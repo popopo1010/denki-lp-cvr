@@ -32,7 +32,7 @@ jobs:
           npx -y --package=esbuild@0.23.1 -- \
             esbuild assets/js/cvr-boost.js --minify --allow-overwrite --outfile=assets/js/cvr-boost.js
           npx -y --package=esbuild@0.23.1 -- \
-            esbuild assets/css/cvr-boost.css --minify --allow-overwrite --loader=css --outfile=assets/css/cvr-boost.css
+            esbuild assets/css/cvr-boost.css --minify --allow-overwrite --outfile=assets/css/cvr-boost.css
           for f in index.html denkikouji/index.html sekoukanri/index.html; do
             npx -y --package=html-minifier-terser@7.2.0 -- \
               html-minifier-terser "$f" \
