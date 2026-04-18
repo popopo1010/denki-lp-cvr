@@ -760,15 +760,22 @@
     observer.observe(els[0].closest(".cvr-social-proof"));
   }
 
-  // ========== 初期化 ==========
+  // ========== 初期化（メインスレッド負荷分散: CVR 系はアイドル時、最大 ~2s で必ず実行） ==========
   document.addEventListener("DOMContentLoaded", function () {
     var h4 = document.getElementById("hidden4");
     if (h4) h4.value = getParam("utm_term") || "";
 
-    initNotifications();
-    initExitIntent();
-    initFormTracking();
-    initFloatingCta();
-    initCountUp();
+    function runCvrBoost() {
+      initNotifications();
+      initExitIntent();
+      initFormTracking();
+      initFloatingCta();
+      initCountUp();
+    }
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(runCvrBoost, { timeout: 2000 });
+    } else {
+      setTimeout(runCvrBoost, 0);
+    }
   });
 })();
