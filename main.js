@@ -513,13 +513,21 @@
         payload._page = location.href;
         payload._referrer = document.referrer || "";
         payload._submitted_at = new Date().toISOString();
-        fetch(ZAPIER_URL, {
-          method: "POST",
-          mode: "no-cors",
-          keepalive: true,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }).catch(() => {});
+        const body = new URLSearchParams();
+        Object.keys(payload).forEach(k => {
+          const v = payload[k];
+          if (Array.isArray(v)) v.forEach(x => body.append(k, x));
+          else body.append(k, v == null ? "" : v);
+        });
+        const sent = navigator.sendBeacon && navigator.sendBeacon(ZAPIER_URL, body);
+        if (!sent) {
+          fetch(ZAPIER_URL, {
+            method: "POST",
+            mode: "no-cors",
+            keepalive: true,
+            body
+          }).catch(() => {});
+        }
       } catch (e) {}
     }, { capture: true });
   }
