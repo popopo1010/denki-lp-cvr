@@ -1,0 +1,44 @@
+name: Deploy to Xserver
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-xserver
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      XSERVER_HOST: ${{ secrets.XSERVER_HOST }}
+      XSERVER_PORT: ${{ secrets.XSERVER_PORT }}
+      XSERVER_USER: ${{ secrets.XSERVER_USER }}
+      XSERVER_DEPLOY_PATH: ${{ secrets.XSERVER_DEPLOY_PATH }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$XSERVER_PORT" -H "$XSERVER_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy via rsync
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='実装依頼書.md' \
+            --exclude='package.json' \
+            --exclude='README.md' \
+            -e "ssh -p $XSERVER_PORT -i ~/.ssh/id_ed25519" \
+            ./ "$XSERVER_USER@$XSERVER_HOST:$XSERVER_DEPLOY_PATH/"
+
+      - name: Verify deployment
+        run: curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/" | head -3
