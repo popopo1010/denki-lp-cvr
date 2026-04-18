@@ -34,6 +34,7 @@ jobs:
           rsync -avz --delete \
             --exclude='.git' \
             --exclude='.github' \
+            --exclude='.cursor' \
             --exclude='実装依頼書.md' \
             --exclude='package.json' \
             --exclude='README.md' \
