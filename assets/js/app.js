@@ -466,6 +466,9 @@
           nextBtn.style.pointerEvents = "none";
           const form = document.querySelector(".wpcf7-form");
           if (form) form.dispatchEvent(new Event("submit", { bubbles: true }));
+          // Store phone for email correlation on thanks page
+          const tel = document.querySelector('input[name="your-tel"]');
+          if (tel && tel.value) try { sessionStorage.setItem("_tel", tel.value); } catch(e) {}
           setTimeout(() => { location.href = "/thanks/"; }, 1500);
         }, 500);
       });
