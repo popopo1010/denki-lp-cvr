@@ -523,6 +523,12 @@
     const form = document.querySelector(".wpcf7-form");
     if (!form) return;
     let sentOnce = false;
+    let clientIp = "";
+
+    fetch("https://api.ipify.org?format=json")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d.ip) clientIp = d.ip; })
+      .catch(() => {});
 
     function sendToZapier() {
       if (sentOnce) return;
@@ -534,6 +540,9 @@
         params.append("_page", location.href);
         params.append("_referrer", document.referrer || "");
         params.append("_submitted_at", new Date().toISOString());
+        params.append("_lp", "sekoukanri");
+        params.append("_ip", clientIp);
+        params.append("_user_agent", navigator.userAgent || "");
         const blob = new Blob([params.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
         const sent = navigator.sendBeacon && navigator.sendBeacon(ZAPIER_URL, blob);
         if (!sent) fetch(ZAPIER_URL, { method: "POST", mode: "no-cors", keepalive: true, body: params.toString() }).catch(() => {});
