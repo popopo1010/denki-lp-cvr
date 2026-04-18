@@ -454,18 +454,14 @@ p.cvr-pp-text a {
 /* FVボタン中央配置 */
 .p-firstButton__container {
   justify-content: center;
-  padding: 0 12px !important;
+  padding: 0 16px !important;
 }
 .p-firstButton__icon {
-  width: 40px !important;
-  flex-shrink: 0;
+  display: none;
 }
 .p-firstButton__text {
-  flex: 1;
   text-align: center;
-}
-.p-firstButton {
-  overflow: hidden;
+  font-size: 15px !important;
 }
 
 .js-form-group {
