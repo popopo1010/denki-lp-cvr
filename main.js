@@ -518,34 +518,33 @@
     form.addEventListener("submit", () => {
       try {
         const fd = new FormData(form);
-        const payload = {};
+        const params = new URLSearchParams();
         fd.forEach((v, k) => {
           if (k.startsWith("_wpcf7")) return;
-          if (payload[k] !== undefined) {
-            payload[k] = [].concat(payload[k], v);
-          } else {
-            payload[k] = v;
-          }
+          params.append(k, v == null ? "" : String(v));
         });
-        payload._page = location.href;
-        payload._referrer = document.referrer || "";
-        payload._submitted_at = new Date().toISOString();
-        const body = new URLSearchParams();
-        Object.keys(payload).forEach(k => {
-          const v = payload[k];
-          if (Array.isArray(v)) v.forEach(x => body.append(k, x));
-          else body.append(k, v == null ? "" : v);
-        });
-        const sent = navigator.sendBeacon && navigator.sendBeacon(ZAPIER_URL, body);
+        params.append("_page", location.href);
+        params.append("_referrer", document.referrer || "");
+        params.append("_submitted_at", new Date().toISOString());
+
+        const bodyStr = params.toString();
+        if (window.console && console.log) {
+          console.log("[Zapier mirror] payload:", Object.fromEntries(params));
+        }
+        const blob = new Blob([bodyStr], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+        const sent = navigator.sendBeacon && navigator.sendBeacon(ZAPIER_URL, blob);
         if (!sent) {
           fetch(ZAPIER_URL, {
             method: "POST",
             mode: "no-cors",
             keepalive: true,
-            body
+            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+            body: bodyStr
           }).catch(() => {});
         }
-      } catch (e) {}
+      } catch (e) {
+        if (window.console && console.warn) console.warn("[Zapier mirror] error", e);
+      }
     }, { capture: true });
   }
 
