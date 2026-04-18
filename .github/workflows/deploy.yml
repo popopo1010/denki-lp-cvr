@@ -42,4 +42,6 @@ jobs:
             ./ "$XSERVER_USER@$XSERVER_HOST:$XSERVER_DEPLOY_PATH/"
 
       - name: Verify deployment
-        run: curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/" | head -3
+        run: |
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/" | head -3
