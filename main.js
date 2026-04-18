@@ -493,6 +493,37 @@
     if (d) { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
   }
 
+  // ========== Zapier Webhook mirror ==========
+  function initZapierMirror() {
+    const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
+    const form = document.querySelector(".wpcf7-form");
+    if (!form) return;
+    form.addEventListener("submit", () => {
+      try {
+        const fd = new FormData(form);
+        const payload = {};
+        fd.forEach((v, k) => {
+          if (k.startsWith("_wpcf7")) return;
+          if (payload[k] !== undefined) {
+            payload[k] = [].concat(payload[k], v);
+          } else {
+            payload[k] = v;
+          }
+        });
+        payload._page = location.href;
+        payload._referrer = document.referrer || "";
+        payload._submitted_at = new Date().toISOString();
+        fetch(ZAPIER_URL, {
+          method: "POST",
+          mode: "no-cors",
+          keepalive: true,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      } catch (e) {}
+    }, { capture: true });
+  }
+
   // ========== Init ==========
   function initForm() {
     const groups = document.querySelectorAll(".js-form-group");
@@ -510,6 +541,7 @@
         initRequiredItems(g);
       });
       initCookieName();
+      initZapierMirror();
       preventEnter();
     });
   }
