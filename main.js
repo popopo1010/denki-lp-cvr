@@ -450,6 +450,23 @@
       });
     });
 
+    // 送信ボタン(step-last-button)の場合、バリデーション通過後にサンクスページへ
+    if (nextBtn.id === "step-last-button") {
+      nextBtn.addEventListener("click", () => {
+        // 250ms後にバリデーション結果を確認して遷移
+        setTimeout(() => {
+          if (!states.every(Boolean)) return;
+          const textEl = nextBtn.querySelector(".c-submit-button__text");
+          if (textEl) textEl.innerText = "検索中...";
+          nextBtn.style.pointerEvents = "none";
+          // Zapier送信（存在すれば）
+          const form = document.querySelector(".wpcf7-form");
+          if (form) form.dispatchEvent(new Event("submit", { bubbles: true }));
+          setTimeout(() => { location.href = "https://denkilp.builders-job.com/thanks/"; }, 1500);
+        }, 500);
+      });
+    }
+
     updateBtn();
   }
 

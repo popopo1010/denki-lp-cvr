@@ -115,18 +115,7 @@
     var h4 = document.getElementById("hidden4");
     if (h4) h4.value = getParam("utm_term") || "";
 
-    // 送信ボタンクリックで検索中→サンクスページ遷移
-    var submitArea = document.getElementById("step-last-button");
-    if (submitArea) {
-      submitArea.addEventListener("click", function () {
-        var textEl = submitArea.querySelector(".c-submit-button__text");
-        if (textEl) textEl.innerText = "検索中...";
-        submitArea.style.pointerEvents = "none";
-        setTimeout(function () {
-          location.href = "https://denkilp.builders-job.com/thanks/";
-        }, 1500);
-      });
-    }
+    // 送信処理はmain.jsのinitRequiredItems内で統合管理
   }
 
   // ========== 初期化 ==========
