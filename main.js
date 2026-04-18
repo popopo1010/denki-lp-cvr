@@ -411,6 +411,19 @@
       const errBox = group.querySelector("#error-" + item.name);
       const errText = errBox ? errBox.querySelector("p") : null;
 
+      // 電話番号の「あと○桁」表示
+      if (item.name === "your-tel") {
+        const telNotice = document.getElementById("tel-notice");
+        if (telNotice) {
+          item.addEventListener("input", () => {
+            const len = item.value.length;
+            if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
+            else if (len === 11) { telNotice.style.display = "none"; }
+            else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
+          });
+        }
+      }
+
       item.addEventListener("blur", () => {
         if (item.nextElementSibling) {
           if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = item.nextElementSibling.textContent; }
