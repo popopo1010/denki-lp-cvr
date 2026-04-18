@@ -455,19 +455,25 @@ p.cvr-pp-text a {
   text-decoration: none !important;
 }
 /* FVボタン中央配置 */
+.p-firstButton {
+  overflow: hidden;
+}
 .p-firstButton__container {
   justify-content: center;
-  padding: 0 16px !important;
+  padding: 0 24px 0 20px !important;
+  gap: 8px;
 }
 .p-firstButton__icon {
-  width: 36px !important;
-  height: 36px !important;
+  width: 32px !important;
+  height: 32px !important;
   object-fit: contain;
   flex-shrink: 0;
+  margin: 0 !important;
 }
 .p-firstButton__text {
   text-align: center;
-  font-size: 15px !important;
+  font-size: 14px !important;
+  margin-left: 0 !important;
 }
 
 .js-form-group {
