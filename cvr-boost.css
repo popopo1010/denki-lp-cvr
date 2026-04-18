@@ -470,6 +470,11 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* ========== 郵便番号入力の〒マーク重なり修正 ========== */
+.c-zip-text input {
+  padding-left: 40px;
+}
+
 /* ========== テキストボックスフォーカス改善 ========== */
 .c-text-box:focus {
   border-color: #314c85;
