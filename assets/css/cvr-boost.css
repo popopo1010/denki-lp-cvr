@@ -457,7 +457,10 @@ p.cvr-pp-text a {
   padding: 0 16px !important;
 }
 .p-firstButton__icon {
-  display: none;
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 .p-firstButton__text {
   text-align: center;
