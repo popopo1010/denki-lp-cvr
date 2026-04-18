@@ -459,6 +459,8 @@
 .cvr-faq {
   position: relative;
   z-index: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
 }
 
 .c-container {
@@ -543,6 +545,79 @@
 /* ========== 数値カウントアップ ========== */
 .cvr-social-proof__number {
   transition: opacity 0.3s;
+}
+
+/* ========== 離脱防止モーダル（JSはDOMのみ生成） ========== */
+@keyframes cvr-exitFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cvr-exitScaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.cvr-exit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: cvr-exitFadeIn 0.3s ease;
+}
+.cvr-exit-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  animation: cvr-exitScaleIn 0.3s ease;
+}
+.cvr-exit-modal__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 12px;
+}
+.cvr-exit-modal__text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #666;
+  margin-bottom: 20px;
+}
+.cvr-exit-modal__text strong {
+  color: #ff5966;
+}
+.cvr-exit-modal__btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #ff5966;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 8px;
+  box-shadow: 0 3px 0 #be5156;
+}
+.cvr-exit-modal__btn:hover {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+.cvr-exit-modal__close {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 @media (min-width: 768px) {

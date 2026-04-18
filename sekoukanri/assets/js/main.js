@@ -25,6 +25,7 @@
 
   function moveIcon(targetEl) {
     if (!icon || !targetEl) return;
+    // クマをターゲット要素の親に挿入（ターゲットの直後に配置）
     const wrapper = targetEl.closest(".c-section, .p-first__buttonArea, .p-step05__address, .p-step06__name, .p-step07__tel, .c-nextLink, .js-form-group");
     if (wrapper) {
       wrapper.style.position = "relative";
@@ -42,17 +43,23 @@
   function startBounce() {
     stopBounce();
     if (!icon) return;
-    let x = 0, dir = -1;
-    bounceId = setInterval(() => {
+    let x = 0;
+    let dir = -1;
+    function tick() {
+      bounceId = requestAnimationFrame(tick);
       x += dir * 0.5;
       if (x <= -15) dir = 1;
       if (x >= 0) dir = -1;
       icon.style.transform = "translateX(" + x + "px)";
-    }, 16);
+    }
+    bounceId = requestAnimationFrame(tick);
   }
 
   function stopBounce() {
-    if (bounceId) { clearInterval(bounceId); bounceId = null; }
+    if (bounceId != null) {
+      cancelAnimationFrame(bounceId);
+      bounceId = null;
+    }
     if (icon) icon.style.transform = "";
   }
 
@@ -71,6 +78,7 @@
     page.style.transform = "translateX(50px)";
     page.style.transition = "none";
 
+    // クマを最初のボタンエリアに配置
     const firstBtnArea = page.querySelector(".p-first__buttonArea, .c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
     if (firstBtnArea && icon) {
       firstBtnArea.style.position = "relative";
@@ -98,6 +106,7 @@
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
 
+    // step05→step06遷移時に名前を挿入
     if (pageTo === "step06") {
       const last = document.getElementById("last-name");
       const nameTxt = document.getElementById("nametxt");
@@ -177,12 +186,18 @@
       sync();
 
       if (states.every(Boolean)) {
+        // 両方選択済み → disable解除後に自動遷移
+        nextBtn.classList.remove(DISABLE);
+        nextBtn.style.opacity = "1";
+        nextBtn.style.pointerEvents = "auto";
         const linkArea = nextBtn.closest(".c-nextLink");
         if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
-        nextBtn.click();
+        setTimeout(() => nextBtn.click(), 100);
       } else {
+        // 未選択のセクションへクマ移動+スクロール誘導
         for (let i = 0; i < states.length; i++) {
           if (!states[i] && titles[i]) {
+            // 次のボタングリッドにクマを移動
             const nextSection = titles[i].closest(".c-section");
             const nextGrid = nextSection ? nextSection.querySelector(".c-button-grid") : null;
             if (nextGrid && icon) { nextGrid.style.position = "relative"; nextGrid.appendChild(icon); }
@@ -229,6 +244,7 @@
       updateHiddens();
       if (hasAny()) {
         nextBtn.classList.remove(DISABLE);
+        // クマを次へボタンの親(c-nextLink)に移動
         const linkArea = nextBtn.closest(".c-nextLink");
         if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
         target.classList.add(SKIP);
@@ -238,6 +254,7 @@
       }
     }));
 
+    // Restore
     const existing = [];
     hiddens.forEach(h => h.value.replace(/\s+/g, "").split(",").forEach(v => existing.push(v)));
     buttons.forEach(b => {
@@ -383,6 +400,7 @@
 
     inputs.forEach(input => input.addEventListener("blur", validate));
 
+    // Initial: disable
     nextBtn.classList.add(DISABLE);
   }
 
@@ -402,6 +420,7 @@
       const errBox = group.querySelector("#error-" + item.name);
       const errText = errBox ? errBox.querySelector("p") : null;
 
+      // 電話番号の「あと○桁」表示
       if (item.name === "your-tel") {
         const telNotice = document.getElementById("tel-notice");
         if (telNotice) {
@@ -436,13 +455,16 @@
       });
     });
 
+    // 送信ボタン(step-last-button)の場合、バリデーション通過後にサンクスページへ
     if (nextBtn.id === "step-last-button") {
       nextBtn.addEventListener("click", () => {
+        // 250ms後にバリデーション結果を確認して遷移
         setTimeout(() => {
           if (!states.every(Boolean)) return;
           const textEl = nextBtn.querySelector(".c-submit-button__text");
           if (textEl) textEl.innerText = "検索中...";
           nextBtn.style.pointerEvents = "none";
+          // Zapier送信（存在すれば）
           const form = document.querySelector(".wpcf7-form");
           if (form) form.dispatchEvent(new Event("submit", { bubbles: true }));
           setTimeout(() => { location.href = "https://denkilp.builders-job.com/thanks/"; }, 1500);
@@ -460,7 +482,7 @@
     });
   }
 
-  // ========== Cookie name ==========
+  // ========== Cookie name + 名前挿入 ==========
   function initCookieName() {
     const last = document.getElementById("last-name");
     const first = document.getElementById("first-name");
@@ -530,7 +552,7 @@
 
     document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
 
-    setTimeout(() => {
+    queueMicrotask(() => {
       groups.forEach(g => {
         initRadioButtons(g);
         initRadioButtons02(g);

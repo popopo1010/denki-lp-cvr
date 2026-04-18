@@ -116,16 +116,24 @@
     if (!cta || !btn) return;
 
     var shown = false;
-    window.addEventListener("scroll", function () {
-      var scrollPct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-      if (scrollPct > 0.15 && !shown) {
-        shown = true;
-        cta.classList.add("is-visible");
-      } else if (scrollPct <= 0.1 && shown) {
-        shown = false;
-        cta.classList.remove("is-visible");
-      }
-    }, { passive: true });
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        var range = document.body.scrollHeight - window.innerHeight;
+        var scrollPct = range > 0 ? window.scrollY / range : 0;
+        if (scrollPct > 0.15 && !shown) {
+          shown = true;
+          cta.classList.add("is-visible");
+        } else if (scrollPct <= 0.1 && shown) {
+          shown = false;
+          cta.classList.remove("is-visible");
+        }
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     btn.addEventListener("click", function () {
       window.scrollTo({ top: 0, behavior: "smooth" });

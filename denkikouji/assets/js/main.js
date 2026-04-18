@@ -43,17 +43,23 @@
   function startBounce() {
     stopBounce();
     if (!icon) return;
-    let x = 0, dir = -1;
-    bounceId = setInterval(() => {
+    let x = 0;
+    let dir = -1;
+    function tick() {
+      bounceId = requestAnimationFrame(tick);
       x += dir * 0.5;
       if (x <= -15) dir = 1;
       if (x >= 0) dir = -1;
       icon.style.transform = "translateX(" + x + "px)";
-    }, 16);
+    }
+    bounceId = requestAnimationFrame(tick);
   }
 
   function stopBounce() {
-    if (bounceId) { clearInterval(bounceId); bounceId = null; }
+    if (bounceId != null) {
+      cancelAnimationFrame(bounceId);
+      bounceId = null;
+    }
     if (icon) icon.style.transform = "";
   }
 
@@ -180,10 +186,13 @@
       sync();
 
       if (states.every(Boolean)) {
-        // 両方選択済み → クマをnextBtnへ移動して自動遷移
+        // 両方選択済み → disable解除後に自動遷移
+        nextBtn.classList.remove(DISABLE);
+        nextBtn.style.opacity = "1";
+        nextBtn.style.pointerEvents = "auto";
         const linkArea = nextBtn.closest(".c-nextLink");
         if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
-        nextBtn.click();
+        setTimeout(() => nextBtn.click(), 100);
       } else {
         // 未選択のセクションへクマ移動+スクロール誘導
         for (let i = 0; i < states.length; i++) {
@@ -543,7 +552,7 @@
 
     document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
 
-    setTimeout(() => {
+    queueMicrotask(() => {
       groups.forEach(g => {
         initRadioButtons(g);
         initRadioButtons02(g);

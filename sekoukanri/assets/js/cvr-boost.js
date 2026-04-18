@@ -62,23 +62,10 @@
         '<div class="cvr-exit-modal">' +
         '<p class="cvr-exit-modal__title">まだ登録が完了していません</p>' +
         '<p class="cvr-exit-modal__text">あなたの条件に合った求人が<strong>多数</strong>見つかっています。<br>あと少しで完了です！</p>' +
-        '<button class="cvr-exit-modal__btn" id="cvr-exit-continue">登録を続ける</button>' +
-        '<button class="cvr-exit-modal__close" id="cvr-exit-close">閉じる</button>' +
+        '<button type="button" class="cvr-exit-modal__btn" id="cvr-exit-continue">登録を続ける</button>' +
+        '<button type="button" class="cvr-exit-modal__close" id="cvr-exit-close">閉じる</button>' +
         "</div>";
 
-      var style = document.createElement("style");
-      style.textContent =
-        ".cvr-exit-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;animation:cvr-fadeIn .3s ease}" +
-        ".cvr-exit-modal{background:#fff;border-radius:16px;padding:32px 24px;text-align:center;max-width:340px;width:100%;animation:cvr-scaleIn .3s ease}" +
-        ".cvr-exit-modal__title{font-size:18px;font-weight:800;color:#333;margin-bottom:12px}" +
-        ".cvr-exit-modal__text{font-size:13px;line-height:1.7;color:#666;margin-bottom:20px}" +
-        ".cvr-exit-modal__text strong{color:#ff5966}" +
-        ".cvr-exit-modal__btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;background:#ff5966;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;box-shadow:0 3px 0 #be5156}" +
-        ".cvr-exit-modal__btn:hover{transform:translateY(2px);box-shadow:none}" +
-        ".cvr-exit-modal__close{display:block;width:100%;padding:8px;border:none;background:transparent;color:#999;font-size:12px;cursor:pointer}" +
-        "@keyframes cvr-fadeIn{from{opacity:0}to{opacity:1}}" +
-        "@keyframes cvr-scaleIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}";
-      document.head.appendChild(style);
       document.body.appendChild(overlay);
 
       function close() { overlay.remove(); }
@@ -116,16 +103,24 @@
     if (!cta || !btn) return;
 
     var shown = false;
-    window.addEventListener("scroll", function () {
-      var scrollPct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-      if (scrollPct > 0.15 && !shown) {
-        shown = true;
-        cta.classList.add("is-visible");
-      } else if (scrollPct <= 0.1 && shown) {
-        shown = false;
-        cta.classList.remove("is-visible");
-      }
-    }, { passive: true });
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        var range = document.body.scrollHeight - window.innerHeight;
+        var scrollPct = range > 0 ? window.scrollY / range : 0;
+        if (scrollPct > 0.15 && !shown) {
+          shown = true;
+          cta.classList.add("is-visible");
+        } else if (scrollPct <= 0.1 && shown) {
+          shown = false;
+          cta.classList.remove("is-visible");
+        }
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     btn.addEventListener("click", function () {
       window.scrollTo({ top: 0, behavior: "smooth" });
