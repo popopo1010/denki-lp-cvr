@@ -51,6 +51,7 @@
   color: #314c85;
   line-height: 1.2;
   letter-spacing: -0.5px;
+  transition: opacity 0.3s;
 }
 
 .cvr-social-proof__label {
@@ -542,11 +543,6 @@
   margin-top: 4px;
 }
 
-/* ========== 数値カウントアップ ========== */
-.cvr-social-proof__number {
-  transition: opacity 0.3s;
-}
-
 /* ========== 離脱防止モーダル（JSはDOMのみ生成） ========== */
 @keyframes cvr-exitFadeIn {
   from { opacity: 0; }
@@ -629,6 +625,46 @@ html { scroll-behavior: smooth; }
 .c-text-box, .c-select-box02 select { min-height: 52px; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #314c85; outline-offset: 2px; }
 .c-button, .p-firstButton, .c-next-button { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+/* FVにCTAを収めるための余白圧縮 */
+@media (max-width: 767px) {
+  .l-main { margin: 4px auto; }
+  .c-container { padding: 0 12px 32px; }
+
+  /* 信頼性バー */
+  .cvr-trust-bar { padding: 6px 4px; margin-bottom: 6px; }
+
+  /* 社会的証明 */
+  .cvr-social-proof { margin-bottom: 6px; }
+  .cvr-social-proof__stats { padding: 8px 6px; gap: 8px; }
+  .cvr-social-proof__number { font-size: 20px; }
+  .cvr-social-proof__divider { height: 24px; }
+
+  /* リアルタイム通知 */
+  .cvr-live-notification { padding: 6px 10px; margin-bottom: 6px; }
+
+  /* バナー画像を小さく */
+  #step-first > picture img { max-height: 140px; object-fit: cover; width: 100%; border-radius: 8px; }
+
+  /* ヒーローバッジ */
+  .cvr-hero-badge { padding: 6px 12px; margin: 4px 0; }
+  .cvr-hero-badge__count { font-size: 22px; }
+  .cvr-hero-badge__tag { font-size: 10px; padding: 1px 6px; }
+  .cvr-hero-badge__unit { font-size: 12px; }
+
+  /* タイトル */
+  .c-title-top { padding: 10px 0; margin-bottom: 8px; }
+  .c-title01 { padding: 8px 0 4px; font-size: 15px; }
+
+  /* CTAボタン */
+  .p-first__buttonArea { padding: 0 8px; gap: 10px; }
+  .p-firstButton { min-height: 64px; }
+  .p-firstButton__icon { width: 36px; }
+  .p-firstButton__text { font-size: 14px; }
+
+  /* マイクロコピー */
+  .cvr-micro-copy { margin-top: 6px; font-size: 11px; }
+}
 
 @media (min-width: 768px) {
   .cvr-trust-bar {

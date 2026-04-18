@@ -28,9 +28,7 @@ jobs:
       - name: Minify JS/CSS/HTML
         run: |
           npx -y --package=esbuild@0.23.1 -- \
-            esbuild assets/js/main.js --minify --allow-overwrite --outfile=assets/js/main.js
-          npx -y --package=esbuild@0.23.1 -- \
-            esbuild assets/js/cvr-boost.js --minify --allow-overwrite --outfile=assets/js/cvr-boost.js
+            esbuild assets/js/app.js --minify --allow-overwrite --outfile=assets/js/app.js
           npx -y --package=esbuild@0.23.1 -- \
             esbuild assets/css/cvr-boost.css --minify --allow-overwrite --outfile=assets/css/cvr-boost.css
           for f in index.html denkikouji/index.html sekoukanri/index.html; do
