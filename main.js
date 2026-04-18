@@ -34,12 +34,12 @@
     const parentRect = parent.getBoundingClientRect();
     const targetRect = iconTarget.getBoundingClientRect();
     let top = targetRect.top - parentRect.top + targetRect.height / 2;
-    // タイトル要素の場合、最初のボタンの中央に合わせる
+    // タイトル要素の場合、最初のボタンの上端に合わせる
     if (iconTarget.tagName === "H2" || (iconTarget.tagName === "SPAN" && iconTarget.closest(".c-title01"))) {
       const firstBtn = parent.querySelector(".c-button, .p-firstButton");
       if (firstBtn) {
         const btnRect = firstBtn.getBoundingClientRect();
-        top = btnRect.top - parentRect.top + btnRect.height / 2;
+        top = btnRect.top - parentRect.top + 20;
       }
     }
     icon.style.top = top + "px";
@@ -202,14 +202,14 @@
       sync();
 
       if (states.every(Boolean)) {
-        // 両方選択済み → ボタンへスクロール誘導（自動遷移しない）
-        moveIconById("#" + nextBtn.id);
+        // 両方選択済み → ボタンへスクロール誘導
+        moveIcon(nextBtn);
         nextBtn.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         // 未選択のセクションへスクロール誘導
         for (let i = 0; i < states.length; i++) {
           if (!states[i] && titles[i]) {
-            moveIconById("#" + titles[i].id);
+            moveIcon(titles[i]);
             titles[i].scrollIntoView({ behavior: "smooth", block: "center" });
             break;
           }
@@ -253,12 +253,12 @@
       updateHiddens();
       if (hasAny()) {
         nextBtn.classList.remove(DISABLE);
-        moveIconById("#" + nextBtn.id);
+        moveIcon(nextBtn);
         target.classList.add(SKIP);
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        moveIconById("#" + target.id);
+        moveIcon(target);
       }
     }));
 
