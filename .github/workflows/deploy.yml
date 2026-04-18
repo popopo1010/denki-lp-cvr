@@ -20,6 +20,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Minify JS/CSS/HTML
+        run: |
+          npx -y --package=esbuild@0.23.1 -- \
+            esbuild assets/js/main.js --minify --allow-overwrite --outfile=assets/js/main.js
+          npx -y --package=esbuild@0.23.1 -- \
+            esbuild assets/js/cvr-boost.js --minify --allow-overwrite --outfile=assets/js/cvr-boost.js
+          npx -y --package=esbuild@0.23.1 -- \
+            esbuild assets/css/cvr-boost.css --minify --allow-overwrite --loader=css --outfile=assets/css/cvr-boost.css
+          for f in index.html denkikouji/index.html sekoukanri/index.html; do
+            npx -y --package=html-minifier-terser@7.2.0 -- \
+              html-minifier-terser "$f" \
+                --collapse-whitespace --remove-comments \
+                --minify-css true --minify-js true \
+                --remove-redundant-attributes --remove-script-type-attributes \
+                --remove-style-link-type-attributes --use-short-doctype \
+                -o "$f.min"
+            mv "$f.min" "$f"
+          done
+          echo "--- minified sizes ---"
+          ls -lh assets/js/*.js assets/css/*.css index.html denkikouji/index.html sekoukanri/index.html
+
       - name: Setup SSH
         env:
           SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}

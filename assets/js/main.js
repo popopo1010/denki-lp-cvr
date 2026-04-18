@@ -540,7 +540,7 @@
         params.append("_page", location.href);
         params.append("_referrer", document.referrer || "");
         params.append("_submitted_at", new Date().toISOString());
-        params.append("_lp", "denkikouji");
+        params.append("_lp", window.__LP_ID || "unknown");
         params.append("_ip", clientIp);
         params.append("_user_agent", navigator.userAgent || "");
         const blob = new Blob([params.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
