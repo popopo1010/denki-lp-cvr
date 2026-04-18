@@ -472,11 +472,6 @@
         Cookie.remove("user-name");
         Cookie.set("user-name", name, 3);
       }
-      // 最終ステップに名前を挿入
-      const nameTxt = document.getElementById("nametxt");
-      if (nameTxt && nameTxt.innerHTML.includes("{name}")) {
-        nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
-      }
     });
   }
 
