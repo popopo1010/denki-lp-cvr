@@ -115,16 +115,13 @@
     var h4 = document.getElementById("hidden4");
     if (h4) h4.value = getParam("utm_term") || "";
 
-    // フォームsubmitを完全に止める + 送信シミュレーション
-    var form = document.querySelector(".wpcf7-form");
-    if (form) {
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var textEl = document.querySelector(".c-submit-button__text");
+    // 送信ボタンクリックで検索中→サンクスページ遷移
+    var submitArea = document.getElementById("step-last-button");
+    if (submitArea) {
+      submitArea.addEventListener("click", function () {
+        var textEl = submitArea.querySelector(".c-submit-button__text");
         if (textEl) textEl.innerText = "検索中...";
-        var submitBtn = document.querySelector('input[type="submit"]');
-        if (submitBtn) submitBtn.style.pointerEvents = "none";
+        submitArea.style.pointerEvents = "none";
         setTimeout(function () {
           location.href = "https://denkilp.builders-job.com/thanks/";
         }, 1500);
