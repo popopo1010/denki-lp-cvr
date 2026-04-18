@@ -454,6 +454,26 @@ p.cvr-pp-text a {
   color: #bbb !important;
   text-decoration: none !important;
 }
+/* クマアイコン（CTA横に固定配置） */
+.cvr-kuma {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -10px;
+  margin-bottom: -20px;
+  pointer-events: none;
+  height: 0;
+  overflow: visible;
+}
+.cvr-kuma img {
+  width: 56px;
+  height: auto;
+  animation: cvr-kumaWave 2s ease-in-out infinite;
+}
+@keyframes cvr-kumaWave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-8px); }
+}
 /* FVボタン中央配置 */
 .p-firstButton {
   overflow: hidden;
