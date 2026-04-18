@@ -470,6 +470,9 @@ p.cvr-pp-text a {
   flex-shrink: 0;
   margin: 0 !important;
 }
+@media (max-width: 767px) {
+  .p-firstButton__icon { display: none; }
+}
 .p-firstButton__text {
   text-align: center;
   font-size: 14px !important;
