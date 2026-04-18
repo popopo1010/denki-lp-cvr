@@ -431,6 +431,10 @@
 .c-fixed-icon {
   z-index: 2;
   pointer-events: none;
+  position: absolute;
+  right: -8px;
+  top: auto;
+  bottom: -10px;
 }
 
 .cvr-testimonials,

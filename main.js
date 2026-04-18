@@ -19,38 +19,19 @@
     remove(name) { Cookie.set(name, "", -1); }
   };
 
-  // ========== Icon system ==========
-  const header = document.getElementById("header");
+  // ========== Icon system (DOM移動方式) ==========
   let icon = null;
-  let iconTarget = null;
   let bounceId = null;
 
-  function resizeHandler() { positionIcon(); }
-
-  function positionIcon() {
-    if (!icon || !iconTarget) return;
-    const parent = icon.closest(".js-form-group");
-    if (!parent) return;
-    const parentRect = parent.getBoundingClientRect();
-    const targetRect = iconTarget.getBoundingClientRect();
-    let top = targetRect.top - parentRect.top + targetRect.height / 2;
-    // タイトル要素の場合、最初のボタンの上端に合わせる
-    if (iconTarget.tagName === "H2" || (iconTarget.tagName === "SPAN" && iconTarget.closest(".c-title01"))) {
-      const firstBtn = parent.querySelector(".c-button, .p-firstButton");
-      if (firstBtn) {
-        const btnRect = firstBtn.getBoundingClientRect();
-        top = btnRect.top - parentRect.top + 20;
-      }
+  function moveIcon(targetEl) {
+    if (!icon || !targetEl) return;
+    // クマをターゲット要素の親に挿入（ターゲットの直後に配置）
+    const wrapper = targetEl.closest(".c-section, .p-first__buttonArea, .p-step05__address, .p-step06__name, .p-step07__tel, .c-nextLink, .js-form-group");
+    if (wrapper) {
+      wrapper.style.position = "relative";
+      if (icon.parentNode !== wrapper) wrapper.appendChild(icon);
     }
-    icon.style.top = top + "px";
     icon.style.opacity = "1";
-  }
-
-  function moveIcon(el) {
-    if (!el) return;
-    iconTarget = el;
-    icon.style.transition = "top 0.3s ease";
-    positionIcon();
   }
 
   function moveIconById(id) {
@@ -81,34 +62,32 @@
     const page = document.querySelector(pageId);
     if (!page) return;
 
-    window.removeEventListener("resize", resizeHandler);
     stopBounce();
-
     icon = page.querySelector(".js-fixed-icon");
-    iconTarget = page.querySelector(".js-icon-target:not(.is-skip)");
 
     window.scrollTo(0, 0);
 
-    // Set initial hidden state
     page.style.display = "block";
     page.style.opacity = "0";
     page.style.transform = "translateX(50px)";
     page.style.transition = "none";
 
-    // Position icon after layout
-    requestAnimationFrame(() => {
-      positionIcon();
+    // クマを最初のボタンエリアに配置
+    const firstBtnArea = page.querySelector(".p-first__buttonArea, .c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
+    if (firstBtnArea && icon) {
+      firstBtnArea.style.position = "relative";
+      firstBtnArea.appendChild(icon);
+      icon.style.opacity = "1";
+    }
 
-      // Trigger transition
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";
         page.style.opacity = "1";
         page.style.transform = "translateX(0)";
 
         setTimeout(() => {
-          window.addEventListener("resize", resizeHandler);
           startBounce();
-          // テキスト/tel入力欄があれば自動フォーカス
           const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
           if (autoFocus && !autoFocus.value) autoFocus.focus();
         }, 320);
@@ -131,7 +110,6 @@
     }
 
     stopBounce();
-    window.removeEventListener("resize", resizeHandler);
 
     cur.style.display = "none";
     cur.style.opacity = "0";
@@ -251,12 +229,13 @@
       updateHiddens();
       if (hasAny()) {
         nextBtn.classList.remove(DISABLE);
-        moveIcon(nextBtn);
+        // クマを次へボタンの親(c-nextLink)に移動
+        const linkArea = nextBtn.closest(".c-nextLink");
+        if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
         target.classList.add(SKIP);
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        moveIcon(target);
       }
     }));
 
