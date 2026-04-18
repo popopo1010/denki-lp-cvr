@@ -202,15 +202,13 @@
       sync();
 
       if (states.every(Boolean)) {
-        // 両方選択済み → ボタンへスクロール誘導
-        moveIcon(nextBtn);
-        nextBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+        // 両方選択済み → 自動で次のステップへ遷移
+        nextBtn.click();
       } else {
         // 未選択のセクションへスクロール誘導
         for (let i = 0; i < states.length; i++) {
           if (!states[i] && titles[i]) {
-            moveIcon(titles[i]);
-            titles[i].scrollIntoView({ behavior: "smooth", block: "center" });
+            titles[i].scrollIntoView({ behavior: "smooth", block: "start" });
             break;
           }
         }
