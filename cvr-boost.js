@@ -115,18 +115,6 @@
     var h4 = document.getElementById("hidden4");
     if (h4) h4.value = getParam("utm_term") || "";
 
-    // 名前ステップ → 最終ステップで名前を挿入
-    var nameBtn = document.getElementById("step05-next-button");
-    if (nameBtn) {
-      nameBtn.addEventListener("click", function () {
-        var nameInput = document.getElementById("last-name");
-        var nameTxt = document.getElementById("nametxt");
-        if (nameInput && nameTxt && nameTxt.innerHTML.includes("{name}")) {
-          nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", nameInput.value);
-        }
-      });
-    }
-
     // 送信ボタン処理
     var submitBtn = document.querySelector('input[type="submit"]');
     if (submitBtn) {

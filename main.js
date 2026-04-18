@@ -440,7 +440,7 @@
     });
   }
 
-  // ========== Cookie name ==========
+  // ========== Cookie name + 名前挿入 ==========
   function initCookieName() {
     const last = document.getElementById("last-name");
     const first = document.getElementById("first-name");
@@ -451,6 +451,11 @@
       if (Cookie.get("user-name") !== name) {
         Cookie.remove("user-name");
         Cookie.set("user-name", name, 3);
+      }
+      // 最終ステップに名前を挿入
+      const nameTxt = document.getElementById("nametxt");
+      if (nameTxt && nameTxt.innerHTML.includes("{name}")) {
+        nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
       }
     });
   }
