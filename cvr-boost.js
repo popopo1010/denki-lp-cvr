@@ -109,20 +109,14 @@
     });
   }
 
-  // ========== 名前挿入 + utm_term + 送信処理 ==========
-  function initInlineScripts() {
-    // utm_term をhiddenに設定
+  // ========== 初期化 ==========
+  document.addEventListener("DOMContentLoaded", function () {
+    // utm_term設定
     var h4 = document.getElementById("hidden4");
     if (h4) h4.value = getParam("utm_term") || "";
 
-    // 送信処理はmain.jsのinitRequiredItems内で統合管理
-  }
-
-  // ========== 初期化 ==========
-  document.addEventListener("DOMContentLoaded", function () {
     initNotifications();
     initExitIntent();
     initFormTracking();
-    initInlineScripts();
   });
 })();
