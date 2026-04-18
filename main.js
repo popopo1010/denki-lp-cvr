@@ -100,6 +100,9 @@
         setTimeout(() => {
           window.addEventListener("resize", resizeHandler);
           startBounce();
+          // テキスト/tel入力欄があれば自動フォーカス
+          const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
+          if (autoFocus && !autoFocus.value) autoFocus.focus();
         }, 320);
       });
     });
@@ -109,6 +112,15 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+
+    // step05→step06遷移時に名前を挿入
+    if (pageTo === "step06") {
+      const last = document.getElementById("last-name");
+      const nameTxt = document.getElementById("nametxt");
+      if (last && nameTxt && nameTxt.innerHTML.includes("{name}")) {
+        nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
+      }
+    }
 
     stopBounce();
     window.removeEventListener("resize", resizeHandler);
