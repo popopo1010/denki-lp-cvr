@@ -323,7 +323,7 @@
         citySel.classList.add(SKIP);
         valid = true;
         updateBtn();
-      } catch (e) { void 0; }
+      } catch (e) {}
     }
 
     async function loadCities(pref, sel) {
@@ -339,7 +339,7 @@
           }
         });
         citySel.innerHTML = html;
-      } catch (e) { void 0; }
+      } catch (e) {}
     }
 
     zipInput.addEventListener("input", () => {

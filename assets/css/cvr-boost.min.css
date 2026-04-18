@@ -254,17 +254,6 @@ p.cvr-pp-text a {
   color: #bbb !important;
   text-decoration: underline;
 }
-
-.cvr-submit-pulse {
-  animation: cvr-submitPulse 2s infinite;
-}
-
-@keyframes cvr-submitPulse {
-  0% { box-shadow: 0px 3px 0px #be5156, 0 0 0 0 rgba(255, 89, 102, 0.4); }
-  50% { box-shadow: 0px 3px 0px #be5156, 0 0 0 8px rgba(255, 89, 102, 0); }
-  100% { box-shadow: 0px 3px 0px #be5156, 0 0 0 0 rgba(255, 89, 102, 0); }
-}
-
 .cvr-testimonials {
   margin-top: 32px;
   padding: 0 4px;
@@ -546,7 +535,6 @@ p.cvr-pp-text a {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 3px 0 #be5156;
-  animation: cvr-submitPulse 2s infinite;
 }
 .cvr-floating-cta__btn:active {
   transform: translateY(2px);
