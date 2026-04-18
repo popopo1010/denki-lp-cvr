@@ -451,6 +451,14 @@ p.cvr-pp-text a {
   color: #bbb !important;
   text-decoration: none !important;
 }
+/* FVボタンのテキスト中央寄せ */
+.p-firstButton__container {
+  justify-content: center;
+}
+.p-firstButton__text {
+  flex: 1;
+  text-align: center;
+}
 
 .js-form-group {
   position: relative;
