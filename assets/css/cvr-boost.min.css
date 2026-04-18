@@ -8,7 +8,6 @@
   border-radius: 8px;
   margin-bottom: 12px;
 }
-
 .cvr-trust-bar__item {
   display: flex;
   align-items: center;
@@ -18,15 +17,12 @@
   color: #444;
   white-space: nowrap;
 }
-
 .cvr-trust-bar__item svg {
   flex-shrink: 0;
 }
-
 .cvr-social-proof {
   margin-bottom: 16px;
 }
-
 .cvr-social-proof__stats {
   display: flex;
   justify-content: center;
@@ -37,7 +33,6 @@
   border: 2px solid #314c85;
   border-radius: 10px;
 }
-
 .cvr-social-proof__stat {
   display: flex;
   flex-direction: column;
@@ -46,7 +41,6 @@
   flex: 1;
   min-width: 0;
 }
-
 .cvr-social-proof__number {
   font-size: 22px;
   font-weight: 800;
@@ -55,21 +49,18 @@
   letter-spacing: -0.5px;
   transition: opacity 0.3s;
 }
-
 .cvr-social-proof__label {
   font-size: 10px;
   font-weight: 600;
   color: #555;
   line-height: 1.4;
 }
-
 .cvr-social-proof__divider {
   width: 1px;
   height: 32px;
   background: #ddd;
   flex-shrink: 0;
 }
-
 .cvr-live-notification {
   display: flex;
   align-items: center;
@@ -83,11 +74,9 @@
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-
 .cvr-live-notification.is-visible {
   opacity: 1;
 }
-
 .cvr-live-notification__dot {
   width: 8px;
   height: 8px;
@@ -96,27 +85,22 @@
   flex-shrink: 0;
   animation: cvr-pulse 2s infinite;
 }
-
 .cvr-live-notification__text {
   font-size: 11px;
   color: #555;
   line-height: 1.4;
 }
-
 .cvr-live-notification__text strong {
   color: #333;
 }
-
 @keyframes cvr-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.8); }
 }
-
 @keyframes cvr-slideIn {
   from { transform: translateY(-10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
-
 .cvr-hero-badge {
   display: flex;
   align-items: center;
@@ -128,7 +112,6 @@
   border-radius: 8px;
   color: #fff;
 }
-
 .cvr-hero-badge__tag {
   font-size: 12px;
   font-weight: 600;
@@ -136,19 +119,16 @@
   padding: 2px 8px;
   border-radius: 4px;
 }
-
 .cvr-hero-badge__count {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -1px;
   line-height: 1;
 }
-
 .cvr-hero-badge__unit {
   font-size: 14px;
   font-weight: 700;
 }
-
 .cvr-micro-copy {
   text-align: center;
   font-size: 12px;
@@ -156,7 +136,6 @@
   margin-top: 12px;
   padding: 0 16px;
 }
-
 .cvr-step-reason {
   text-align: center;
   font-size: 11px;
@@ -166,12 +145,10 @@
   padding: 0 8px;
   line-height: 1.5;
 }
-
 .cvr-almost-done {
   text-align: center;
   margin: 16px 0 8px;
 }
-
 .cvr-almost-done p {
   display: inline-block;
   padding: 6px 20px;
@@ -181,7 +158,6 @@
   font-weight: 700;
   color: #314c85;
 }
-
 .cvr-final-step {
   display: flex;
   align-items: center;
@@ -192,7 +168,6 @@
   background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
   border-radius: 10px;
 }
-
 .cvr-final-step__icon {
   display: flex;
   align-items: center;
@@ -202,13 +177,11 @@
   background: #fff;
   border-radius: 50%;
 }
-
 .cvr-final-step p {
   font-size: 14px;
   font-weight: 700;
   color: #2e7d32;
 }
-
 .p-step07__tel {
   position: relative !important;
 }
@@ -226,7 +199,6 @@
   z-index: 2;
   pointer-events: none;
 }
-
 .cvr-tel-reassurance {
   display: flex;
   align-items: center;
@@ -236,11 +208,9 @@
   color: #777;
   line-height: 1.4;
 }
-
 .cvr-tel-reassurance svg {
   flex-shrink: 0;
 }
-
 /* プライバシーポリシー同意テキスト */
 p.cvr-pp-text {
   text-align: center;
@@ -258,7 +228,6 @@ p.cvr-pp-text a {
   margin-top: 32px;
   padding: 0 4px;
 }
-
 .cvr-testimonials__title {
   font-size: 16px;
   font-weight: 700;
@@ -268,7 +237,6 @@ p.cvr-pp-text a {
   position: relative;
   padding-bottom: 8px;
 }
-
 .cvr-testimonials__title::after {
   content: "";
   display: block;
@@ -278,7 +246,6 @@ p.cvr-pp-text a {
   margin: 8px auto 0;
   border-radius: 2px;
 }
-
 .cvr-testimonial {
   background: #fff;
   border: 1px solid #e8e8e8;
@@ -287,14 +254,12 @@ p.cvr-pp-text a {
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-
 .cvr-testimonial__header {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
-
 .cvr-testimonial__avatar {
   width: 40px;
   height: 40px;
@@ -308,46 +273,38 @@ p.cvr-pp-text a {
   font-weight: 700;
   flex-shrink: 0;
 }
-
 .cvr-testimonial__meta {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
-
 .cvr-testimonial__name {
   font-size: 13px;
   font-weight: 700;
   color: #333;
 }
-
 .cvr-testimonial__role {
   font-size: 11px;
   color: #888;
 }
-
 .cvr-testimonial__stars {
   color: #FFC107;
   font-size: 14px;
   letter-spacing: 1px;
 }
-
 .cvr-testimonial__text {
   font-size: 13px;
   line-height: 1.7;
   color: #555;
 }
-
 .cvr-testimonial__text strong {
   color: #ff5966;
 }
-
 .cvr-faq {
   margin-top: 32px;
   margin-bottom: 24px;
   padding: 0 4px;
 }
-
 .cvr-faq__title {
   font-size: 16px;
   font-weight: 700;
@@ -356,7 +313,6 @@ p.cvr-pp-text a {
   color: #333;
   position: relative;
 }
-
 .cvr-faq__title::after {
   content: "";
   display: block;
@@ -366,7 +322,6 @@ p.cvr-pp-text a {
   margin: 8px auto 0;
   border-radius: 2px;
 }
-
 .cvr-faq__item {
   border: 1px solid #e8e8e8;
   border-radius: 10px;
@@ -374,7 +329,6 @@ p.cvr-pp-text a {
   overflow: hidden;
   background: #fff;
 }
-
 .cvr-faq__item summary {
   padding: 14px 40px 14px 16px;
   font-size: 13px;
@@ -385,11 +339,9 @@ p.cvr-pp-text a {
   line-height: 1.5;
   list-style: none;
 }
-
 .cvr-faq__item summary::-webkit-details-marker {
   display: none;
 }
-
 .cvr-faq__item summary::after {
   content: "+";
   position: absolute;
@@ -401,22 +353,18 @@ p.cvr-pp-text a {
   color: #999;
   transition: transform 0.2s;
 }
-
 .cvr-faq__item[open] summary::after {
   content: "-";
 }
-
 .cvr-faq__item p {
   padding: 0 16px 14px;
   font-size: 12px;
   line-height: 1.7;
   color: #666;
 }
-
 .footer-dark {
   padding: 16px;
 }
-
 .footer-dark .div-block-96 {
   display: flex;
   flex-wrap: wrap;
@@ -424,24 +372,20 @@ p.cvr-pp-text a {
   gap: 16px;
   margin-bottom: 12px;
 }
-
 .footer-dark .link {
   font-size: 11px;
   color: rgba(255,255,255,0.7);
   text-decoration: underline;
   transition: color 0.2s;
 }
-
 .footer-dark .link:hover {
   color: #fff;
 }
-
 .footer-dark .copyright {
   font-size: 10px;
   color: rgba(255,255,255,0.5);
   margin-top: 8px;
 }
-
 .c-next-button span:first-child {
   font-size: 15px;
   font-weight: 700;
@@ -459,12 +403,10 @@ p.cvr-pp-text a {
   flex: 1;
   text-align: center;
 }
-
 .js-form-group {
   position: relative;
   overflow: visible;
 }
-
 .c-fixed-icon {
   z-index: 2;
   pointer-events: none;
@@ -473,7 +415,6 @@ p.cvr-pp-text a {
   top: auto;
   bottom: -10px;
 }
-
 .cvr-testimonials,
 .cvr-faq {
   position: relative;
@@ -481,24 +422,19 @@ p.cvr-pp-text a {
   content-visibility: auto;
   contain-intrinsic-size: auto 480px;
 }
-
 .c-container {
   overflow: visible !important;
 }
-
 .c-step__no li.is-on {
   background: linear-gradient(135deg, #314c85, #5c6bc0);
   box-shadow: 0 2px 4px rgba(49, 76, 133, 0.3);
 }
-
 .c-button {
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
-
 .p-firstButton {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-
 .c-zip-text input,
 .c-zip-text input[type="tel"],
 .p-step05__address.c-zip-text input {
@@ -508,13 +444,11 @@ p.cvr-pp-text a {
   left: 16px;
   font-size: 16px;
 }
-
 .c-text-box:focus {
   border-color: #314c85;
   box-shadow: 0 0 0 3px rgba(49, 76, 133, 0.15);
   background: #fff;
 }
-
 /* ========== フローティングCTA ========== */
 .cvr-floating-cta {
   position: fixed;
@@ -559,7 +493,6 @@ p.cvr-pp-text a {
   color: #888;
   margin-top: 4px;
 }
-
 /* ========== 離脱防止モーダル（JSはDOMのみ生成） ========== */
 @keyframes cvr-exitFadeIn {
   from { opacity: 0; }
@@ -632,7 +565,6 @@ p.cvr-pp-text a {
   font-size: 12px;
   cursor: pointer;
 }
-
 /* スマホ最適化 */
 .cvr-floating-cta { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 .l-footer { padding-bottom: 80px; }
@@ -642,82 +574,66 @@ html { scroll-behavior: smooth; }
 .c-text-box, .c-select-box02 select { min-height: 52px; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #314c85; outline-offset: 2px; }
 .c-button, .p-firstButton, .c-next-button { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-
 /* FVにCTAを収めるための余白圧縮 */
 @media (max-width: 767px) {
   .l-main { margin: 0 auto; width: 95%; }
   .c-container { padding: 0 8px 32px; }
   .l-header__container { padding: 4px 8px; }
-
   /* 信頼性バー - 1行に収める */
   .cvr-trust-bar { padding: 4px 4px; margin-bottom: 4px; gap: 8px; }
   .cvr-trust-bar__item { font-size: 9px; gap: 2px; }
   .cvr-trust-bar__item svg { width: 12px; height: 12px; }
-
   /* 社会的証明 */
   .cvr-social-proof { margin-bottom: 4px; }
   .cvr-social-proof__stats { padding: 6px 4px; gap: 6px; }
   .cvr-social-proof__number { font-size: 18px; }
   .cvr-social-proof__label { font-size: 9px; }
   .cvr-social-proof__divider { height: 20px; }
-
   /* リアルタイム通知 */
   .cvr-live-notification { padding: 4px 8px; margin-bottom: 4px; }
   .cvr-live-notification__text { font-size: 10px; }
-
   /* バナー画像を大幅に小さく */
   #step-first > picture,
   .p-first > picture { display: block; }
   #step-first > picture img,
   .p-first > picture img { max-height: 100px !important; object-fit: cover; width: 100%; border-radius: 6px; }
-
   /* ヒーローバッジ */
   .cvr-hero-badge { padding: 4px 10px; margin: 2px 0; }
   .cvr-hero-badge__count { font-size: 20px; }
   .cvr-hero-badge__tag { font-size: 9px; padding: 1px 5px; }
   .cvr-hero-badge__unit { font-size: 11px; }
-
   /* タイトル */
   .c-title-top { padding: 6px 0; margin-bottom: 4px; }
   .c-title01 { padding: 4px 0 2px; font-size: 14px; }
-
   /* CTAボタン - コンパクトに */
   .p-first__buttonArea { padding: 0 4px; gap: 6px; }
   .p-firstButton { min-height: 56px; }
   .p-firstButton__container { padding: 0 10px; }
   .p-firstButton__icon { width: 32px; margin-right: 4px; }
   .p-firstButton__text { font-size: 13px; margin-left: 2px; }
-
   /* マイクロコピー */
   .cvr-micro-copy { margin-top: 4px; font-size: 10px; }
 }
-
 @media (min-width: 768px) {
   .cvr-trust-bar {
     gap: 24px;
     padding: 10px 16px;
   }
-
   .cvr-trust-bar__item {
     font-size: 12px;
   }
-
   .cvr-social-proof__number {
     font-size: 28px;
   }
-
   .cvr-social-proof__label {
     font-size: 12px;
   }
-
   .cvr-hero-badge__count {
     font-size: 36px;
   }
-
   .cvr-testimonial {
     padding: 20px;
   }
-
   .cvr-testimonial__text {
     font-size: 14px;
   }
