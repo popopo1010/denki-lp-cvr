@@ -109,14 +109,67 @@
     });
   }
 
+  // ========== フローティングCTA ==========
+  function initFloatingCta() {
+    var cta = document.getElementById("floating-cta");
+    var btn = document.getElementById("floating-cta-btn");
+    if (!cta || !btn) return;
+
+    var shown = false;
+    window.addEventListener("scroll", function () {
+      var scrollPct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      if (scrollPct > 0.15 && !shown) {
+        shown = true;
+        cta.classList.add("is-visible");
+      } else if (scrollPct <= 0.1 && shown) {
+        shown = false;
+        cta.classList.remove("is-visible");
+      }
+    }, { passive: true });
+
+    btn.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      cta.classList.remove("is-visible");
+      shown = false;
+    });
+  }
+
+  // ========== 数値カウントアップ ==========
+  function initCountUp() {
+    var els = document.querySelectorAll(".cvr-social-proof__number");
+    if (!els.length) return;
+    var done = false;
+    var observer = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting || done) return;
+      done = true;
+      els.forEach(function (el) {
+        var target = parseInt(el.textContent.replace(/,/g, ""), 10);
+        var duration = 1500;
+        var start = 0;
+        var startTime = null;
+        function step(ts) {
+          if (!startTime) startTime = ts;
+          var progress = Math.min((ts - startTime) / duration, 1);
+          var val = Math.floor(progress * target);
+          el.textContent = val.toLocaleString();
+          if (progress < 1) requestAnimationFrame(step);
+          else el.textContent = target.toLocaleString();
+        }
+        requestAnimationFrame(step);
+      });
+    }, { threshold: 0.5 });
+    observer.observe(els[0].closest(".cvr-social-proof"));
+  }
+
   // ========== 初期化 ==========
   document.addEventListener("DOMContentLoaded", function () {
-    // utm_term設定
     var h4 = document.getElementById("hidden4");
     if (h4) h4.value = getParam("utm_term") || "";
 
     initNotifications();
     initExitIntent();
     initFormTracking();
+    initFloatingCta();
+    initCountUp();
   });
 })();
