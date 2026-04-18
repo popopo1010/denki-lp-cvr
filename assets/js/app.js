@@ -71,6 +71,11 @@
     stopBounce();
     icon = page.querySelector(".js-fixed-icon");
 
+    // step-firstに戻った場合は通知等を再表示
+    if (pageId === "#step-first") {
+      document.querySelectorAll(".is-hidden").forEach(el => el.classList.remove("is-hidden"));
+    }
+
     window.scrollTo(0, 0);
 
     page.style.display = "block";
@@ -105,6 +110,10 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+
+    // ステップ遷移時に通知・社会的証明・信頼バーを非表示
+    const hideOnStep = document.querySelectorAll(".cvr-live-notification, .cvr-social-proof, .cvr-trust-bar");
+    hideOnStep.forEach(el => el.classList.add("is-hidden"));
 
     // step05→step06遷移時に名前を挿入
     if (pageTo === "step06") {

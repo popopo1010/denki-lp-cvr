@@ -87,6 +87,9 @@
 .cvr-live-notification.is-visible {
   opacity: 1;
 }
+.cvr-live-notification.is-hidden {
+  display: none !important;
+}
 
 .cvr-live-notification__dot {
   width: 8px;
