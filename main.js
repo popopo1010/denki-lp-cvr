@@ -171,7 +171,7 @@
           if (titles[i]) titles[i].classList.remove(SKIP);
         }
       });
-      if (states.every(Boolean)) nextBtn.classList.remove(DISABLE);
+      nextBtn.classList.toggle(DISABLE, !states.every(Boolean));
     }
     sync();
 

@@ -455,6 +455,30 @@
   font-weight: 700;
 }
 
+/* ========== フォームグループのoverflow制御 ========== */
+.js-form-group {
+  position: relative;
+  overflow: visible;
+}
+
+/* ========== クマアイコンのz-index制御 ========== */
+.c-fixed-icon {
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ========== フォーム外セクションの表示制御 ========== */
+.cvr-testimonials,
+.cvr-faq {
+  position: relative;
+  z-index: 0;
+}
+
+/* ========== containerのoverflow修正 ========== */
+.c-container {
+  overflow: visible !important;
+}
+
 /* ========== プログレスバーの視認性向上 ========== */
 .c-step__no li.is-on {
   background: linear-gradient(135deg, #314c85, #5c6bc0);
