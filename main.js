@@ -180,12 +180,18 @@
       sync();
 
       if (states.every(Boolean)) {
-        // 両方選択済み → 自動で次のステップへ遷移
+        // 両方選択済み → クマをnextBtnへ移動して自動遷移
+        const linkArea = nextBtn.closest(".c-nextLink");
+        if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
         nextBtn.click();
       } else {
-        // 未選択のセクションへスクロール誘導
+        // 未選択のセクションへクマ移動+スクロール誘導
         for (let i = 0; i < states.length; i++) {
           if (!states[i] && titles[i]) {
+            // 次のボタングリッドにクマを移動
+            const nextSection = titles[i].closest(".c-section");
+            const nextGrid = nextSection ? nextSection.querySelector(".c-button-grid") : null;
+            if (nextGrid && icon) { nextGrid.style.position = "relative"; nextGrid.appendChild(icon); }
             titles[i].scrollIntoView({ behavior: "smooth", block: "start" });
             break;
           }
