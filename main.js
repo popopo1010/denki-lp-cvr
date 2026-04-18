@@ -493,55 +493,28 @@
   function initZapierMirror() {
     const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
     const form = document.querySelector(".wpcf7-form");
-    console.log("[Zapier mirror] init, form found:", !!form);
     if (!form) return;
     let sentOnce = false;
 
-    function sendToZapier(trigger) {
+    function sendToZapier() {
       if (sentOnce) return;
       sentOnce = true;
       try {
         const fd = new FormData(form);
         const params = new URLSearchParams();
-        fd.forEach((v, k) => {
-          if (k.startsWith("_wpcf7")) return;
-          params.append(k, v == null ? "" : String(v));
-        });
+        fd.forEach((v, k) => { if (!k.startsWith("_wpcf7")) params.append(k, v == null ? "" : String(v)); });
         params.append("_page", location.href);
         params.append("_referrer", document.referrer || "");
         params.append("_submitted_at", new Date().toISOString());
-        params.append("_trigger", trigger);
-
-        const bodyStr = params.toString();
-        console.log("[Zapier mirror] sending via", trigger, Object.fromEntries(params));
-        const blob = new Blob([bodyStr], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+        const blob = new Blob([params.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
         const sent = navigator.sendBeacon && navigator.sendBeacon(ZAPIER_URL, blob);
-        console.log("[Zapier mirror] sendBeacon result:", sent);
-        if (!sent) {
-          fetch(ZAPIER_URL, {
-            method: "POST",
-            mode: "no-cors",
-            keepalive: true,
-            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-            body: bodyStr
-          }).then(() => console.log("[Zapier mirror] fetch fallback ok"))
-            .catch(err => console.warn("[Zapier mirror] fetch fallback failed", err));
-        }
-      } catch (e) {
-        console.warn("[Zapier mirror] error", e);
-        sentOnce = false;
-      }
+        if (!sent) fetch(ZAPIER_URL, { method: "POST", mode: "no-cors", keepalive: true, body: params.toString() }).catch(() => {});
+      } catch (e) { sentOnce = false; }
     }
 
-    form.addEventListener("submit", () => sendToZapier("submit"), { capture: true });
-
-    const submitBtn = form.querySelector('#submit-button, input[type="submit"], button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.addEventListener("click", () => sendToZapier("click"), { capture: true });
-    }
-
-    document.addEventListener("wpcf7beforesubmit", () => sendToZapier("wpcf7beforesubmit"));
-    document.addEventListener("wpcf7submit", () => sendToZapier("wpcf7submit"));
+    form.addEventListener("submit", sendToZapier, { capture: true });
+    const submitBtn = form.querySelector('#submit-button, input[type="submit"]');
+    if (submitBtn) submitBtn.addEventListener("click", sendToZapier, { capture: true });
   }
 
   // ========== Init ==========
