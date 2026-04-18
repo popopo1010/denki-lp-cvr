@@ -620,6 +620,16 @@
   cursor: pointer;
 }
 
+/* スマホ最適化 */
+.cvr-floating-cta { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.l-footer { padding-bottom: 80px; }
+.c-button:active, .p-firstButton:active { transform: scale(0.97); }
+.c-next-button:active { transform: translateY(3px) scale(0.98); }
+html { scroll-behavior: smooth; }
+.c-text-box, .c-select-box02 select { min-height: 52px; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #314c85; outline-offset: 2px; }
+.c-button, .p-firstButton, .c-next-button { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+
 @media (min-width: 768px) {
   .cvr-trust-bar {
     gap: 24px;
