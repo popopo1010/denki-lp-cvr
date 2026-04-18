@@ -495,8 +495,14 @@
 }
 
 /* ========== 郵便番号入力の〒マーク重なり修正 ========== */
-.c-zip-text input {
+.c-zip-text input,
+.c-zip-text input[type="tel"],
+.p-step05__address.c-zip-text input {
   padding-left: 48px !important;
+}
+.c-zip-text::before {
+  left: 16px;
+  font-size: 16px;
 }
 
 /* ========== テキストボックスフォーカス改善 ========== */
