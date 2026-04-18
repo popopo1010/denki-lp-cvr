@@ -458,24 +458,9 @@
 
     // 送信ボタン(step-last-button)の場合
     if (nextBtn.id === "step-last-button") {
-      // プライバシーポリシー同意チェック制御
-      const ppCheck = document.getElementById("pp-agree-check");
-      if (ppCheck) {
-        ppCheck.addEventListener("change", () => {
-          if (ppCheck.checked && states.every(Boolean)) {
-            nextBtn.classList.remove(DISABLE);
-            nextBtn.style.opacity = "1";
-            nextBtn.style.pointerEvents = "auto";
-          } else {
-            nextBtn.classList.add(DISABLE);
-          }
-        });
-      }
-
       nextBtn.addEventListener("click", () => {
         setTimeout(() => {
           if (!states.every(Boolean)) return;
-          if (ppCheck && !ppCheck.checked) return;
           const textEl = nextBtn.querySelector(".c-submit-button__text");
           if (textEl) textEl.innerText = "検索中...";
           nextBtn.style.pointerEvents = "none";

@@ -239,29 +239,15 @@
   flex-shrink: 0;
 }
 
-/* プライバシーポリシー同意 */
-.cvr-pp-agree {
-  margin-top: 12px;
+/* プライバシーポリシー同意テキスト */
+.cvr-pp-text {
   text-align: center;
-}
-.cvr-pp-agree__label {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 6px;
-  font-size: 11px;
-  color: #555;
+  font-size: 10px;
+  color: #999;
+  margin-top: 8px;
   line-height: 1.5;
-  cursor: pointer;
 }
-.cvr-pp-agree__checkbox {
-  width: 18px;
-  height: 18px;
-  margin-top: 1px;
-  flex-shrink: 0;
-  accent-color: #ff5966;
-  cursor: pointer;
-}
-.cvr-pp-agree__label a {
+.cvr-pp-text a {
   color: #314c85;
   text-decoration: underline;
 }
