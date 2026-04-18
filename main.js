@@ -33,14 +33,12 @@
     if (!parent) return;
     const parentRect = parent.getBoundingClientRect();
     const targetRect = iconTarget.getBoundingClientRect();
-    // ターゲットがh2等のタイトルの場合、次の兄弟要素（ボタングリッド）の中央に合わせる
     let top = targetRect.top - parentRect.top + targetRect.height / 2;
-    const nextGrid = iconTarget.tagName === "H2" && iconTarget.nextElementSibling
-      ? iconTarget.nextElementSibling.querySelector(".c-button-grid") || iconTarget.nextElementSibling
-      : null;
-    if (nextGrid) {
-      const gridRect = nextGrid.getBoundingClientRect();
-      top = gridRect.top - parentRect.top + gridRect.height / 2;
+    // タイトル要素の場合、近くのボタングリッド/ボタンエリアの中央に合わせる
+    const btnArea = parent.querySelector(".c-button-grid, .p-first__buttonArea");
+    if (btnArea && (iconTarget.tagName === "H2" || iconTarget.tagName === "SPAN" && iconTarget.closest(".c-title01"))) {
+      const areaRect = btnArea.getBoundingClientRect();
+      top = areaRect.top - parentRect.top + areaRect.height / 2;
     }
     icon.style.top = top + "px";
     icon.style.opacity = "1";
