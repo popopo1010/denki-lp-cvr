@@ -40,6 +40,7 @@ jobs:
                 --minify-css true --minify-js true \
                 --remove-redundant-attributes --remove-script-type-attributes \
                 --remove-style-link-type-attributes --use-short-doctype \
+                --continue-on-parse-error \
                 -o "$f.min"
             mv "$f.min" "$f"
           done
