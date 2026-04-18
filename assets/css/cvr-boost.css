@@ -240,15 +240,16 @@
 }
 
 /* プライバシーポリシー同意テキスト */
-.cvr-pp-text {
+p.cvr-pp-text {
   text-align: center;
-  font-size: 10px;
-  color: #999;
-  margin-top: 8px;
-  line-height: 1.5;
+  font-size: 9px !important;
+  color: #bbb !important;
+  margin-top: 6px;
+  line-height: 1.4;
+  font-weight: 400;
 }
-.cvr-pp-text a {
-  color: #314c85;
+p.cvr-pp-text a {
+  color: #bbb !important;
   text-decoration: underline;
 }
 

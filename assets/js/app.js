@@ -760,22 +760,23 @@
     observer.observe(els[0].closest(".cvr-social-proof"));
   }
 
-  // ========== 初期化（メインスレッド負荷分散: CVR 系はアイドル時、最大 ~2s で必ず実行） ==========
+  // ========== 初期化（離脱防止は即時、その他 CVR はアイドル時・最大 ~2s で実行） ==========
   document.addEventListener("DOMContentLoaded", function () {
     var h4 = document.getElementById("hidden4");
     if (h4) h4.value = getParam("utm_term") || "";
 
-    function runCvrBoost() {
+    initExitIntent();
+
+    function runCvrBoostRest() {
       initNotifications();
-      initExitIntent();
       initFormTracking();
       initFloatingCta();
       initCountUp();
     }
     if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(runCvrBoost, { timeout: 2000 });
+      requestIdleCallback(runCvrBoostRest, { timeout: 2000 });
     } else {
-      setTimeout(runCvrBoost, 0);
+      setTimeout(runCvrBoostRest, 0);
     }
   });
 })();
