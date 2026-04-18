@@ -29,8 +29,12 @@
 
   function positionIcon() {
     if (!icon || !iconTarget) return;
-    const rect = iconTarget.getBoundingClientRect();
-    icon.style.top = (window.scrollY + rect.top - header.clientHeight + rect.height / 2) + "px";
+    // クマはposition:absoluteなので、親(js-form-group)からの相対位置で計算
+    const parent = icon.closest(".js-form-group");
+    if (!parent) return;
+    const parentRect = parent.getBoundingClientRect();
+    const targetRect = iconTarget.getBoundingClientRect();
+    icon.style.top = (targetRect.top - parentRect.top + targetRect.height / 2) + "px";
     icon.style.opacity = "1";
   }
 

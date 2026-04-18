@@ -33,23 +33,15 @@
     <meta property="og:site_name" content="国内最大級の施工管理 / 電気工事士の転職・求人サービス | 電気工事キャリア">
     <meta name="twitter:card" content="summary_large_image">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="//www.googletagmanager.com">
-    <link rel="dns-prefetch" href="//yubinbango.github.io">
     <link rel="dns-prefetch" href="//geoapi.heartrails.com">
     <link rel="dns-prefetch" href="//zipcloud.ibsnet.co.jp">
-    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 
     <meta name='robots' content='max-image-preview:large' />
-    <link rel="preload" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" as="style">
     <link rel="canonical" href="https://denkilp.builders-job.com/denkikouji-kyujin-2/" />
 
-    <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"></noscript>
     <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014">
     <link rel="stylesheet" href="./cvr-boost.css">
-    <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" defer charset="UTF-8"></script>
     <script src="./main.js" defer></script>
 </head>
 
@@ -578,28 +570,6 @@
   </div>
 </div>
 
-<script>
-function getParam(name, url) {
-    if (!url) url = window.location.href;
-    name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
-(function () {
- document.getElementById("hidden4").value = getParam('utm_term');
-}());
-const slideNextButton = document.getElementById('step05-next-button');
-slideNextButton.addEventListener('click', ()=>{
-const nameinput = document.getElementById('last-name');
-const nameTxt = document.getElementById("nametxt").innerHTML;
-if(nameTxt.includes("{name}")){
-    document.getElementById("nametxt").innerHTML = nameTxt.replace('{name}',nameinput.value) ;
-  }
-})
-</script>
 <div class="wpcf7-response-output" aria-hidden="true"></div>
 </form>
 </div>
@@ -658,11 +628,6 @@ if(nameTxt.includes("{name}")){
         </article>
     </main>
 
-<script>
-document.addEventListener('wpcf7mailsent', function(event) {
-    location = 'https://denkilp.builders-job.com/thanks/';
-  }, false);
-</script>
 
 <footer class="l-footer">
     <div class="l-footer__info">
@@ -678,40 +643,7 @@ document.addEventListener('wpcf7mailsent', function(event) {
     </div>
 </footer>
 
-<script>
-(function () {
- document.getElementById("hidden4").value = getParam('utm_term');
-}());
-</script>
-
-<p class="ad_text">
-  電気主任技術者（通称：電験）資格は、電気を扱う事業における重要な国家資格であり、
-  電気事業法に基づいて設定されています。この資格体系は、電気工作物の電圧レベルに応じて、
-  第三種、第二種、そして第一種の三段階に細分化されており、
-  それぞれ異なる規模と複雑性の電気設備の保安監督業務に従事する能力を証明します。
-</p>
-
-
-<!-- CVR Boost Script -->
 <script src="./cvr-boost.js" defer></script>
-
-<script type="text/javascript">
-document.addEventListener('DOMContentLoaded', function() {
-  var btn = document.querySelector('input[type="submit"]');
-  if (btn) {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      this.style.pointerEvents = 'none';
-      var textEl = document.getElementsByClassName('c-submit-button__text')[0];
-      if (textEl) textEl.innerText = "検索中...";
-      // ローカル環境用：1.5秒後にサンクスページへ遷移
-      setTimeout(function() {
-        location = 'https://denkilp.builders-job.com/thanks/';
-      }, 1500);
-    });
-  }
-});
-</script>
 
 </body>
 </html>

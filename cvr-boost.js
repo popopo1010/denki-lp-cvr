@@ -1,14 +1,17 @@
 /**
  * CVR Boost Script - 電気工事バンク LP改善
- * - リアルタイム通知のローテーション
- * - 離脱防止ポップアップ
- * - フォーム進捗トラッキング
  */
 (function () {
   "use strict";
 
+  // ========== URL パラメータ取得 ==========
+  function getParam(name) {
+    var match = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)").exec(location.href);
+    return match && match[2] ? decodeURIComponent(match[2].replace(/\+/g, " ")) : null;
+  }
+
   // ========== リアルタイム通知ローテーション ==========
-  const notifications = [
+  var notifications = [
     { area: "東京都", time: "3分前" },
     { area: "大阪府", time: "5分前" },
     { area: "神奈川県", time: "8分前" },
@@ -24,45 +27,33 @@
   function initNotifications() {
     var el = document.getElementById("live-notification");
     if (!el) return;
-
     var textEl = el.querySelector(".cvr-live-notification__text");
     if (!textEl) return;
-
     var index = Math.floor(Math.random() * notifications.length);
 
     function show() {
       var n = notifications[index];
-      textEl.innerHTML =
-        "<strong>" + n.area + "</strong>の方が<strong>" + n.time + "</strong>に登録しました";
+      textEl.innerHTML = "<strong>" + n.area + "</strong>の方が<strong>" + n.time + "</strong>に登録しました";
       el.classList.add("is-visible");
     }
 
-    function rotate() {
-      el.classList.remove("is-visible");
-      setTimeout(function () {
-        index = (index + 1) % notifications.length;
-        show();
-      }, 500);
-    }
-
-    // 初回表示を2秒後に
     setTimeout(function () {
       show();
-      // 8秒ごとにローテーション
-      setInterval(rotate, 8000);
+      setInterval(function () {
+        el.classList.remove("is-visible");
+        setTimeout(function () { index = (index + 1) % notifications.length; show(); }, 500);
+      }, 8000);
     }, 2000);
   }
 
-  // ========== 離脱防止（モバイルではスクロール、PCではmouseleave） ==========
+  // ========== 離脱防止 ==========
   function initExitIntent() {
     var shown = false;
 
     function showExitMessage() {
       if (shown) return;
-      // フォームにすでに入力がある場合のみ表示
       var feeling = document.querySelector('input[name="your-feeling"]');
       if (!feeling || !feeling.value) return;
-
       shown = true;
 
       var overlay = document.createElement("div");
@@ -75,7 +66,6 @@
         '<button class="cvr-exit-modal__close" id="cvr-exit-close">閉じる</button>' +
         "</div>";
 
-      // スタイルを動的に追加
       var style = document.createElement("style");
       style.textContent =
         ".cvr-exit-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;animation:cvr-fadeIn .3s ease}" +
@@ -91,25 +81,14 @@
       document.head.appendChild(style);
       document.body.appendChild(overlay);
 
-      document.getElementById("cvr-exit-continue").addEventListener("click", function () {
-        overlay.remove();
-      });
-      document.getElementById("cvr-exit-close").addEventListener("click", function () {
-        overlay.remove();
-      });
-      overlay.addEventListener("click", function (e) {
-        if (e.target === overlay) overlay.remove();
-      });
+      function close() { overlay.remove(); }
+      document.getElementById("cvr-exit-continue").addEventListener("click", close);
+      document.getElementById("cvr-exit-close").addEventListener("click", close);
+      overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
     }
 
-    // PC: マウスが画面上部から出たとき
-    document.addEventListener("mouseleave", function (e) {
-      if (e.clientY < 10) {
-        showExitMessage();
-      }
-    });
+    document.addEventListener("mouseleave", function (e) { if (e.clientY < 10) showExitMessage(); });
 
-    // モバイル: 戻るボタン（popstate）
     if ("pushState" in history) {
       history.pushState(null, "", location.href);
       window.addEventListener("popstate", function () {
@@ -119,30 +98,48 @@
     }
   }
 
-  // ========== フォーム進捗のDataLayerイベント送信 ==========
+  // ========== フォームトラッキング ==========
   function initFormTracking() {
-    var buttons = document.querySelectorAll(".js-step-button");
-    buttons.forEach(function (btn) {
+    document.querySelectorAll(".js-step-button").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var pageTo = btn.dataset.pageTo;
-        if (pageTo && window.dataLayer) {
-          window.dataLayer.push({
-            event: "form_step",
-            step_name: pageTo,
-          });
+        if (btn.dataset.pageTo && window.dataLayer) {
+          window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
         }
       });
     });
+  }
 
-    // 送信完了トラッキング
-    document.addEventListener("wpcf7mailsent", function () {
-      if (window.dataLayer) {
-        window.dataLayer.push({
-          event: "form_complete",
-          form_name: "denkikouji-kyujin-2",
-        });
-      }
-    });
+  // ========== 名前挿入 + utm_term + 送信処理 ==========
+  function initInlineScripts() {
+    // utm_term をhiddenに設定
+    var h4 = document.getElementById("hidden4");
+    if (h4) h4.value = getParam("utm_term") || "";
+
+    // 名前ステップ → 最終ステップで名前を挿入
+    var nameBtn = document.getElementById("step05-next-button");
+    if (nameBtn) {
+      nameBtn.addEventListener("click", function () {
+        var nameInput = document.getElementById("last-name");
+        var nameTxt = document.getElementById("nametxt");
+        if (nameInput && nameTxt && nameTxt.innerHTML.includes("{name}")) {
+          nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", nameInput.value);
+        }
+      });
+    }
+
+    // 送信ボタン処理
+    var submitBtn = document.querySelector('input[type="submit"]');
+    if (submitBtn) {
+      submitBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        this.style.pointerEvents = "none";
+        var textEl = document.querySelector(".c-submit-button__text");
+        if (textEl) textEl.innerText = "検索中...";
+        setTimeout(function () {
+          location = "https://denkilp.builders-job.com/thanks/";
+        }, 1500);
+      });
+    }
   }
 
   // ========== 初期化 ==========
@@ -150,5 +147,6 @@
     initNotifications();
     initExitIntent();
     initFormTracking();
+    initInlineScripts();
   });
 })();
