@@ -454,19 +454,20 @@ p.cvr-pp-text a {
   color: #bbb !important;
   text-decoration: none !important;
 }
-/* クマアイコン（CTAボタン右横に重ねて配置） */
-.c-nextLink {
+/* クマアイコン（入力エリア右横に配置） */
+.cvr-kuma-wrap {
   position: relative;
 }
 .cvr-kuma {
   position: absolute;
-  right: -10px;
-  bottom: -8px;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
   pointer-events: none;
   z-index: 3;
 }
 .cvr-kuma img {
-  width: 52px;
+  width: 48px;
   height: auto;
   animation: cvr-kumaWave 2s ease-in-out infinite;
 }
@@ -474,8 +475,6 @@ p.cvr-pp-text a {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(-6px); }
 }
-/* step-firstではクマ非表示（ボタンがhiddenのため） */
-#step-first .cvr-kuma { display: none; }
 /* FVボタン中央配置 */
 .p-firstButton {
   overflow: hidden;
