@@ -235,6 +235,49 @@ html{scroll-behavior:smooth}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #314c85;outline-offset:2px}
 .is-hidden{display:none!important}
 
+/* Step layouts */
+.c-section+.c-section{margin-top:0;margin-bottom:0}
+.p-step05__info,.p-step06__info,.p-step07__info{margin-top:16px}
+.p-step05__address{position:relative;margin-top:16px}
+.p-step05__accordion{width:calc(100% - 32px);margin:8px auto 0}
+.p-step05__accordion[open] .arrow::before{transform:rotate(315deg)}
+.p-step05__accordionTrigger{display:flex;align-items:center;justify-content:center;height:40px;border-radius:8px;background:#f5f4f2;font-size:12px;cursor:pointer;list-style:none;position:relative}
+.p-step05__accordionTrigger::-webkit-details-marker{display:none}
+.p-step05__accordionTrigger .arrow{display:flex;position:absolute;top:calc(50% - 10px);right:9px;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#fff}
+.p-step05__accordionTrigger .arrow::before{width:8px;height:8px;transform:rotate(135deg);border-top:2px solid #ff5966;border-right:2px solid #ff5966;content:""}
+.p-step05__message{display:flex;align-items:center;gap:8px;margin-top:12px;padding:8px 12px;background:#fce4ec;border-radius:8px}
+.p-step05__messageImg{width:56px;flex-shrink:0}
+.p-step05__messageText{font-size:12px;line-height:1.5;color:#555}
+.p-step06__name{display:flex;gap:4px}
+.p-step06__formGroup{margin-top:12px}
+.p-step06__formGroup dt{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px}
+.p-step06__birthday{display:flex;align-items:center;gap:4px;margin-top:8px}
+.p-step06__birthdayYear{flex:2}
+.p-step06__birthdayDayMonth{flex:1}
+.suffix{font-size:14px;font-weight:700}
+.p-step07__formGroup{margin-top:12px}
+.p-step07__formGroup dt{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px}
+.p-step07__tel{position:relative;margin-top:8px}
+
+/* Micro copies */
+.cvr-micro-copy{text-align:center;font-size:11px;color:#888;margin-top:6px}
+.cvr-step-reason{text-align:center;font-size:11px;color:#888;margin-top:4px;margin-bottom:4px;line-height:1.5}
+.cvr-almost-done{text-align:center;margin:12px 0 8px}
+.cvr-almost-done p{display:inline-block;padding:6px 20px;background:linear-gradient(135deg,#e3f2fd,#e8eaf6);border-radius:20px;font-size:13px;font-weight:700;color:#314c85}
+.cvr-final-step{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 8px;padding:10px 16px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:10px}
+.cvr-final-step__icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:#fff;border-radius:50%}
+.cvr-final-step p{font-size:14px;font-weight:700;color:#2e7d32}
+.cvr-tel-notice{position:absolute;top:-7px;right:4px;padding:2px 8px;border-radius:50px;background:#f5f4f2;color:#314c85;font-weight:600;font-size:10px;line-height:15px;z-index:2;pointer-events:none}
+.cvr-tel-reassurance{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#777;line-height:1.4}
+.cvr-tel-reassurance svg{flex-shrink:0}
+.cvr-pp-text{text-align:center;font-size:9px;color:#bbb;margin-top:6px;line-height:1.4}
+.cvr-pp-text a{color:#bbb;text-decoration:underline}
+
+/* Kuma */
+.cvr-kuma{text-align:right;margin-top:-10px;margin-bottom:-10px;pointer-events:none}
+.cvr-kuma img{width:48px;animation:kumaWave 2s ease-in-out infinite}
+@keyframes kumaWave{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+
 /* SP FV圧縮 */
 @media(max-width:767px){
   .l-main{margin:0 auto;width:95%}
