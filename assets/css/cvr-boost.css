@@ -640,32 +640,26 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 
 /* FVにCTAを収めるための余白圧縮 */
 @media (max-width: 767px) {
-  /* ビューポートぴったりのflex chain */
-  body { min-height: 100svh; }
-  .l-main { margin: 0 auto; width: 95%; display: flex; flex-direction: column; }
-  .l-main > article,
-  .l-main__content { flex: 1; display: flex; flex-direction: column; }
-  .c-container { padding: 0 8px 0; flex: 1; display: flex; flex-direction: column; }
-  .wp-block-contact-form-7-contact-form-selector,
-  .wpcf7,
-  .wpcf7-form { flex: 1; display: flex; flex-direction: column; }
+  .l-main { margin: 0 auto; width: 95%; }
+  .c-container { padding: 0 8px 0; }
   .l-header__container { padding: 4px 8px; }
 
-  /* FV: マイクロコピーをビューポート最下部へ */
+  /* FV: マイクロコピーをビューポート最下部へ
+     ヘッダー(~75px) + trust-bar(~26px) + social-proof(~55px) + notification(~28px) + 余白(~16px) ≈ 200px */
   #step-first {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    min-height: calc(100svh - 200px);
   }
   #step-first .cvr-micro-copy {
     margin-top: auto;
     padding-bottom: 8px;
   }
-  /* クマ・次へボタンはマイクロコピーの上に重ねる */
+  /* クマはマイクロコピー横に配置 */
   #step-first .cvr-kuma {
     position: absolute;
     right: 0;
-    bottom: 40px;
+    bottom: 24px;
   }
   #step-first .c-nextLink { display: none; }
 
