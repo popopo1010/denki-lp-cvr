@@ -640,9 +640,34 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 
 /* FVにCTAを収めるための余白圧縮 */
 @media (max-width: 767px) {
-  .l-main { margin: 0 auto; width: 95%; }
-  .c-container { padding: 0 8px 32px; }
+  /* ビューポートぴったりのflex chain */
+  body { min-height: 100svh; }
+  .l-main { margin: 0 auto; width: 95%; display: flex; flex-direction: column; }
+  .l-main > article,
+  .l-main__content { flex: 1; display: flex; flex-direction: column; }
+  .c-container { padding: 0 8px 0; flex: 1; display: flex; flex-direction: column; }
+  .wp-block-contact-form-7-contact-form-selector,
+  .wpcf7,
+  .wpcf7-form { flex: 1; display: flex; flex-direction: column; }
   .l-header__container { padding: 4px 8px; }
+
+  /* FV: マイクロコピーをビューポート最下部へ */
+  #step-first {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  #step-first .cvr-micro-copy {
+    margin-top: auto;
+    padding-bottom: 8px;
+  }
+  /* クマ・次へボタンはマイクロコピーの上に重ねる */
+  #step-first .cvr-kuma {
+    position: absolute;
+    right: 0;
+    bottom: 40px;
+  }
+  #step-first .c-nextLink { display: none; }
 
   /* 信頼性バー - 1行に収める */
   .cvr-trust-bar { padding: 4px 4px; margin-bottom: 4px; gap: 8px; }
@@ -660,7 +685,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .cvr-live-notification { padding: 4px 8px; margin-bottom: 4px; }
   .cvr-live-notification__text { font-size: 10px; }
 
-  /* バナー画像を大幅に小さく */
+  /* バナー画像 */
   #step-first > picture,
   .p-first > picture { display: block; }
   #step-first > picture img,
