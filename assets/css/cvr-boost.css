@@ -655,12 +655,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     margin-top: auto;
     padding-bottom: 8px;
   }
-  /* クマはマイクロコピー横に配置 */
-  #step-first .cvr-kuma {
-    position: absolute;
-    right: 0;
-    bottom: 24px;
-  }
+  /* クマは選択ボタン横に配置（cvr-kuma-wrapのposition:relativeで基準） */
   #step-first .c-nextLink { display: none; }
 
   /* 信頼性バー - 1行に収める */
