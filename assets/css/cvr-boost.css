@@ -199,7 +199,8 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 
 /* クマアイコン */
 .cvr-kuma-wrap { position: relative; }
-.cvr-kuma { position: absolute; right: 0; bottom: -8px; z-index: 3; }
+.cvr-kuma-wrap > .cvr-kuma { position: absolute; right: 0; bottom: -8px; z-index: 3; }
+.cvr-kuma { text-align: right; margin-top: -10px; margin-bottom: -10px; pointer-events: none; }
 .cvr-kuma img { width: 48px; height: auto; animation: cvr-kumaWave 2s ease-in-out infinite; }
 @keyframes cvr-kumaWave {
   0%, 100% { transform: translateX(0); }

@@ -21,46 +21,24 @@
 
   // ========== Icon system (DOM移動方式) ==========
   let icon = null;
-  let bounceId = null;
 
-  function moveIcon(targetEl) {
+  function moveIcon(targetEl, scroll) {
     if (!icon || !targetEl) return;
-    // クマをターゲット要素の親に挿入（ターゲットの直後に配置）
-    const wrapper = targetEl.closest(".c-section, .p-first__buttonArea, .p-step05__address, .p-step06__name, .p-step07__tel, .c-nextLink, .js-form-group");
+    const wrapper = targetEl.closest(".c-section, .p-first__buttonArea, .p-step05__address, .p-step06__name, .p-step07__tel, .c-nextLink, .p-step06__birthday, .js-form-group");
     if (wrapper) {
       wrapper.style.position = "relative";
       if (icon.parentNode !== wrapper) wrapper.appendChild(icon);
     }
-    icon.style.opacity = "1";
+    icon.style.cssText = "position:absolute;right:-8px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:3;opacity:1";
+    if (scroll && wrapper) {
+      setTimeout(() => wrapper.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+    }
   }
 
-  function moveIconById(id) {
+  function moveIconById(id, scroll) {
     if (!id || id === "#") return;
     const el = document.querySelector(id);
-    if (el) moveIcon(el);
-  }
-
-  function startBounce() {
-    stopBounce();
-    if (!icon) return;
-    let x = 0;
-    let dir = -1;
-    function tick() {
-      bounceId = requestAnimationFrame(tick);
-      x += dir * 0.5;
-      if (x <= -15) dir = 1;
-      if (x >= 0) dir = -1;
-      icon.style.transform = "translateX(" + x + "px)";
-    }
-    bounceId = requestAnimationFrame(tick);
-  }
-
-  function stopBounce() {
-    if (bounceId != null) {
-      cancelAnimationFrame(bounceId);
-      bounceId = null;
-    }
-    if (icon) icon.style.transform = "";
+    if (el) moveIcon(el, scroll);
   }
 
   // ========== Page transitions ==========
@@ -68,8 +46,7 @@
     const page = document.querySelector(pageId);
     if (!page) return;
 
-    stopBounce();
-    icon = page.querySelector(".js-fixed-icon");
+    icon = page.querySelector(".cvr-kuma");
 
     // step-firstに戻った場合は通知等を再表示
     if (pageId === "#step-first") {
@@ -83,12 +60,12 @@
     page.style.transform = "translateX(50px)";
     page.style.transition = "none";
 
-    // クマを最初のボタンエリアに配置
-    const firstBtnArea = page.querySelector(".p-first__buttonArea, .c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
-    if (firstBtnArea && icon) {
-      firstBtnArea.style.position = "relative";
-      firstBtnArea.appendChild(icon);
-      icon.style.opacity = "1";
+    // クマを最初の入力エリアに配置
+    const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
+    if (firstArea && icon) {
+      firstArea.style.position = "relative";
+      firstArea.appendChild(icon);
+      icon.style.cssText = "position:absolute;right:-8px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:3;opacity:1";
     }
 
     requestAnimationFrame(() => {
@@ -98,7 +75,6 @@
         page.style.transform = "translateX(0)";
 
         setTimeout(() => {
-          startBounce();
           const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
           if (autoFocus && !autoFocus.value) autoFocus.focus();
         }, 320);
@@ -123,8 +99,6 @@
         nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
       }
     }
-
-    stopBounce();
 
     cur.style.display = "none";
     cur.style.opacity = "0";
@@ -197,7 +171,6 @@
       if (states.every(Boolean)) {
         // 両方選択済み → 直接ページ遷移
         nextBtn.classList.remove(DISABLE);
-        stopBounce();
         const cur = nextBtn.closest(".js-form-group");
         cur.style.display = "none";
         cur.style.opacity = "0";
@@ -254,9 +227,7 @@
       updateHiddens();
       if (hasAny()) {
         nextBtn.classList.remove(DISABLE);
-        // クマを次へボタンの親(c-nextLink)に移動
-        const linkArea = nextBtn.closest(".c-nextLink");
-        if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
+        moveIconById("#" + nextBtn.id, true);
         target.classList.add(SKIP);
       } else {
         nextBtn.classList.add(DISABLE);
@@ -332,6 +303,7 @@
         citySel.classList.add(SKIP);
         valid = true;
         updateBtn();
+        moveIconById("#" + nextBtn.id, true);
       } catch (e) {}
     }
 
@@ -399,7 +371,13 @@
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
         if (errBox) errBox.style.display = "none";
-        moveIconById("#" + nextBtn.id);
+        // 生年月日エリアにクマを移動してスクロール
+        const bday = group.querySelector(".p-step06__birthday");
+        if (bday && icon) {
+          moveIcon(bday, true);
+        } else {
+          moveIconById("#" + nextBtn.id, true);
+        }
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
