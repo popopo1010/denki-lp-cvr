@@ -259,10 +259,7 @@
   margin-top: 10px;
 }
 
-/* ===== 旧FVヒーロー非表示 ===== */
-.ns-fv-hero { display: none; }
-
-/* 通知テキスト「登録」→ このLPは年収診断なのでそのまま */
+/* 通知 */
 .cvr-live-notification { margin-top: 8px; }
 
 /* ===== SP最適化 ===== */
