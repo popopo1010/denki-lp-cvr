@@ -55,7 +55,7 @@
 
     window.scrollTo(0, 0);
 
-    page.style.display = "block";
+    page.style.display = pageId === "#step-first" ? "flex" : "block";
     page.style.opacity = "0";
     page.style.transform = "translateX(50px)";
     page.style.transition = "none";

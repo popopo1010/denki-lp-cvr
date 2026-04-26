@@ -271,9 +271,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .c-container { padding: 0 8px 0; }
   .l-header__container { padding: 4px 8px; }
 
-  /* FV: マイクロコピーをビューポート最下部へ
-     JSのshowPageがdisplay:blockで上書きするため!importantが必要 */
-  #step-first { display: flex !important; flex-direction: column; min-height: calc(100vh - 200px); min-height: calc(100svh - 200px); }
+  /* FV: マイクロコピーをビューポート最下部へ (displayはJSのshowPageで制御) */
+  #step-first { flex-direction: column; min-height: calc(100vh - 200px); min-height: calc(100svh - 200px); }
   #step-first .cvr-micro-copy { margin-top: auto; padding-bottom: 8px; }
   #step-first .c-nextLink { visibility: hidden; height: 0; overflow: hidden; }
 
