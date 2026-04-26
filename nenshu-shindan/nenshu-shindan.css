@@ -232,8 +232,9 @@
 .ns-salary-data__card-salary {
   padding: 10px 14px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
   flex: 1;
   min-width: 0;
 }
@@ -250,7 +251,7 @@
 }
 .ns-salary-data__card-avg strong {
   color: #333;
-  font-size: 13px;
+  font-size: 12px;
 }
 .ns-salary-data__note {
   text-align: center;
