@@ -55,10 +55,16 @@
 
     window.scrollTo(0, 0);
 
-    page.style.display = pageId === "#step-first" ? "flex" : "block";
-    page.style.opacity = "0";
-    page.style.transform = "translateX(50px)";
-    page.style.transition = "none";
+    if (pageId === "#step-first") {
+      page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
+      var mc = page.querySelector(".cvr-micro-copy");
+      if (mc) mc.style.marginTop = "auto";
+    } else {
+      page.style.display = "block";
+      page.style.opacity = "0";
+      page.style.transform = "translateX(50px)";
+      page.style.transition = "none";
+    }
 
     // クマを最初の入力エリアに配置
     const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
