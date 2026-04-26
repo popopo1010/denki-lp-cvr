@@ -29,7 +29,7 @@
       wrapper.style.position = "relative";
       if (icon.parentNode !== wrapper) wrapper.appendChild(icon);
     }
-    icon.style.cssText = "position:absolute;right:-8px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:3;opacity:1";
+    icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
     if (scroll && wrapper) {
       setTimeout(() => wrapper.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
     }
@@ -71,7 +71,7 @@
     if (firstArea && icon) {
       firstArea.style.position = "relative";
       firstArea.appendChild(icon);
-      icon.style.cssText = "position:absolute;right:-8px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:3;opacity:1";
+      icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
     }
 
     requestAnimationFrame(() => {
