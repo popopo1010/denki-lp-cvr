@@ -712,39 +712,6 @@
     });
   }
 
-  // ========== フローティングCTA ==========
-  function initFloatingCta() {
-    var cta = document.getElementById("floating-cta");
-    var btn = document.getElementById("floating-cta-btn");
-    if (!cta || !btn) return;
-
-    var shown = false;
-    var ticking = false;
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(function () {
-        ticking = false;
-        var range = document.body.scrollHeight - window.innerHeight;
-        var scrollPct = range > 0 ? window.scrollY / range : 0;
-        if (scrollPct > 0.15 && !shown) {
-          shown = true;
-          cta.classList.add("is-visible");
-        } else if (scrollPct <= 0.1 && shown) {
-          shown = false;
-          cta.classList.remove("is-visible");
-        }
-      });
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    btn.addEventListener("click", function () {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      cta.classList.remove("is-visible");
-      shown = false;
-    });
-  }
-
   // ========== 数値カウントアップ ==========
   function initCountUp() {
     var els = document.querySelectorAll(".cvr-social-proof__number");
@@ -754,17 +721,18 @@
       if (!entries[0].isIntersecting || done) return;
       done = true;
       els.forEach(function (el) {
-        var target = parseInt(el.textContent.replace(/,/g, ""), 10);
+        var raw = el.textContent;
+        var suffix = raw.replace(/[\d,]/g, "");
+        var target = parseInt(raw.replace(/[^\d]/g, ""), 10);
         var duration = 1500;
-        var start = 0;
         var startTime = null;
         function step(ts) {
           if (!startTime) startTime = ts;
           var progress = Math.min((ts - startTime) / duration, 1);
           var val = Math.floor(progress * target);
-          el.textContent = val.toLocaleString();
+          el.textContent = val.toLocaleString() + suffix;
           if (progress < 1) requestAnimationFrame(step);
-          else el.textContent = target.toLocaleString();
+          else el.textContent = target.toLocaleString() + suffix;
         }
         requestAnimationFrame(step);
       });
@@ -782,7 +750,6 @@
     function runCvrBoostRest() {
       initNotifications();
       initFormTracking();
-      initFloatingCta();
       initCountUp();
     }
     if (typeof requestIdleCallback === "function") {
