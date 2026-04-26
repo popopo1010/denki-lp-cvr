@@ -514,17 +514,19 @@
     let sentOnce = false;
     let clientIp = "";
 
-    function fetchClientIp() {
+    // IP取得はstep04到達時に遅延実行（初期ロード高速化）
+    let ipFetched = false;
+    function fetchClientIpOnce() {
+      if (ipFetched) return;
+      ipFetched = true;
       fetch("https://api.ipify.org?format=json")
         .then(r => r.ok ? r.json() : null)
         .then(d => { if (d && d.ip) clientIp = d.ip; })
         .catch(() => {});
     }
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(fetchClientIp, { timeout: 5000 });
-    } else {
-      setTimeout(fetchClientIp, 2000);
-    }
+    document.querySelectorAll('.js-step-button[data-page-to="step04"]').forEach(b =>
+      b.addEventListener("click", fetchClientIpOnce, { once: true })
+    );
 
     function sendToZapier() {
       if (sentOnce) return;
