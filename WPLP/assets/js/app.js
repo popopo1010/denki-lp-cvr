@@ -69,7 +69,7 @@
     if (!page) return;
 
     stopBounce();
-    icon = page.querySelector(".js-fixed-icon");
+    icon = page.querySelector(".cvr-kuma, .js-fixed-icon");
 
     // step-firstに戻った場合は通知等を再表示
     if (pageId === "#step-first") {
