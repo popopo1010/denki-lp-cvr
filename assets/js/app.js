@@ -46,7 +46,7 @@
     const page = document.querySelector(pageId);
     if (!page) return;
 
-    icon = page.querySelector(".cvr-kuma");
+    icon = page.querySelector(".cvr-kuma, .js-fixed-icon");
 
     // step-firstに戻った場合は通知等を再表示
     if (pageId === "#step-first") {
@@ -462,7 +462,9 @@
           // Store phone for email correlation on thanks page
           const tel = document.querySelector('input[name="your-tel"]');
           if (tel && tel.value) try { sessionStorage.setItem("_tel", tel.value); } catch(e) {}
-          setTimeout(() => { location.href = "/thanks/"; }, 1500);
+          var thanksUrl = "/thanks/";
+          if (window.__LP_ID && window.__LP_ID.indexOf("nenshu-shindan") === 0) thanksUrl = "/nenshu-shindan/thanks/";
+          setTimeout(() => { location.href = thanksUrl; }, 1500);
         }, 500);
       });
     }
