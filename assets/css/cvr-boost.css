@@ -165,7 +165,14 @@ p.cvr-pp-text { text-align: center; font-size: 9px !important; color: #bbb !impo
 p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 
 /* ===== 利用者の声 ===== */
-.cvr-testimonials { margin-top: 32px; padding: 0 4px; }
+/* content-visibility: ファーストビュー外なので初期描画スキップ → LCP改善
+   contain-intrinsic-size: スクロール前のレイアウト確保用 */
+.cvr-testimonials {
+  margin-top: 32px;
+  padding: 0 4px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 800px;
+}
 .cvr-testimonials__title {
   font-size: 16px; font-weight: 700; text-align: center;
   margin-bottom: 16px; color: #333; padding-bottom: 8px;
@@ -194,7 +201,13 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 .cvr-testimonial__text strong { color: #ff5966; }
 
 /* ===== FAQ ===== */
-.cvr-faq { margin-top: 32px; margin-bottom: 24px; padding: 0 4px; }
+.cvr-faq {
+  margin-top: 32px;
+  margin-bottom: 24px;
+  padding: 0 4px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
 .cvr-faq__title { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 16px; color: #333; }
 .cvr-faq__title::after {
   content: ""; display: block; width: 40px; height: 3px;
