@@ -10,7 +10,9 @@ const patternPages = {
     "index.html",
     "denkikouji/index.html",
     "sekoukanri/index.html",
-    "nenshu-shindan/index.html",
+    "sekoukanri-kentiku/index.html",
+    "sekoukanri-doboku/index.html",
+    "sekoukanri-denkisekou/index.html",
     "thanks/index.html",
     "privacypolicy/index.html"
   ],
@@ -18,12 +20,18 @@ const patternPages = {
     "WPLP/index.html",
     "WPLP/denkikouji/index.html",
     "WPLP/sekoukanri/index.html",
+    "WPLP/sekoukanri-kentiku/index.html",
+    "WPLP/sekoukanri-doboku/index.html",
+    "WPLP/sekoukanri-denkisekou/index.html",
     "WPLP/thanks/index.html",
     "WPLP/privacypolicy/index.html"
   ],
   "standalone": [
     "自前LP/denkikouji/index.html",
     "自前LP/sekoukanri/index.html",
+    "自前LP/sekoukanri-kentiku/index.html",
+    "自前LP/sekoukanri-doboku/index.html",
+    "自前LP/sekoukanri-denkisekou/index.html",
     "自前LP/thanks/index.html",
     "自前LP/privacypolicy/index.html"
   ]
@@ -32,11 +40,30 @@ const patternPages = {
 const formPages = [
   "denkikouji/index.html",
   "sekoukanri/index.html",
-  "nenshu-shindan/index.html",
+  "sekoukanri-kentiku/index.html",
+  "sekoukanri-doboku/index.html",
+  "sekoukanri-denkisekou/index.html",
+  "nenshu-shindan/sekoukanri/index.html",
+  "nenshu-shindan/sekoukanri-kentiku/index.html",
+  "nenshu-shindan/sekoukanri-doboku/index.html",
+  "nenshu-shindan/sekoukanri-denkisekou/index.html",
+  "meta-lp/denkikouji/index.html",
+  "meta-lp/sekoukanri-kentiku/index.html",
+  "meta-lp/sekoukanri-doboku/index.html",
+  "meta-lp/sekoukanri-denkisekou/index.html",
+  "meta-lp/nenshu-shindan-kentiku/index.html",
+  "meta-lp/nenshu-shindan-doboku/index.html",
+  "meta-lp/nenshu-shindan-denkisekou/index.html",
   "WPLP/denkikouji/index.html",
   "WPLP/sekoukanri/index.html",
+  "WPLP/sekoukanri-kentiku/index.html",
+  "WPLP/sekoukanri-doboku/index.html",
+  "WPLP/sekoukanri-denkisekou/index.html",
   "自前LP/denkikouji/index.html",
-  "自前LP/sekoukanri/index.html"
+  "自前LP/sekoukanri/index.html",
+  "自前LP/sekoukanri-kentiku/index.html",
+  "自前LP/sekoukanri-doboku/index.html",
+  "自前LP/sekoukanri-denkisekou/index.html"
 ];
 
 const requiredFormTokens = [

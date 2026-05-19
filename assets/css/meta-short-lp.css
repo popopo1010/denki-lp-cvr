@@ -1,0 +1,125 @@
+/**
+ * Meta広告送客用ショートLP（meta-lp/）
+ * 1画面FV・下部の長尺コンテンツを抑え、フォーム導線を優先
+ */
+body.meta-short-lp {
+  background: #f6f8fb;
+}
+
+body.meta-short-lp .l-header {
+  padding: 8px 0;
+}
+
+body.meta-short-lp .l-header__title {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+body.meta-short-lp .cvr-live-notification,
+body.meta-short-lp .cvr-social-proof,
+body.meta-short-lp .cvr-trust-bar,
+body.meta-short-lp .cvr-testimonials,
+body.meta-short-lp .cvr-faq,
+body.meta-short-lp .cvr-floating-cta,
+body.meta-short-lp .cvr-lp-hub {
+  display: none !important;
+}
+
+body.meta-short-lp #step-first.meta-fv {
+  padding: 12px 0 8px;
+  min-height: calc(100dvh - 120px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.meta-fv__eyebrow {
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0d6b3f;
+  letter-spacing: 0.04em;
+}
+
+.meta-fv__title {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 1.45rem;
+  line-height: 1.45;
+  font-weight: 800;
+  color: #1a2b4a;
+}
+
+.meta-fv__title strong {
+  color: #e8520e;
+}
+
+.meta-fv__sub {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #5a6478;
+  line-height: 1.5;
+}
+
+.meta-fv__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.meta-fv__cta {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ff8a2a 0%, #e8520e 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(232, 82, 14, 0.35);
+}
+
+.meta-fv__cta--ghost {
+  background: #fff;
+  color: #314c85;
+  border: 2px solid #c5d0e8;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+.meta-fv__trust {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 0.68rem;
+  color: #8a94a8;
+}
+
+body.meta-short-lp.lp-form-step .l-header {
+  display: none;
+}
+
+/* 年収診断Meta：FVをさらにコンパクト */
+body.meta-short-lp.ns-lp .ns-fv__loss,
+body.meta-short-lp.ns-lp .ns-fv__card-sub {
+  display: none;
+}
+
+body.meta-short-lp.ns-lp .ns-fv__card-title {
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+body.meta-short-lp.ns-lp #step-first {
+  min-height: auto;
+  padding-top: 4px;
+}
+
+body.meta-short-lp.ns-lp .ns-header-bar__sub {
+  display: none;
+}
