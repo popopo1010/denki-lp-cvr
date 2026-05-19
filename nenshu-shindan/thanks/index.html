@@ -330,11 +330,31 @@ body{background:#f5f7fa}
   var lineBtn = document.getElementById("line-cta");
   if (lineBtn) lineBtn.href = LINE_URL;
 
+  // LINEクリック/自動遷移をGAS Sheetsに記録（電話番号で既存行を更新）
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
+  var lineNotifiedOnce = false;
+  function notifyLineClick() {
+    if (lineNotifiedOnce || !tel) return;
+    lineNotifiedOnce = true;
+    var p = new URLSearchParams();
+    p.append("_event", "line_click");
+    p.append("your-tel", tel);
+    p.append("_lp", "nenshu-shindan-thanks");
+    p.append("_page", location.href);
+    var body = p.toString();
+    var blob = new Blob([body], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+    if (!(navigator.sendBeacon && navigator.sendBeacon(GAS_URL, blob))) {
+      fetch(GAS_URL, { method: "POST", mode: "no-cors", keepalive: true, body: body }).catch(function(){});
+    }
+  }
+  if (lineBtn) lineBtn.addEventListener("click", notifyLineClick);
+
   // サンクス表示後にLINE公式アカウントへ（プレビュー用 ?no_line_redirect=1 で無効化）
   if (!/[?&]no_line_redirect=1/.test(location.search)) {
     setTimeout(function() {
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({ event: "line_redirect", page_type: "nenshu-shindan-thanks" });
+      notifyLineClick();
       location.href = LINE_URL;
     }, 2000);
   }
