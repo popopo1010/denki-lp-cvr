@@ -370,10 +370,45 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step .p-step05__info.c-info-text,
   body.lp-form-step .p-step06__info.c-info-text { margin: 4px 0; font-size: 10px; }
 
-  body.lp-form-step .c-button-grid { margin-top: 6px; gap: 5px; }
-  body.lp-form-step .c-button { padding: 6px 4px 2px; }
-  body.lp-form-step .c-button__img { height: 34px; }
-  body.lp-form-step .c-button__text { min-height: 26px; font-size: 12px; line-height: 1.35; }
+  body.lp-form-step .c-button-grid { margin-top: 8px; gap: 8px; }
+  body.lp-form-step .c-button {
+    padding: 14px 8px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+  body.lp-form-step .c-button__img {
+    height: auto !important;
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+  body.lp-form-step .c-button__img picture {
+    display: inline-flex;
+    line-height: 0;
+  }
+  body.lp-form-step .c-button__img img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    display: block;
+  }
+  body.lp-form-step .c-button__text {
+    min-height: 0;
+    font-size: 12px;
+    line-height: 1.3;
+    text-align: center;
+    display: block;
+    word-break: keep-all;
+  }
 
   /* 資格選択肢が9個以上(施工管理 11択)のLPのみアイコン非表示でコンパクト化。
      6-8択のLP(電気工事士など)では下のブロックで通常サイズ＋アイコン表示。 */
@@ -457,18 +492,26 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     font-size: 11px;
     line-height: 1.25;
   }
-  /* 選択肢が8個以下のLP(電気工事士6択など)は大きめサイズ + アイコン表示 */
+  /* 選択肢が8個以下のLP(電気工事士6択など)は大きめサイズ + アイコン表示。
+     アイコン+gap+text+padding が収まるよう min-height は余裕を持って106px。 */
   body.lp-form-step #step01 .p-step01__button.c-button {
-    min-height: 88px;
-    padding: 12px 8px;
+    min-height: 106px;
+    padding: 14px 8px;
+    gap: 10px;
     box-shadow: 1px 1px 0 #dadada;
   }
+  body.lp-form-step #step01 .p-step01__button .c-button__img {
+    width: 40px;
+    height: 40px;
+  }
   body.lp-form-step #step01 .p-step01__button .c-button__img img {
-    height: 38px;
+    max-width: 40px;
+    max-height: 40px;
     object-fit: contain;
   }
   body.lp-form-step #step01 .p-step01__button .c-button__text {
     font-size: 14px;
+    font-weight: 700;
     line-height: 1.3;
   }
   body.lp-form-step #step01 .c-nextLink {
@@ -477,6 +520,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-top: 4px;
     padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   }
+  /* CTAの下に次セクション(testimonials)とのbreathing space */
+  body.lp-form-step .js-page-body { padding-bottom: 32px; }
+  body.lp-form-step .cvr-testimonials { margin-top: 48px; }
   body.lp-form-step #step01 .c-next-button { min-height: 48px; padding: 10px 12px; }
   /* クマアイコンは step01 でも表示する（以前は圧縮のため非表示にしていたが、視認性のため復活） */
   body.lp-form-step .l-header__title .adtext { font-size: 10px; line-height: 1.25; }
