@@ -17,7 +17,7 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
-PORT = 8917
+PORT = 8979
 
 LPS = [
     "index.html",

@@ -501,9 +501,9 @@
           // Store phone for email correlation on thanks page
           const tel = document.querySelector('input[name="your-tel"]');
           if (tel && tel.value) try { sessionStorage.setItem("_tel", tel.value); } catch(e) {}
-          var thanksUrl = "/thanks/";
-          if (window.__LP_ID && window.__LP_ID.indexOf("nenshu-shindan") === 0) thanksUrl = "/denki-lp-cvr/nenshu-shindan/thanks/";
-          setTimeout(() => { location.href = thanksUrl; }, 1500);
+          // 新redesign版 thanks は CV計測タグ設定が未確定のため、
+          // 一旦すべて旧 WordPress thanks(/thanks/) へ統一
+          setTimeout(() => { location.href = "/thanks/"; }, 1500);
         }, 500);
       });
     }

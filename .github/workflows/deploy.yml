@@ -75,6 +75,7 @@ jobs:
             --exclude='thanks/' \
             --exclude='WPLP/thanks/' \
             --exclude='自前LP/thanks/' \
+            --exclude='nenshu-shindan/thanks/' \
             -e "ssh -p $XSERVER_PORT -i ~/.ssh/id_ed25519" \
             ./ "$XSERVER_USER@$XSERVER_HOST:$XSERVER_DEPLOY_PATH/"
 
