@@ -321,6 +321,75 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .cvr-hero-badge { margin: 6px 0; }
   .c-title-top { margin-bottom: 8px; }
   .p-first__buttonArea { gap: 10px; }
+
+  /* フォームステップ（step-first以外）を1画面に収める */
+  body.lp-form-step .l-header__sub { display: none; }
+  body.lp-form-step .l-header__container { padding: 3px 8px; }
+  body.lp-form-step .l-header__message { margin-top: 2px; }
+  body.lp-form-step .l-header__message span { font-size: 11px; }
+  body.lp-form-step .c-container { padding-bottom: 8px; }
+
+  body.lp-form-step .c-step { padding-top: 6px; }
+  body.lp-form-step .c-step__no { gap: 3px; }
+  body.lp-form-step .c-step__no li { width: 22px; height: 22px; font-size: 14px; }
+  body.lp-form-step .c-step__title { font-size: 12px; }
+  body.lp-form-step .c-step__text { font-size: 9px; }
+  body.lp-form-step .c-step__text span { font-size: 12px; }
+
+  body.lp-form-step .c-title01,
+  body.lp-form-step .c-title02 { padding: 4px 0 2px; font-size: 14px; line-height: 1.35; }
+  body.lp-form-step .c-title02 { padding-top: 8px; }
+  body.lp-form-step .cvr-step-reason { margin: 2px 0; font-size: 10px; line-height: 1.4; }
+  body.lp-form-step .p-step05__info.c-info-text,
+  body.lp-form-step .p-step06__info.c-info-text { margin: 4px 0; font-size: 10px; }
+
+  body.lp-form-step .c-button-grid { margin-top: 6px; gap: 5px; }
+  body.lp-form-step .c-button { padding: 6px 4px 2px; }
+  body.lp-form-step .c-button__img { height: 34px; }
+  body.lp-form-step .c-button__text { min-height: 26px; font-size: 12px; line-height: 1.35; }
+
+  /* 資格など選択肢が多いステップはアイコン非表示でコンパクトに */
+  body.lp-form-step .p-step01__button .c-button__img { display: none; }
+  body.lp-form-step .p-step01__button.c-button {
+    padding: 8px 6px;
+    min-height: 40px;
+    justify-content: center;
+  }
+  body.lp-form-step .p-step01__button .c-button__text { min-height: 0; font-size: 11px; }
+
+  body.lp-form-step .c-section + .c-section .c-title02 { padding-top: 4px; }
+  body.lp-form-step .c-section + .c-section .cvr-step-reason { display: none; }
+  /* 1ステップに複数設問がある場合（経験＋雇用形態など） */
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__img { display: none; }
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button {
+    padding: 8px 6px;
+    min-height: 38px;
+    justify-content: center;
+  }
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__text { min-height: 0; font-size: 11px; }
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button-grid { margin-top: 4px; }
+
+  body.lp-form-step .c-nextLink { margin-top: 6px; gap: 4px; }
+  body.lp-form-step .c-next-button { min-height: 48px; padding: 10px 12px; }
+  body.lp-form-step .c-next-button span:first-child { font-size: 14px; }
+  body.lp-form-step .cvr-kuma img,
+  body.lp-form-step .c-fixed-icon { width: 36px; }
+
+  body.lp-form-step .js-form-group > p[style*="font-size:10px"] {
+    margin-top: 4px !important;
+    font-size: 9px !important;
+  }
+}
+
+/* 短い画面（in-appブラウザ等）向けの追加圧縮 */
+@media (max-width: 767px) and (max-height: 740px) {
+  body.lp-form-step .c-step { padding-top: 4px; }
+  body.lp-form-step .c-button-grid { gap: 4px; }
+  body.lp-form-step .p-step01__button.c-button { min-height: 36px; padding: 6px 4px; }
+  body.lp-form-step .p-step01__button .c-button__text { font-size: 10px; }
+  body.lp-form-step .c-button__img { height: 28px; }
+  body.lp-form-step .c-button__text { min-height: 22px; font-size: 11px; }
+  body.lp-form-step .c-next-button { min-height: 44px; }
 }
 
 /* ===== PC最適化 ===== */

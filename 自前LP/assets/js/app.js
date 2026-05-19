@@ -76,6 +76,8 @@
       document.querySelectorAll(".is-hidden").forEach(el => el.classList.remove("is-hidden"));
     }
 
+    document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+
     window.scrollTo(0, 0);
 
     page.style.display = "block";

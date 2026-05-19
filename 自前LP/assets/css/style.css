@@ -281,6 +281,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   .c-button{padding:8px 6px 4px}
   .c-button__img{height:42px}
   .c-button__text{min-height:32px;font-size:13px}
+
+  body.lp-form-step .l-header__sub{display:none}
+  body.lp-form-step .c-step{padding-top:6px}
+  body.lp-form-step .c-step__no li{width:22px;height:22px;font-size:14px}
+  body.lp-form-step .cvr-step-reason{margin:2px 0;font-size:10px}
+  body.lp-form-step .p-step01__button .c-button__img{display:none}
+  body.lp-form-step .p-step01__button.c-button{padding:8px 6px;min-height:40px;justify-content:center}
+  body.lp-form-step .p-step01__button .c-button__text{min-height:0;font-size:11px}
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__img{display:none}
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button{padding:8px 6px;min-height:38px;justify-content:center}
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__text{min-height:0;font-size:11px}
 }
 
 @media(min-width:768px){
