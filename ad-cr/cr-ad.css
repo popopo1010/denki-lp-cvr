@@ -83,6 +83,27 @@ body {
   );
 }
 
+.cr-ad__hook {
+  position: relative;
+  z-index: 3;
+  flex-shrink: 0;
+  text-align: center;
+  padding: max(8px, env(safe-area-inset-top, 0px) + 6px) 12px 0;
+}
+.cr-ad__hook-label {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  font-size: clamp(13px, 3.7vw, 15px);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.45;
+  padding: 8px 14px;
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
 .cr-ad__main {
   position: relative;
   z-index: 1;
@@ -90,7 +111,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: max(5%, calc(env(safe-area-inset-top, 0px) + 12px));
+  padding-top: max(2%, 8px);
   padding-right: max(8px, env(safe-area-inset-right, 0px));
   padding-left: max(8px, env(safe-area-inset-left, 0px));
   min-height: 0;
@@ -164,6 +185,17 @@ body {
 @keyframes cr-card-in {
   from { opacity: 0; transform: translateY(12px) scale(0.96); }
   to { opacity: 1; transform: none; }
+}
+
+.cr-ad__card-title {
+  background: #0d6b3f;
+  color: #fff;
+  font-size: clamp(12px, 3.4vw, 14px);
+  font-weight: 800;
+  text-align: center;
+  padding: 9px 10px;
+  line-height: 1.45;
+  letter-spacing: 0.06em;
 }
 
 .cr-ad__q {
@@ -318,38 +350,6 @@ body {
 body.cr-recording .cr-guide,
 body.cr-record .cr-guide { display: none !important; }
 
-/* カード内フッター（Meta入稿用） */
-.cr-ad__card-foot {
-  display: none;
-  background: linear-gradient(160deg, #0f7a49 0%, #0d6b3f 45%, #0a5230 100%);
-  padding: 14px 12px 16px;
-  text-align: center;
-  color: #fff;
-}
-.cr-ad__card-foot-tag {
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.5;
-  margin: 0 0 8px;
-  opacity: 0.95;
-}
-.cr-ad__card-foot-brand {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-.cr-ad__card-foot-brand small {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  opacity: 0.88;
-  margin-bottom: 3px;
-}
-
 /* ===== Meta Reels/Stories 入稿用（?meta=1） ===== */
 body.cr-meta {
   background: #0a1f14;
@@ -375,20 +375,22 @@ body.cr-meta .cr-ad__bg::after {
     #0d6b3f 100%
   );
 }
-body.cr-meta .cr-ad__footer {
-  display: none;
+body.cr-meta .cr-ad__hook {
+  padding-top: max(12px, env(safe-area-inset-top, 0px) + 10px);
 }
 body.cr-meta .cr-ad__main {
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding-top: 12%;
-  padding-bottom: 20%;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(2%, 10px);
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
 }
 body.cr-meta .cr-ad__side {
-  top: 14%;
+  top: max(6%, env(safe-area-inset-top, 0px) + 48px);
   right: max(8px, env(safe-area-inset-right, 0px));
+}
+body.cr-meta .cr-ad__footer {
+  padding-bottom: max(22px, env(safe-area-inset-bottom, 0px) + 20px);
 }
 body.cr-meta .cr-ad__niche {
   border-radius: 4px;
@@ -423,9 +425,6 @@ body.cr-meta .cr-ad__cta {
   padding: 16px 12px;
   animation: none;
   box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
-}
-body.cr-meta .cr-ad__card-foot {
-  display: block;
 }
 
 /* Meta安全域ガイド（?meta=1&guide=1） */

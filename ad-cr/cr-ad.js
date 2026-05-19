@@ -4,6 +4,23 @@
 
   var amountEl = document.getElementById("cr-amount");
 
+  function setText(id, text, asHtml) {
+    var el = document.getElementById(id);
+    if (!el || text == null) return;
+    if (asHtml) el.innerHTML = text;
+    else el.textContent = text;
+  }
+
+  if (cfg.hook) {
+    var hookLabel = document.querySelector("#cr-hook .cr-ad__hook-label");
+    if (hookLabel) hookLabel.textContent = cfg.hook;
+  }
+  setText("cr-card-title", cfg.cardTitle);
+  setText("cr-niche", cfg.niche);
+  setText("cr-tagline", cfg.tagline);
+  setText("cr-sub", cfg.sub);
+  if (cfg.brand) setText("cr-brand", "<small>無料</small>" + cfg.brand, true);
+
   var phases = cfg.amounts.map(function (v, i) {
     return {
       value: v,
