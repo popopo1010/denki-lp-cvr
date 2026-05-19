@@ -196,7 +196,57 @@ function handleLineClick(params) {
   }
 }
 
-function doGet() {
+function doGet(e) {
+  // ?setup=legend で凡例シートを構築・更新
+  if (e && e.parameter && e.parameter.setup === "legend") {
+    var msg = setupColumnsLegend();
+    return ContentService.createTextOutput(msg).setMimeType(ContentService.MimeType.TEXT);
+  }
   return ContentService.createTextOutput("LP form recorder is alive.")
     .setMimeType(ContentService.MimeType.TEXT);
+}
+
+// 凡例シートの中身。カラム名 / 意味 / 備考 の3列
+const COLUMNS_LEGEND = [
+  ["カラム名", "意味", "備考"],
+  ["_received_at", "GAS受信時刻", "サーバー側で記録した日本時間 (yyyy-MM-dd HH:mm:ss)"],
+  ["_lp", "送信元LP識別子", "sekoukanri / denkikouji / sekoukanri-doboku / sekoukanri-kentiku / sekoukanri-denkisekou / *-meta / nenshu-shindan-* / thanks / nenshu-shindan-thanks など"],
+  ["your-tel", "電話番号", "ハイフンなし11桁。先頭0はスプシで欠落表示することがある"],
+  ["your-last-name", "姓", ""],
+  ["your-first-name", "名", ""],
+  ["your-birthday", "生年月日 (YYYY-MM-DD)", "year/month/day から GAS が自動生成"],
+  ["your-birthday-year", "生年（西暦）", ""],
+  ["your-birthday-month", "生月", ""],
+  ["your-birthday-day", "生日", ""],
+  ["your-zip", "郵便番号", "ハイフンなし7桁"],
+  ["your-pref", "都道府県", "郵便番号APIから自動入力"],
+  ["your-city", "市区町村", "郵便番号APIから自動入力"],
+  ["your-license01", "保有資格", "例: 1級電気施工管理技士 / 第二種電気工事士 など"],
+  ["your-experience", "経験年数", "例: 施工管理経験 / 未経験 など"],
+  ["your-willingness", "転職意欲", "近いうちに転職したい / 良い求人があれば / 未回答 など"],
+  ["your-feeling", "step01の気持ち", "FVの初期回答(年収UP・残業少ない・休日多い 等)"],
+  ["your-term", "利用規約同意", ""],
+  ["line_clicked_at", "LINE追加クリック時刻", "thanksページでLINEボタンを押した(or 自動遷移直前)に記録。空ならLINE未登録"],
+  ["_submitted_at", "クライアント送信時刻", "ブラウザがフォーム送信した日本時間"],
+  ["_page", "送信時のURL", ""],
+  ["_referrer", "流入元URL", "どこからLPに来たか"],
+  ["_ip", "IPアドレス", "送信者IP (api.ipify.org経由)"],
+  ["_user_agent", "UA文字列", "ブラウザ・デバイス情報"]
+];
+
+function setupColumnsLegend() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName("columns_legend");
+  if (!sheet) {
+    sheet = ss.insertSheet("columns_legend");
+  } else {
+    sheet.clear();
+  }
+  sheet.getRange(1, 1, COLUMNS_LEGEND.length, 3).setValues(COLUMNS_LEGEND);
+  sheet.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#f0f0f0");
+  sheet.setColumnWidth(1, 200);
+  sheet.setColumnWidth(2, 220);
+  sheet.setColumnWidth(3, 500);
+  sheet.setFrozenRows(1);
+  return "columns_legend updated: " + COLUMNS_LEGEND.length + " rows";
 }
