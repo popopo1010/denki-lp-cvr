@@ -46,7 +46,10 @@
     const page = document.querySelector(pageId);
     if (!page) return;
 
-    icon = page.querySelector(".cvr-kuma, .js-fixed-icon");
+    // step-firstからスタートしたkumaを各ステップで使い回す。
+    // 各stepにkuma要素は無いので、見つかった時だけ更新（無ければ前回のicon参照を保持）。
+    const foundIcon = page.querySelector(".cvr-kuma, .js-fixed-icon");
+    if (foundIcon) icon = foundIcon;
 
     // step-firstに戻った場合は通知等を再表示
     if (pageId === "#step-first") {

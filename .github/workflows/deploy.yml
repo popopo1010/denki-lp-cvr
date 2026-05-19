@@ -31,7 +31,10 @@ jobs:
             esbuild assets/js/app.js --minify --allow-overwrite --outfile=assets/js/app.js
           npx -y --package=esbuild@0.23.1 -- \
             esbuild assets/css/cvr-boost.css --minify --allow-overwrite --outfile=assets/css/cvr-boost.css
-          for f in index.html denkikouji/index.html sekoukanri/index.html; do
+          npx -y --package=esbuild@0.23.1 -- \
+            esbuild assets/css/meta-short-lp.css --minify --allow-overwrite --outfile=assets/css/meta-short-lp.css
+          for f in index.html denkikouji/index.html sekoukanri/index.html \
+            sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
             npx -y --package=html-minifier-terser@7.2.0 -- \
               html-minifier-terser "$f" \
                 --collapse-whitespace --remove-comments \
@@ -63,6 +66,9 @@ jobs:
             --exclude='実装依頼書.md' \
             --exclude='package.json' \
             --exclude='README.md' \
+            --exclude='thanks/' \
+            --exclude='WPLP/thanks/' \
+            --exclude='自前LP/thanks/' \
             -e "ssh -p $XSERVER_PORT -i ~/.ssh/id_ed25519" \
             ./ "$XSERVER_USER@$XSERVER_HOST:$XSERVER_DEPLOY_PATH/"
 
