@@ -575,6 +575,14 @@
     width: 100%;
     box-sizing: border-box;
   }
+
+  /* 年収診断LPは .ns-header-bar(~87px) + .ns-step-progress(~39px) = ~126px が常時表示。
+     cvr-boost.css の #step01 { min-height: calc(100svh - 72px) } では CTA が画面外に出るため上書き。
+     meta-lp/nenshu-shindan-* はヘッダーが薄い(~53px)が、安全側に同じ値で揃える。 */
+  body.lp-form-step #step01 {
+    min-height: calc(100svh - 132px) !important;
+    min-height: calc(100dvh - 132px) !important;
+  }
 }
 
 @media (min-width: 768px) {
