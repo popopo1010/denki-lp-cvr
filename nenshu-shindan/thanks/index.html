@@ -126,7 +126,7 @@ body{background:#f5f7fa}
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>チャットで気軽に<strong>年収相談</strong>OK</span></div>
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>年収UP求人を<strong>リアルタイム通知</strong></span></div>
     </div>
-    <a href="https://lin.ee/placeholder" class="t-line__btn" target="_blank" rel="noopener">
+    <a href="https://line.me/R/ti/p/@944wdqpz?oat_content=url" class="t-line__btn" id="line-cta" target="_blank" rel="noopener noreferrer">
       <svg viewBox="0 0 24 24" width="22" height="22"><path d="M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="#fff"/></svg>
       LINE友だち追加
     </a>
@@ -275,6 +275,7 @@ body{background:#f5f7fa}
 <script>
 (function(){
   var HOOK = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
+  var LINE_URL = "https://line.me/R/ti/p/@944wdqpz?oat_content=url";
 
   // Personalize with user name from cookie
   var m = document.cookie.match(/(^| )user-name=([^;]+)/);
@@ -325,6 +326,18 @@ body{background:#f5f7fa}
 
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: "form_complete", page_type: "nenshu-shindan-thanks" });
+
+  var lineBtn = document.getElementById("line-cta");
+  if (lineBtn) lineBtn.href = LINE_URL;
+
+  // サンクス表示後にLINE公式アカウントへ（プレビュー用 ?no_line_redirect=1 で無効化）
+  if (!/[?&]no_line_redirect=1/.test(location.search)) {
+    setTimeout(function() {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: "line_redirect", page_type: "nenshu-shindan-thanks" });
+      location.href = LINE_URL;
+    }, 2000);
+  }
 })();
 </script>
 </body>
