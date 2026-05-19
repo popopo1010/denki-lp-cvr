@@ -38,6 +38,8 @@ const PREFERRED_COLUMNS = [
   "your-willingness",
   "your-feeling",
   "your-term",
+  "your-email",
+  "email_captured_at",
   "line_clicked_at",
   "_submitted_at",
   "_page",
@@ -109,9 +111,12 @@ function doPost(e) {
       for (var k in e.parameter) { params[k] = e.parameter[k]; }
     }
 
-    // LINE追加クリックイベントは別ハンドラ（既存行を更新）
+    // LINE追加クリックイベント・メール登録イベントは別ハンドラ（既存行を更新）
     if (params["_event"] === "line_click") {
       return handleLineClick(params);
+    }
+    if (params["_event"] === "email_capture") {
+      return handleEmailCapture(params);
     }
 
     // 通常のフォーム送信処理
@@ -149,6 +154,66 @@ function doPost(e) {
     sheet.appendRow(row);
 
     return jsonOk();
+  } catch (err) {
+    return jsonError(err);
+  }
+}
+
+// thanksページのメール登録イベント。電話番号で最新行を検索し your-email / email_captured_at を更新。
+// 該当行が無い場合（電話番号未一致）は新規行として append する。
+function handleEmailCapture(params) {
+  try {
+    var email = params["your-email"];
+    var tel = params["your-tel"];
+    if (!email) return jsonOk({ matched: false, note: "no email" });
+
+    var sheet = getSheet();
+    var header = ensureHeader(sheet);
+    var emailColIdx = header.indexOf("your-email");
+    var capturedColIdx = header.indexOf("email_captured_at");
+    if (emailColIdx === -1) {
+      emailColIdx = header.length;
+      header.push("your-email");
+      sheet.getRange(1, emailColIdx + 1).setValue("your-email");
+    }
+    if (capturedColIdx === -1) {
+      capturedColIdx = header.length;
+      header.push("email_captured_at");
+      sheet.getRange(1, capturedColIdx + 1).setValue("email_captured_at");
+    }
+    var nowJst = toJst(new Date());
+
+    if (tel) {
+      var telColIdx = header.indexOf("your-tel");
+      var lastRow = sheet.getLastRow();
+      if (telColIdx !== -1 && lastRow >= 2) {
+        var telVals = sheet.getRange(2, telColIdx + 1, lastRow - 1, 1).getValues();
+        var telKey = normalizeTel(tel);
+        var matchedRow = -1;
+        for (var i = telVals.length - 1; i >= 0; i--) {
+          if (normalizeTel(telVals[i][0]) === telKey) {
+            matchedRow = i + 2;
+            break;
+          }
+        }
+        if (matchedRow > 0) {
+          sheet.getRange(matchedRow, emailColIdx + 1).setValue(email);
+          sheet.getRange(matchedRow, capturedColIdx + 1).setValue(nowJst);
+          return jsonOk({ matched: true, row: matchedRow });
+        }
+      }
+    }
+
+    // 電話番号が無い or 一致行が無い場合は新規行として append
+    params["_received_at"] = nowJst;
+    params["email_captured_at"] = nowJst;
+    if (params["_submitted_at"]) params["_submitted_at"] = toJst(params["_submitted_at"]);
+    var row = [];
+    for (var j = 0; j < header.length; j++) {
+      row.push((header[j] in params) ? params[header[j]] : "");
+    }
+    sheet.appendRow(row);
+    return jsonOk({ matched: false, appended: true });
   } catch (err) {
     return jsonError(err);
   }
@@ -226,6 +291,8 @@ const COLUMNS_LEGEND = [
   ["your-willingness", "転職意欲", "近いうちに転職したい / 良い求人があれば / 未回答 など"],
   ["your-feeling", "step01の気持ち", "FVの初期回答(年収UP・残業少ない・休日多い 等)"],
   ["your-term", "利用規約同意", ""],
+  ["your-email", "メールアドレス", "thanksページのメール登録フォームで取得。電話番号で既存行に紐付け"],
+  ["email_captured_at", "メール登録時刻", "thanksページでメール送信した日本時間。空ならメール未登録"],
   ["line_clicked_at", "LINE追加クリック時刻", "thanksページでLINEボタンを押した(or 自動遷移直前)に記録。空ならLINE未登録"],
   ["_submitted_at", "クライアント送信時刻", "ブラウザがフォーム送信した日本時間"],
   ["_page", "送信時のURL", ""],
