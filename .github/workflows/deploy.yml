@@ -38,6 +38,9 @@ jobs:
           fi
           for f in index.html denkikouji/index.html sekoukanri/index.html \
             sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
+            if [ ! -f "$f" ]; then
+              echo "skip (not in repo): $f"; continue
+            fi
             npx -y --package=html-minifier-terser@7.2.0 -- \
               html-minifier-terser "$f" \
                 --collapse-whitespace --remove-comments \
