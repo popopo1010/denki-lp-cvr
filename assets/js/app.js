@@ -518,9 +518,11 @@
     if (d) { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
   }
 
-  // ========== Zapier Webhook mirror ==========
+  // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
   function initZapierMirror() {
     const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
+    // GAS Web App URL（デプロイ後にここへ貼る。空のままなら GAS送信は無効）
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
     const form = document.querySelector(".wpcf7-form");
     if (!form) return;
     let sentOnce = false;
@@ -540,7 +542,14 @@
       b.addEventListener("click", fetchClientIpOnce, { once: true })
     );
 
-    function sendToZapier() {
+    function postTo(url, body) {
+      if (!url) return;
+      const blob = new Blob([body], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+      const sent = navigator.sendBeacon && navigator.sendBeacon(url, blob);
+      if (!sent) fetch(url, { method: "POST", mode: "no-cors", keepalive: true, body: body }).catch(() => {});
+    }
+
+    function sendToMirrors() {
       if (sentOnce) return;
       sentOnce = true;
       try {
@@ -553,15 +562,15 @@
         params.append("_lp", window.__LP_ID || "unknown");
         params.append("_ip", clientIp);
         params.append("_user_agent", navigator.userAgent || "");
-        const blob = new Blob([params.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
-        const sent = navigator.sendBeacon && navigator.sendBeacon(ZAPIER_URL, blob);
-        if (!sent) fetch(ZAPIER_URL, { method: "POST", mode: "no-cors", keepalive: true, body: params.toString() }).catch(() => {});
+        const body = params.toString();
+        postTo(ZAPIER_URL, body);
+        postTo(GAS_URL, body);
       } catch (e) { sentOnce = false; }
     }
 
-    form.addEventListener("submit", sendToZapier, { capture: true });
+    form.addEventListener("submit", sendToMirrors, { capture: true });
     const submitBtn = form.querySelector('#submit-button, input[type="submit"]');
-    if (submitBtn) submitBtn.addEventListener("click", sendToZapier, { capture: true });
+    if (submitBtn) submitBtn.addEventListener("click", sendToMirrors, { capture: true });
   }
 
   // ========== Init ==========
