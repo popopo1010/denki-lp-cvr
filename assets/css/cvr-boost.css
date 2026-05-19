@@ -373,7 +373,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step .c-button-grid { margin-top: 8px; gap: 8px; }
   body.lp-form-step .c-button {
     padding: 14px 8px;
-    min-height: 110px;
+    min-height: 116px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -396,14 +396,15 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     line-height: 0;
   }
   body.lp-form-step .c-button__img img {
-    width: 42px;
-    height: 42px;
+    width: 54px;
+    height: 54px;
     object-fit: contain;
     display: block;
   }
   body.lp-form-step .c-button__text {
     min-height: 0;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 700;
     line-height: 1.3;
     text-align: center;
     display: block;
@@ -493,20 +494,21 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     line-height: 1.25;
   }
   /* 選択肢が8個以下のLP(電気工事士6択など)は大きめサイズ + アイコン表示。
-     アイコン+gap+text+padding が収まるよう min-height は余裕を持って106px。 */
+     箱を大きくしてCTAまでの空きを減らす + 視認性UP */
   body.lp-form-step #step01 .p-step01__button.c-button {
-    min-height: 106px;
-    padding: 14px 8px;
-    gap: 10px;
+    min-height: 124px;
+    padding: 16px 10px;
+    gap: 12px;
     box-shadow: 1px 1px 0 #dadada;
   }
   body.lp-form-step #step01 .p-step01__button .c-button__img {
-    width: 40px;
-    height: 40px;
+    height: auto !important;
   }
   body.lp-form-step #step01 .p-step01__button .c-button__img img {
-    max-width: 40px;
-    max-height: 40px;
+    width: 52px;
+    height: 52px;
+    max-width: none;
+    max-height: none;
     object-fit: contain;
   }
   body.lp-form-step #step01 .p-step01__button .c-button__text {
