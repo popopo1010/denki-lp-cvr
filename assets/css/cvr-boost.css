@@ -512,7 +512,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     object-fit: contain;
   }
   body.lp-form-step #step01 .p-step01__button .c-button__text {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.3;
   }

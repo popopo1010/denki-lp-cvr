@@ -81,16 +81,19 @@
       icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
     }
 
+    // iOS Safari でキーボードを自動で開くには、ユーザータップ直後の同期focusが必須。
+    // setTimeoutの中で focus() してもキーボードは開かないため、ここで先に同期で focus する。
+    // (transition前にfocusしてもinputは見えているのでUX的に問題ない)
+    const autoFocusEl = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
+    if (autoFocusEl && !autoFocusEl.value) {
+      try { autoFocusEl.focus({ preventScroll: true }); } catch (e) { autoFocusEl.focus(); }
+    }
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";
         page.style.opacity = "1";
         page.style.transform = "translateX(0)";
-
-        setTimeout(() => {
-          const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
-          if (autoFocus && !autoFocus.value) autoFocus.focus();
-        }, 320);
       });
     });
   }
