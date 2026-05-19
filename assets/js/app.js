@@ -567,9 +567,9 @@
       } catch (e) { sentOnce = false; }
     }
 
+    // required(電話番号)チェック通過後に dispatchEvent('submit') 経由で発火する。
+    // submit ボタンの click capture には登録しない（未入力でゴミデータが飛ぶのを防ぐため）。
     form.addEventListener("submit", sendToMirrors, { capture: true });
-    const submitBtn = form.querySelector('#submit-button, input[type="submit"]');
-    if (submitBtn) submitBtn.addEventListener("click", sendToMirrors, { capture: true });
   }
 
   // ========== Init ==========
