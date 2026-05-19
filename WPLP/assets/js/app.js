@@ -80,10 +80,14 @@
 
     window.scrollTo(0, 0);
 
-    page.style.display = "block";
-    page.style.opacity = "0";
-    page.style.transform = "translateX(50px)";
-    page.style.transition = "none";
+    if (pageId === "#step01") {
+      page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 72px);min-height:calc(100dvh - 72px);opacity:0;transform:translateX(50px);transition:none";
+    } else {
+      page.style.display = "block";
+      page.style.opacity = "0";
+      page.style.transform = "translateX(50px)";
+      page.style.transition = "none";
+    }
 
     // クマを最初のボタンエリアに配置
     const firstBtnArea = page.querySelector(".p-first__buttonArea, .c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");

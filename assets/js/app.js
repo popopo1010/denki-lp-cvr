@@ -61,6 +61,8 @@
       page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
       var mc = page.querySelector(".cvr-micro-copy");
       if (mc) mc.style.marginTop = "auto";
+    } else if (pageId === "#step01") {
+      page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 72px);min-height:calc(100dvh - 72px);opacity:0;transform:translateX(50px);transition:none";
     } else {
       page.style.display = "block";
       page.style.opacity = "0";
