@@ -142,24 +142,63 @@
   z-index: 1;
   background: #fff;
   border-radius: 14px;
-  padding: 36px 28px;
+  padding: 28px 22px 24px;
   text-align: center;
   max-width: 380px;
   width: 100%;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .ns-fv__card-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
-  color: #333;
-  line-height: 1.5;
-  margin: 0 0 4px;
+  color: #222;
+  line-height: 1.55;
+  margin: 0;
 }
 .ns-fv__card-sub {
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #444;
+  line-height: 1.65;
+  margin: 0;
+}
+.ns-fv__loss {
+  background: #fff8e6;
+  border: 2px solid #e8520e;
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: left;
+}
+.ns-fv__loss-label {
+  display: block;
+  font-size: 11px;
   font-weight: 800;
-  color: #555;
-  margin: 0 0 24px;
+  color: #c62828;
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+}
+.ns-fv__loss-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.55;
+  margin: 0;
+}
+.ns-fv__loss-text strong {
+  color: #c62828;
+}
+.ns-fv__cta-wrap {
+  margin-top: 4px;
+  padding-top: 4px;
+}
+.ns-fv__cta-note {
+  font-size: 11px;
+  color: #666;
+  margin: 8px 0 0;
+  line-height: 1.5;
 }
 .ns-fv__cta {
   display: block;
@@ -189,10 +228,19 @@
 }
 .ns-salary-data__title {
   font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 8px;
+  color: #333;
+  line-height: 1.5;
+}
+.ns-salary-data__lead {
+  font-size: 13px;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 16px;
-  color: #333;
+  color: #c62828;
+  margin: 0 0 16px;
+  line-height: 1.55;
 }
 .ns-salary-data__title::after {
   content: "";

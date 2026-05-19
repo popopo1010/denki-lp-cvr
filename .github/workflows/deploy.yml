@@ -70,3 +70,4 @@ jobs:
         run: |
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/sekoukanri/" | head -3
