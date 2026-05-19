@@ -31,8 +31,11 @@ jobs:
             esbuild assets/js/app.js --minify --allow-overwrite --outfile=assets/js/app.js
           npx -y --package=esbuild@0.23.1 -- \
             esbuild assets/css/cvr-boost.css --minify --allow-overwrite --outfile=assets/css/cvr-boost.css
-          npx -y --package=esbuild@0.23.1 -- \
-            esbuild assets/css/meta-short-lp.css --minify --allow-overwrite --outfile=assets/css/meta-short-lp.css
+          # meta-short-lp.css は meta-lp/ がまだリポジトリに未追加のためスキップ
+          if [ -f assets/css/meta-short-lp.css ]; then
+            npx -y --package=esbuild@0.23.1 -- \
+              esbuild assets/css/meta-short-lp.css --minify --allow-overwrite --outfile=assets/css/meta-short-lp.css
+          fi
           for f in index.html denkikouji/index.html sekoukanri/index.html \
             sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
             npx -y --package=html-minifier-terser@7.2.0 -- \
