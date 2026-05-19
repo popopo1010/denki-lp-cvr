@@ -376,7 +376,8 @@
 
     function allFilled() { return Array.from(inputs).every(i => !!i.value); }
 
-    function validate() {
+    function validate(opts) {
+      opts = opts || {};
       if (allFilled()) {
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
@@ -388,6 +389,20 @@
         } else {
           moveIconById("#" + nextBtn.id, true);
         }
+        // 姓+名 両方埋まったら生年月日に視覚的誘導（first-name の入力完了時のみ）
+        // iOS Safari の <select> は focus() ではピッカーが開かない仕様。
+        // スクロール + ハイライトでユーザーにタップを促す。
+        if (opts.autoAdvance) {
+          const bdayYear = document.getElementById("bday-year");
+          if (bdayYear) {
+            setTimeout(() => {
+              bdayYear.scrollIntoView({ behavior: "smooth", block: "center" });
+              bdayYear.focus();
+              bdayYear.classList.add("js-pulse-highlight");
+              setTimeout(() => bdayYear.classList.remove("js-pulse-highlight"), 2400);
+            }, 200);
+          }
+        }
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
@@ -396,7 +411,21 @@
       }
     }
 
-    inputs.forEach(input => input.addEventListener("blur", validate));
+    inputs.forEach(input => input.addEventListener("blur", () => validate()));
+    // 名(first-name)を入力中に両方埋まったらすぐ生年月日にジャンプ
+    const firstNameInput = group.querySelector("#first-name");
+    if (firstNameInput) {
+      let advTimer = null;
+      firstNameInput.addEventListener("input", () => {
+        if (advTimer) clearTimeout(advTimer);
+        advTimer = setTimeout(() => {
+          if (allFilled() && document.activeElement === firstNameInput) {
+            firstNameInput.blur();
+            validate({ autoAdvance: true });
+          }
+        }, 700);
+      });
+    }
 
     // Initial: disable
     nextBtn.classList.add(DISABLE);

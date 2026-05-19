@@ -104,6 +104,31 @@
 /* ===== マイクロコピー・ステップ理由 ===== */
 .cvr-micro-copy { text-align: center; font-size: 12px; color: #888; margin-top: 12px; }
 .cvr-step-reason { text-align: center; font-size: 11px; color: #888; margin: 4px 0; padding: 0 8px; line-height: 1.5; }
+.cvr-step-reward {
+  text-align: center; font-size: 11px; color: #314c85;
+  margin: 4px 0 10px; padding: 6px 10px; line-height: 1.45;
+  background: #f0f4fa; border: 1px solid #dce4f0; border-radius: 8px;
+}
+.cvr-step-reward strong { color: #ff5966; font-weight: 700; }
+.cvr-testimonials__lead {
+  font-size: 12px; color: #666; text-align: center;
+  margin: -8px 0 16px; padding: 0 8px; line-height: 1.5;
+}
+.cvr-specialty-badge {
+  display: block; text-align: center; margin: 8px 0 4px;
+  font-size: 12px; font-weight: 800; color: #314c85;
+  background: #e8eef7; border-radius: 20px; padding: 4px 12px;
+  width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto;
+}
+.cvr-fv-note {
+  text-align: center; font-size: 11px; color: #666;
+  margin: 0 0 8px; line-height: 1.45; padding: 0 8px;
+}
+.cvr-lp-hub {
+  text-align: center; font-size: 11px; color: #666;
+  margin: 0 0 10px; line-height: 1.5; padding: 0 8px;
+}
+.cvr-lp-hub a { color: #314c85; font-weight: 700; text-decoration: underline; }
 
 /* ===== 進捗演出 ===== */
 .cvr-almost-done { text-align: center; margin: 16px 0 8px; }
@@ -350,14 +375,20 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step .c-button__img { height: 34px; }
   body.lp-form-step .c-button__text { min-height: 26px; font-size: 12px; line-height: 1.35; }
 
-  /* 資格など選択肢が多いステップはアイコン非表示でコンパクトに */
-  body.lp-form-step .p-step01__button .c-button__img { display: none; }
-  body.lp-form-step .p-step01__button.c-button {
+  /* 資格選択肢が9個以上(施工管理 11択)のLPのみアイコン非表示でコンパクト化。
+     6-8択のLP(電気工事士など)では下のブロックで通常サイズ＋アイコン表示。 */
+  body.lp-form-step .p-step01__buttonArea:has(.p-step01__button:nth-of-type(9)) .p-step01__button .c-button__img {
+    display: none;
+  }
+  body.lp-form-step .p-step01__buttonArea:has(.p-step01__button:nth-of-type(9)) .p-step01__button.c-button {
     padding: 8px 6px;
     min-height: 40px;
     justify-content: center;
   }
-  body.lp-form-step .p-step01__button .c-button__text { min-height: 0; font-size: 11px; }
+  body.lp-form-step .p-step01__buttonArea:has(.p-step01__button:nth-of-type(9)) .p-step01__button .c-button__text {
+    min-height: 0;
+    font-size: 11px;
+  }
 
   body.lp-form-step .c-section + .c-section .c-title02 { padding-top: 4px; }
   body.lp-form-step .c-section + .c-section .cvr-step-reason { display: none; }
@@ -382,37 +413,63 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     font-size: 9px !important;
   }
 
-  /* 資格選択 step01: 選択肢が多くてもCTAを画面内に（施工管理LP 11択等） */
+  /* 資格選択 step01: 選択肢が多くてもCTAを画面内に。
+     重要: display: flex には !important を付けない。app.js の遷移で
+     `cur.style.display = "none"` が上書きされてしまい、step01が消えず
+     step03以降が画面外に押し出されるバグになるため。inline指定が勝つように。 */
   body.lp-form-step #step01 {
-    display: flex !important;
+    display: flex;
     flex-direction: column;
-    min-height: calc(100svh - 72px);
-    min-height: calc(100dvh - 72px);
+    /* app.js は inline で min-height: calc(100svh - 72px) を設定するため、
+       !important が必要。display には付けない(step03遷移時に消えなくなる)。
+       viewportより少し低い高さに抑え、下に次セクション(testimonials等)の
+       チラ見せを出す。 */
+    min-height: calc(100svh - 130px) !important;
+    min-height: calc(100dvh - 130px) !important;
+    padding-bottom: 8px;
   }
   body.lp-form-step #step01 .cvr-step-reason { display: none; }
+  body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
+  body.lp-form-step #step01 .cvr-step-reward { display: block; }
   body.lp-form-step #step01 .c-title01 { padding: 2px 0; font-size: 13px; }
   body.lp-form-step #step01 .c-step { padding-top: 4px; }
   body.lp-form-step #step01 .p-step01__buttonArea {
-    flex: 1 1 auto;
-    margin-top: 4px;
-    gap: 4px;
+    flex: 0 0 auto;
+    margin-top: 10px;
+    gap: 10px;
     align-content: start;
   }
-  body.lp-form-step #step01 .p-step01__button .c-button__img,
-  body.lp-form-step #step01 .c-button__img {
+  body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(9)) {
+    gap: 6px;
+  }
+  /* 選択肢が9個以上のLP(施工管理 11択)のみアイコンを隠し、ボタンを最大圧縮 */
+  body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(9)) .c-button__img {
     display: none !important;
     height: 0 !important;
     margin: 0 !important;
   }
+  body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(9)) .p-step01__button.c-button {
+    min-height: 44px;
+    padding: 8px 6px;
+  }
+  body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(9)) .p-step01__button .c-button__text {
+    min-height: 0;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  /* 選択肢が8個以下のLP(電気工事士6択など)は大きめサイズ + アイコン表示 */
   body.lp-form-step #step01 .p-step01__button.c-button {
-    min-height: 34px;
-    padding: 5px 4px;
+    min-height: 88px;
+    padding: 12px 8px;
     box-shadow: 1px 1px 0 #dadada;
   }
+  body.lp-form-step #step01 .p-step01__button .c-button__img img {
+    height: 38px;
+    object-fit: contain;
+  }
   body.lp-form-step #step01 .p-step01__button .c-button__text {
-    min-height: 0;
-    font-size: 10px;
-    line-height: 1.25;
+    font-size: 14px;
+    line-height: 1.3;
   }
   body.lp-form-step #step01 .c-nextLink {
     margin-top: auto;
@@ -420,9 +477,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-top: 4px;
     padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   }
-  body.lp-form-step #step01 .c-next-button { min-height: 44px; padding: 8px 10px; }
-  body.lp-form-step #step01 .c-fixed-icon,
-  body.lp-form-step #step01 .cvr-kuma { display: none !important; }
+  body.lp-form-step #step01 .c-next-button { min-height: 48px; padding: 10px 12px; }
+  /* クマアイコンは step01 でも表示する（以前は圧縮のため非表示にしていたが、視認性のため復活） */
   body.lp-form-step .l-header__title .adtext { font-size: 10px; line-height: 1.25; }
 }
 

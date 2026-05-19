@@ -172,6 +172,65 @@
   line-height: 1.5;
 }
 
+.cvr-step-reward {
+  text-align: center;
+  font-size: 11px;
+  color: #314c85;
+  margin: 4px 0 10px;
+  padding: 6px 10px;
+  line-height: 1.45;
+  background: #f0f4fa;
+  border: 1px solid #dce4f0;
+  border-radius: 8px;
+}
+.cvr-step-reward strong { color: #ff5966; font-weight: 700; }
+.cvr-testimonials__lead {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin: -8px 0 16px;
+  padding: 0 8px;
+  line-height: 1.5;
+}
+
+.cvr-specialty-badge {
+  display: block;
+  text-align: center;
+  margin: 8px auto 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #314c85;
+  background: #e8eef7;
+  border-radius: 20px;
+  padding: 4px 12px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.cvr-fv-note {
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+  margin: 0 0 8px;
+  line-height: 1.45;
+  padding: 0 8px;
+}
+
+.cvr-lp-hub {
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+  margin: 0 0 10px;
+  line-height: 1.5;
+  padding: 0 8px;
+}
+
+.cvr-lp-hub a {
+  color: #314c85;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .cvr-almost-done {
   text-align: center;
   margin: 16px 0 8px;
@@ -801,6 +860,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     min-height: calc(100dvh - 72px);
   }
   body.lp-form-step #step01 .cvr-step-reason { display: none; }
+  body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
+  body.lp-form-step #step01 .cvr-step-reward { display: block; }
   body.lp-form-step #step01 .c-title01 { padding: 2px 0; font-size: 13px; }
   body.lp-form-step #step01 .c-step { padding-top: 4px; }
   body.lp-form-step #step01 .p-step01__buttonArea {
