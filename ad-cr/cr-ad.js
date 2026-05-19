@@ -107,7 +107,11 @@
     fitAmountSize();
   }
 
-  if (location.search.indexOf("record=1") !== -1) {
+  var qs = location.search;
+  if (qs.indexOf("meta=1") !== -1) {
+    document.body.classList.add("cr-meta");
+    document.body.classList.add("cr-record");
+  } else if (qs.indexOf("record=1") !== -1) {
     document.body.classList.add("cr-record");
   }
 
@@ -119,9 +123,12 @@
     setTimeout(runSequence, 500);
   }
 
-  if (location.search.indexOf("guide=1") !== -1) {
+  if (qs.indexOf("guide=1") !== -1) {
     var g = document.querySelector(".cr-guide");
     if (g) g.classList.add("is-show");
+    if (qs.indexOf("meta=1") !== -1) {
+      document.body.classList.add("cr-guide-on");
+    }
   }
 
   document.addEventListener("keydown", function (e) {
