@@ -317,7 +317,14 @@
   .ns-header-bar__title { font-size: 15px; }
   .ns-header-bar__title .ns-badge { font-size: 11px; padding: 1px 6px; }
   .ns-header-bar__sub { font-size: 10px; }
-  .ns-header-bar__permit { display: none; }
+  .ns-header-bar__permit {
+    display: block;
+    position: static;
+    transform: none;
+    margin-top: 5px;
+    font-size: 9px;
+    opacity: 0.92;
+  }
 
   .ns-step-progress { padding: 6px 6px; gap: 1px; }
   .ns-step-progress__num { width: 26px; height: 26px; font-size: 11px; }
@@ -328,7 +335,7 @@
   .ns-fv { min-height: 340px; padding: 24px 12px; }
   .ns-fv__card { padding: 28px 20px; }
   .ns-fv__card-title { font-size: 16px; }
-  .ns-fv__card-sub { font-size: 14px; margin-bottom: 20px; }
+  .ns-fv__card-sub { font-size: 13px; margin-bottom: 0; }
   .ns-fv__cta { font-size: 17px; padding: 16px 20px; }
 
   .ns-salary-data__card-header { min-width: 95px; max-width: 110px; font-size: 11px; padding: 8px 8px; }
@@ -352,4 +359,189 @@
   .ns-salary-data__card-header { min-width: 160px; max-width: 180px; font-size: 14px; }
   .ns-salary-data__card-range { font-size: 20px; }
   .ns-salary-data__card-avg strong { font-size: 15px; }
+}
+
+/* ===== UI統一（年収診断LP専用 .ns-lp） ===== */
+.ns-lp {
+  --ns-primary: #e8520e;
+  --ns-primary-dark: #c2410c;
+  --ns-accent: #f57c00;
+  --ns-cta: #e8860c;
+  --ns-cta-shadow: #c06f0a;
+}
+
+/* 二重ステップ：上部バーのみ */
+.ns-lp .c-step {
+  display: none !important;
+}
+
+/* ステップ完了色（緑→オレンジ系） */
+.ns-lp .ns-step-progress__num.is-done {
+  background: #f0a070;
+}
+.ns-lp .ns-step-progress__arrow.is-done {
+  border-left-color: #f0a070;
+}
+
+/* FVコンパクト（CTAを上に） */
+.ns-lp .ns-fv {
+  min-height: 0;
+  padding: 16px 12px;
+}
+.ns-lp .ns-fv__card {
+  padding: 18px 16px 16px;
+  gap: 10px;
+}
+.ns-lp .ns-fv__card-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+.ns-lp .ns-fv__loss {
+  padding: 10px;
+  border-width: 1px;
+  background: #fffaf5;
+}
+.ns-lp .ns-fv__loss-label {
+  color: var(--ns-primary);
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+.ns-lp .ns-fv__loss-text {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ns-lp .ns-fv__loss-text strong {
+  color: var(--ns-primary-dark);
+}
+
+/* 資格選択：同一アイコンを非表示・テキスト中心 */
+.ns-lp .p-step01__button .c-button__img {
+  display: none !important;
+}
+.ns-lp .p-step01__button.c-button {
+  padding: 12px 8px;
+  justify-content: center;
+  min-height: 52px;
+}
+.ns-lp .p-step01__button .c-button__text {
+  min-height: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+.ns-lp .c-button.is-active {
+  border-color: var(--ns-primary) !important;
+  background: linear-gradient(135deg, var(--ns-primary), var(--ns-accent)) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+/* 次へ・送信ボタン（赤/青→オレンジ） */
+.ns-lp .c-next-button,
+.ns-lp .c-submit-button {
+  background: linear-gradient(to bottom, #f5a623, var(--ns-cta)) !important;
+  box-shadow: 0 3px 0 var(--ns-cta-shadow) !important;
+  color: #fff !important;
+}
+.ns-lp .c-next-button .arrow::before {
+  border-top-color: var(--ns-cta) !important;
+  border-right-color: var(--ns-cta) !important;
+}
+
+/* cvr-boost 色の上書き */
+.ns-lp .cvr-social-proof__stats {
+  border-color: #f0d4c4;
+  background: #fffaf7;
+}
+.ns-lp .cvr-social-proof__number {
+  color: var(--ns-primary-dark);
+}
+.ns-lp .cvr-live-notification {
+  background: #fff;
+  border: 1px solid #eee;
+}
+.ns-lp .cvr-live-notification__dot {
+  background: var(--ns-primary);
+}
+.ns-lp .cvr-hero-badge {
+  background: linear-gradient(135deg, var(--ns-primary), var(--ns-accent));
+}
+.ns-lp .cvr-step-reason {
+  color: #888;
+  font-size: 10px;
+  font-weight: 500;
+}
+.ns-lp .cvr-almost-done p {
+  background: #fff4eb;
+  color: var(--ns-primary-dark);
+}
+.ns-lp .cvr-final-step {
+  background: #fff8f0;
+  border: 1px solid #ffe0c2;
+}
+.ns-lp .cvr-final-step p {
+  color: var(--ns-primary-dark);
+}
+.ns-lp .cvr-final-step__icon svg path {
+  fill: var(--ns-primary) !important;
+}
+.ns-lp .cvr-tel-notice {
+  background: #fff4eb;
+  color: var(--ns-primary-dark);
+}
+.ns-lp .cvr-cta-proof strong {
+  color: var(--ns-primary-dark) !important;
+}
+.ns-lp .cvr-testimonials__title::after {
+  background: var(--ns-primary);
+}
+.ns-lp .cvr-testimonial__avatar {
+  background: linear-gradient(135deg, var(--ns-primary), var(--ns-accent));
+}
+.ns-lp .cvr-testimonial__text strong {
+  color: var(--ns-primary);
+}
+.ns-lp .cvr-faq__title::after {
+  background: var(--ns-primary);
+}
+.ns-lp .c-text-box:focus {
+  border-color: var(--ns-primary) !important;
+  box-shadow: 0 0 0 3px rgba(232, 82, 14, 0.15) !important;
+}
+.ns-lp button:focus-visible,
+.ns-lp input:focus-visible,
+.ns-lp select:focus-visible {
+  outline-color: var(--ns-primary);
+}
+
+/* 年収カード：緑ヘッダー→オレンジ統一 */
+.ns-lp .ns-salary-data__card-header {
+  background: linear-gradient(135deg, var(--ns-primary), var(--ns-accent));
+}
+.ns-lp .ns-salary-data__lead {
+  color: #666;
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .ns-lp .ns-fv {
+    min-height: 0;
+    padding: 12px 8px;
+  }
+  .ns-lp .ns-fv__card {
+    padding: 16px 14px 14px;
+  }
+  .ns-lp .ns-fv__cta {
+    font-size: 16px;
+    padding: 15px 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .ns-lp .ns-fv {
+    min-height: 420px;
+    padding: 32px 20px;
+  }
 }
