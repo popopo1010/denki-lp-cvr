@@ -465,7 +465,7 @@
           const tel = document.querySelector('input[name="your-tel"]');
           if (tel && tel.value) try { sessionStorage.setItem("_tel", tel.value); } catch(e) {}
           var thanksUrl = "/thanks/";
-          if (window.__LP_ID && window.__LP_ID.indexOf("nenshu-shindan") === 0) thanksUrl = "/nenshu-shindan/thanks/";
+          if (window.__LP_ID && window.__LP_ID.indexOf("nenshu-shindan") === 0) thanksUrl = "/denki-lp-cvr/nenshu-shindan/thanks/";
           setTimeout(() => { location.href = thanksUrl; }, 1500);
         }, 500);
       });
