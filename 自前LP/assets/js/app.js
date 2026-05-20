@@ -561,6 +561,13 @@
 
     function sendToMirrors() {
       if (sentOnce) return;
+      // 必須項目（電話番号11桁・姓・名）が埋まっていなければ送信しない。
+      // form内の type="submit" がネイティブsubmitイベントを発火させても、
+      // 未入力のゴミデータがZapier/GASに飛ばないように最終ガード。
+      const tel = (form.querySelector('input[name="your-tel"]') || {}).value || "";
+      const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
+      const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
+      if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
       sentOnce = true;
       try {
         const fd = new FormData(form);
