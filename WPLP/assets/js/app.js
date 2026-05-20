@@ -690,7 +690,7 @@
 
     function showExitMessage() {
       if (shown) return;
-      var feeling = document.querySelector('input[name="your-feeling"]');
+      var feeling = document.querySelector('input[name="your-willingness"]');
       if (!feeling || !feeling.value) return;
       shown = true;
 
