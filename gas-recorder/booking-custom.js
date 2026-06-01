@@ -24,10 +24,19 @@ function bookingConfig() {
 
 function getBookingCalendar() {
   var cfg = bookingConfig();
-  if (cfg.calendarId) {
-    return CalendarApp.getCalendarById(cfg.calendarId);
+  var id = String(cfg.calendarId || "").trim();
+  if (id) {
+    var byId = CalendarApp.getCalendarById(id);
+    if (byId) return byId;
+    throw new Error(
+      "BOOKING_CALENDAR_ID が無効です: " +
+        id +
+        " （getBookingCalendarInfo の calendar_id を設定してください）"
+    );
   }
-  return CalendarApp.getDefaultCalendar();
+  var def = CalendarApp.getDefaultCalendar();
+  if (!def) throw new Error("デフォルトカレンダーが取得できません");
+  return def;
 }
 
 function jsonpResponse(callback, payload) {
@@ -38,9 +47,45 @@ function jsonpResponse(callback, payload) {
 }
 
 function parseIsoToDate(iso) {
-  var d = new Date(iso);
-  if (isNaN(d.getTime())) throw new Error("invalid datetime");
+  var s = String(iso || "").trim();
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (m) {
+    return new Date(
+      parseInt(m[1], 10),
+      parseInt(m[2], 10) - 1,
+      parseInt(m[3], 10),
+      parseInt(m[4], 10),
+      parseInt(m[5], 10),
+      parseInt(m[6], 10)
+    );
+  }
+  var d = new Date(s);
+  if (isNaN(d.getTime())) throw new Error("invalid datetime: " + s);
   return d;
+}
+
+function mergeRequestParams(e, params) {
+  params = params || {};
+  if (e && e.parameter) {
+    for (var k in e.parameter) {
+      if (!e.parameter.hasOwnProperty(k)) continue;
+      if (k === "action" || k === "callback") continue;
+      params[k] = e.parameter[k];
+    }
+  }
+  if (e && e.postData && e.postData.contents) {
+    var raw = String(e.postData.contents);
+    if (raw.charAt(0) !== "{") {
+      raw.split("&").forEach(function (pair) {
+        var idx = pair.indexOf("=");
+        if (idx === -1) return;
+        var key = decodeURIComponent(pair.slice(0, idx).replace(/\+/g, " "));
+        var val = decodeURIComponent(pair.slice(idx + 1).replace(/\+/g, " "));
+        if (key && params[key] === undefined) params[key] = val;
+      });
+    }
+  }
+  return params;
 }
 
 function formatSlotLabel(d) {
@@ -182,47 +227,112 @@ function getBookingCalendarInfo() {
   return info;
 }
 
+/** 予約確定の本体（カレンダー作成 → スプシ/Slack） */
+function bookSlotCore(params) {
+  var startIso = params.calendar_start || params.slot_start;
+  var endIso = params.calendar_end || params.slot_end;
+  if (!startIso || !endIso) throw new Error("missing slot");
+
+  var slotStart = parseIsoToDate(startIso);
+  var slotEnd = parseIsoToDate(endIso);
+  var cal = getBookingCalendar();
+
+  var busy = getBusyRanges(cal, slotStart, new Date(slotEnd.getTime() + 60000));
+  if (!isSlotFree(slotStart, slotEnd, busy)) {
+    throw new Error("slot_taken");
+  }
+
+  var name = params.calendar_guest_name || params["guest_name"] || "";
+  var tel = params["your-tel"] || "";
+  var lp = params["_lp"] || params["lp_id"] || "thanks";
+  var title = "【LP面談】" + (name || "お問い合わせ") + (tel ? " " + tel : "");
+  var desc = [
+    "予約元: LPサンクス（独自予約）",
+    "電話: " + tel,
+    "LP: " + lp
+  ].join("\n");
+
+  var event = cal.createEvent(title, slotStart, slotEnd, {
+    description: desc
+  });
+
+  params._event = "calendar_booked";
+  params.calendar_event_id = event.getId();
+  params.calendar_id = cal.getId();
+  params.calendar_tool = "独自予約";
+  params.calendar_booked_at = toJst(new Date());
+  params.calendar_start = toJst(slotStart);
+  params.calendar_end = toJst(slotEnd);
+  params.calendar_guest_name = name;
+
+  var sheetResult = handleCalendarBooked(params);
+  var sheetJson = JSON.parse(sheetResult.getContent());
+  return {
+    calendar_id: cal.getId(),
+    calendar_name: cal.getName(),
+    calendar_event_id: event.getId(),
+    calendar_start: params.calendar_start,
+    calendar_end: params.calendar_end,
+    sheet: sheetJson
+  };
+}
+
 function handleBookSlot(params) {
   try {
-    var startIso = params.calendar_start || params.slot_start;
-    var endIso = params.calendar_end || params.slot_end;
-    if (!startIso || !endIso) return jsonError("missing slot");
-
-    var slotStart = parseIsoToDate(startIso);
-    var slotEnd = parseIsoToDate(endIso);
-    var cal = getBookingCalendar();
-    if (!cal) return jsonError("calendar not found");
-
-    var busy = getBusyRanges(cal, slotStart, new Date(slotEnd.getTime() + 60000));
-    if (!isSlotFree(slotStart, slotEnd, busy)) {
-      return jsonError("slot_taken");
-    }
-
-    var name = params.calendar_guest_name || params["guest_name"] || "";
-    var tel = params["your-tel"] || "";
-    var lp = params["_lp"] || params["lp_id"] || "thanks";
-    var title = "【LP面談】" + (name || "お問い合わせ") + (tel ? " " + tel : "");
-    var desc = [
-      "予約元: LPサンクス（独自予約）",
-      "電話: " + tel,
-      "LP: " + lp
-    ].join("\n");
-
-    var event = cal.createEvent(title, slotStart, slotEnd, {
-      description: desc
-    });
-
-    params._event = "calendar_booked";
-    params.calendar_event_id = event.getId();
-    params.calendar_id = cal.getId();
-    params.calendar_tool = "独自予約";
-    params.calendar_booked_at = toJst(new Date());
-    params.calendar_start = toJst(slotStart);
-    params.calendar_end = toJst(slotEnd);
-    params.calendar_guest_name = name;
-
-    return handleCalendarBooked(params);
+    return jsonOk(bookSlotCore(params));
   } catch (err) {
     return jsonError(err);
   }
+}
+
+/**
+ * doGet ?action=book … ブラウザから JSONP で予約（POSTリダイレクトで本文が消える問題の回避）
+ */
+function handleBookRequest(e) {
+  try {
+    var params = mergeRequestParams(e, {});
+    params._event = params._event || "book_slot";
+    var payload = bookSlotCore(params);
+    payload.ok = true;
+    if (e && e.parameter && e.parameter.callback) {
+      return jsonpResponse(e.parameter.callback, payload);
+    }
+    return jsonOk(payload);
+  } catch (err) {
+    var errPayload = { ok: false, error: String(err) };
+    if (e && e.parameter && e.parameter.callback) {
+      return jsonpResponse(e.parameter.callback, errPayload);
+    }
+    return jsonError(err);
+  }
+}
+
+/** GASエディタでテスト予約（自分のカレンダーに1件入る） */
+function testBookSlot() {
+  var cal = getBookingCalendar();
+  var slots = getAvailableSlots(3);
+  if (!slots.length) {
+    Logger.log("空き枠なし");
+    return null;
+  }
+  var s = slots[0];
+  var out = bookSlotCore({
+    calendar_start: s.start,
+    calendar_end: s.end,
+    calendar_guest_name: "GASテスト",
+    "your-tel": "09000000000",
+    _lp: "gas_test"
+  });
+  Logger.log(
+    JSON.stringify(
+      {
+        calendar_name: cal.getName(),
+        calendar_id: cal.getId(),
+        booked: out
+      },
+      null,
+      2
+    )
+  );
+  return out;
 }

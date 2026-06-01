@@ -137,10 +137,7 @@ function doPost(e) {
       }
     }
 
-    var params = {};
-    if (e && e.parameter) {
-      for (var k in e.parameter) { params[k] = e.parameter[k]; }
-    }
+    var params = mergeRequestParams(e, {});
 
     // LINE追加クリックイベント・メール登録イベントは別ハンドラ（既存行を更新）
     if (params["_event"] === "line_click") {
@@ -478,6 +475,9 @@ function handleTimerexWebhook(json) {
 function doGet(e) {
   if (e && e.parameter && e.parameter.action === "slots") {
     return handleSlotsRequest(e);
+  }
+  if (e && e.parameter && e.parameter.action === "book") {
+    return handleBookRequest(e);
   }
   // ?setup=legend で凡例シートを構築・更新
   if (e && e.parameter && e.parameter.setup === "legend") {

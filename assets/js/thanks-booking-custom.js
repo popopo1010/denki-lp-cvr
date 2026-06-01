@@ -36,17 +36,36 @@
   var allSlots = [];
   var selected = null;
 
-  function postBook(body) {
-    var blob = new Blob([body], {
-      type: "application/x-www-form-urlencoded;charset=UTF-8"
-    });
-    if (navigator.sendBeacon && navigator.sendBeacon(GAS_URL, blob)) return;
-    fetch(GAS_URL, {
-      method: "POST",
-      mode: "no-cors",
-      keepalive: true,
-      body: body
-    }).catch(function () {});
+  function bookSlotViaJsonp(payload, onDone) {
+    var cb = "lpBookingBook_" + Date.now();
+    window[cb] = function (res) {
+      try {
+        delete window[cb];
+      } catch (e1) {}
+      var script = document.getElementById("booking-book-jsonp");
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+      onDone(res);
+    };
+
+    var q = [
+      "action=book",
+      "_event=book_slot",
+      "calendar_start=" + encodeURIComponent(payload.start),
+      "calendar_end=" + encodeURIComponent(payload.end),
+      "calendar_guest_name=" + encodeURIComponent(payload.name),
+      "your-tel=" + encodeURIComponent(payload.tel),
+      "_lp=" + encodeURIComponent(payload.lp),
+      "_page=" + encodeURIComponent(payload.page),
+      "callback=" + encodeURIComponent(cb)
+    ].join("&");
+
+    var script = document.createElement("script");
+    script.id = "booking-book-jsonp";
+    script.src = GAS_URL + "?" + q;
+    script.onerror = function () {
+      onDone({ ok: false, error: "network" });
+    };
+    document.head.appendChild(script);
   }
 
   function groupByDay(slots) {
@@ -163,33 +182,49 @@
         confirm.disabled = true;
         confirm.textContent = "予約中...";
 
-        var p = new URLSearchParams();
-        p.append("_event", "book_slot");
-        p.append("calendar_start", selected.start);
-        p.append("calendar_end", selected.end);
-        p.append("calendar_guest_name", name);
-        p.append("your-tel", tel);
-        p.append("_lp", lp);
-        p.append("_page", location.href);
-        postBook(p.toString());
+        bookSlotViaJsonp(
+          {
+            start: selected.start,
+            end: selected.end,
+            name: name,
+            tel: tel,
+            lp: lp,
+            page: location.href
+          },
+          function (res) {
+            if (!res || !res.ok) {
+              confirm.disabled = false;
+              confirm.textContent = "この日時で予約する";
+              var errMsg =
+                res && res.error === "slot_taken"
+                  ? "この枠は直前で埋まりました。別の時間をお選びください。"
+                  : "予約に失敗しました。時間をおいて再度お試しください。";
+              mount.insertAdjacentHTML(
+                "beforeend",
+                '<p class="t-booking-empty">' + errMsg + "</p>"
+              );
+              return;
+            }
 
-        mount.innerHTML =
-          '<div class="t-booking-done">' +
-          "<p><strong>予約を受け付けました</strong></p>" +
-          "<p>" +
-          selected.day_label +
-          " " +
-          selected.time_label +
-          " 開始</p>" +
-          '<p class="t-booking-done__sub">担当者よりご連絡します</p>' +
-          "</div>";
+            mount.innerHTML =
+              '<div class="t-booking-done">' +
+              "<p><strong>予約が完了しました</strong></p>" +
+              "<p>" +
+              selected.day_label +
+              " " +
+              selected.time_label +
+              " 開始</p>" +
+              '<p class="t-booking-done__sub">Googleカレンダーに登録済みです。担当者よりご連絡します</p>' +
+              "</div>";
 
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          event: "calendar_booked",
-          page_type: "thanks",
-          booking_tool: "custom"
-        });
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+              event: "calendar_booked",
+              page_type: "thanks",
+              booking_tool: "custom"
+            });
+          }
+        );
       });
     }
   }
