@@ -483,7 +483,15 @@
           if (form) form.dispatchEvent(new Event("submit", { bubbles: true }));
           // Store phone for email correlation on thanks page
           const tel = document.querySelector('input[name="your-tel"]');
-          if (tel && tel.value) try { sessionStorage.setItem("_tel", tel.value); } catch(e) {}
+          try {
+            if (tel && tel.value) sessionStorage.setItem("_tel", tel.value);
+            var lastEl = document.querySelector('input[name="your-last-name"]');
+            var firstEl = document.querySelector('input[name="your-first-name"]');
+            var fullName = ((lastEl && lastEl.value) || "") + " " + ((firstEl && firstEl.value) || "");
+            fullName = fullName.trim();
+            if (fullName) sessionStorage.setItem("_name", fullName);
+            if (window.__LP_ID) sessionStorage.setItem("_lp", window.__LP_ID);
+          } catch (e) {}
           setTimeout(() => { location.href = "/thanks/"; }, 1500);
         }, 500);
       });

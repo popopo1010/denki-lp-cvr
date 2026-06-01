@@ -1,0 +1,597 @@
+/* サンクス：面談予約（TimeRex）— 視認性優先 */
+.t-cal {
+  margin: 0 12px 28px;
+  padding: 0;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 32px rgba(30, 58, 110, 0.14);
+  border: 1px solid #cfd8e6;
+  text-align: left;
+}
+
+.t-cal__head {
+  background: linear-gradient(135deg, #1a3568 0%, #314c85 55%, #3d5f9a 100%);
+  color: #fff;
+  padding: 20px 18px 18px;
+}
+
+.t-cal--nenshu .t-cal__head {
+  background: linear-gradient(135deg, #a83d06 0%, #e8520e 55%, #f57c00 100%);
+}
+
+.t-cal__step {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin: 0 0 10px;
+}
+
+.t-cal h3 {
+  font-size: 21px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.t-cal__body {
+  padding: 18px 16px 20px;
+}
+
+.t-cal__sub {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+
+.t-cal__sub strong {
+  color: #1a3568;
+  font-weight: 800;
+}
+
+.t-cal--nenshu .t-cal__sub strong {
+  color: #c04a06;
+}
+
+.t-cal__widget-wrap {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 10px 6px 12px;
+  overflow: hidden;
+}
+
+.t-cal__scroll-hint {
+  display: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.t-cal__widget-scaler {
+  width: 100%;
+  overflow: hidden;
+  min-height: 480px;
+}
+
+.t-cal__widget {
+  min-height: 520px;
+  transform-origin: top left;
+}
+
+#timerex_calendar {
+  width: 640px;
+  max-width: none;
+}
+
+#timerex_calendar iframe {
+  width: 640px !important;
+  min-width: 640px !important;
+  min-height: 520px !important;
+  border: 0 !important;
+  display: block;
+}
+
+/* 広い画面はスケール1でそのまま3日表示 */
+@media (min-width: 720px) {
+  .t-s {
+    max-width: 720px !important;
+  }
+
+  .t-cal__widget-scaler {
+    min-height: 540px;
+  }
+}
+
+.t-cal__note {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 16px 0 0;
+  line-height: 1.55;
+  text-align: center;
+  padding: 12px 10px;
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+/* サンクス全体の読みやすさ（補助） */
+.t-s {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  color: #1f2937;
+}
+
+.t-step__d,
+.t-line__sub,
+.t-email__sub,
+.t-ref__tx,
+.t-contact__note {
+  font-size: 14px !important;
+  color: #4b5563 !important;
+  line-height: 1.65 !important;
+}
+
+.t-step__l,
+.t-line h3,
+.t-email h3 {
+  font-size: 16px !important;
+}
+
+.t-email__sub {
+  font-size: 14px !important;
+}
+
+/* メール枠は予約より目立たせすぎない */
+.t-email {
+  border-width: 1px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+.t-email__btn {
+  animation: none !important;
+}
+
+.t-tl__title {
+  font-size: 18px !important;
+}
+
+.t-contact__tx {
+  font-size: 15px !important;
+  color: #1f2937 !important;
+}
+
+/* --- 独自予約（3日表示） --- */
+#booking-slot-root {
+  min-height: 200px;
+}
+
+.t-booking-loading,
+.t-booking-empty,
+.t-booking-hint {
+  font-size: 15px;
+  color: #475569;
+  text-align: center;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+
+.t-booking-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.t-booking-nav__btn {
+  flex: 1;
+  padding: 10px 8px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #1e3a6e;
+  cursor: pointer;
+}
+
+.t-booking-nav__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.t-booking-days {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.t-booking-day {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 8px;
+  min-width: 0;
+}
+
+.t-booking-day__title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e3a6e;
+  text-align: center;
+  margin: 0 0 10px;
+  line-height: 1.3;
+}
+
+.t-booking-day__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.t-booking-slot {
+  width: 100%;
+  padding: 12px 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e3a6e;
+  background: #eef4ff;
+  border: 2px solid #c7d7f5;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.t-booking-slot.is-selected {
+  background: #314c85;
+  border-color: #314c85;
+  color: #fff;
+}
+
+.t-booking-actions {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.t-booking-selected {
+  font-size: 15px;
+  color: #1f2937;
+  margin: 0 0 12px;
+}
+
+.t-booking-confirm {
+  width: 100%;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #1a3568, #314c85);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #1a2d52;
+}
+
+.t-booking-confirm:disabled {
+  opacity: 0.6;
+}
+
+.t-booking-done {
+  text-align: center;
+  padding: 20px 12px;
+  background: #ecfdf5;
+  border: 2px solid #6ee7b7;
+  border-radius: 14px;
+}
+
+.t-booking-done p {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #065f46;
+}
+
+.t-booking-done__sub {
+  font-size: 14px !important;
+  color: #047857 !important;
+}
+
+.t-cal--nenshu .t-booking-day__title,
+.t-cal--nenshu .t-booking-slot {
+  color: #a83d06;
+}
+
+.t-cal--nenshu .t-booking-slot {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.t-cal--nenshu .t-booking-slot.is-selected {
+  background: #e8520e;
+  border-color: #e8520e;
+  color: #fff;
+}
+
+.t-cal--nenshu .t-booking-confirm {
+  background: linear-gradient(135deg, #a83d06, #e8520e);
+  box-shadow: 0 4px 0 #9a3a07;
+}
+
+/* LINE優先 / メール任意（サンクス共通） */
+.t-line {
+  margin: 0 16px 24px;
+  padding: 24px 20px;
+  background: #fff;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(6, 199, 85, 0.15);
+  border: 2px solid #06c755;
+  position: relative;
+  overflow: hidden;
+}
+
+.t-line__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #06c755;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 14px 4px 18px;
+  border-radius: 0 0 0 12px;
+}
+
+.t-line h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #333;
+  text-align: center;
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+
+.t-line h3 strong {
+  color: #06c755;
+}
+
+.t-line__sub {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.t-line__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 12px;
+  padding: 15px 20px;
+  background: #06c755;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 3px 0 #05a847;
+  transition: transform 0.15s;
+  animation: t-line-pulse 2s infinite;
+}
+
+.t-line__btn:hover {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+@keyframes t-line-pulse {
+  0%,
+  100% {
+    box-shadow: 0 3px 0 #05a847, 0 0 0 0 rgba(6, 199, 85, 0.35);
+  }
+  50% {
+    box-shadow: 0 3px 0 #05a847, 0 0 0 8px rgba(6, 199, 85, 0);
+  }
+}
+
+.t-line__note {
+  font-size: 11px;
+  color: #888;
+}
+
+.t-email {
+  margin: 0 16px 24px;
+  padding: 20px 16px;
+  background: #f9f9f9;
+  border-radius: 16px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e0e0e0;
+  position: relative;
+  overflow: hidden;
+}
+
+.t-email__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #888;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 12px 4px 14px;
+  border-radius: 0 0 0 10px;
+}
+
+.t-email h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #555;
+  text-align: center;
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+
+.t-email h3 strong {
+  color: #555;
+}
+
+.t-email__sub {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.t-bene {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.t-bene__i {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+}
+
+.t-bene__i svg {
+  flex-shrink: 0;
+}
+
+.t-bene__i strong {
+  color: #333;
+}
+
+.t-email__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.t-email__input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.t-email__input:focus {
+  border-color: #314c85;
+  box-shadow: 0 0 0 3px rgba(49, 76, 133, 0.15);
+}
+
+.t-cal--nenshu ~ .t-email .t-email__input:focus,
+.ns-thanks .t-email__input:focus {
+  border-color: #e8520e;
+  box-shadow: 0 0 0 3px rgba(232, 82, 14, 0.15);
+}
+
+.t-email__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  background: #888;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #666;
+  transition: transform 0.15s;
+}
+
+.t-email__btn:hover {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.t-email__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.t-email__note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.t-email__note svg {
+  flex-shrink: 0;
+}
+
+.t-email__done {
+  display: none;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.t-email__done-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #e8f5e9;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+
+.t-email__done-tx {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 4px;
+}
+
+.t-cal--nenshu .t-email__done-tx,
+.ns-thanks .t-email__done-tx {
+  color: #e8520e;
+}
+
+.t-email__done-sub {
+  font-size: 12px;
+  color: #888;
+}
+
+@media (min-width: 768px) {
+  .t-email {
+    padding: 28px 24px;
+  }
+  .t-email h3 {
+    font-size: 18px;
+  }
+}

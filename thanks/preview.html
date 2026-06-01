@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>サンクスプレビュー（TimeRex）</title>
+<script>
+sessionStorage.setItem("_tel", "09012345678");
+sessionStorage.setItem("_name", "山田 太郎");
+sessionStorage.setItem("_lp", "denkikouji");
+document.cookie = "user-name=" + encodeURIComponent("山田 太郎") + "; path=/; max-age=86400";
+location.replace("index.html");
+</script>
+</head>
+<body><p>サンクスへ移動中…</p></body>
+</html>

@@ -17,6 +17,7 @@ if('requestIdleCallback'in window)requestIdleCallback(g,{timeout:4e3});else wind
 <link rel="preconnect" href="https://denkilp.builders-job.com" crossorigin>
 <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014">
 <link rel="stylesheet" href="../../assets/css/cvr-boost.css?v1779240000">
+<link rel="stylesheet" href="../../assets/css/thanks-calendar.css?v=4">
 <style>
 body{background:#f5f7fa}
 .t-s{max-width:480px;margin:0 auto}
@@ -37,28 +38,6 @@ body{background:#f5f7fa}
 .t-contact__tx{font-size:13px;color:#333;line-height:1.6}
 .t-contact__tx strong{color:#e8520e}
 .t-contact__note{display:block;font-size:11px;color:#888;margin-top:4px}
-.t-email{margin:0 16px 24px;padding:24px 20px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:2px solid #e8520e;position:relative;overflow:hidden}
-.t-email__badge{position:absolute;top:0;right:0;background:#e8520e;color:#fff;font-size:11px;font-weight:700;padding:4px 14px 4px 18px;border-radius:0 0 0 12px}
-.t-email h3{font-size:16px;font-weight:800;color:#333;text-align:center;margin:0 0 6px;line-height:1.5}
-.t-email h3 strong{color:#e8520e}
-.t-email__sub{font-size:12px;color:#888;text-align:center;margin-bottom:16px;line-height:1.6}
-.t-bene{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
-.t-bene__i{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;line-height:1.4}
-.t-bene__i svg{flex-shrink:0}
-.t-bene__i strong{color:#333}
-.t-email__form{display:flex;flex-direction:column;gap:10px}
-.t-email__input{width:100%;padding:14px 16px;border:2px solid #ddd;border-radius:10px;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
-.t-email__input:focus{border-color:#e8520e;box-shadow:0 0 0 3px rgba(232,82,14,.15)}
-.t-email__btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;background:#e8520e;color:#fff;font-size:16px;font-weight:700;border:none;border-radius:10px;cursor:pointer;box-shadow:0 3px 0 #c04009;transition:transform .15s;animation:t-pulse 2s infinite}
-.t-email__btn:hover{transform:translateY(2px);box-shadow:none}
-.t-email__btn:disabled{opacity:.6;cursor:not-allowed;animation:none}
-@keyframes t-pulse{0%,100%{box-shadow:0 3px 0 #c04009,0 0 0 0 rgba(232,82,14,.4)}50%{box-shadow:0 3px 0 #c04009,0 0 0 8px rgba(232,82,14,0)}}
-.t-email__note{display:flex;align-items:center;gap:4px;font-size:11px;color:#aaa;margin-top:4px;line-height:1.4}
-.t-email__note svg{flex-shrink:0}
-.t-email__done{display:none;text-align:center;padding:16px 0}
-.t-email__done-ic{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:#fff3e0;border-radius:50%;margin-bottom:12px}
-.t-email__done-tx{font-size:15px;font-weight:700;color:#e8520e;margin-bottom:4px}
-.t-email__done-sub{font-size:12px;color:#888}
 .t-tl{padding:0 16px;margin-bottom:28px}
 .t-tl__title{font-size:16px;font-weight:700;text-align:center;margin-bottom:20px;color:#333;position:relative;padding-bottom:8px}
 .t-tl__title::after{content:"";display:block;width:40px;height:3px;background:#e8520e;margin:8px auto 0;border-radius:2px}
@@ -74,12 +53,6 @@ body{background:#f5f7fa}
 .t-step.is-cur .t-step__l{color:#e8520e}
 .t-step__d{font-size:12px;color:#888;line-height:1.5}
 .t-step__tag{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:#e8520e;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
-.t-line{margin:0 16px 28px;padding:24px 16px;background:#fff;border-radius:16px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.t-line h3{font-size:15px;font-weight:700;color:#333;margin:0 0 6px}
-.t-line__sub{font-size:12px;color:#888;margin-bottom:16px;line-height:1.5}
-.t-line__btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:320px;margin:0 auto 12px;padding:14px 20px;background:#06C755;color:#fff;font-size:15px;font-weight:700;border:none;border-radius:12px;cursor:pointer;text-decoration:none;box-shadow:0 3px 0 #05a847;transition:transform .15s}
-.t-line__btn:hover{transform:translateY(2px);box-shadow:none}
-.t-line__note{font-size:11px;color:#aaa}
 .t-testi{padding:0 16px;margin-bottom:28px}
 .t-ref{margin:0 16px 28px;padding:20px 16px;background:#fff;border:1px dashed #e8520e;border-radius:12px;text-align:center}
 .t-ref h3{font-size:14px;font-weight:700;color:#333;margin:0 0 6px}
@@ -89,7 +62,7 @@ body{background:#f5f7fa}
 .t-ref__btn:hover{opacity:.85}
 .t-ref__btn--ln{background:#06C755}
 .t-ref__btn--x{background:#000}
-@media(min-width:768px){.t-hero h2{font-size:26px}.t-hero p{font-size:15px}.t-email{padding:28px 24px}.t-email h3{font-size:18px}}
+@media(min-width:768px){.t-hero h2{font-size:26px}.t-hero p{font-size:15px}}
 </style>
 </head>
 <body class="wp-singular page-template-default page p-pageThanks wp-theme-original-thema">
@@ -148,6 +121,23 @@ body{background:#f5f7fa}
     <div class="t-contact__tx"><strong>24時間以内</strong>に担当アドバイザーから診断結果をお伝えします。<br>知らない番号からの着信にご注意ください。<span class="t-contact__note">※ 営業時間: 平日 9:00〜18:00</span></div>
   </div>
 
+  <div class="t-cal t-cal--nenshu" id="t-calendar">
+    <div class="t-cal__head">
+      <p class="t-cal__step">次のステップ</p>
+      <h3>診断結果の説明日時を選ぶ</h3>
+    </div>
+    <div class="t-cal__body">
+      <p class="t-cal__sub">下から<strong>日時をタップ</strong>して予約（名前・電話の再入力なし）。</p>
+      <div id="booking-slot-root"></div>
+      <div class="t-cal__widget-wrap">
+        <div class="t-cal__widget-scaler">
+          <div class="t-cal__widget" id="timerex_calendar" data-url=""></div>
+        </div>
+      </div>
+      <p class="t-cal__note">約1分で完了 · 予約後は<strong>LINE友だち追加</strong>がおすすめです</p>
+    </div>
+  </div>
+
   <!-- Timeline -->
   <div class="t-tl">
     <p class="t-tl__title">今後の流れ</p>
@@ -157,11 +147,11 @@ body{background:#f5f7fa}
     </div>
     <div class="t-step is-cur">
       <div class="t-step__n">2</div>
-      <div class="t-step__b"><p class="t-step__l">診断結果のご連絡 <span class="t-step__tag">24時間以内</span></p><p class="t-step__d">担当アドバイザーが診断結果と年収相場をお伝えします（電話10〜15分程度）</p></div>
+      <div class="t-step__b"><p class="t-step__l">診断結果のご説明予約 <span class="t-step__tag">推奨</span></p><p class="t-step__d">上のカレンダーで空き枠を選ぶと、その時間に診断結果をお伝えします（10〜15分）</p></div>
     </div>
     <div class="t-step">
       <div class="t-step__n">3</div>
-      <div class="t-step__b"><p class="t-step__l">年収UP求人のご紹介</p><p class="t-step__d">診断結果をもとに、年収アップが見込める求人をご紹介</p></div>
+      <div class="t-step__b"><p class="t-step__l">LINE友だち追加 <span class="t-step__tag" style="background:#06C755">おすすめ</span></p><p class="t-step__d">診断結果・年収UP求人をLINEで優先的にお届けします</p></div>
     </div>
     <div class="t-step">
       <div class="t-step__n">4</div>
@@ -169,9 +159,10 @@ body{background:#f5f7fa}
     </div>
   </div>
 
-  <!-- Email capture -->
+  <!-- Email（任意） -->
   <div class="t-email" id="email-section">
-    <h3>メールでも<strong>診断結果</strong>を受け取る</h3>
+    <span class="t-email__badge">任意</span>
+    <h3>メールでも診断結果を受け取る</h3>
     <p class="t-email__sub">電話に出られない時でも、診断結果と年収UP求人を確認できます</p>
     <div class="t-bene">
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span><strong>診断結果レポート</strong>をメールでお届け</span></div>
@@ -272,6 +263,8 @@ body{background:#f5f7fa}
   </div>
 </footer>
 
+<script src="../../assets/js/thanks-booking-config.js"></script>
+<script src="../../assets/js/thanks-booking-loader.js"></script>
 <script>
 (function(){
   var HOOK = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
@@ -333,6 +326,9 @@ body{background:#f5f7fa}
     document.querySelector(".t-email h3").textContent = "メール登録完了";
     document.getElementById("email-done").style.display = "block";
     document.querySelector(".t-email").style.borderColor = "#4CAF50";
+
+    try { sessionStorage.setItem("_email", email); } catch (e) {}
+    if (typeof window.refreshTimerexBooking === "function") window.refreshTimerexBooking();
 
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: "email_capture" });

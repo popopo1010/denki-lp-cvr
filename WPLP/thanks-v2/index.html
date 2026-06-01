@@ -13,6 +13,7 @@ if('requestIdleCallback'in window)requestIdleCallback(g,{timeout:4e3});else wind
 <link rel="preconnect" href="https://denkilp.builders-job.com" crossorigin>
 <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014">
 <link rel="stylesheet" href="../assets/css/cvr-boost-v2.css">
+<link rel="stylesheet" href="../../assets/css/thanks-calendar.css?v=4">
 <style>
 body{background:#f5f7fa}
 .t-s{max-width:480px;margin:0 auto}
@@ -28,28 +29,6 @@ body{background:#f5f7fa}
 .t-contact__tx{font-size:13px;color:#333;line-height:1.6}
 .t-contact__tx strong{color:#ff5966}
 .t-contact__note{display:block;font-size:11px;color:#888;margin-top:4px}
-.t-email{margin:0 16px 24px;padding:24px 20px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:2px solid #ff5966;position:relative;overflow:hidden}
-.t-email__badge{position:absolute;top:0;right:0;background:#ff5966;color:#fff;font-size:11px;font-weight:700;padding:4px 14px 4px 18px;border-radius:0 0 0 12px}
-.t-email h3{font-size:16px;font-weight:800;color:#333;text-align:center;margin:0 0 6px;line-height:1.5}
-.t-email h3 strong{color:#ff5966}
-.t-email__sub{font-size:12px;color:#888;text-align:center;margin-bottom:16px;line-height:1.6}
-.t-bene{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
-.t-bene__i{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;line-height:1.4}
-.t-bene__i svg{flex-shrink:0}
-.t-bene__i strong{color:#333}
-.t-email__form{display:flex;flex-direction:column;gap:10px}
-.t-email__input{width:100%;padding:14px 16px;border:2px solid #ddd;border-radius:10px;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
-.t-email__input:focus{border-color:#314c85;box-shadow:0 0 0 3px rgba(49,76,133,.15)}
-.t-email__btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;background:#ff5966;color:#fff;font-size:16px;font-weight:700;border:none;border-radius:10px;cursor:pointer;box-shadow:0 3px 0 #be5156;transition:transform .15s;animation:t-pulse 2s infinite}
-.t-email__btn:hover{transform:translateY(2px);box-shadow:none}
-.t-email__btn:disabled{opacity:.6;cursor:not-allowed;animation:none}
-@keyframes t-pulse{0%,100%{box-shadow:0 3px 0 #be5156,0 0 0 0 rgba(255,89,102,.4)}50%{box-shadow:0 3px 0 #be5156,0 0 0 8px rgba(255,89,102,0)}}
-.t-email__note{display:flex;align-items:center;gap:4px;font-size:11px;color:#aaa;margin-top:4px;line-height:1.4}
-.t-email__note svg{flex-shrink:0}
-.t-email__done{display:none;text-align:center;padding:16px 0}
-.t-email__done-ic{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:#e8f5e9;border-radius:50%;margin-bottom:12px}
-.t-email__done-tx{font-size:15px;font-weight:700;color:#2e7d32;margin-bottom:4px}
-.t-email__done-sub{font-size:12px;color:#888}
 .t-tl{padding:0 16px;margin-bottom:28px}
 .t-tl__title{font-size:16px;font-weight:700;text-align:center;margin-bottom:20px;color:#333;position:relative;padding-bottom:8px}
 .t-tl__title::after{content:"";display:block;width:40px;height:3px;background:#314c85;margin:8px auto 0;border-radius:2px}
@@ -65,12 +44,7 @@ body{background:#f5f7fa}
 .t-step.is-cur .t-step__l{color:#2e7d32}
 .t-step__d{font-size:12px;color:#888;line-height:1.5}
 .t-step__tag{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:#ff5966;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
-.t-line{margin:0 16px 28px;padding:24px 16px;background:#fff;border-radius:16px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.t-line h3{font-size:15px;font-weight:700;color:#333;margin:0 0 6px}
-.t-line__sub{font-size:12px;color:#888;margin-bottom:16px;line-height:1.5}
-.t-line__btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:320px;margin:0 auto 12px;padding:14px 20px;background:#06C755;color:#fff;font-size:15px;font-weight:700;border:none;border-radius:12px;cursor:pointer;text-decoration:none;box-shadow:0 3px 0 #05a847;transition:transform .15s}
-.t-line__btn:hover{transform:translateY(2px);box-shadow:none}
-.t-line__note{font-size:11px;color:#aaa}
+
 .t-testi{padding:0 16px;margin-bottom:28px}
 .t-ref{margin:0 16px 28px;padding:20px 16px;background:#fff;border:1px dashed #314c85;border-radius:12px;text-align:center}
 .t-ref h3{font-size:14px;font-weight:700;color:#333;margin:0 0 6px}
@@ -117,6 +91,23 @@ body{background:#f5f7fa}
     <div class="t-contact__tx"><strong>24時間以内</strong>に担当者からお電話いたします。<br>知らない番号からの着信にご注意ください。<span class="t-contact__note">※ 営業時間: 平日 9:00〜18:00</span></div>
   </div>
 
+  <!-- LINE（優先） -->
+  <div class="t-line" id="line-section">
+    <span class="t-line__badge">おすすめ</span>
+    <h3>LINEで<strong>最速</strong>の求人案内を受け取る</h3>
+    <p class="t-line__sub">非公開求人をいち早くお届けします（30秒で完了）</p>
+    <div class="t-bene" style="margin-bottom:16px;text-align:left">
+      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>ハローワーク非掲載の<strong>非公開求人</strong>を優先案内</span></div>
+      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>チャットで気軽に相談OK（休憩時間でもOK）</span></div>
+      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>新着求人をリアルタイム通知</span></div>
+    </div>
+    <a href="https://lin.ee/PzFJp7H" class="t-line__btn" id="line-cta" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="#fff"/></svg>
+      LINE友だち追加
+    </a>
+    <p class="t-line__note">追加後すぐにメッセージが届きます</p>
+  </div>
+
   <!-- Timeline -->
   <div class="t-tl">
     <p class="t-tl__title">今後の流れ</p>
@@ -130,28 +121,12 @@ body{background:#f5f7fa}
     </div>
     <div class="t-step">
       <div class="t-step__n">3</div>
-      <div class="t-step__b"><p class="t-step__l">求人のご紹介</p><p class="t-step__d">非公開求人を含む、あなたに最適な求人をご紹介</p></div>
+      <div class="t-step__b"><p class="t-step__l">LINE友だち追加 <span class="t-step__tag" style="background:#06C755">おすすめ</span></p><p class="t-step__d">非公開求人の優先案内・チャット相談がLINEで受けられます</p></div>
     </div>
     <div class="t-step">
       <div class="t-step__n">4</div>
       <div class="t-step__b"><p class="t-step__l">応募・面接・内定</p><p class="t-step__d">履歴書の添削から面接対策まで完全サポート</p></div>
     </div>
-  </div>
-
-  <!-- LINE -->
-  <div class="t-line">
-    <h3>LINEで最速の求人案内を受け取る</h3>
-    <p class="t-line__sub">非公開求人をいち早くお届けします</p>
-    <div class="t-bene" style="margin-bottom:16px;text-align:left">
-      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>ハローワーク非掲載の<strong>非公開求人</strong>を優先案内</span></div>
-      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>チャットで気軽に相談OK（休憩時間でもOK）</span></div>
-      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>新着求人をリアルタイム通知</span></div>
-    </div>
-    <a href="https://lin.ee/PzFJp7H" class="t-line__btn" id="line-cta" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="#fff"/></svg>
-      LINE友だち追加
-    </a>
-    <p class="t-line__note">追加後すぐにメッセージが届きます</p>
   </div>
 
   <!-- Testimonials -->
@@ -260,5 +235,7 @@ body{background:#f5f7fa}
   window.dataLayer.push({ event: "form_complete", page_type: "thanks" });
 })();
 </script>
+<script src="../../assets/js/thanks-booking-config.js"></script>
+<script src="../../assets/js/thanks-booking-loader.js"></script>
 </body>
 </html>
