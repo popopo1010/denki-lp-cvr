@@ -177,6 +177,30 @@
   min-height: 200px;
 }
 
+.t-booking-skeleton__days {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.t-booking-skeleton__day {
+  border-radius: 10px;
+  background: linear-gradient(90deg, #e8edf3 25%, #f4f6f9 50%, #e8edf3 75%);
+  background-size: 200% 100%;
+  animation: t-booking-shimmer 1.2s ease-in-out infinite;
+  min-height: 120px;
+}
+
+@keyframes t-booking-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .t-booking-loading,
 .t-booking-empty,
 .t-booking-hint {

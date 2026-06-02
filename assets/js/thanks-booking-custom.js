@@ -343,40 +343,48 @@
     }
   }
 
-  function loadSlots() {
-    mount.innerHTML = '<p class="t-booking-loading">空き枠を読み込み中...</p>';
-    var cb = "lpBookingSlots_" + Date.now();
-    window[cb] = function (res) {
-      try {
-        delete window[cb];
-      } catch (e2) {}
-      var script = document.getElementById("booking-slots-jsonp");
-      if (script && script.parentNode) script.parentNode.removeChild(script);
+  function applySlots(slots) {
+    allSlots = slots || [];
+    dayOffset = 0;
+    selected = null;
+    render();
+  }
 
-      if (!res || !res.ok) {
-        mount.innerHTML =
-          '<p class="t-booking-empty">空き枠の取得に失敗しました。時間をおいて再度お試しください。</p>';
+  function showSlotsError() {
+    mount.innerHTML =
+      '<p class="t-booking-empty">空き枠の取得に失敗しました。時間をおいて再度お試しください。</p>';
+  }
+
+  function loadSlots() {
+    var cached =
+      window.dkBookingSlotsReadCache && window.dkBookingSlotsReadCache();
+    if (cached && cached.slots && cached.slots.length) {
+      applySlots(cached.slots);
+      return;
+    }
+
+    var root = document.getElementById("booking-slot-root");
+    if (root && !root.querySelector(".t-booking-skeleton")) {
+      mount.innerHTML = '<p class="t-booking-loading">空き枠を読み込み中...</p>';
+    }
+
+    var fetchFn = window.dkBookingSlotsFetch;
+    var promise =
+      window.__dkBookingSlotsPromise ||
+      (fetchFn ? fetchFn(false) : null);
+
+    if (!promise) {
+      showSlotsError();
+      return;
+    }
+
+    promise.then(function (data) {
+      if (data && data.slots && data.slots.length) {
+        applySlots(data.slots);
         return;
       }
-      allSlots = res.slots || [];
-      dayOffset = 0;
-      selected = null;
-      render();
-    };
-
-    var script = document.createElement("script");
-    script.id = "booking-slots-jsonp";
-    script.src =
-      GAS_URL +
-      "?action=slots&days=" +
-      encodeURIComponent(String(fetchDays)) +
-      "&callback=" +
-      encodeURIComponent(cb);
-    script.onerror = function () {
-      mount.innerHTML =
-        '<p class="t-booking-empty">空き枠の取得に失敗しました。</p>';
-    };
-    document.head.appendChild(script);
+      showSlotsError();
+    });
   }
 
   loadSlots();
