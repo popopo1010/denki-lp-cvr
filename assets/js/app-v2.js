@@ -37,17 +37,30 @@
   }
 
   function prewarmThanksBookingSlots() {
+    var el =
+      document.currentScript ||
+      document.querySelector('script[src*="app-v2.js"]');
+    if (el && el.src && !document.querySelector('link[data-dk-booking-slots-preload]')) {
+      var jsonHref = el.src.replace(
+        /app-v2\.js(\?.*)?$/,
+        "../assets/data/booking-slots.json"
+      );
+      var preload = document.createElement("link");
+      preload.rel = "preload";
+      preload.as = "fetch";
+      preload.href = jsonHref;
+      preload.crossOrigin = "anonymous";
+      preload.setAttribute("data-dk-booking-slots-preload", "1");
+      document.head.appendChild(preload);
+    }
     if (window.dkBookingSlotsFetch) {
       window.dkBookingSlotsFetch(false);
       return;
     }
-    var el =
-      document.currentScript ||
-      document.querySelector('script[src*="app-v2.js"]');
     if (!el || !el.src) return;
     var bootSrc = el.src.replace(
       /app-v2\.js(\?.*)?$/,
-      "thanks-booking-bootstrap.js?v=10"
+      "thanks-booking-bootstrap.js?v=11"
     );
     var s = document.createElement("script");
     s.src = bootSrc;
@@ -115,6 +128,10 @@
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
 
     window.scrollTo(0, 0);
+
+    if (pageId === "#step06" || pageId === "#step-last") {
+      prewarmThanksBookingSlots();
+    }
 
     if (pageId === "#step-first") {
       page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
@@ -706,7 +723,7 @@
           } catch (e) {}
           prewarmThanksBookingSlots();
           persistLeadForThanks();
-          setTimeout(() => { location.href = buildThanksV2Url(); }, 1000);
+          setTimeout(() => { location.href = buildThanksV2Url(); }, 600);
         }, 500);
       });
     }

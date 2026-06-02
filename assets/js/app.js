@@ -19,6 +19,39 @@
     remove(name) { Cookie.set(name, "", -1); }
   };
 
+  const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
+  const LEAD_SESSION_KEY = "dk_lp_lead_v1";
+  const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
+
+  function buildThanksV2Url() {
+    const u = new URL(THANKS_V2_PATH, location.origin);
+    const lp = window.__LP_ID || "";
+    if (lp) u.searchParams.set("lp", lp);
+    const incoming = new URLSearchParams(location.search);
+    UTM_KEYS.forEach((key) => {
+      const val = incoming.get(key);
+      if (val) u.searchParams.set(key, val);
+    });
+    return u.pathname + u.search;
+  }
+
+  function persistLeadForThanks() {
+    const lp = window.__LP_ID || "unknown";
+    try {
+      sessionStorage.setItem(
+        LEAD_SESSION_KEY,
+        JSON.stringify({ ts: Date.now(), lp, href: location.href })
+      );
+    } catch (e) { /* private mode */ }
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "lead_form_submit",
+      lp_slug: lp,
+      page_location: location.href,
+      page_path: location.pathname
+    });
+  }
+
   // ========== Icon system (DOM移動方式) ==========
   let icon = null;
 
@@ -509,9 +542,8 @@
             if (fullName) sessionStorage.setItem("_name", fullName);
             if (window.__LP_ID) sessionStorage.setItem("_lp", window.__LP_ID);
           } catch (e) {}
-          // 新redesign版 thanks は CV計測タグ設定が未確定のため、
-          // 一旦すべて旧 WordPress thanks(/thanks/) へ統一
-          setTimeout(() => { location.href = "/thanks/"; }, 1500);
+          persistLeadForThanks();
+          setTimeout(() => { location.href = buildThanksV2Url(); }, 1500);
         }, 500);
       });
     }

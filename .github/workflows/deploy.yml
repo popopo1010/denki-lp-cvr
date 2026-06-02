@@ -39,6 +39,8 @@ jobs:
             assets/js/thanks-booking-custom.js \
             assets/js/thanks-booking-config.js \
             assets/js/thanks-booking-slots.js \
+            assets/js/thanks-booking-loader.js \
+            assets/js/thanks-testimonials.js \
             assets/js/thanks-gtm.js; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done

@@ -209,6 +209,7 @@
 - `CLAUDE.md` — エージェント作業原則・要確認項目
 - `本番反映手順書.md` — URL一覧・GTM・デプロイ
 - `index.html` — ローカルLP一覧
+- **`docs/reference-build-job-lp-thanks.md`** — 競合リファレンス（ビルドジョブ LP / thanks A・B）
 
 ---
 

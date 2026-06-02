@@ -18,9 +18,11 @@ window.BOOKING_FETCH_DAYS = 5;
 /** CDN配信の空き枠JSON（deploy / 5分sync で更新） */
 window.BOOKING_SLOTS_STATIC_URL = "../assets/data/booking-slots.json";
 
-/** 空き枠キャッシュ（sessionStorage） */
+/** 空き枠キャッシュ（sessionStorage + localStorage） */
 window.BOOKING_SLOTS_CACHE_KEY = "dk_booking_slots_cache";
 window.BOOKING_SLOTS_CACHE_TTL_MS = 5 * 60 * 1000;
+window.BOOKING_SLOTS_LS_KEY = "dk_booking_slots_ls";
+window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
 
 // --- TimeRex（THANKS_BOOKING_MODE=timerex のときのみ） ---
 window.TIMEREX_CALENDAR_BASE = "https://timerex.net/s/yuki.shibayama_34d4/1d1870bd";

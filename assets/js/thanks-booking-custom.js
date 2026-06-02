@@ -355,35 +355,57 @@
       '<p class="t-booking-empty">空き枠の取得に失敗しました。時間をおいて再度お試しください。</p>';
   }
 
+  function bookingSkeletonHtml() {
+    return (
+      '<div class="t-booking-skeleton">' +
+      '<p class="t-booking-loading" style="margin-bottom:8px">空き枠を表示しています…</p>' +
+      '<div class="t-booking-skeleton__days">' +
+      '<div class="t-booking-skeleton__day"></div>' +
+      '<div class="t-booking-skeleton__day"></div>' +
+      '<div class="t-booking-skeleton__day"></div>' +
+      "</div></div>"
+    );
+  }
+
+  function showLoadingShell() {
+    if (
+      !mount.querySelector(".t-booking-skeleton") &&
+      !mount.querySelector(".t-booking-day")
+    ) {
+      mount.innerHTML = bookingSkeletonHtml();
+    }
+  }
+
   function loadSlots() {
+    showLoadingShell();
+
     var cached =
       window.dkBookingSlotsReadCache && window.dkBookingSlotsReadCache();
     if (cached && cached.slots && cached.slots.length) {
       applySlots(cached.slots);
-      return;
     }
 
-    var root = document.getElementById("booking-slot-root");
-    if (root && !root.querySelector(".t-booking-skeleton")) {
-      mount.innerHTML = '<p class="t-booking-loading">空き枠を読み込み中...</p>';
-    }
-
-    var fetchFn = window.dkBookingSlotsFetch;
     var promise =
       window.__dkBookingSlotsPromise ||
-      (fetchFn ? fetchFn(false) : null);
+      (window.dkBookingSlotsFetch ? window.dkBookingSlotsFetch(false) : null);
 
-    if (!promise) {
+    if (promise) {
+      promise.then(function (data) {
+        if (data && data.slots && data.slots.length) {
+          applySlots(data.slots);
+        } else if (!allSlots.length) {
+          showSlotsError();
+        }
+      });
+    } else if (!allSlots.length) {
       showSlotsError();
-      return;
     }
 
-    promise.then(function (data) {
-      if (data && data.slots && data.slots.length) {
-        applySlots(data.slots);
+    window.addEventListener("dk-booking-slots-updated", function (ev) {
+      if (selected || !ev.detail || !ev.detail.slots || !ev.detail.slots.length) {
         return;
       }
-      showSlotsError();
+      applySlots(ev.detail.slots);
     });
   }
 
