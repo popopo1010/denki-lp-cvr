@@ -16,7 +16,7 @@ if('requestIdleCallback'in window)requestIdleCallback(g,{timeout:4e3});else wind
 <link rel="preload" href="../../assets/data/booking-slots.json" as="fetch" crossorigin>
 <script src="../../assets/js/thanks-booking-bootstrap.js?v=11"></script>
 <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014">
-<link rel="stylesheet" href="../../assets/css/thanks-page.css?v=11">
+<link rel="stylesheet" href="../../assets/css/thanks-page.css?v=12">
 <link rel="stylesheet" href="../../assets/css/thanks-calendar.css?v=6">
 <style>
 body{background:#f5f7fa}
@@ -97,7 +97,7 @@ body{background:#f5f7fa}
       <h3>面談日時を選ぶ</h3>
     </div>
     <div class="t-cal__body">
-      <p class="t-cal__sub">下から<strong>日時をタップ</strong>して予約（名前・電話の再入力なし）。</p>
+      <p class="t-cal__sub">初回は<strong>情報収集だけ</strong>でもOK。下から<strong>日時をタップ</strong>して予約（名前・電話の再入力なし）。</p>
       <div id="booking-slot-root">
         <div class="t-booking-skeleton" aria-busy="true">
           <p class="t-booking-loading" style="margin-bottom:8px">空き枠を表示しています…</p>
@@ -173,7 +173,7 @@ body{background:#f5f7fa}
         <div class="cvr-testimonials__stat"><span class="num">+80万</span><span class="lbl">年収UPの声あり</span></div>
         <div class="cvr-testimonials__stat"><span class="num">1ヶ月</span><span class="lbl">内定までの事例</span></div>
       </div>
-      <div class="cvr-testimonial cvr-testimonial--featured">
+      <div class="cvr-testimonial cvr-testimonial--featured" data-license="電気施工管理 1級">
         <div class="cvr-testimonial__header">
           <div class="cvr-testimonial__avatar"><img src="../../assets/img/testimonials/avatar-kt.svg" alt="" width="48" height="48" loading="lazy" decoding="async"></div>
           <div class="cvr-testimonial__meta">
@@ -200,7 +200,7 @@ body{background:#f5f7fa}
           </div>
         </div>
       </div>
-      <div class="cvr-testimonial">
+      <div class="cvr-testimonial" data-license="第二種電気工事士">
         <div class="cvr-testimonial__header">
           <div class="cvr-testimonial__avatar"><img src="../../assets/img/testimonials/avatar-sm.svg" alt="" width="48" height="48" loading="lazy" decoding="async"></div>
           <div class="cvr-testimonial__meta">
@@ -227,7 +227,7 @@ body{background:#f5f7fa}
           </div>
         </div>
       </div>
-      <div class="cvr-testimonial">
+      <div class="cvr-testimonial" data-license="電気主任技術者">
         <div class="cvr-testimonial__header">
           <div class="cvr-testimonial__avatar"><img src="../../assets/img/testimonials/avatar-yh.svg" alt="" width="48" height="48" loading="lazy" decoding="async"></div>
           <div class="cvr-testimonial__meta">
@@ -254,7 +254,7 @@ body{background:#f5f7fa}
           </div>
         </div>
       </div>
-      <div class="cvr-testimonial cvr-testimonial--purpose">
+      <div class="cvr-testimonial cvr-testimonial--purpose" data-license="第二種電気工事士">
         <div class="cvr-testimonial__header">
           <div class="cvr-testimonial__avatar"><img src="../../assets/img/testimonials/avatar-hs.svg" alt="" width="48" height="48" loading="lazy" decoding="async"></div>
           <div class="cvr-testimonial__meta">
@@ -281,7 +281,7 @@ body{background:#f5f7fa}
           </div>
         </div>
       </div>
-      <div class="cvr-testimonial cvr-testimonial--trust">
+      <div class="cvr-testimonial cvr-testimonial--trust" data-license="電気施工管理 1級">
         <div class="cvr-testimonial__header">
           <div class="cvr-testimonial__avatar"><img src="../../assets/img/testimonials/avatar-mk.svg" alt="" width="48" height="48" loading="lazy" decoding="async"></div>
           <div class="cvr-testimonial__meta">
@@ -308,7 +308,7 @@ body{background:#f5f7fa}
           </div>
         </div>
       </div>
-      <div class="cvr-testimonial cvr-testimonial--life">
+      <div class="cvr-testimonial cvr-testimonial--life" data-license="第二種電気工事士">
         <div class="cvr-testimonial__header">
           <div class="cvr-testimonial__avatar"><img src="../../assets/img/testimonials/avatar-tn.svg" alt="" width="48" height="48" loading="lazy" decoding="async"></div>
           <div class="cvr-testimonial__meta">
@@ -404,7 +404,7 @@ body{background:#f5f7fa}
   // CV tracking
 })();
 </script>
-<script src="../../assets/js/thanks-testimonials.js?v=1" defer></script>
+<script src="../../assets/js/thanks-testimonials.js?v=2" defer></script>
 <script src="../../assets/js/thanks-gtm.js?v=1"></script>
 </body>
 </html>

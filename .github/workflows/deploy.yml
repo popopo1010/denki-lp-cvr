@@ -113,3 +113,4 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denki-koji-bank-v3/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/denki-suite.css" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3

@@ -358,6 +358,12 @@
         const el = document.getElementById(k);
         if (el) el.value = vals[k];
       }
+      if (vals.license01) {
+        try {
+          const first = vals.license01.split(",")[0].trim();
+          if (first) sessionStorage.setItem("_license", first);
+        } catch (e) { /* private mode */ }
+      }
     }
 
     function hasAny() {
@@ -720,6 +726,11 @@
             fullName = fullName.trim();
             if (fullName) sessionStorage.setItem("_name", fullName);
             if (window.__LP_ID) sessionStorage.setItem("_lp", window.__LP_ID);
+            var licEl = document.getElementById("license01");
+            if (licEl && licEl.value) {
+              var firstLic = licEl.value.split(",")[0].trim();
+              if (firstLic) sessionStorage.setItem("_license", firstLic);
+            }
           } catch (e) {}
           prewarmThanksBookingSlots();
           persistLeadForThanks();

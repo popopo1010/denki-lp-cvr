@@ -154,8 +154,19 @@ body {
   display: block;
   object-fit: cover;
 }
-.cvr-testimonial__meta {
-  display: flex;
+.cvr-testimonial--match {
+  border-color: #314c85;
+  box-shadow: 0 2px 14px rgba(49, 76, 133, 0.2);
+}
+.cvr-testimonials__filter {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #314c85;
+  background: #eef2fa;
+  border-radius: 8px;
+}
   flex-direction: column;
   flex: 1;
   min-width: 0;
