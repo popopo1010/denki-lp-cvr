@@ -25,6 +25,10 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Sync booking slots JSON
+        continue-on-error: true
+        run: node scripts/sync-booking-slots.js
+
       - name: Minify JS/CSS/HTML
         run: |
           npx -y --package=esbuild@0.23.1 -- \

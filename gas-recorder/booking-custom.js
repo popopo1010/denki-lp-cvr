@@ -131,6 +131,47 @@ function isSlotFree(slotStart, slotEnd, busy) {
   return true;
 }
 
+var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v1_";
+
+function bookingSlotsCacheKey(days) {
+  return BOOKING_SLOTS_CACHE_PREFIX + days;
+}
+
+function readBookingSlotsCache(days) {
+  var raw = CacheService.getScriptCache().get(bookingSlotsCacheKey(days));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeBookingSlotsCache(days, payload) {
+  CacheService.getScriptCache().put(
+    bookingSlotsCacheKey(days),
+    JSON.stringify(payload),
+    180
+  );
+}
+
+function clearBookingSlotsCache() {
+  var cache = CacheService.getScriptCache();
+  [3, 5, 7, 14].forEach(function (d) {
+    cache.remove(bookingSlotsCacheKey(d));
+  });
+}
+
+function buildSlotsPayload(days) {
+  return {
+    ok: true,
+    slots: getAvailableSlots(days),
+    timezone: TZ,
+    slot_minutes: bookingConfig().slotMinutes,
+    generated_at: Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX")
+  };
+}
+
 function getAvailableSlots(daysAhead) {
   var cfg = bookingConfig();
   var cal = getBookingCalendar();
@@ -176,12 +217,15 @@ function getAvailableSlots(daysAhead) {
 function handleSlotsRequest(e) {
   try {
     var days = parseInt((e && e.parameter && e.parameter.days) || bookingConfig().daysAhead, 10);
-    var payload = {
-      ok: true,
-      slots: getAvailableSlots(days),
-      timezone: TZ,
-      slot_minutes: bookingConfig().slotMinutes
-    };
+    if (isNaN(days) || days < 1) days = 5;
+    if (days > 14) days = 14;
+
+    var payload = readBookingSlotsCache(days);
+    if (!payload || !payload.slots) {
+      payload = buildSlotsPayload(days);
+      writeBookingSlotsCache(days, payload);
+    }
+
     if (e && e.parameter && e.parameter.callback) {
       return jsonpResponse(e.parameter.callback, payload);
     }
@@ -193,6 +237,19 @@ function handleSlotsRequest(e) {
     }
     return jsonError(err);
   }
+}
+
+/**
+ * 時間主導トリガー用（5分ごと推奨）— CacheService を温める
+ * GASエディタ: トリガー → warmBookingSlotsCache → 分ベース 5
+ */
+function warmBookingSlotsCache() {
+  var daysList = [5, 7];
+  daysList.forEach(function (days) {
+    var payload = buildSlotsPayload(days);
+    writeBookingSlotsCache(days, payload);
+  });
+  return { ok: true, warmed: daysList };
 }
 
 /** GASエディタから1回実行 → カレンダー権限の承認 */
@@ -264,6 +321,8 @@ function bookSlotCore(params) {
   params.calendar_start = toJst(slotStart);
   params.calendar_end = toJst(slotEnd);
   params.calendar_guest_name = name;
+
+  clearBookingSlotsCache();
 
   var sheetResult = handleCalendarBooked(params);
   var sheetJson = JSON.parse(sheetResult.getContent());

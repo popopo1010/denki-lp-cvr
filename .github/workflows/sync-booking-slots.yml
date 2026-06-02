@@ -1,0 +1,47 @@
+name: Sync booking slots JSON
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-booking-slots
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      XSERVER_HOST: ${{ secrets.XSERVER_HOST }}
+      XSERVER_PORT: ${{ secrets.XSERVER_PORT }}
+      XSERVER_USER: ${{ secrets.XSERVER_USER }}
+      XSERVER_DEPLOY_PATH: ${{ secrets.XSERVER_DEPLOY_PATH }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch slots from GAS
+        run: node scripts/sync-booking-slots.js
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$XSERVER_PORT" -H "$XSERVER_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload booking-slots.json only
+        run: |
+          scp -P "$XSERVER_PORT" -i ~/.ssh/id_ed25519 \
+            assets/data/booking-slots.json \
+            "$XSERVER_USER@$XSERVER_HOST:$XSERVER_DEPLOY_PATH/assets/data/booking-slots.json"
+
+      - name: Verify JSON on server
+        run: |
+          curl -sS "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json" | head -c 120
