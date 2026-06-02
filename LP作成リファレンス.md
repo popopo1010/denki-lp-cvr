@@ -210,6 +210,7 @@
 - `本番反映手順書.md` — URL一覧・GTM・デプロイ
 - `index.html` — ローカルLP一覧
 - **`docs/reference-build-job-lp-thanks.md`** — 競合リファレンス（ビルドジョブ LP / thanks A・B）
+- **`docs/thanks-v2-残論点.md`** — サンクス v2 の完了項目・運用TODO・本番チェックリスト
 
 ---
 
