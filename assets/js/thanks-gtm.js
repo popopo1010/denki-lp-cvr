@@ -1,0 +1,81 @@
+/**
+ * thanks-v2 GTM（dk_lp main.js と同じ qualified / conversion ルール）
+ */
+(function () {
+  var LEAD_SESSION_KEY = "dk_lp_lead_v1";
+  var LEAD_SESSION_TTL_MS = 30 * 60 * 1000;
+  var CONVERSION_FIRED_KEY = "dk_lp_conversion_fired";
+
+  function pushDL(payload) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(payload);
+  }
+
+  function isQualified() {
+    try {
+      var raw = sessionStorage.getItem(LEAD_SESSION_KEY);
+      if (!raw) return false;
+      var data = JSON.parse(raw);
+      return !!(data && data.lp && Date.now() - data.ts < LEAD_SESSION_TTL_MS);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function getLpSlug() {
+    var params = new URLSearchParams(location.search);
+    var fromQs = params.get("lp");
+    if (fromQs) return fromQs;
+    try {
+      var raw = sessionStorage.getItem(LEAD_SESSION_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (data && data.lp) return data.lp;
+      }
+      return sessionStorage.getItem("_lp") || "unknown";
+    } catch (e2) {
+      return "unknown";
+    }
+  }
+
+  var qualified = isQualified();
+  var lpSlug = getLpSlug();
+
+  pushDL({
+    event: "thanks_page_view",
+    lp_slug: lpSlug,
+    thanks_qualified: qualified,
+    page_location: location.href,
+    page_path: location.pathname,
+    page_type: "thanks-v2"
+  });
+
+  pushDL({ event: "form_complete", page_type: "thanks-v2" });
+
+  if (qualified) {
+    try {
+      if (!sessionStorage.getItem(CONVERSION_FIRED_KEY)) {
+        sessionStorage.setItem(CONVERSION_FIRED_KEY, "1");
+        pushDL({
+          event: "lead_conversion",
+          lp_slug: lpSlug,
+          conversion_source: "lp_form"
+        });
+      }
+    } catch (e3) {}
+  }
+
+  function onLineClick() {
+    pushDL({
+      event: "thanks_line_click",
+      lp_slug: lpSlug,
+      thanks_qualified: qualified
+    });
+  }
+
+  document
+    .querySelectorAll('a[href*="lin.ee"], a[href*="line.me"], #line-cta')
+    .forEach(function (link) {
+      link.addEventListener("click", onLineClick);
+    });
+})();

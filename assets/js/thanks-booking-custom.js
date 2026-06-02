@@ -24,8 +24,117 @@
   }
   if (!tel) {
     section.style.display = "none";
+    document.body.classList.add("thanks-flow", "is-booked");
+    var lineOnly = document.getElementById("line-section");
+    if (lineOnly) lineOnly.classList.add("t-line--revealed");
     return;
   }
+
+  var BOOKING_DONE_KEY = "dk_booking_done";
+
+  function pushDL(event, extra) {
+    window.dataLayer = window.dataLayer || [];
+    var payload = { event: event, page_type: "thanks" };
+    if (extra) {
+      Object.keys(extra).forEach(function (k) {
+        payload[k] = extra[k];
+      });
+    }
+    window.dataLayer.push(payload);
+  }
+
+  function renderDoneHtml(info) {
+    return (
+      '<div class="t-booking-done t-booking-done--hero">' +
+      '<p class="t-booking-done__title">ご予約完了</p>' +
+      "<p class=\"t-booking-done__when\"><strong>" +
+      info.day_label +
+      " " +
+      info.time_label +
+      "</strong> 開始</p>" +
+      '<p class="t-booking-done__sub">この時間に担当よりご連絡します</p>' +
+      '<p class="t-booking-done__next">次は <strong>LINE友だち追加</strong>（30秒）をお願いします</p>' +
+      "</div>"
+    );
+  }
+
+  function revealLineStep(info) {
+    document.body.classList.remove("is-awaiting-booking");
+    document.body.classList.add("is-booked");
+    section.classList.add("t-cal--booked");
+
+    var headTitle = section.querySelector(".t-cal__head h3");
+    if (headTitle) headTitle.textContent = "ご予約完了";
+
+    var calBody = section.querySelector(".t-cal__body");
+    if (calBody) {
+      calBody.querySelectorAll(".t-cal__sub, .t-cal__note").forEach(function (el) {
+        el.style.display = "none";
+      });
+    }
+
+    var contact = document.querySelector(".t-contact");
+    if (contact) contact.style.display = "none";
+
+    var line = document.getElementById("line-section");
+    if (line) {
+      line.classList.add("t-line--revealed");
+      var badge = line.querySelector(".t-line__badge");
+      var h3 = line.querySelector("h3");
+      var sub = line.querySelector(".t-line__sub");
+      if (badge) badge.textContent = "次のステップ";
+      if (h3) h3.innerHTML = "予約のあと、<strong>LINE</strong>で求人を受け取る";
+      if (sub) sub.textContent = "面談前に非公開求人をお届けします（30秒で完了）";
+      setTimeout(function () {
+        line.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 450);
+    }
+
+    var stepBooking = document.querySelector('[data-step="booking"]');
+    var stepLine = document.querySelector('[data-step="line"]');
+    if (stepBooking) {
+      stepBooking.classList.remove("is-cur");
+      stepBooking.classList.add("is-done");
+    }
+    if (stepLine) stepLine.classList.add("is-cur");
+
+    var heroP = document.querySelector(".t-hero p");
+    if (heroP) {
+      heroP.innerHTML =
+        "面談日時のご予約ありがとうございます。<br>続いて<strong>LINE友だち追加</strong>をお願いします。";
+    }
+
+    pushDL("thanks_line_step_revealed", {
+      booking_tool: "custom",
+      booking_day: info.day_label || "",
+      booking_time: info.time_label || ""
+    });
+  }
+
+  function applyBookedState(info, skipSave) {
+    mount.innerHTML = renderDoneHtml(info);
+    if (!skipSave) {
+      try {
+        sessionStorage.setItem(BOOKING_DONE_KEY, JSON.stringify(info));
+      } catch (e) {}
+    }
+    revealLineStep(info);
+  }
+
+  document.body.classList.add("thanks-flow");
+
+  var savedRaw = null;
+  try {
+    savedRaw = sessionStorage.getItem(BOOKING_DONE_KEY);
+  } catch (e) {}
+  if (savedRaw) {
+    try {
+      applyBookedState(JSON.parse(savedRaw), true);
+      return;
+    } catch (e2) {}
+  }
+
+  document.body.classList.add("is-awaiting-booking");
 
   var wrap = document.querySelector(".t-cal__widget-wrap");
   if (wrap) wrap.style.display = "none";
@@ -206,23 +315,14 @@
               return;
             }
 
-            mount.innerHTML =
-              '<div class="t-booking-done">' +
-              "<p><strong>予約が完了しました</strong></p>" +
-              "<p>" +
-              selected.day_label +
-              " " +
-              selected.time_label +
-              " 開始</p>" +
-              '<p class="t-booking-done__sub">Googleカレンダーに登録済みです。担当者よりご連絡します</p>' +
-              "</div>";
-
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push({
-              event: "calendar_booked",
-              page_type: "thanks",
-              booking_tool: "custom"
-            });
+            var bookingInfo = {
+              day_label: selected.day_label,
+              time_label: selected.time_label,
+              start: selected.start,
+              end: selected.end
+            };
+            applyBookedState(bookingInfo, false);
+            pushDL("calendar_booked", { booking_tool: "custom" });
           }
         );
       });

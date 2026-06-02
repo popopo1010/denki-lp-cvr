@@ -307,6 +307,61 @@
   color: #047857 !important;
 }
 
+.t-booking-done--hero {
+  padding: 22px 14px;
+}
+
+.t-booking-done__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #065f46;
+  margin: 0 0 10px !important;
+}
+
+.t-booking-done__when {
+  font-size: 17px !important;
+  color: #1a3568 !important;
+  margin: 0 0 8px !important;
+}
+
+.t-booking-done__next {
+  font-size: 14px !important;
+  color: #047857 !important;
+  margin: 12px 0 0 !important;
+  padding-top: 12px;
+  border-top: 1px dashed #6ee7b7;
+}
+
+/* 予約 → LINE の順序フロー */
+.thanks-flow.is-awaiting-booking #line-section {
+  display: none;
+}
+
+.thanks-flow.is-booked .t-contact {
+  display: none;
+}
+
+.t-cal.t-cal--booked .t-cal__head {
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 55%, #43a047 100%);
+}
+
+.t-line--revealed {
+  animation: t-line-reveal 0.55s ease;
+  box-shadow: 0 6px 28px rgba(6, 199, 85, 0.32);
+  border-width: 3px;
+}
+
+@keyframes t-line-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .t-cal--nenshu .t-booking-day__title,
 .t-cal--nenshu .t-booking-slot {
   color: #a83d06;
