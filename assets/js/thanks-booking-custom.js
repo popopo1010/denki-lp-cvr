@@ -14,21 +14,24 @@
   var name = "";
   var lp = "thanks";
   try {
-    tel = sessionStorage.getItem("_tel") || "";
-    name = sessionStorage.getItem("_name") || "";
+    var qs = new URLSearchParams(location.search);
+    if (qs.get("_tel")) {
+      sessionStorage.setItem("_tel", qs.get("_tel"));
+      tel = qs.get("_tel");
+    }
+    if (qs.get("_name")) {
+      sessionStorage.setItem("_name", qs.get("_name"));
+      name = qs.get("_name");
+    }
+    if (!tel) tel = sessionStorage.getItem("_tel") || "";
+    if (!name) name = sessionStorage.getItem("_name") || "";
     lp = sessionStorage.getItem("_lp") || lp;
   } catch (e) {}
   if (!name) {
     var m = document.cookie.match(/(^| )user-name=([^;]+)/);
     if (m) name = decodeURIComponent(m[2]).trim();
   }
-  if (!tel) {
-    section.style.display = "none";
-    document.body.classList.add("thanks-flow", "is-booked");
-    var lineOnly = document.getElementById("line-section");
-    if (lineOnly) lineOnly.classList.add("t-line--revealed");
-    return;
-  }
+  var hasTel = !!tel;
 
   var BOOKING_DONE_KEY = "dk_booking_done";
 
@@ -250,6 +253,10 @@
     } else {
       html += '<p class="t-booking-hint">希望の時間をタップしてください</p>';
     }
+    if (!hasTel) {
+      html +=
+        '<p class="t-booking-hint" style="margin-top:8px">※ 予約確定にはLP登録時の電話番号が必要です</p>';
+    }
     html += "</div>";
 
     mount.innerHTML = html;
@@ -288,6 +295,13 @@
     if (confirm) {
       confirm.addEventListener("click", function () {
         if (!selected) return;
+        if (!hasTel) {
+          mount.insertAdjacentHTML(
+            "beforeend",
+            '<p class="t-booking-empty">電話番号が取得できません。LPの登録フォームから再度お進みください。</p>'
+          );
+          return;
+        }
         confirm.disabled = true;
         confirm.textContent = "予約中...";
 

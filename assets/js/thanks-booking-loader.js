@@ -9,7 +9,7 @@
     src = base.replace(/thanks-booking-loader\.js.*$/, src);
   }
   var s = document.createElement("script");
-  s.src = src;
+  s.src = src.split("?")[0] + "?v=7";
   s.async = true;
   document.head.appendChild(s);
 })();
