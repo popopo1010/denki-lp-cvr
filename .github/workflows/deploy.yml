@@ -31,32 +31,48 @@ jobs:
 
       - name: Minify JS/CSS/HTML
         run: |
-          npx -y --package=esbuild@0.23.1 -- \
-            esbuild assets/js/app.js --minify --allow-overwrite --outfile=assets/js/app.js
-          npx -y --package=esbuild@0.23.1 -- \
-            esbuild assets/css/cvr-boost.css --minify --allow-overwrite --outfile=assets/css/cvr-boost.css
-          # meta-short-lp.css は meta-lp/ がまだリポジトリに未追加のためスキップ
-          if [ -f assets/css/meta-short-lp.css ]; then
-            npx -y --package=esbuild@0.23.1 -- \
-              esbuild assets/css/meta-short-lp.css --minify --allow-overwrite --outfile=assets/css/meta-short-lp.css
-          fi
-          for f in index.html denkikouji/index.html sekoukanri/index.html \
+          ESBUILD="npx -y --package=esbuild@0.23.1 -- esbuild"
+          for f in \
+            assets/js/app.js \
+            assets/js/app-v2.js \
+            assets/js/thanks-booking-bootstrap.js \
+            assets/js/thanks-booking-custom.js \
+            assets/js/thanks-booking-config.js \
+            assets/js/thanks-booking-slots.js \
+            assets/js/thanks-gtm.js; do
+            [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
+          done
+          for f in \
+            assets/css/cvr-boost.css \
+            assets/css/cvr-boost-v2.css \
+            assets/css/thanks-calendar.css \
+            assets/css/thanks-page.css; do
+            [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
+          done
+          HTML_MIN="npx -y --package=html-minifier-terser@7.2.0 -- html-minifier-terser"
+          for f in \
+            thanks-v2/index.html \
+            denkikouji-v2/index.html \
+            sekoukanri-v2/index.html \
+            sekoukanri-kentiku-v2/index.html \
+            sekoukanri-doboku-v2/index.html \
+            sekoukanri-denkisekou-v2/index.html \
+            index.html denkikouji/index.html sekoukanri/index.html \
             sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
             if [ ! -f "$f" ]; then
               echo "skip (not in repo): $f"; continue
             fi
-            npx -y --package=html-minifier-terser@7.2.0 -- \
-              html-minifier-terser "$f" \
-                --collapse-whitespace --remove-comments \
-                --minify-css true --minify-js true \
-                --remove-redundant-attributes --remove-script-type-attributes \
-                --remove-style-link-type-attributes --use-short-doctype \
-                --continue-on-parse-error \
-                -o "$f.min"
+            $HTML_MIN "$f" \
+              --collapse-whitespace --remove-comments \
+              --minify-css true --minify-js true \
+              --remove-redundant-attributes --remove-script-type-attributes \
+              --remove-style-link-type-attributes --use-short-doctype \
+              --continue-on-parse-error \
+              -o "$f.min"
             mv "$f.min" "$f"
           done
           echo "--- minified sizes ---"
-          ls -lh assets/js/*.js assets/css/*.css index.html denkikouji/index.html sekoukanri/index.html
+          ls -lh assets/js/app-v2.js assets/js/thanks-booking-bootstrap.js assets/css/thanks-page.css thanks-v2/index.html 2>/dev/null || true
 
       - name: Setup SSH
         env:
@@ -86,5 +102,5 @@ jobs:
       - name: Verify deployment
         run: |
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" | head -3
-          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/" | head -3
-          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/sekoukanri/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json" | head -3

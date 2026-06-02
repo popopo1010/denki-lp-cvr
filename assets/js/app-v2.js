@@ -45,26 +45,15 @@
       document.currentScript ||
       document.querySelector('script[src*="app-v2.js"]');
     if (!el || !el.src) return;
-    var cfgSrc = el.src.replace(/app-v2\.js(\?.*)?$/, "thanks-booking-config.js?v=9");
+    var bootSrc = el.src.replace(
+      /app-v2\.js(\?.*)?$/,
+      "thanks-booking-bootstrap.js?v=10"
+    );
     var s = document.createElement("script");
-    s.src = cfgSrc;
+    s.src = bootSrc;
     s.async = true;
     s.onload = function () {
-      if (window.dkBookingSlotsFetch) {
-        window.dkBookingSlotsFetch(false);
-        return;
-      }
-      var slotsSrc = cfgSrc.replace(
-        "thanks-booking-config.js",
-        "thanks-booking-slots.js"
-      );
-      var s2 = document.createElement("script");
-      s2.src = slotsSrc;
-      s2.async = true;
-      s2.onload = function () {
-        if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
-      };
-      document.head.appendChild(s2);
+      if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
     };
     document.head.appendChild(s);
   }
@@ -717,7 +706,7 @@
           } catch (e) {}
           prewarmThanksBookingSlots();
           persistLeadForThanks();
-          setTimeout(() => { location.href = buildThanksV2Url(); }, 1500);
+          setTimeout(() => { location.href = buildThanksV2Url(); }, 1000);
         }, 500);
       });
     }
