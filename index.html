@@ -3,42 +3,890 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
   <title>LP 一覧 | 施工管理LP</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 560px; margin: 48px auto; padding: 0 24px; line-height: 1.6; color: #333; }
-    h1 { font-size: 1.25rem; margin-bottom: 8px; }
-    .lead { color: #666; font-size: 0.95rem; margin-bottom: 24px; }
-    a {
-      display: block; margin: 12px 0; padding: 16px 20px;
-      background: #314c85; color: #fff; text-decoration: none; border-radius: 10px;
-      text-align: center; font-weight: 700;
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0; padding: 32px 20px 64px; line-height: 1.5; color: #1a1a1a;
+      background: #f4f6f9;
     }
-    a:hover { filter: brightness(1.08); }
-    .sub { font-size: 0.85rem; font-weight: 600; opacity: 0.95; }
+    .wrap { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 1.35rem; margin: 0 0 6px; }
+    .lead { color: #555; font-size: 0.95rem; margin: 0 0 12px; }
+    .server-box {
+      background: #fff8e1; border: 1px solid #ffcc80; border-radius: 10px;
+      padding: 14px 16px; margin-bottom: 16px; font-size: 0.9rem;
+    }
+    .server-box strong { color: #e65100; }
+    .server-box code {
+      display: block; margin: 8px 0; padding: 10px 12px; background: #fff;
+      border-radius: 6px; font-size: 0.82rem; word-break: break-all;
+      border: 1px solid #eee;
+    }
+    .server-box a.local-root {
+      font-weight: 700; color: #1565c0; font-size: 1rem;
+    }
+    .file-warn {
+      display: none; background: #ffebee; border: 1px solid #ef9a9a;
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;
+      font-size: 0.88rem; color: #b71c1c;
+    }
+    .file-warn.is-on { display: block; }
+    .meta { font-size: 0.85rem; color: #666; margin-bottom: 20px; }
+    .back { margin: 0 0 16px; }
+    .back a { color: #314c85; font-weight: 600; }
+    .search-wrap { margin-bottom: 16px; }
+    #q {
+      width: 100%; padding: 12px 14px; font-size: 1rem; border: 1px solid #ccc;
+      border-radius: 10px; background: #fff;
+    }
+    nav {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px;
+    }
+    nav a {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 12px; background: #fff; border: 1px solid #dde3ec;
+      border-radius: 999px; text-decoration: none; color: #314c85;
+      font-size: 0.82rem; font-weight: 600;
+    }
+    nav a .count {
+      background: #eef2f8; color: #314c85; padding: 1px 7px; border-radius: 999px;
+      font-size: 0.75rem;
+    }
+    .section { margin-bottom: 36px; }
+    .section h2 {
+      font-size: 1.05rem; margin: 0 0 4px; padding-left: 10px;
+      border-left: 4px solid var(--accent, #314c85);
+    }
+    .section .note { color: #666; font-size: 0.85rem; margin: 0 0 12px; }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .lp-card {
+      display: block; padding: 0; background: #fff;
+      border: 1px solid #dde3ec; border-radius: 10px; color: inherit;
+      transition: box-shadow 0.15s, border-color 0.15s; overflow: hidden;
+    }
+    .lp-card:hover {
+      border-color: var(--accent, #314c85);
+      box-shadow: 0 4px 12px rgba(49, 76, 133, 0.12);
+    }
+    .lp-card-main {
+      display: block; padding: 14px 16px 10px; text-decoration: none; color: inherit;
+    }
+    .lp-card-main:hover .open-hint { text-decoration: underline; }
+    .lp-card .path {
+      display: block; font-size: 0.78rem; font-weight: 700;
+      color: var(--accent, #314c85); margin-bottom: 4px; word-break: break-all;
+    }
+    .lp-card .name {
+      display: block; font-size: 0.88rem; color: #333; line-height: 1.4;
+    }
+    .open-hint {
+      display: block; margin-top: 6px; font-size: 0.72rem; font-weight: 700;
+      color: var(--accent, #314c85);
+    }
+    .url-lines {
+      padding: 0 16px 12px; border-top: 1px solid #eef2f8;
+    }
+    .url-line {
+      margin: 6px 0 0; font-size: 0.72rem; line-height: 1.45;
+      word-break: break-all;
+    }
+    .url-label {
+      display: inline-block; min-width: 4.8em; font-weight: 700;
+      color: #666; margin-right: 4px;
+    }
+    .url {
+      color: #1565c0; text-decoration: none;
+    }
+    .url:hover { text-decoration: underline; }
+    .lp-card.is-hidden { display: none; }
+    .empty { display: none; color: #888; font-size: 0.9rem; padding: 12px 0; }
+    .empty.is-visible { display: block; }
+    footer { margin-top: 40px; font-size: 0.8rem; color: #888; }
+    footer code { font-size: 0.78rem; }
   </style>
 </head>
 <body>
-  <h1>LP 一覧</h1>
-  <p class="lead">各サービス用のランディングページです。公開URLに合わせてフォルダ配下の index を配信してください。</p>
-  <a href="./denkikouji/"><span class="sub">電気工事士向け</span><br>denkikouji</a>
-  <a href="./sekoukanri/"><span class="sub">施工管理（全工種）</span><br>sekoukanri</a>
-  <a href="./sekoukanri-kentiku/"><span class="sub">建築施工管理 1級・2級</span><br>sekoukanri-kentiku</a>
-  <a href="./sekoukanri-doboku/"><span class="sub">土木施工管理 1級・2級</span><br>sekoukanri-doboku</a>
-  <a href="./sekoukanri-denkisekou/"><span class="sub">電気工事施工管理 1級・2級</span><br>sekoukanri-denkisekou</a>
-  <a href="./nenshu-shindan/denkikouji/" style="background:#e8520e"><span class="sub">年収診断LP（電気工事士）</span><br>nenshu-shindan/denkikouji</a>
-  <a href="./nenshu-shindan/sekoukanri/" style="background:#e8520e"><span class="sub">年収診断LP（施工管理・全工種）</span><br>nenshu-shindan/sekoukanri</a>
-  <a href="./nenshu-shindan/sekoukanri-kentiku/" style="background:#e8520e"><span class="sub">年収診断・建築施工管理</span><br>nenshu-shindan/sekoukanri-kentiku</a>
-  <a href="./nenshu-shindan/sekoukanri-doboku/" style="background:#e8520e"><span class="sub">年収診断・土木施工管理</span><br>nenshu-shindan/sekoukanri-doboku</a>
-  <a href="./nenshu-shindan/sekoukanri-denkisekou/" style="background:#e8520e"><span class="sub">年収診断・電気施工管理</span><br>nenshu-shindan/sekoukanri-denkisekou</a>
-  <a href="./thanks/" style="background:#2e7d32"><span class="sub">サンクスページ</span><br>thanks</a>
-  <p class="lead" style="margin-top:24px;font-weight:700;color:#1a2b4a">Meta広告送客用（ショートLP・noindex）</p>
-  <a href="./meta-lp/sekoukanri-kentiku/" style="background:#6a1b9a"><span class="sub">Meta・建築施工管理</span><br>meta-lp/sekoukanri-kentiku</a>
-  <a href="./meta-lp/sekoukanri-doboku/" style="background:#6a1b9a"><span class="sub">Meta・土木施工管理</span><br>meta-lp/sekoukanri-doboku</a>
-  <a href="./meta-lp/sekoukanri-denkisekou/" style="background:#6a1b9a"><span class="sub">Meta・電気施工管理</span><br>meta-lp/sekoukanri-denkisekou</a>
-  <a href="./meta-lp/denkikouji/" style="background:#6a1b9a"><span class="sub">Meta・電気工事士</span><br>meta-lp/denkikouji</a>
-  <a href="./meta-lp/nenshu-shindan-kentiku/" style="background:#7b1fa2"><span class="sub">Meta・年収診断・建築</span><br>meta-lp/nenshu-shindan-kentiku</a>
-  <a href="./meta-lp/nenshu-shindan-doboku/" style="background:#7b1fa2"><span class="sub">Meta・年収診断・土木</span><br>meta-lp/nenshu-shindan-doboku</a>
-  <a href="./meta-lp/nenshu-shindan-denkisekou/" style="background:#7b1fa2"><span class="sub">Meta・年収診断・電気施工</span><br>meta-lp/nenshu-shindan-denkisekou</a>
-  <p class="lead" style="margin-top:32px">広告CR（録画用・フォームなし）は LP とは別URLです → <a href="./ad-cr/" style="display:inline;padding:0;background:none;color:#c62828;font-weight:700">ad-cr/</a></p>
+  <div class="wrap">
+    
+    <h1>LP 一覧 | 施工管理LP</h1>
+    <p class="lead">カード上部をクリックするとローカルプレビューが開きます。下のURLは本番・GitHub用（別タブ）。</p>
+    <p id="file-warn" class="file-warn" hidden>
+      <strong>ファイル直開（file://）ではリンクが動きません。</strong>
+      下の手順でローカルサーバーを起動してから
+      <a class="local-root" href="http://localhost:8080/">http://localhost:8080/</a>
+      を開いてください。
+    </p>
+    <div class="server-box">
+      <strong>ローカルで見る（推奨）</strong>
+      ターミナルでリポジトリ直下から実行:
+      <code>cd /Users/ikeobook15/施工管理LP<br>python3 -m http.server 8080</code>
+      ブラウザで開く:
+      <a class="local-root" href="http://localhost:8080/">http://localhost:8080/</a>
+    </div>
+    <p class="meta">全 <strong>71</strong> ページ · 生成: <code>node scripts/generate-lp-index.js</code></p>
+    <div class="search-wrap">
+      <input type="search" id="q" placeholder="パス・タイトルで絞り込み（例: meta, 土木, thanks）" autocomplete="off">
+    </div>
+    <nav aria-label="セクション">
+      <a href="#production">本番LP（ルート配信） <span class="count">13</span></a>
+      <a href="#wplp">WordPress版 (WPLP) <span class="count">13</span></a>
+      <a href="#jizen">自前LP <span class="count">13</span></a>
+      <a href="#nenshu">年収診断LP <span class="count">8</span></a>
+      <a href="#meta">Meta広告送客（noindex） <span class="count">7</span></a>
+      <a href="#adcr">広告CR（録画用） <span class="count">2</span></a>
+      <a href="#other">その他 <span class="count">15</span></a>
+    </nav>
+    <p class="empty" id="empty">該当するLPがありません。</p>
+
+    <section id="production" class="section" style="--accent:#314c85">
+      <h2>本番LP（ルート配信）</h2>
+      <p class="note">本番URLのルートパスに対応。GTM反映・静的配信の主対象。</p>
+      <div class="grid">
+        <article class="lp-card" data-search="denkikouji-v2/index.html 電気工事士の求人募集・転職サイト[国内最大級] denkikouji-v2 本番 https://denkilp.builders-job.com/denkikouji-kyujin-2/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/denkikouji-v2/" data-local="./denkikouji-v2/">
+          <a class="lp-card-main" href="./denkikouji-v2/">
+            <span class="path">denkikouji-v2</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denkikouji-kyujin-2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denkikouji-kyujin-2/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/denkikouji-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/denkikouji-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="denkikouji/index.html 電気工事士の求人募集・転職サイト[国内最大級] denkikouji 本番 https://denkilp.builders-job.com/denkikouji-kyujin-2/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/denkikouji/" data-local="./denkikouji/">
+          <a class="lp-card-main" href="./denkikouji/">
+            <span class="path">denkikouji</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denkikouji-kyujin-2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denkikouji-kyujin-2/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="privacypolicy/index.html プライバシーポリシー privacypolicy 本番 https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/ github確認 https://popopo1010.github.io/denki-lp-cvr/privacypolicy/" data-local="./privacypolicy/">
+          <a class="lp-card-main" href="./privacypolicy/">
+            <span class="path">privacypolicy</span>
+            <span class="name">プライバシーポリシー</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/privacypolicy/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/privacypolicy/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri-denkisekou-v2/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア sekoukanri-denkisekou-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri-denkisekou-v2/" data-local="./sekoukanri-denkisekou-v2/">
+          <a class="lp-card-main" href="./sekoukanri-denkisekou-v2/">
+            <span class="path">sekoukanri-denkisekou-v2</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri-denkisekou-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri-denkisekou-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア sekoukanri-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri-denkisekou/" data-local="./sekoukanri-denkisekou/">
+          <a class="lp-card-main" href="./sekoukanri-denkisekou/">
+            <span class="path">sekoukanri-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri-doboku-v2/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア sekoukanri-doboku-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri-doboku-v2/" data-local="./sekoukanri-doboku-v2/">
+          <a class="lp-card-main" href="./sekoukanri-doboku-v2/">
+            <span class="path">sekoukanri-doboku-v2</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri-doboku-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri-doboku-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア sekoukanri-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri-doboku/" data-local="./sekoukanri-doboku/">
+          <a class="lp-card-main" href="./sekoukanri-doboku/">
+            <span class="path">sekoukanri-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri-kentiku-v2/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア sekoukanri-kentiku-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri-kentiku-v2/" data-local="./sekoukanri-kentiku-v2/">
+          <a class="lp-card-main" href="./sekoukanri-kentiku-v2/">
+            <span class="path">sekoukanri-kentiku-v2</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri-kentiku-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri-kentiku-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア sekoukanri-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri-kentiku/" data-local="./sekoukanri-kentiku/">
+          <a class="lp-card-main" href="./sekoukanri-kentiku/">
+            <span class="path">sekoukanri-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri-v2/index.html 施工管理技士の求人募集・転職サイト[国内最大級] sekoukanri-v2 本番 https://denkilp.builders-job.com/sekokan/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri-v2/" data-local="./sekoukanri-v2/">
+          <a class="lp-card-main" href="./sekoukanri-v2/">
+            <span class="path">sekoukanri-v2</span>
+            <span class="name">施工管理技士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/sekokan/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/sekokan/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="sekoukanri/index.html 施工管理技士の求人募集・転職サイト[国内最大級] sekoukanri 本番 https://denkilp.builders-job.com/sekokan/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/ github確認 https://popopo1010.github.io/denki-lp-cvr/sekoukanri/" data-local="./sekoukanri/">
+          <a class="lp-card-main" href="./sekoukanri/">
+            <span class="path">sekoukanri</span>
+            <span class="name">施工管理技士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/sekokan/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/sekokan/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/sekoukanri/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/sekoukanri/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="thanks-v2/index.html 登録完了 thanks-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/thanks-v2/" data-local="./thanks-v2/">
+          <a class="lp-card-main" href="./thanks-v2/">
+            <span class="path">thanks-v2</span>
+            <span class="name">登録完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/thanks-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/thanks-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="thanks/index.html 登録完了 thanks 本番 https://denkilp.builders-job.com/denki-lp-cvr/thanks/ github確認 https://popopo1010.github.io/denki-lp-cvr/thanks/" data-local="./thanks/">
+          <a class="lp-card-main" href="./thanks/">
+            <span class="path">thanks</span>
+            <span class="name">登録完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/thanks/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/thanks/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/thanks/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/thanks/</a></p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="wplp" class="section" style="--accent:#1565c0">
+      <h2>WordPress版 (WPLP)</h2>
+      <p class="note">WPテーマ・本番反映用のコピー。</p>
+      <div class="grid">
+        <article class="lp-card" data-search="wplp/denkikouji-v2/index.html 電気工事士の求人募集・転職サイト[国内最大級] wplp/denkikouji-v2 本番 https://denkilp.builders-job.com/denkikouji-kyujin-2/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/denkikouji-v2/" data-local="./WPLP/denkikouji-v2/">
+          <a class="lp-card-main" href="./WPLP/denkikouji-v2/">
+            <span class="path">WPLP/denkikouji-v2</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denkikouji-kyujin-2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denkikouji-kyujin-2/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/denkikouji-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/denkikouji-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/denkikouji/index.html 電気工事士の求人募集・転職サイト[国内最大級] wplp/denkikouji 本番 https://denkilp.builders-job.com/denkikouji-kyujin-2/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/denkikouji/" data-local="./WPLP/denkikouji/">
+          <a class="lp-card-main" href="./WPLP/denkikouji/">
+            <span class="path">WPLP/denkikouji</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denkikouji-kyujin-2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denkikouji-kyujin-2/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/privacypolicy/index.html プライバシーポリシー wplp/privacypolicy 本番 https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/privacypolicy/" data-local="./WPLP/privacypolicy/">
+          <a class="lp-card-main" href="./WPLP/privacypolicy/">
+            <span class="path">WPLP/privacypolicy</span>
+            <span class="name">プライバシーポリシー</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/privacypolicy/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/privacypolicy/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri-denkisekou-v2/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア wplp/sekoukanri-denkisekou-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri-denkisekou-v2/" data-local="./WPLP/sekoukanri-denkisekou-v2/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri-denkisekou-v2/">
+            <span class="path">WPLP/sekoukanri-denkisekou-v2</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-denkisekou-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-denkisekou-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア wplp/sekoukanri-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri-denkisekou/" data-local="./WPLP/sekoukanri-denkisekou/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri-denkisekou/">
+            <span class="path">WPLP/sekoukanri-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri-doboku-v2/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア wplp/sekoukanri-doboku-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri-doboku-v2/" data-local="./WPLP/sekoukanri-doboku-v2/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri-doboku-v2/">
+            <span class="path">WPLP/sekoukanri-doboku-v2</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-doboku-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-doboku-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア wplp/sekoukanri-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri-doboku/" data-local="./WPLP/sekoukanri-doboku/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri-doboku/">
+            <span class="path">WPLP/sekoukanri-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri-kentiku-v2/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア wplp/sekoukanri-kentiku-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri-kentiku-v2/" data-local="./WPLP/sekoukanri-kentiku-v2/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri-kentiku-v2/">
+            <span class="path">WPLP/sekoukanri-kentiku-v2</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-kentiku-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-kentiku-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア wplp/sekoukanri-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri-kentiku/" data-local="./WPLP/sekoukanri-kentiku/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri-kentiku/">
+            <span class="path">WPLP/sekoukanri-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri-v2/index.html 施工管理技士の求人募集・転職サイト[国内最大級] wplp/sekoukanri-v2 本番 https://denkilp.builders-job.com/sekokan/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri-v2/" data-local="./WPLP/sekoukanri-v2/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri-v2/">
+            <span class="path">WPLP/sekoukanri-v2</span>
+            <span class="name">施工管理技士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/sekokan/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/sekokan/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/sekoukanri/index.html 施工管理技士の求人募集・転職サイト[国内最大級] wplp/sekoukanri 本番 https://denkilp.builders-job.com/sekokan/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/sekoukanri/" data-local="./WPLP/sekoukanri/">
+          <a class="lp-card-main" href="./WPLP/sekoukanri/">
+            <span class="path">WPLP/sekoukanri</span>
+            <span class="name">施工管理技士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/sekokan/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/sekokan/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/sekoukanri/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/thanks-v2/index.html 登録完了 wplp/thanks-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/thanks-v2/" data-local="./WPLP/thanks-v2/">
+          <a class="lp-card-main" href="./WPLP/thanks-v2/">
+            <span class="path">WPLP/thanks-v2</span>
+            <span class="name">登録完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/thanks-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/thanks-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="wplp/thanks/index.html 登録完了 wplp/thanks 本番 https://denkilp.builders-job.com/denki-lp-cvr/thanks/ github確認 https://popopo1010.github.io/denki-lp-cvr/wplp/thanks/" data-local="./WPLP/thanks/">
+          <a class="lp-card-main" href="./WPLP/thanks/">
+            <span class="path">WPLP/thanks</span>
+            <span class="name">登録完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/thanks/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/thanks/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/WPLP/thanks/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/WPLP/thanks/</a></p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="jizen" class="section" style="--accent:#00695c">
+      <h2>自前LP</h2>
+      <p class="note">自社ホスティング・検証用の静的LP。</p>
+      <div class="grid">
+        <article class="lp-card" data-search="自前lp/denkikouji-v2/index.html 電気工事士の求人募集・転職サイト[国内最大級] 自前lp/denkikouji-v2 本番 https://denkilp.builders-job.com/denkikouji-kyujin-2/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/denkikouji-v2/" data-local="./自前LP/denkikouji-v2/">
+          <a class="lp-card-main" href="./自前LP/denkikouji-v2/">
+            <span class="path">自前LP/denkikouji-v2</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denkikouji-kyujin-2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denkikouji-kyujin-2/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/denkikouji-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/denkikouji-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/denkikouji/index.html 電気工事士の求人募集・転職サイト[国内最大級] 自前lp/denkikouji 本番 https://denkilp.builders-job.com/denkikouji-kyujin-2/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/denkikouji/" data-local="./自前LP/denkikouji/">
+          <a class="lp-card-main" href="./自前LP/denkikouji/">
+            <span class="path">自前LP/denkikouji</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denkikouji-kyujin-2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denkikouji-kyujin-2/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/privacypolicy/index.html プライバシーポリシー 自前lp/privacypolicy 本番 https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/privacypolicy/" data-local="./自前LP/privacypolicy/">
+          <a class="lp-card-main" href="./自前LP/privacypolicy/">
+            <span class="path">自前LP/privacypolicy</span>
+            <span class="name">プライバシーポリシー</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/privacypolicy/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/privacypolicy/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri-denkisekou-v2/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア 自前lp/sekoukanri-denkisekou-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri-denkisekou-v2/" data-local="./自前LP/sekoukanri-denkisekou-v2/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri-denkisekou-v2/">
+            <span class="path">自前LP/sekoukanri-denkisekou-v2</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-denkisekou-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-denkisekou-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア 自前lp/sekoukanri-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri-denkisekou/" data-local="./自前LP/sekoukanri-denkisekou/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri-denkisekou/">
+            <span class="path">自前LP/sekoukanri-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri-doboku-v2/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア 自前lp/sekoukanri-doboku-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri-doboku-v2/" data-local="./自前LP/sekoukanri-doboku-v2/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri-doboku-v2/">
+            <span class="path">自前LP/sekoukanri-doboku-v2</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-doboku-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-doboku-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア 自前lp/sekoukanri-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri-doboku/" data-local="./自前LP/sekoukanri-doboku/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri-doboku/">
+            <span class="path">自前LP/sekoukanri-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri-kentiku-v2/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア 自前lp/sekoukanri-kentiku-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri-kentiku-v2/" data-local="./自前LP/sekoukanri-kentiku-v2/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri-kentiku-v2/">
+            <span class="path">自前LP/sekoukanri-kentiku-v2</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-kentiku-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-kentiku-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア 自前lp/sekoukanri-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri-kentiku/" data-local="./自前LP/sekoukanri-kentiku/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri-kentiku/">
+            <span class="path">自前LP/sekoukanri-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri-v2/index.html 施工管理技士の求人募集・転職サイト[国内最大級] 自前lp/sekoukanri-v2 本番 https://denkilp.builders-job.com/sekokan/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri-v2/" data-local="./自前LP/sekoukanri-v2/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri-v2/">
+            <span class="path">自前LP/sekoukanri-v2</span>
+            <span class="name">施工管理技士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/sekokan/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/sekokan/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/sekoukanri/index.html 施工管理技士の求人募集・転職サイト[国内最大級] 自前lp/sekoukanri 本番 https://denkilp.builders-job.com/sekokan/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/sekoukanri/" data-local="./自前LP/sekoukanri/">
+          <a class="lp-card-main" href="./自前LP/sekoukanri/">
+            <span class="path">自前LP/sekoukanri</span>
+            <span class="name">施工管理技士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/sekokan/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/sekokan/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/sekoukanri/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/thanks-v2/index.html 登録完了 自前lp/thanks-v2 本番 https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/thanks-v2/" data-local="./自前LP/thanks-v2/">
+          <a class="lp-card-main" href="./自前LP/thanks-v2/">
+            <span class="path">自前LP/thanks-v2</span>
+            <span class="name">登録完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/thanks-v2/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/thanks-v2/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="自前lp/thanks/index.html 登録完了 自前lp/thanks 本番 https://denkilp.builders-job.com/denki-lp-cvr/thanks/ github確認 https://popopo1010.github.io/denki-lp-cvr/自前lp/thanks/" data-local="./自前LP/thanks/">
+          <a class="lp-card-main" href="./自前LP/thanks/">
+            <span class="path">自前LP/thanks</span>
+            <span class="name">登録完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/thanks/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/thanks/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/自前LP/thanks/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/自前LP/thanks/</a></p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="nenshu" class="section" style="--accent:#e8520e">
+      <h2>年収診断LP</h2>
+      <p class="note">年収診断フォーム・サンクス・CRリダイレクト。</p>
+      <div class="grid">
+        <article class="lp-card" data-search="nenshu-shindan/cr/denkikouji/index.html 移動中… nenshu-shindan/cr/denkikouji 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/cr/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/cr/denkikouji/" data-local="./nenshu-shindan/cr/denkikouji/">
+          <a class="lp-card-main" href="./nenshu-shindan/cr/denkikouji/">
+            <span class="path">nenshu-shindan/cr/denkikouji</span>
+            <span class="name">移動中…</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/cr/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/cr/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/cr/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/cr/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan/cr/sekoukanri/index.html 移動中… nenshu-shindan/cr/sekoukanri 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/cr/sekoukanri/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/cr/sekoukanri/" data-local="./nenshu-shindan/cr/sekoukanri/">
+          <a class="lp-card-main" href="./nenshu-shindan/cr/sekoukanri/">
+            <span class="path">nenshu-shindan/cr/sekoukanri</span>
+            <span class="name">移動中…</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/cr/sekoukanri/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/cr/sekoukanri/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/cr/sekoukanri/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/cr/sekoukanri/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan/denkikouji/index.html 電気工事士・電気施工管理の年収診断 nenshu-shindan/denkikouji 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/denkikouji/" data-local="./nenshu-shindan/denkikouji/">
+          <a class="lp-card-main" href="./nenshu-shindan/denkikouji/">
+            <span class="path">nenshu-shindan/denkikouji</span>
+            <span class="name">電気工事士・電気施工管理の年収診断</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan/sekoukanri-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア nenshu-shindan/sekoukanri-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-denkisekou/" data-local="./nenshu-shindan/sekoukanri-denkisekou/">
+          <a class="lp-card-main" href="./nenshu-shindan/sekoukanri-denkisekou/">
+            <span class="path">nenshu-shindan/sekoukanri-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan/sekoukanri-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア nenshu-shindan/sekoukanri-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-doboku/" data-local="./nenshu-shindan/sekoukanri-doboku/">
+          <a class="lp-card-main" href="./nenshu-shindan/sekoukanri-doboku/">
+            <span class="path">nenshu-shindan/sekoukanri-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan/sekoukanri-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア nenshu-shindan/sekoukanri-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-kentiku/" data-local="./nenshu-shindan/sekoukanri-kentiku/">
+          <a class="lp-card-main" href="./nenshu-shindan/sekoukanri-kentiku/">
+            <span class="path">nenshu-shindan/sekoukanri-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan/sekoukanri/index.html 施工管理技士の年収診断 nenshu-shindan/sekoukanri 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri/" data-local="./nenshu-shindan/sekoukanri/">
+          <a class="lp-card-main" href="./nenshu-shindan/sekoukanri/">
+            <span class="path">nenshu-shindan/sekoukanri</span>
+            <span class="name">施工管理技士の年収診断</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/sekoukanri/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/sekoukanri/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan/thanks/index.html 年収診断 受付完了 nenshu-shindan/thanks 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/thanks/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/thanks/" data-local="./nenshu-shindan/thanks/">
+          <a class="lp-card-main" href="./nenshu-shindan/thanks/">
+            <span class="path">nenshu-shindan/thanks</span>
+            <span class="name">年収診断 受付完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/thanks/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan/thanks/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/thanks/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan/thanks/</a></p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="meta" class="section" style="--accent:#6a1b9a">
+      <h2>Meta広告送客（noindex）</h2>
+      <p class="note">ショートLP・Meta送客専用。</p>
+      <div class="grid">
+        <article class="lp-card" data-search="meta-lp/denkikouji/index.html 電気工事士の求人募集・転職サイト[国内最大級] meta-lp/denkikouji 本番 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp/denkikouji/" data-local="./meta-lp/denkikouji/">
+          <a class="lp-card-main" href="./meta-lp/denkikouji/">
+            <span class="path">meta-lp/denkikouji</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp/nenshu-shindan-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp/nenshu-shindan-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/" data-local="./meta-lp/nenshu-shindan-denkisekou/">
+          <a class="lp-card-main" href="./meta-lp/nenshu-shindan-denkisekou/">
+            <span class="path">meta-lp/nenshu-shindan-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp/nenshu-shindan-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp/nenshu-shindan-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/" data-local="./meta-lp/nenshu-shindan-doboku/">
+          <a class="lp-card-main" href="./meta-lp/nenshu-shindan-doboku/">
+            <span class="path">meta-lp/nenshu-shindan-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp/nenshu-shindan-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp/nenshu-shindan-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/" data-local="./meta-lp/nenshu-shindan-kentiku/">
+          <a class="lp-card-main" href="./meta-lp/nenshu-shindan-kentiku/">
+            <span class="path">meta-lp/nenshu-shindan-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp/sekoukanri-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp/sekoukanri-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-denkisekou/" data-local="./meta-lp/sekoukanri-denkisekou/">
+          <a class="lp-card-main" href="./meta-lp/sekoukanri-denkisekou/">
+            <span class="path">meta-lp/sekoukanri-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp/sekoukanri-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp/sekoukanri-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-doboku/" data-local="./meta-lp/sekoukanri-doboku/">
+          <a class="lp-card-main" href="./meta-lp/sekoukanri-doboku/">
+            <span class="path">meta-lp/sekoukanri-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp/sekoukanri-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp/sekoukanri-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-kentiku/" data-local="./meta-lp/sekoukanri-kentiku/">
+          <a class="lp-card-main" href="./meta-lp/sekoukanri-kentiku/">
+            <span class="path">meta-lp/sekoukanri-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp/sekoukanri-kentiku/</a></p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="adcr" class="section" style="--accent:#c62828">
+      <h2>広告CR（録画用）</h2>
+      <p class="note">動画広告の画面録画用。送客先URLではない。</p>
+      <div class="grid">
+        <article class="lp-card" data-search="ad-cr/denkikouji/index.html 【録画用cr】電気工事士 年収診断 ad-cr/denkikouji 本番 https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/denkikouji/?meta=1 github確認 https://popopo1010.github.io/denki-lp-cvr/ad-cr/denkikouji/" data-local="./ad-cr/denkikouji/">
+          <a class="lp-card-main" href="./ad-cr/denkikouji/">
+            <span class="path">ad-cr/denkikouji</span>
+            <span class="name">【録画用CR】電気工事士 年収診断</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/denkikouji/?meta=1" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/denkikouji/?meta=1</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/ad-cr/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/ad-cr/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="ad-cr/sekoukanri/index.html 【録画用cr】施工管理 年収診断 ad-cr/sekoukanri 本番 https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/sekoukanri/?meta=1 github確認 https://popopo1010.github.io/denki-lp-cvr/ad-cr/sekoukanri/" data-local="./ad-cr/sekoukanri/">
+          <a class="lp-card-main" href="./ad-cr/sekoukanri/">
+            <span class="path">ad-cr/sekoukanri</span>
+            <span class="name">【録画用CR】施工管理 年収診断</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/sekoukanri/?meta=1" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/ad-cr/sekoukanri/?meta=1</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/ad-cr/sekoukanri/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/ad-cr/sekoukanri/</a></p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="other" class="section" style="--accent:#546e7a">
+      <h2>その他</h2>
+      <p class="note">分類未定義のページ。generate-lp-index.js の SECTIONS を更新してください。</p>
+      <div class="grid">
+        <article class="lp-card" data-search="denki-koji-bank-v3/index.html 電気工事士の転職・求人｜第二種・第一種｜電気工事バンク denki-koji-bank-v3 本番 https://denkilp.builders-job.com/denki-lp-cvr/denki-koji-bank-v3/ github確認 https://popopo1010.github.io/denki-lp-cvr/denki-koji-bank-v3/" data-local="./denki-koji-bank-v3/">
+          <a class="lp-card-main" href="./denki-koji-bank-v3/">
+            <span class="path">denki-koji-bank-v3</span>
+            <span class="name">電気工事士の転職・求人｜第二種・第一種｜電気工事バンク</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denki-koji-bank-v3/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denki-koji-bank-v3/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/denki-koji-bank-v3/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/denki-koji-bank-v3/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="densen-bank-v3/index.html 電気施工管理の転職・求人｜電気現場の監督｜電気施工バンク densen-bank-v3 本番 https://denkilp.builders-job.com/denki-lp-cvr/densen-bank-v3/ github確認 https://popopo1010.github.io/denki-lp-cvr/densen-bank-v3/" data-local="./densen-bank-v3/">
+          <a class="lp-card-main" href="./densen-bank-v3/">
+            <span class="path">densen-bank-v3</span>
+            <span class="name">電気施工管理の転職・求人｜電気現場の監督｜電気施工バンク</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/densen-bank-v3/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/densen-bank-v3/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/densen-bank-v3/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/densen-bank-v3/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp-v2/denkikouji/index.html 電気工事士の求人募集・転職サイト[国内最大級] meta-lp-v2/denkikouji 本番 https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/denkikouji/" data-local="./meta-lp-v2/denkikouji/">
+          <a class="lp-card-main" href="./meta-lp-v2/denkikouji/">
+            <span class="path">meta-lp-v2/denkikouji</span>
+            <span class="name">電気工事士の求人募集・転職サイト[国内最大級]</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp-v2/nenshu-shindan-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp-v2/nenshu-shindan-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-denkisekou/" data-local="./meta-lp-v2/nenshu-shindan-denkisekou/">
+          <a class="lp-card-main" href="./meta-lp-v2/nenshu-shindan-denkisekou/">
+            <span class="path">meta-lp-v2/nenshu-shindan-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp-v2/nenshu-shindan-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp-v2/nenshu-shindan-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-doboku/" data-local="./meta-lp-v2/nenshu-shindan-doboku/">
+          <a class="lp-card-main" href="./meta-lp-v2/nenshu-shindan-doboku/">
+            <span class="path">meta-lp-v2/nenshu-shindan-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp-v2/nenshu-shindan-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp-v2/nenshu-shindan-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-kentiku/" data-local="./meta-lp-v2/nenshu-shindan-kentiku/">
+          <a class="lp-card-main" href="./meta-lp-v2/nenshu-shindan-kentiku/">
+            <span class="path">meta-lp-v2/nenshu-shindan-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/nenshu-shindan-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/nenshu-shindan-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp-v2/sekoukanri-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp-v2/sekoukanri-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-denkisekou/" data-local="./meta-lp-v2/sekoukanri-denkisekou/">
+          <a class="lp-card-main" href="./meta-lp-v2/sekoukanri-denkisekou/">
+            <span class="path">meta-lp-v2/sekoukanri-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp-v2/sekoukanri-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp-v2/sekoukanri-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-doboku/" data-local="./meta-lp-v2/sekoukanri-doboku/">
+          <a class="lp-card-main" href="./meta-lp-v2/sekoukanri-doboku/">
+            <span class="path">meta-lp-v2/sekoukanri-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="meta-lp-v2/sekoukanri-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア meta-lp-v2/sekoukanri-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/ cvr反映 https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-kentiku/" data-local="./meta-lp-v2/sekoukanri-kentiku/">
+          <a class="lp-card-main" href="./meta-lp-v2/sekoukanri-kentiku/">
+            <span class="path">meta-lp-v2/sekoukanri-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">CVR反映</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/meta-lp-v2/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/meta-lp-v2/sekoukanri-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan-v2/denkikouji/index.html 電気工事士・電気施工管理の年収診断 nenshu-shindan-v2/denkikouji 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/denkikouji/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/denkikouji/" data-local="./nenshu-shindan-v2/denkikouji/">
+          <a class="lp-card-main" href="./nenshu-shindan-v2/denkikouji/">
+            <span class="path">nenshu-shindan-v2/denkikouji</span>
+            <span class="name">電気工事士・電気施工管理の年収診断</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/denkikouji/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/denkikouji/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/denkikouji/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/denkikouji/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan-v2/sekoukanri-denkisekou/index.html 電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア nenshu-shindan-v2/sekoukanri-denkisekou 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-denkisekou/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-denkisekou/" data-local="./nenshu-shindan-v2/sekoukanri-denkisekou/">
+          <a class="lp-card-main" href="./nenshu-shindan-v2/sekoukanri-denkisekou/">
+            <span class="path">nenshu-shindan-v2/sekoukanri-denkisekou</span>
+            <span class="name">電気工事施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-denkisekou/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-denkisekou/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-denkisekou/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan-v2/sekoukanri-doboku/index.html 土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア nenshu-shindan-v2/sekoukanri-doboku 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-doboku/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-doboku/" data-local="./nenshu-shindan-v2/sekoukanri-doboku/">
+          <a class="lp-card-main" href="./nenshu-shindan-v2/sekoukanri-doboku/">
+            <span class="path">nenshu-shindan-v2/sekoukanri-doboku</span>
+            <span class="name">土木施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-doboku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-doboku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-doboku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan-v2/sekoukanri-kentiku/index.html 建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア nenshu-shindan-v2/sekoukanri-kentiku 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-kentiku/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-kentiku/" data-local="./nenshu-shindan-v2/sekoukanri-kentiku/">
+          <a class="lp-card-main" href="./nenshu-shindan-v2/sekoukanri-kentiku/">
+            <span class="path">nenshu-shindan-v2/sekoukanri-kentiku</span>
+            <span class="name">建築施工管理技士の求人・転職｜1級・2級専門｜施工管理キャリア</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-kentiku/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-kentiku/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri-kentiku/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan-v2/sekoukanri/index.html 施工管理技士の年収診断 nenshu-shindan-v2/sekoukanri 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri/" data-local="./nenshu-shindan-v2/sekoukanri/">
+          <a class="lp-card-main" href="./nenshu-shindan-v2/sekoukanri/">
+            <span class="path">nenshu-shindan-v2/sekoukanri</span>
+            <span class="name">施工管理技士の年収診断</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/sekoukanri/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/sekoukanri/</a></p></div>
+        </article>
+        <article class="lp-card" data-search="nenshu-shindan-v2/thanks/index.html 年収診断 受付完了 nenshu-shindan-v2/thanks 本番 https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/thanks/ github確認 https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/thanks/" data-local="./nenshu-shindan-v2/thanks/">
+          <a class="lp-card-main" href="./nenshu-shindan-v2/thanks/">
+            <span class="path">nenshu-shindan-v2/thanks</span>
+            <span class="name">年収診断 受付完了</span>
+            <span class="open-hint">クリックでローカルプレビュー →</span>
+          </a>
+          <div class="url-lines"><p class="url-line"><span class="url-label">本番</span><a class="url" href="https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/thanks/" target="_blank" rel="noopener noreferrer">https://denkilp.builders-job.com/denki-lp-cvr/nenshu-shindan-v2/thanks/</a></p>
+<p class="url-line"><span class="url-label">GitHub確認</span><a class="url" href="https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/thanks/" target="_blank" rel="noopener noreferrer">https://popopo1010.github.io/denki-lp-cvr/nenshu-shindan-v2/thanks/</a></p></div>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      広告CRの入稿用一覧は <a href="./ad-cr/">ad-cr/</a> も参照。
+    </footer>
+  </div>
+  <script>
+    (function () {
+      if (location.protocol === "file:") {
+        var w = document.getElementById("file-warn");
+        if (w) { w.hidden = false; w.classList.add("is-on"); }
+      }
+      var input = document.getElementById("q");
+      var cards = document.querySelectorAll(".lp-card");
+      var empty = document.getElementById("empty");
+      function filter() {
+        var q = (input.value || "").trim().toLowerCase();
+        var visible = 0;
+        cards.forEach(function (card) {
+          var show = !q || (card.getAttribute("data-search") || "").indexOf(q) !== -1;
+          card.classList.toggle("is-hidden", !show);
+          if (show) visible++;
+        });
+        empty.classList.toggle("is-visible", visible === 0);
+      }
+      input.addEventListener("input", filter);
+    })();
+  </script>
 </body>
 </html>

@@ -35,6 +35,7 @@ jobs:
           for f in \
             assets/js/app.js \
             assets/js/app-v2.js \
+            assets/js/denki-suite.js \
             assets/js/thanks-booking-bootstrap.js \
             assets/js/thanks-booking-custom.js \
             assets/js/thanks-booking-config.js \
@@ -47,6 +48,7 @@ jobs:
           for f in \
             assets/css/cvr-boost.css \
             assets/css/cvr-boost-v2.css \
+            assets/css/denki-suite.css \
             assets/css/thanks-calendar.css \
             assets/css/thanks-page.css; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
@@ -59,6 +61,8 @@ jobs:
             sekoukanri-kentiku-v2/index.html \
             sekoukanri-doboku-v2/index.html \
             sekoukanri-denkisekou-v2/index.html \
+            densen-bank-v3/index.html \
+            denki-koji-bank-v3/index.html \
             index.html denkikouji/index.html sekoukanri/index.html \
             sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
             if [ ! -f "$f" ]; then
@@ -105,4 +109,7 @@ jobs:
         run: |
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/densen-bank-v3/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denki-koji-bank-v3/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/denki-suite.css" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json" | head -3
