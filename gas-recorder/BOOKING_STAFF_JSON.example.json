@@ -1,0 +1,22 @@
+[
+  {
+    "id": "shibayama",
+    "name": "柴山",
+    "calendar_id": "yuki.shibayama@xchange-inc.com"
+  },
+  {
+    "id": "hayashi",
+    "name": "林",
+    "calendar_id": "REPLACE_WITH_HAYASHI_CALENDAR_ID"
+  },
+  {
+    "id": "fukuyama",
+    "name": "福山",
+    "calendar_id": "REPLACE_WITH_FUKUYAMA_CALENDAR_ID"
+  },
+  {
+    "id": "yamada",
+    "name": "山田",
+    "calendar_id": "REPLACE_WITH_YAMADA_CALENDAR_ID"
+  }
+]

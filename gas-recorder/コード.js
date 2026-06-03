@@ -49,6 +49,8 @@ const PREFERRED_COLUMNS = [
   "calendar_guest_email",
   "calendar_tool",
   "calendar_id",
+  "calendar_staff_id",
+  "calendar_staff_name",
   "calendar_event_id",
   "_submitted_at",
   "_page",
@@ -371,6 +373,8 @@ function handleCalendarBooked(params) {
       calendar_guest_email: params.calendar_guest_email || params["guest_email"] || "",
       calendar_tool: params.calendar_tool,
       calendar_id: params.calendar_id || "",
+      calendar_staff_id: params.calendar_staff_id || "",
+      calendar_staff_name: params.calendar_staff_name || "",
       calendar_event_id: params.calendar_event_id || ""
     };
 
@@ -419,6 +423,8 @@ function buildCalendarSlackMessage(params) {
   if (name) lines.push("*名前:* " + name);
   if (tel) lines.push("*電話:* " + tel);
   if (lp) lines.push("*LP:* " + lp);
+  var staffName = params.calendar_staff_name || "";
+  if (staffName) lines.push("*担当:* " + staffName);
   return lines.join("\n");
 }
 

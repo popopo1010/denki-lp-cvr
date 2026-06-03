@@ -2,7 +2,8 @@
  * 独自予約: Googleカレンダーの空き → JSONP / 予約確定 → スプシ + Slack
  *
  * スクリプトプロパティ（任意）:
- *   BOOKING_CALENDAR_ID … 空き判定・予定作成に使うカレンダーID（未設定=デフォルト）
+ *   BOOKING_CALENDAR_ID … 単一カレンダー（BOOKING_STAFF_JSON 未設定時）
+ *   BOOKING_STAFF_JSON … 担当複数 [{id,name,calendar_id},...] 空きマージ＋RR割当
  *   BOOKING_SLOT_MINUTES … 枠の長さ（分）既定 15
  *   BOOKING_START_HOUR … 開始時刻 既定 9
  *   BOOKING_END_HOUR … 終了時刻 既定 18
@@ -37,6 +38,118 @@ function getBookingCalendar() {
   var def = CalendarApp.getDefaultCalendar();
   if (!def) throw new Error("デフォルトカレンダーが取得できません");
   return def;
+}
+
+/** @returns {{id:string,name:string,calendar_id:string}[]} */
+function getBookingStaffList() {
+  var p = PropertiesService.getScriptProperties();
+  var raw = String(p.getProperty("BOOKING_STAFF_JSON") || "").trim();
+  if (raw) {
+    try {
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) {
+        var out = [];
+        for (var i = 0; i < parsed.length; i++) {
+          var row = parsed[i];
+          if (!row) continue;
+          var calendarId = String(row.calendar_id || "").trim();
+          if (!calendarId) continue;
+          var cal = CalendarApp.getCalendarById(calendarId);
+          if (!cal) continue;
+          out.push({
+            id: String(row.id || "staff_" + i).trim(),
+            name: String(row.name || row.id || "担当").trim(),
+            calendar_id: calendarId
+          });
+        }
+        if (out.length) return out;
+      }
+    } catch (e) {
+      throw new Error("BOOKING_STAFF_JSON の JSON が不正です: " + e);
+    }
+  }
+  var cal = getBookingCalendar();
+  return [
+    {
+      id: "default",
+      name: "担当",
+      calendar_id: cal.getId()
+    }
+  ];
+}
+
+function getCalendarForStaff(staff) {
+  var cal = CalendarApp.getCalendarById(staff.calendar_id);
+  if (!cal) {
+    throw new Error("calendar not found: " + staff.calendar_id);
+  }
+  return cal;
+}
+
+function getStaffBusyMap(staffList, rangeStart, rangeEnd) {
+  var map = {};
+  for (var i = 0; i < staffList.length; i++) {
+    var staff = staffList[i];
+    map[staff.id] = getBusyRanges(getCalendarForStaff(staff), rangeStart, rangeEnd);
+  }
+  return map;
+}
+
+function staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd) {
+  var ids = [];
+  for (var i = 0; i < staffList.length; i++) {
+    var staff = staffList[i];
+    if (isSlotFree(slotStart, slotEnd, busyMap[staff.id])) {
+      ids.push(staff.id);
+    }
+  }
+  return ids;
+}
+
+function pickStaffRoundRobin(staffIds) {
+  if (!staffIds || !staffIds.length) {
+    throw new Error("no_staff_available");
+  }
+  if (staffIds.length === 1) return staffIds[0];
+  var sorted = staffIds.slice().sort();
+  var p = PropertiesService.getScriptProperties();
+  var key = "BOOKING_RR_CURSOR";
+  var cursor = parseInt(p.getProperty(key) || "0", 10);
+  if (isNaN(cursor) || cursor < 0) cursor = 0;
+  var pick = sorted[cursor % sorted.length];
+  p.setProperty(key, String((cursor + 1) % 1000000));
+  return pick;
+}
+
+function findStaffById(staffList, staffId) {
+  for (var i = 0; i < staffList.length; i++) {
+    if (staffList[i].id === staffId) return staffList[i];
+  }
+  return null;
+}
+
+function resolveStaffForBooking(params, slotStart, slotEnd) {
+  var staffList = getBookingStaffList();
+  var busyMap = getStaffBusyMap(
+    staffList,
+    slotStart,
+    new Date(slotEnd.getTime() + 60000)
+  );
+  var explicit = String(params.calendar_staff_id || "").trim();
+  if (explicit) {
+    var chosen = findStaffById(staffList, explicit);
+    if (!chosen) throw new Error("invalid_staff");
+    if (!isSlotFree(slotStart, slotEnd, busyMap[chosen.id])) {
+      throw new Error("slot_taken");
+    }
+    return chosen;
+  }
+  var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd);
+  if (!freeIds.length) throw new Error("slot_taken");
+  var pickId = pickStaffRoundRobin(freeIds);
+  var picked = findStaffById(staffList, pickId);
+  if (!picked) throw new Error("assign_failed");
+  return picked;
 }
 
 function jsonpResponse(callback, payload) {
@@ -131,7 +244,7 @@ function isSlotFree(slotStart, slotEnd, busy) {
   return true;
 }
 
-var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v1_";
+var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v2_";
 
 function bookingSlotsCacheKey(days) {
   return BOOKING_SLOTS_CACHE_PREFIX + days;
@@ -159,31 +272,35 @@ function clearBookingSlotsCache() {
   var cache = CacheService.getScriptCache();
   [3, 5, 7, 14].forEach(function (d) {
     cache.remove(bookingSlotsCacheKey(d));
+    cache.remove("booking_slots_v1_" + d);
   });
 }
 
 function buildSlotsPayload(days) {
+  var staffList = getBookingStaffList();
   return {
     ok: true,
     slots: getAvailableSlots(days),
     timezone: TZ,
     slot_minutes: bookingConfig().slotMinutes,
+    staff_count: staffList.length,
+    assignment: "merged_round_robin",
     generated_at: Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX")
   };
 }
 
 function getAvailableSlots(daysAhead) {
   var cfg = bookingConfig();
-  var cal = getBookingCalendar();
-  if (!cal) throw new Error("calendar not found");
+  var staffList = getBookingStaffList();
+  if (!staffList.length) throw new Error("no booking staff configured");
 
   var now = new Date();
   var earliest = new Date(now.getTime() + cfg.leadHours * 60 * 60 * 1000);
   var rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var rangeEnd = new Date(rangeStart.getTime() + (daysAhead + 1) * 24 * 60 * 60 * 1000);
-  var busy = getBusyRanges(cal, rangeStart, rangeEnd);
+  var busyMap = getStaffBusyMap(staffList, rangeStart, rangeEnd);
 
-  var slots = [];
+  var slotMap = {};
   var slotMs = cfg.slotMinutes * 60 * 1000;
 
   for (var d = 0; d < daysAhead; d++) {
@@ -198,20 +315,35 @@ function getAvailableSlots(daysAhead) {
           continue;
         }
         if (slotStart < earliest) continue;
-        if (!isSlotFree(slotStart, slotEnd, busy)) continue;
 
-        slots.push({
-          start: Utilities.formatDate(slotStart, TZ, "yyyy-MM-dd'T'HH:mm:ss"),
-          end: Utilities.formatDate(slotEnd, TZ, "yyyy-MM-dd'T'HH:mm:ss"),
-          day: formatDayKey(slotStart),
-          day_label: formatDayLabel(slotStart),
-          time_label: formatSlotLabel(slotStart)
-        });
+        var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd);
+        if (!freeIds.length) continue;
+
+        var key = Utilities.formatDate(slotStart, TZ, "yyyy-MM-dd'T'HH:mm:ss");
+        if (!slotMap[key]) {
+          slotMap[key] = {
+            start: key,
+            end: Utilities.formatDate(slotEnd, TZ, "yyyy-MM-dd'T'HH:mm:ss"),
+            day: formatDayKey(slotStart),
+            day_label: formatDayLabel(slotStart),
+            time_label: formatSlotLabel(slotStart),
+            staff_ids: freeIds.slice()
+          };
+        } else {
+          var merged = slotMap[key].staff_ids;
+          for (var fi = 0; fi < freeIds.length; fi++) {
+            if (merged.indexOf(freeIds[fi]) === -1) merged.push(freeIds[fi]);
+          }
+        }
       }
     }
   }
 
-  return slots;
+  return Object.keys(slotMap)
+    .sort()
+    .map(function (k) {
+      return slotMap[k];
+    });
 }
 
 function handleSlotsRequest(e) {
@@ -265,20 +397,30 @@ function testBookingSlots() {
  * スクリプトプロパティ BOOKING_CALENDAR_ID にそのまま貼る。
  */
 function getBookingCalendarInfo() {
-  var cfg = bookingConfig();
-  var cal = getBookingCalendar();
-  if (!cal) {
-    Logger.log("カレンダーが見つかりません。BOOKING_CALENDAR_ID を確認してください。");
-    return { ok: false };
+  return getBookingStaffInfo();
+}
+
+/** 担当カレンダー一覧（BOOKING_STAFF_JSON 設定確認用） */
+function getBookingStaffInfo() {
+  var staffList = getBookingStaffList();
+  var rows = [];
+  for (var i = 0; i < staffList.length; i++) {
+    var staff = staffList[i];
+    var cal = getCalendarForStaff(staff);
+    rows.push({
+      id: staff.id,
+      name: staff.name,
+      calendar_id: staff.calendar_id,
+      calendar_name: cal.getName(),
+      timezone: cal.getTimeZone()
+    });
   }
   var info = {
     ok: true,
-    calendar_name: cal.getName(),
-    calendar_id: cal.getId(),
-    timezone: cal.getTimeZone(),
-    configured_property: cfg.calendarId || "(未設定 → デフォルトカレンダー)",
+    staff: rows,
+    staff_count: rows.length,
     note:
-      "予約確定時はこのカレンダーに自動で予定が入ります。別カレンダーなら BOOKING_CALENDAR_ID に calendar_id を設定。"
+      "BOOKING_STAFF_JSON に id/name/calendar_id を並べると空きをマージし、予約時にラウンドロビンで割当します。"
   };
   Logger.log(JSON.stringify(info, null, 2));
   return info;
@@ -292,19 +434,21 @@ function bookSlotCore(params) {
 
   var slotStart = parseIsoToDate(startIso);
   var slotEnd = parseIsoToDate(endIso);
-  var cal = getBookingCalendar();
-
-  var busy = getBusyRanges(cal, slotStart, new Date(slotEnd.getTime() + 60000));
-  if (!isSlotFree(slotStart, slotEnd, busy)) {
-    throw new Error("slot_taken");
-  }
+  var staff = resolveStaffForBooking(params, slotStart, slotEnd);
+  var cal = getCalendarForStaff(staff);
 
   var name = params.calendar_guest_name || params["guest_name"] || "";
   var tel = params["your-tel"] || "";
   var lp = params["_lp"] || params["lp_id"] || "thanks";
-  var title = "【LP面談】" + (name || "お問い合わせ") + (tel ? " " + tel : "");
+  var title =
+    "【LP面談・" +
+    staff.name +
+    "】" +
+    (name || "お問い合わせ") +
+    (tel ? " " + tel : "");
   var desc = [
     "予約元: LPサンクス（独自予約）",
+    "担当: " + staff.name + " (" + staff.id + ")",
     "電話: " + tel,
     "LP: " + lp
   ].join("\n");
@@ -316,6 +460,8 @@ function bookSlotCore(params) {
   params._event = "calendar_booked";
   params.calendar_event_id = event.getId();
   params.calendar_id = cal.getId();
+  params.calendar_staff_id = staff.id;
+  params.calendar_staff_name = staff.name;
   params.calendar_tool = "独自予約";
   params.calendar_booked_at = toJst(new Date());
   params.calendar_start = toJst(slotStart);
@@ -329,6 +475,8 @@ function bookSlotCore(params) {
   return {
     calendar_id: cal.getId(),
     calendar_name: cal.getName(),
+    calendar_staff_id: staff.id,
+    calendar_staff_name: staff.name,
     calendar_event_id: event.getId(),
     calendar_start: params.calendar_start,
     calendar_end: params.calendar_end,
@@ -368,7 +516,6 @@ function handleBookRequest(e) {
 
 /** GASエディタでテスト予約（自分のカレンダーに1件入る） */
 function testBookSlot() {
-  var cal = getBookingCalendar();
   var slots = getAvailableSlots(3);
   if (!slots.length) {
     Logger.log("空き枠なし");
@@ -382,16 +529,6 @@ function testBookSlot() {
     "your-tel": "09000000000",
     _lp: "gas_test"
   });
-  Logger.log(
-    JSON.stringify(
-      {
-        calendar_name: cal.getName(),
-        calendar_id: cal.getId(),
-        booked: out
-      },
-      null,
-      2
-    )
-  );
+  Logger.log(JSON.stringify(out, null, 2));
   return out;
 }

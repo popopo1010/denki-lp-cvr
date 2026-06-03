@@ -25,7 +25,7 @@
 
 | # | 項目 | やること |
 |---|------|----------|
-| O1 | GAS 枠キャッシュ | `clasp push` + `warmBookingSlotsCache` 5分トリガー |
+| O1 | GAS 枠キャッシュ | `clasp push` + 再デプロイ + `BOOKING_STAFF_JSON`（林・福山・山田の calendar_id） |
 | O2 | `sync-booking-slots` workflow | GitHub Actions が green か確認 |
 | O3 | 実体験談への差し替え | 許諾取得後、文言・写真を実データに |
 | O4 | 計測・A/B | GTMで口コミ展開率・予約完了率。順序・文言の検証 |

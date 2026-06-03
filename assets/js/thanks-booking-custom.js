@@ -55,7 +55,11 @@
       " " +
       info.time_label +
       "</strong> 開始</p>" +
-      '<p class="t-booking-done__sub">この時間に担当よりご連絡します</p>' +
+      '<p class="t-booking-done__sub">' +
+      (info.staff_name
+        ? "この時間に<strong>" + info.staff_name + "</strong>よりご連絡します"
+        : "この時間に担当よりご連絡します") +
+      "</p>" +
       '<p class="t-booking-done__next">次は <strong>LINE友だち追加</strong>（30秒）をお願いします</p>' +
       "</div>"
     );
@@ -333,7 +337,8 @@
               day_label: selected.day_label,
               time_label: selected.time_label,
               start: selected.start,
-              end: selected.end
+              end: selected.end,
+              staff_name: (res && res.calendar_staff_name) || ""
             };
             applyBookedState(bookingInfo, false);
             pushDL("calendar_booked", { booking_tool: "custom" });
