@@ -1,62 +1,47 @@
-# thanks-v2 リリース前チェックリスト（2026-06-03）
+# thanks-v2 リリース前チェックリスト（2026-06-03 更新）
 
-## 本番URL（自動確認済み 2026-06-03）
+## 本番URL（要再確認）
 
 | 項目 | URL | 期待 |
 |------|-----|------|
 | サンクス | https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/ | 200 |
-| 空き枠JSON | …/assets/data/booking-slots.json | 200・`slots` 配列あり |
-| 予約JS | …/assets/js/thanks-booking-bootstrap.js | 200 |
-| 口コミSVG | …/assets/img/testimonials/avatar-kt.svg | 200 |
+| 求人JSON | …/assets/data/thanks-job-previews.json | 200 |
+| 空き枠JSON | …/assets/data/booking-slots.json | 200・`staff_count: 4` |
+| JS | `thanks-job-preview.js?v=3` / `thanks-booking-custom.js?v=16` | 200 |
 
-## GAS（スクリプトプロパティ）
+## 登録フロー（現行）
 
-| プロパティ | 状態 |
+1. **仮登録** … LP送信（`dk_lead_profile` に資格・都道府県・意欲）
+2. **求人プレビュー** … 好条件サンプル3件・希望チップで再ソート（会社名非公開）
+3. **詳しく聞く** … カレンダー推奨（スキップ可）
+4. **LINE本登録** … 求人一覧・新着
+
+## GAS
+
+| プロパティ | 備考 |
 |------------|------|
-| `BOOKING_STAFF_JSON` | 4人分 `calendar_id`（林・福山・山田含む） |
-| `SLACK_BOT_TOKEN` | `xoxb-...` 設定済み |
-| `SLACK_LEAD_CHANNEL_ID` | `C...` 設定済み |
-| `SLACK_MENTION_CA` | 任意（未設定＝メンションなし） |
-| `BOOKING_ALLOW_OVERLAP` | 未設定 or `false`（空き担当優先） |
+| `BOOKING_STAFF_JSON` | 4人・空きマージ |
+| `SLACK_BOT_TOKEN` + `SLACK_LEAD_CHANNEL_ID` | Bot + スレッド返信 |
+| `BOOKING_ALLOW_OVERLAP` | 未設定推奨（空き担当優先） |
 
-**反映:** `cd gas-recorder && clasp push && clasp redeploy AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw`
+## 手動E2E
 
-**Slack Bot:** 通知チャンネルで `/invite @lead_apo`
+- [ ] LP（郵便番号まで）→ サンクスで都道府県マッチ求人
+- [ ] 希望チップで求人入れ替え
+- [ ] 予約 → LINE強調 → Slackスレッド
+- [ ] GTM Preview: `thanks_job_preview_view` 等
 
-## 登録フロー（コピー）
+## CI
 
-1. **仮登録完了** … LP送信直後（ヒーロー）
-2. **求人プレビュー3件** … 資格マッチ（`thanks-job-previews.json`）
-3. **面談予約** … 気になる案件の詳細を聞く（推奨・スキップ可）
-4. **LINE本登録** … 求人一覧・新着（面談後に強調表示）
+- Deploy: `main` push（minify → rsync）
+- Sync booking: 5分ごと JSON
 
-GTM: `thanks_job_preview_view` / `thanks_job_card_click` / `thanks_job_intent_select` / `thanks_provisional_registration` / `thanks_booking_recommended_complete` / `thanks_full_registration_click`
+## 既知
 
-## 手動E2E（リリース前に1回）
-
-- [ ] テスト電話で LP 送信 → ヒーロー「仮登録」・**求人プレビュー3件**（資格一致）
-- [ ] 求人カードタップ → カレンダーへスクロール
-- [ ] 「もっと見る」→ LINEへ / 「詳細を聞く」→ カレンダーへ
-- [ ] 予約完了 → LINE強調・ヒーロー更新
-- [ ] 面談スキップ → LINE本登録ボタンが使える
-- [ ] Slack 同スレッドに「面談の予約がされました」（メンションなし可）
-- [ ] 担当カレンダーに予定作成
-- [ ] 口コミ・資格マッチ（`_license`）
-
-## CI / 運用
-
-| Workflow | 用途 |
-|----------|------|
-| Deploy to Xserver | `main` push → 全ファイル rsync + minify |
-| Sync booking slots | 5分ごと `booking-slots.json` のみ scp |
-
-## 既知の制限
-
-- 旧リード（`slack_thread_ts` 空）はスレッド返信不可 → Webhook フォールバック（任意）
-- 予約と LP の電話番号不一致 → 行突合・スレッド返信失敗
-- 静的枠は最大5日分（表示は3日ずつ）。GAS キャッシュ 3分 + JSON 5分同期
+- 求人プレビューは**好条件のイメージ**（実案件は本登録後）
+- Deploy失敗時は本番HTMLが古い `?v=` のまま残る → Actions green を確認
 
 ## ロールバック
 
-- 予約: `thanks-booking-config.js` で `THANKS_BOOKING_MODE = "timerex"`
-- デプロイ: 直前コミットを `main` に revert push
+- `THANKS_BOOKING_MODE=timerex`（config）
+- git revert + push

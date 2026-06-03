@@ -254,7 +254,7 @@
         '<div class="t-job-card__tags">' +
         tags +
         "</div>" +
-        '<p class="t-job-card__lock">※ 会社名・応募条件の詳細は<strong>本登録後</strong>に開示</p>" +
+        '<p class="t-job-card__lock">※ 会社名・応募条件の詳細は<strong>本登録後</strong>に開示</p>' +
         "</article>";
     });
     return html;
