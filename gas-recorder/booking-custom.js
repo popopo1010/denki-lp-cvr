@@ -6,7 +6,8 @@
  *   BOOKING_STAFF_JSON … 担当複数 [{id,name,calendar_id},...] 空きマージ＋RR割当
  *   BOOKING_SLOT_MINUTES … 枠の長さ（分）既定 15
  *   BOOKING_START_HOUR … 開始時刻 既定 9
- *   BOOKING_END_HOUR … 終了時刻 既定 18
+ *   BOOKING_END_HOUR … 終了の上限（24=23:45枠まで）既定 24
+ *   BOOKING_ALLOW_OVERLAP … true=既存予定と重複OK（既定 true）
  *   BOOKING_LEAD_HOURS … 何時間後から予約可 既定 2
  *   BOOKING_DAYS_AHEAD … 何日先まで表示 既定 14
  */
@@ -17,7 +18,10 @@ function bookingConfig() {
     calendarId: p.getProperty("BOOKING_CALENDAR_ID") || "",
     slotMinutes: parseInt(p.getProperty("BOOKING_SLOT_MINUTES") || "15", 10),
     startHour: parseInt(p.getProperty("BOOKING_START_HOUR") || "9", 10),
-    endHour: parseInt(p.getProperty("BOOKING_END_HOUR") || "18", 10),
+    endHour: parseInt(p.getProperty("BOOKING_END_HOUR") || "24", 10),
+    allowOverlap:
+      String(p.getProperty("BOOKING_ALLOW_OVERLAP") || "true").toLowerCase() !==
+      "false",
     leadHours: parseInt(p.getProperty("BOOKING_LEAD_HOURS") || "2", 10),
     daysAhead: parseInt(p.getProperty("BOOKING_DAYS_AHEAD") || "14", 10)
   };
@@ -96,7 +100,14 @@ function getStaffBusyMap(staffList, rangeStart, rangeEnd) {
   return map;
 }
 
-function staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd) {
+function staffAllIds(staffList) {
+  var ids = [];
+  for (var i = 0; i < staffList.length; i++) ids.push(staffList[i].id);
+  return ids;
+}
+
+function staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd, cfg) {
+  if (cfg && cfg.allowOverlap) return staffAllIds(staffList);
   var ids = [];
   for (var i = 0; i < staffList.length; i++) {
     var staff = staffList[i];
@@ -105,6 +116,18 @@ function staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd) {
     }
   }
   return ids;
+}
+
+/** その日の予約可能時間帯（endHour=24 なら 翌0:00 まで） */
+function getDayBookingWindow(day, cfg) {
+  var dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), cfg.startHour, 0, 0);
+  var dayEnd;
+  if (cfg.endHour >= 24) {
+    dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1, 0, 0, 0);
+  } else {
+    dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), cfg.endHour, 0, 0);
+  }
+  return { dayStart: dayStart, dayEnd: dayEnd };
 }
 
 function pickStaffRoundRobin(staffIds) {
@@ -130,22 +153,29 @@ function findStaffById(staffList, staffId) {
 }
 
 function resolveStaffForBooking(params, slotStart, slotEnd) {
+  var cfg = bookingConfig();
   var staffList = getBookingStaffList();
-  var busyMap = getStaffBusyMap(
-    staffList,
-    slotStart,
-    new Date(slotEnd.getTime() + 60000)
-  );
+  var busyMap = null;
+  if (!cfg.allowOverlap) {
+    busyMap = getStaffBusyMap(
+      staffList,
+      slotStart,
+      new Date(slotEnd.getTime() + 60000)
+    );
+  }
   var explicit = String(params.calendar_staff_id || "").trim();
   if (explicit) {
     var chosen = findStaffById(staffList, explicit);
     if (!chosen) throw new Error("invalid_staff");
-    if (!isSlotFree(slotStart, slotEnd, busyMap[chosen.id])) {
+    if (
+      !cfg.allowOverlap &&
+      !isSlotFree(slotStart, slotEnd, busyMap[chosen.id])
+    ) {
       throw new Error("slot_taken");
     }
     return chosen;
   }
-  var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd);
+  var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd, cfg);
   if (!freeIds.length) throw new Error("slot_taken");
   var pickId = pickStaffRoundRobin(freeIds);
   var picked = findStaffById(staffList, pickId);
@@ -245,7 +275,7 @@ function isSlotFree(slotStart, slotEnd, busy) {
   return true;
 }
 
-var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v2_";
+var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v3_";
 
 function bookingSlotsCacheKey(days) {
   return BOOKING_SLOTS_CACHE_PREFIX + days;
@@ -274,6 +304,7 @@ function clearBookingSlotsCache() {
   [3, 5, 7, 14].forEach(function (d) {
     cache.remove(bookingSlotsCacheKey(d));
     cache.remove("booking_slots_v1_" + d);
+    cache.remove("booking_slots_v2_" + d);
   });
 }
 
@@ -315,6 +346,8 @@ function buildSlotsPayload(days) {
     slot_minutes: bookingConfig().slotMinutes,
     staff_count: staffList.length,
     assignment: "merged_round_robin",
+    allow_overlap: bookingConfig().allowOverlap,
+    end_hour: bookingConfig().endHour,
     generated_at: Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX")
   };
 }
@@ -327,8 +360,11 @@ function getAvailableSlots(daysAhead) {
   var now = new Date();
   var earliest = new Date(now.getTime() + cfg.leadHours * 60 * 60 * 1000);
   var rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var rangeEnd = new Date(rangeStart.getTime() + (daysAhead + 1) * 24 * 60 * 60 * 1000);
-  var busyMap = getStaffBusyMap(staffList, rangeStart, rangeEnd);
+  var busyMap = null;
+  if (!cfg.allowOverlap) {
+    var rangeEnd = new Date(rangeStart.getTime() + (daysAhead + 1) * 24 * 60 * 60 * 1000);
+    busyMap = getStaffBusyMap(staffList, rangeStart, rangeEnd);
+  }
 
   var slotMap = {};
   var slotMs = cfg.slotMinutes * 60 * 1000;
@@ -337,33 +373,29 @@ function getAvailableSlots(daysAhead) {
     var day = new Date(rangeStart.getTime() + d * 24 * 60 * 60 * 1000);
     if (!isWorkday(day)) continue;
 
-    for (var h = cfg.startHour; h < cfg.endHour; h++) {
-      for (var m = 0; m < 60; m += cfg.slotMinutes) {
-        var slotStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, m, 0);
-        var slotEnd = new Date(slotStart.getTime() + slotMs);
-        if (slotEnd.getHours() > cfg.endHour || (slotEnd.getHours() === cfg.endHour && slotEnd.getMinutes() > 0)) {
-          continue;
-        }
-        if (slotStart < earliest) continue;
+    var win = getDayBookingWindow(day, cfg);
+    for (var t = win.dayStart.getTime(); t + slotMs <= win.dayEnd.getTime(); t += slotMs) {
+      var slotStart = new Date(t);
+      var slotEnd = new Date(t + slotMs);
+      if (slotStart < earliest) continue;
 
-        var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd);
-        if (!freeIds.length) continue;
+      var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd, cfg);
+      if (!freeIds.length) continue;
 
-        var key = Utilities.formatDate(slotStart, TZ, "yyyy-MM-dd'T'HH:mm:ss");
-        if (!slotMap[key]) {
-          slotMap[key] = {
-            start: key,
-            end: Utilities.formatDate(slotEnd, TZ, "yyyy-MM-dd'T'HH:mm:ss"),
-            day: formatDayKey(slotStart),
-            day_label: formatDayLabel(slotStart),
-            time_label: formatSlotLabel(slotStart),
-            staff_ids: freeIds.slice()
-          };
-        } else {
-          var merged = slotMap[key].staff_ids;
-          for (var fi = 0; fi < freeIds.length; fi++) {
-            if (merged.indexOf(freeIds[fi]) === -1) merged.push(freeIds[fi]);
-          }
+      var key = Utilities.formatDate(slotStart, TZ, "yyyy-MM-dd'T'HH:mm:ss");
+      if (!slotMap[key]) {
+        slotMap[key] = {
+          start: key,
+          end: Utilities.formatDate(slotEnd, TZ, "yyyy-MM-dd'T'HH:mm:ss"),
+          day: formatDayKey(slotStart),
+          day_label: formatDayLabel(slotStart),
+          time_label: formatSlotLabel(slotStart),
+          staff_ids: freeIds.slice()
+        };
+      } else {
+        var merged = slotMap[key].staff_ids;
+        for (var fi = 0; fi < freeIds.length; fi++) {
+          if (merged.indexOf(freeIds[fi]) === -1) merged.push(freeIds[fi]);
         }
       }
     }
