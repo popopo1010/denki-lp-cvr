@@ -356,9 +356,14 @@
   border-top: 1px dashed #6ee7b7;
 }
 
-/* 予約 → LINE の順序フロー */
+/* 予約 → LINE の順序フロー（面談スキップ時も本登録可能） */
 .thanks-flow.is-awaiting-booking #line-section {
-  display: none;
+  border-style: dashed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  opacity: 0.92;
+}
+.thanks-flow.is-awaiting-booking #line-section .t-line__badge {
+  background: #888;
 }
 
 .thanks-flow.is-booked .t-contact {

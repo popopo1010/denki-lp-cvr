@@ -49,7 +49,7 @@
   function renderDoneHtml(info) {
     return (
       '<div class="t-booking-done t-booking-done--hero">' +
-      '<p class="t-booking-done__title">ご予約完了</p>' +
+      '<p class="t-booking-done__title">面談日時を確保しました</p>' +
       "<p class=\"t-booking-done__when\"><strong>" +
       info.day_label +
       " " +
@@ -60,7 +60,7 @@
         ? "この時間に<strong>" + info.staff_name + "</strong>よりご連絡します"
         : "この時間に担当よりご連絡します") +
       "</p>" +
-      '<p class="t-booking-done__next">次は <strong>LINE友だち追加</strong>（30秒）をお願いします</p>' +
+      '<p class="t-booking-done__next">次は <strong>LINEで本登録</strong>（30秒）をお願いします</p>' +
       "</div>"
     );
   }
@@ -71,7 +71,7 @@
     section.classList.add("t-cal--booked");
 
     var headTitle = section.querySelector(".t-cal__head h3");
-    if (headTitle) headTitle.textContent = "ご予約完了";
+    if (headTitle) headTitle.textContent = "面談日時を確保しました";
 
     var calBody = section.querySelector(".t-cal__body");
     if (calBody) {
@@ -89,9 +89,11 @@
       var badge = line.querySelector(".t-line__badge");
       var h3 = line.querySelector("h3");
       var sub = line.querySelector(".t-line__sub");
-      if (badge) badge.textContent = "次のステップ";
-      if (h3) h3.innerHTML = "予約のあと、<strong>LINE</strong>で求人を受け取る";
-      if (sub) sub.textContent = "面談前に非公開求人をお届けします（30秒で完了）";
+      if (badge) badge.textContent = "ステップ3";
+      if (h3) h3.innerHTML = "LINEで<strong>本登録</strong>（残り1ステップ）";
+      if (sub)
+        sub.textContent =
+          "友だち追加で本登録完了。非公開求人の優先案内が受け取れます（30秒）";
       setTimeout(function () {
         line.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 450);
@@ -108,10 +110,16 @@
     var heroP = document.querySelector(".t-hero p");
     if (heroP) {
       heroP.innerHTML =
-        "面談日時のご予約ありがとうございます。<br>続いて<strong>LINE友だち追加</strong>をお願いします。";
+        "面談日時を確保しました。<br>続いて<strong>LINEで本登録</strong>をお願いします。";
     }
 
     pushDL("thanks_line_step_revealed", {
+      booking_tool: "custom",
+      booking_day: info.day_label || "",
+      booking_time: info.time_label || "",
+      registration_step: "booking_done"
+    });
+    pushDL("thanks_booking_recommended_complete", {
       booking_tool: "custom",
       booking_day: info.day_label || "",
       booking_time: info.time_label || ""

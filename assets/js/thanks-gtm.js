@@ -52,6 +52,13 @@
 
   pushDL({ event: "form_complete", page_type: "thanks-v2" });
 
+  pushDL({
+    event: "thanks_provisional_registration",
+    lp_slug: lpSlug,
+    thanks_qualified: qualified,
+    page_type: "thanks-v2"
+  });
+
   if (qualified) {
     try {
       if (!sessionStorage.getItem(CONVERSION_FIRED_KEY)) {
@@ -66,11 +73,14 @@
   }
 
   function onLineClick() {
-    pushDL({
-      event: "thanks_line_click",
+    var payload = {
       lp_slug: lpSlug,
-      thanks_qualified: qualified
-    });
+      thanks_qualified: qualified,
+      registration_step: "line_friend_add",
+      page_type: "thanks-v2"
+    };
+    pushDL(Object.assign({ event: "thanks_line_click" }, payload));
+    pushDL(Object.assign({ event: "thanks_full_registration_click" }, payload));
   }
 
   document

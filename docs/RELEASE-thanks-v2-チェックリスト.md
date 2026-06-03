@@ -23,14 +23,22 @@
 
 **Slack Bot:** 通知チャンネルで `/invite @lead_apo`
 
+## 登録フロー（コピー）
+
+1. **仮登録完了** … LP送信直後（ヒーロー）
+2. **面談予約** … 推奨（スキップ可）
+3. **LINE本登録** … 友だち追加（面談後に強調表示・未予約でも可能）
+
+GTM: `thanks_provisional_registration` / `thanks_booking_recommended_complete` / `thanks_full_registration_click`
+
 ## 手動E2E（リリース前に1回）
 
-- [ ] テスト電話で LP 送信 → Slack「新規リード」・スプシ `slack_thread_ts` あり
-- [ ] 同じ電話でサンクス → 3日分の枠表示 → 予約完了
+- [ ] テスト電話で LP 送信 → ヒーロー「仮登録が完了」・Slack「新規リード」
+- [ ] 同じ電話でサンクス → 3日分の枠表示 → 予約完了 →「面談日時を確保」→ LINE強調
+- [ ] 面談スキップ → 下の LINE から本登録ボタンが押せる
 - [ ] Slack 同スレッドに「面談の予約がされました」（メンションなし可）
 - [ ] 担当カレンダーに予定作成
-- [ ] 予約後 LINE ブロック表示・GTM `dataLayer` イベント
-- [ ] 口コミ「詳しい経緯を読む」・資格マッチ並べ替え（`_license`）
+- [ ] 口コミ・資格マッチ（`_license`）
 
 ## CI / 運用
 
