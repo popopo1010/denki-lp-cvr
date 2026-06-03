@@ -43,7 +43,7 @@
       title: "仮登録完了 | 電気工事バンク",
       defaultLicense: "電気工事士",
       heroSub:
-        "あなた向けの求人を<strong>下に表示</strong>しています。<br>気になる案件は<strong>詳細を聞く</strong>か、<strong>LINEで一覧</strong>をご確認ください。"
+        "ご登録内容に合う<strong>非公開求人のイメージ</strong>を下に表示しています。<br>気になる案件は<strong>10分で相談</strong>、全文・新着は<strong>LINE本登録後</strong>に届きます。"
     },
     sekoukanri: {
       siteName: "施工管理キャリア",
@@ -52,7 +52,7 @@
       title: "仮登録完了 | 施工管理キャリア",
       defaultLicense: "施工管理技士",
       heroSub:
-        "ご登録の<strong>資格・勤務地</strong>に合いそうな求人を<strong>下に表示</strong>しています。<br>建築・土木・電気施工管理の<strong>非公開案件</strong>はLINE本登録後に全文が届きます。"
+        "ご登録の<strong>資格・勤務地</strong>に合う<strong>非公開求人のイメージ</strong>を下に表示しています。<br>全文・<strong>企業からの声がけ</strong>はLINE本登録後に届きます。"
     }
   };
 

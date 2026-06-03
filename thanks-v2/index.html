@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>仮登録完了</title>
-<script src="../assets/js/thanks-page-context.js?v=2"></script>
+<script src="../assets/js/thanks-page-context.js?v=3"></script>
 <script>
 (function(){
   function loadGTM(){
@@ -44,12 +44,12 @@
   <div class="t-hero">
     <div class="t-hero__chk"><svg viewBox="0 0 24 24" width="36" height="36"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg></div>
     <h2>仮登録が完了しました</h2>
-    <p>あなた向けの求人を<strong>下に表示</strong>しています。<br>気になる案件は<strong>詳細を聞く</strong>か、<strong>LINEで一覧</strong>をご確認ください。</p>
-    <span class="t-hero__preview-hint">まず求人プレビュー</span>
+    <p>ご登録内容に合う<strong>非公開求人のイメージ</strong>を下に表示しています。<br>気になる案件は<strong>10分で相談</strong>、全文・新着は<strong>LINE本登録後</strong>に届きます。</p>
+    <span class="t-hero__preview-hint">まず非公開求人のイメージ</span>
   </div>
 
   <nav class="t-flow" aria-label="次のステップ">
-    <a href="#t-jobs-preview" class="t-flow__item is-active" data-step="1">求人</a>
+    <a href="#t-jobs-preview" class="t-flow__item is-active" data-step="1">案件</a>
     <a href="#t-calendar" class="t-flow__item" data-step="2">面談</a>
     <a href="#line-section" class="t-flow__item" data-step="3">LINE</a>
   </nav>
@@ -69,14 +69,14 @@
     <div class="t-contact__tx">仮登録のため、<strong>24時間以内</strong>に担当からお電話する場合があります。<br><strong>求人の全文・新着</strong>はLINE本登録後に届きます。<span class="t-contact__note">※ 着信: 知らない番号にご注意ください（平日 9:00〜18時）</span></div>
   </div>
 
-  <!-- 求人プレビュー（見たいテンション） -->
+  <!-- 非公開求人イメージ（見たいテンション） -->
   <section class="t-jobs" id="t-jobs-preview" aria-labelledby="t-jobs-title">
-    <h3 class="t-jobs__title" id="t-jobs-title">あなた向けの求人（プレビュー）</h3>
-    <p class="t-jobs__lead">登録の<strong>資格・勤務地・転職意欲</strong>と、下の希望をもとに<strong>合いそうな求人</strong>を表示します（会社名は非公開のまま）。タップで「詳しく聞く」へ。</p>
-    <p class="t-jobs__label" id="job-preview-label">求人を読み込んでいます…</p>
+    <h3 class="t-jobs__title" id="t-jobs-title">あなた向けの非公開求人（イメージ）</h3>
+    <p class="t-jobs__lead">登録の<strong>資格・勤務地・転職意欲</strong>に合いそうな<strong>非公開案件</strong>を、会社名なしで一部お見せしています（好条件のイメージ）。タップで相談へ進めます。</p>
+    <p class="t-jobs__label" id="job-preview-label">あなた向けの案件を表示しています…</p>
     <div class="t-jobs__cards" id="job-preview-root" aria-live="polite"></div>
     <p class="t-jobs__voice" id="job-preview-voice" hidden></p>
-    <p class="t-jobs__intent-title">いま一番気になるのは？（タップで<strong>求人表示が切り替わります</strong>）</p>
+    <p class="t-jobs__intent-title">いま一番気になるのは？（タップで<strong>表示する案件が切り替わります</strong>）</p>
     <div class="t-jobs__intent" role="group" aria-label="希望の優先">
       <button type="button" class="t-jobs__intent-btn" data-intent="salary">年収を上げたい</button>
       <button type="button" class="t-jobs__intent-btn" data-intent="area">エリア・勤務地</button>
@@ -87,18 +87,18 @@
       <button type="button" class="t-jobs__cta-secondary" data-scroll-target="#t-calendar">詳しく聞く（10分・無料）</button>
       <button type="button" class="t-jobs__cta-primary" data-scroll-target="#line-section">LINEで求人一覧を見る</button>
     </div>
-    <p class="t-jobs__note">※ 好条件の求人イメージです。社名・詳細は非公開のまま、本登録後に担当がご案内します。</p>
+    <p class="t-jobs__note">※ 実際の非公開求人の一部イメージです。社名・応募条件の全文は<strong>LINE本登録後</strong>に担当がご案内します。</p>
   </section>
-  <script src="../assets/js/thanks-job-preview.js?v=4" defer></script>
+  <script src="../assets/js/thanks-job-preview.js?v=5" defer></script>
 
   <!-- Calendar（独自予約）— 詳しく聞く -->
   <div class="t-cal" id="t-calendar">
     <div class="t-cal__head">
       <p class="t-cal__step">ステップ2（推奨）</p>
-      <h3>気になる求人の詳細を聞く</h3>
+      <h3>希望を伝えて非公開求人を増やす</h3>
     </div>
     <div class="t-cal__body">
-      <p class="t-cal__sub">プレビューで気になった案件の<strong>続き</strong>を担当がお伝えします（10〜15分・無料）。<strong>詳細条件</strong>をヒアリングし、ハローワークにない<strong>非公開求人</strong>もあわせてご紹介。下の枠を<strong>タップ</strong>（再入力なし）。</p>
+      <p class="t-cal__sub">上で気になった案件の<strong>続き</strong>と、あなたの<strong>詳細条件</strong>を担当がお聞きします（10〜15分・無料）。ハローワークにない<strong>非公開求人</strong>もあわせてご紹介。下の枠を<strong>タップ</strong>（再入力なし）。</p>
       <div id="booking-slot-root">
         <div class="t-booking-skeleton" aria-busy="true">
           <p class="t-booking-loading" style="margin-bottom:8px">空き枠を表示しています…</p>
@@ -117,7 +117,7 @@
       <p class="t-cal__note">約1分で日時確保 · 予約後に<strong>LINEで本登録</strong>へ進みます</p>
     </div>
   </div>
-  <script src="../assets/js/thanks-booking-custom.js?v=16"></script>
+  <script src="../assets/js/thanks-booking-custom.js?v=17"></script>
 
   <!-- LINE（優先） -->
   <div class="t-line" id="line-section">
@@ -125,7 +125,7 @@
     <h3>LINEで<strong>本登録</strong>—求人一覧を開く</h3>
     <p class="t-line__sub"><strong>あなた向けの求人一覧・新着通知</strong>がLINEで届きます（30秒）。気になる案件はチャットで質問OK。</p>
     <div class="t-bene" style="margin-bottom:16px;text-align:left">
-      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>プレビューより<strong>多くの非公開求人</strong>を一覧で確認</span></div>
+      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>ここより<strong>多くの非公開求人</strong>を一覧で確認</span></div>
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>担当が職歴ヒアリング中も<strong>マッチした法人からの声がけ</strong>—探し回らなくてOK</span></div>
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>「この求人について」と<strong>1タップで相談</strong>（電話不要）</span></div>
     </div>
@@ -145,7 +145,7 @@
     </div>
     <div class="t-step is-cur" data-step="booking">
       <div class="t-step__n">2</div>
-      <div class="t-step__b"><p class="t-step__l">気になる求人の詳細を聞く <span class="t-step__tag t-step__tag--recommend">推奨</span></p><p class="t-step__d">プレビューで気になった案件の<strong>続き</strong>を10分で。詳細条件を聞き、<strong>非公開求人</strong>を追加紹介（スキップ可）</p></div>
+      <div class="t-step__b"><p class="t-step__l">非公開求人について相談する <span class="t-step__tag t-step__tag--recommend">推奨</span></p><p class="t-step__d">上の案件で気になったものの<strong>続き</strong>を10分で。希望を聞き、<strong>非公開求人</strong>を追加紹介（スキップ可）</p></div>
     </div>
     <div class="t-step" data-step="line">
       <div class="t-step__n">3</div>
@@ -168,7 +168,7 @@
   <div class="t-testi">
     <div class="cvr-testimonials cvr-testimonials--rich">
       <h3 class="cvr-testimonials__title">あなたと近い条件の方の体験談</h3>
-      <p class="cvr-testimonials__lead">求人を見たあと、「話してよかった」と感じる方の<strong>同資格の体験談</strong>です。</p>
+      <p class="cvr-testimonials__lead">案件イメージを見たあと、「話してよかった」と感じる方の<strong>同資格の体験談</strong>です。</p>
       <div class="cvr-testimonials__summary">
         <div class="cvr-testimonials__stat"><span class="num">★4.8</span><span class="lbl">満足度（自社調査）</span></div>
         <div class="cvr-testimonials__stat"><span class="num">+80万</span><span class="lbl">年収UPの声あり</span></div>

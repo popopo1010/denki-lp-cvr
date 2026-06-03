@@ -436,6 +436,6 @@
     })
     .catch(function () {
       root.innerHTML =
-        '<p class="t-jobs__error">求人プレビューを読み込めませんでした。下の日時選択からご相談ください。</p>';
+        '<p class="t-jobs__error">案件の表示に失敗しました。下の日時からご相談いただけます。</p>';
     });
 })();

@@ -93,7 +93,7 @@
       if (h3) h3.innerHTML = "LINEで<strong>本登録</strong>—求人一覧を開く";
       if (sub)
         sub.innerHTML =
-          "<strong>プレビューより多くの求人</strong>がLINEで届きます。ヒアリング中は<strong>法人からの声がけ</strong>も—友だち追加（30秒）";
+          "<strong>ここより多くの非公開求人</strong>がLINEで届きます。ヒアリング中は<strong>法人からの声がけ</strong>も—友だち追加（30秒）";
       setTimeout(function () {
         line.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 450);
@@ -110,7 +110,7 @@
     var heroP = document.querySelector(".t-hero p");
     if (heroP) {
       heroP.innerHTML =
-        "面談日時を確保しました。<br>担当がプレビュー案件の<strong>詳細</strong>をお伝えします。続けて<strong>LINEで求人一覧</strong>をご確認ください。";
+        "面談日時を確保しました。<br>担当が気になった案件の<strong>詳細</strong>をお伝えします。続けて<strong>LINEで非公開求人一覧</strong>をご確認ください。";
     }
 
     pushDL("thanks_line_step_revealed", {
