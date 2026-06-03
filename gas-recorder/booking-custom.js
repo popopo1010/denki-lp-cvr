@@ -462,6 +462,29 @@ function getBookingCalendarInfo() {
   return getBookingStaffInfo();
 }
 
+/**
+ * GASエディタで1回実行 → 実行アカウントから見えるカレンダー一覧をログ出力。
+ * 林・福山・山田の calendar_id をここから拾って BOOKING_STAFF_JSON に貼る。
+ */
+function listAccessibleBookingCalendars() {
+  var cals = CalendarApp.getAllCalendars();
+  var rows = [];
+  for (var i = 0; i < cals.length; i++) {
+    var cal = cals[i];
+    rows.push({
+      calendar_name: cal.getName(),
+      calendar_id: cal.getId(),
+      timezone: cal.getTimeZone(),
+      my_access: cal.isOwnedByMe() ? "owner" : "shared"
+    });
+  }
+  rows.sort(function (a, b) {
+    return String(a.calendar_name).localeCompare(String(b.calendar_name), "ja");
+  });
+  Logger.log(JSON.stringify({ ok: true, count: rows.length, calendars: rows }, null, 2));
+  return { ok: true, count: rows.length, calendars: rows };
+}
+
 /** 担当カレンダー一覧（BOOKING_STAFF_JSON 設定確認用） */
 function getBookingStaffInfo() {
   var staffList = getBookingStaffList();
