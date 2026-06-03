@@ -42,9 +42,8 @@
 
 ## 本番チェックリスト
 
-- [ ] https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/ が 200
-- [ ] `booking-slots.json` が 200・TTFB短い
-- [ ] `assets/img/testimonials/avatar-kt.svg` が 200
-- [ ] 口コミ「詳しい経緯を読む」で全文表示
-- [ ] 資格選択後サンクスで該当口コミが上に来る（`_license`）
-- [ ] 予約完了後に LINE ブロック表示
+詳細は **`docs/RELEASE-thanks-v2-チェックリスト.md`**
+
+- [x] thanks-v2 / booking-slots.json / 主要JS・SVG が 200（2026-06-03 確認）
+- [ ] Slack Bot 導入後 E2E（リード→予約スレッド）
+- [ ] 口コミ・資格マッチ・予約→LINE（手動）

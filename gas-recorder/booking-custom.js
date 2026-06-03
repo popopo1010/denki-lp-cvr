@@ -541,7 +541,7 @@ function getBookingStaffInfo() {
     staff: rows,
     staff_count: rows.length,
     note:
-      "BOOKING_STAFF_JSON に id/name/calendar_id を並べると空きをマージし、予約時にラウンドロビンで割当します。"
+      "BOOKING_STAFF_JSON に id/name/calendar_id を並べると空きをマージし、空いている担当のうち当日予定が少ない人に割当します。"
   };
   Logger.log(JSON.stringify(info, null, 2));
   return info;

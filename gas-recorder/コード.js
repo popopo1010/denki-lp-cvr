@@ -381,8 +381,7 @@ function notifySlackNewLead(params) {
 }
 
 function getSlackCaMention() {
-  var raw = String(getScriptProp("SLACK_MENTION_CA") || "").trim();
-  return raw || "@ca";
+  return String(getScriptProp("SLACK_MENTION_CA") || "").trim();
 }
 
 function buildBookingThreadSlackMessage(params) {
@@ -398,9 +397,12 @@ function buildBookingThreadSlackMessage(params) {
   var name = params.calendar_guest_name || params["guest_name"] || "";
   var tel = params["your-tel"] || params["guest_phone"] || "";
   var staffName = params.calendar_staff_name || "";
-  var head = ca;
-  if (staffMention) head = ca + " " + staffMention;
-  var lines = [head, "面談の予約がされました", "*日時:* " + (when || "要確認")];
+  var head = "";
+  if (ca && staffMention) head = ca + " " + staffMention;
+  else if (ca) head = ca;
+  else if (staffMention) head = staffMention;
+  var lines = ["面談の予約がされました", "*日時:* " + (when || "要確認")];
+  if (head) lines.unshift(head);
   if (staffName) lines.push("*担当:* " + staffName);
   if (name) lines.push("*名前:* " + name);
   if (tel) lines.push("*電話:* " + tel);

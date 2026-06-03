@@ -27,20 +27,43 @@ jobs:
       - name: Fetch slots from GAS
         run: node scripts/sync-booking-slots.js
 
-      - name: Setup SSH
+      - name: Setup SSH key
         env:
           SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$XSERVER_PORT" -H "$XSERVER_HOST" >> ~/.ssh/known_hosts
+          set -euo pipefail
+          install -m 700 -d "${HOME}/.ssh"
+          printf '%s\n' "$SSH_KEY" > "${HOME}/.ssh/id_ed25519"
+          chmod 600 "${HOME}/.ssh/id_ed25519"
+
+      - name: Trust Xserver host key
+        id: hostkey
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          touch "${HOME}/.ssh/known_hosts"
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 20 -p "$XSERVER_PORT" -H "$XSERVER_HOST" >> "${HOME}/.ssh/known_hosts" 2>/dev/null; then
+              echo "ok=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "ok=false" >> "$GITHUB_OUTPUT"
 
       - name: Upload booking-slots.json only
+        env:
+          HOSTKEY_OK: ${{ steps.hostkey.outputs.ok }}
         run: |
-          scp -P "$XSERVER_PORT" -i ~/.ssh/id_ed25519 \
+          set -euo pipefail
+          if [ "${HOSTKEY_OK:-false}" = "true" ]; then
+            SSH_CHECK="-o StrictHostKeyChecking=yes"
+          else
+            SSH_CHECK="-o StrictHostKeyChecking=accept-new"
+          fi
+          scp -P "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" ${SSH_CHECK} \
             assets/data/booking-slots.json \
-            "$XSERVER_USER@$XSERVER_HOST:$XSERVER_DEPLOY_PATH/assets/data/booking-slots.json"
+            "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/assets/data/booking-slots.json"
 
       - name: Verify JSON on server
         run: |

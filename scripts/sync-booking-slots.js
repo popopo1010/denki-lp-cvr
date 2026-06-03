@@ -64,6 +64,10 @@ async function main() {
     ttl_sec: 300,
     timezone: data.timezone || "Asia/Tokyo",
     slot_minutes: data.slot_minutes || 15,
+    staff_count: data.staff_count,
+    assignment: data.assignment,
+    allow_overlap: data.allow_overlap,
+    end_hour: data.end_hour,
     slots: data.slots
   };
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
