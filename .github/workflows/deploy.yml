@@ -149,11 +149,16 @@ jobs:
 
       - name: Verify deployment
         run: |
-          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" | head -3
-          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/densen-bank-v3/" | head -3
-          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denki-koji-bank-v3/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/denki-suite.css" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-job-previews.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
+          html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
+          echo "$html" | grep -q 'thanks-job-preview.js?v=6' || (echo "missing thanks-job-preview v=6" && exit 1)
+          echo "$html" | grep -q '非公開求人（イメージ）' || (echo "missing thanks copy" && exit 1)
+          echo "$html" | grep -q 'thanks-mobile-ux.js' || (echo "missing thanks-mobile-ux" && exit 1)
+          slots=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json")
+          echo "$slots" | grep -q '"staff_count": 4' || (echo "booking staff_count not 4" && exit 1)
