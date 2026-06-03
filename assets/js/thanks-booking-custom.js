@@ -60,7 +60,7 @@
         ? "この時間に<strong>" + info.staff_name + "</strong>よりご連絡します"
         : "この時間に担当よりご連絡します") +
       "</p>" +
-      '<p class="t-booking-done__next">次は <strong>LINEで本登録</strong>（30秒）をお願いします</p>' +
+      '<p class="t-booking-done__next">次は <strong>LINEで求人一覧を開く</strong>（本登録・30秒）</p>' +
       "</div>"
     );
   }
@@ -90,10 +90,10 @@
       var h3 = line.querySelector("h3");
       var sub = line.querySelector(".t-line__sub");
       if (badge) badge.textContent = "ステップ3";
-      if (h3) h3.innerHTML = "LINEで<strong>本登録</strong>—待っていればOK";
+      if (h3) h3.innerHTML = "LINEで<strong>本登録</strong>—求人一覧を開く";
       if (sub)
         sub.innerHTML =
-          "担当が<strong>職歴・条件</strong>をヒアリング中も<strong>法人オファー</strong>が届きます。友だち追加して<strong>待つだけ</strong>でOK（30秒）";
+          "<strong>プレビューより多くの求人</strong>がLINEで届きます。ヒアリング中は<strong>法人からの声がけ</strong>も—友だち追加（30秒）";
       setTimeout(function () {
         line.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 450);
@@ -110,7 +110,7 @@
     var heroP = document.querySelector(".t-hero p");
     if (heroP) {
       heroP.innerHTML =
-        "面談日時を確保しました。<br>続いて<strong>LINEで本登録</strong>すれば、ヒアリング中も<strong>法人オファー</strong>が届きます。";
+        "面談日時を確保しました。<br>担当がプレビュー案件の<strong>詳細</strong>をお伝えします。続けて<strong>LINEで求人一覧</strong>をご確認ください。";
     }
 
     pushDL("thanks_line_step_revealed", {
@@ -171,6 +171,11 @@
       onDone(res);
     };
 
+    var jobIntent = "";
+    try {
+      jobIntent = sessionStorage.getItem("dk_job_intent") || "";
+    } catch (e0) {}
+
     var q = [
       "action=book",
       "_event=book_slot",
@@ -180,6 +185,7 @@
       "your-tel=" + encodeURIComponent(payload.tel),
       "_lp=" + encodeURIComponent(payload.lp),
       "_page=" + encodeURIComponent(payload.page),
+      "job_intent=" + encodeURIComponent(jobIntent),
       "callback=" + encodeURIComponent(cb)
     ].join("&");
 

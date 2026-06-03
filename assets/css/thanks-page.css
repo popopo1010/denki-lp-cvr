@@ -391,3 +391,191 @@ body {
   color: rgba(255, 255, 255, 0.5);
   margin-top: 8px;
 }
+
+/* 求人プレビュー（見たい → 話したい） */
+.t-jobs {
+  margin: 0 16px 24px;
+  padding: 18px 14px;
+  background: #fff;
+  border: 2px solid #314c85;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(49, 76, 133, 0.1);
+}
+.t-jobs__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #314c85;
+  text-align: center;
+}
+.t-jobs__lead {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.65;
+  text-align: center;
+}
+.t-jobs__label {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.55;
+  text-align: center;
+}
+.t-jobs__label strong {
+  color: #314c85;
+}
+.t-jobs__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.t-job-card {
+  position: relative;
+  padding: 12px 12px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fafbff 0%, #fff 100%);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.t-job-card:hover,
+.t-job-card:focus {
+  outline: none;
+  border-color: #314c85;
+  box-shadow: 0 2px 10px rgba(49, 76, 133, 0.15);
+}
+.t-job-card__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  background: #ff5966;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+.t-job-card__title {
+  margin: 0 24px 6px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+  line-height: 1.4;
+}
+.t-job-card__meta {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #666;
+}
+.t-job-card__meta strong {
+  color: #2e7d32;
+}
+.t-job-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.t-job-card__tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #314c85;
+  background: #e8eef8;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.t-job-card__lock {
+  margin: 0;
+  font-size: 10px;
+  color: #888;
+}
+.t-jobs__voice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: #444;
+  line-height: 1.55;
+  background: #f0f7ff;
+  border-radius: 8px;
+  border-left: 3px solid #314c85;
+}
+.t-jobs__intent-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+}
+.t-jobs__intent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.t-jobs__intent-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #314c85;
+  background: #fff;
+  border: 1px solid #314c85;
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.t-jobs__intent-btn.is-active {
+  color: #fff;
+  background: #314c85;
+}
+.t-jobs__cta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.t-jobs__cta-primary,
+.t-jobs__cta-secondary {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 12px 10px;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+.t-jobs__cta-primary {
+  color: #fff;
+  background: linear-gradient(135deg, #06c755, #05a847);
+}
+.t-jobs__cta-secondary {
+  color: #314c85;
+  background: #fff;
+  border: 2px solid #314c85;
+}
+.t-jobs__note {
+  margin: 0;
+  font-size: 10px;
+  color: #888;
+  line-height: 1.5;
+  text-align: center;
+}
+.t-jobs__error {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+.t-hero__preview-hint {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #314c85;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 6px 12px;
+  border-radius: 20px;
+}

@@ -26,16 +26,19 @@
 ## 登録フロー（コピー）
 
 1. **仮登録完了** … LP送信直後（ヒーロー）
-2. **面談予約** … 推奨（スキップ可）
-3. **LINE本登録** … 友だち追加（面談後に強調表示・未予約でも可能）
+2. **求人プレビュー3件** … 資格マッチ（`thanks-job-previews.json`）
+3. **面談予約** … 気になる案件の詳細を聞く（推奨・スキップ可）
+4. **LINE本登録** … 求人一覧・新着（面談後に強調表示）
 
-GTM: `thanks_provisional_registration` / `thanks_booking_recommended_complete` / `thanks_full_registration_click`
+GTM: `thanks_job_preview_view` / `thanks_job_card_click` / `thanks_job_intent_select` / `thanks_provisional_registration` / `thanks_booking_recommended_complete` / `thanks_full_registration_click`
 
 ## 手動E2E（リリース前に1回）
 
-- [ ] テスト電話で LP 送信 → ヒーロー「仮登録が完了」・Slack「新規リード」
-- [ ] 同じ電話でサンクス → 3日分の枠表示 → 予約完了 →「面談日時を確保」→ LINE強調
-- [ ] 面談スキップ → 下の LINE から本登録ボタンが押せる
+- [ ] テスト電話で LP 送信 → ヒーロー「仮登録」・**求人プレビュー3件**（資格一致）
+- [ ] 求人カードタップ → カレンダーへスクロール
+- [ ] 「もっと見る」→ LINEへ / 「詳細を聞く」→ カレンダーへ
+- [ ] 予約完了 → LINE強調・ヒーロー更新
+- [ ] 面談スキップ → LINE本登録ボタンが使える
 - [ ] Slack 同スレッドに「面談の予約がされました」（メンションなし可）
 - [ ] 担当カレンダーに予定作成
 - [ ] 口コミ・資格マッチ（`_license`）
