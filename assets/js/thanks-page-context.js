@@ -61,6 +61,13 @@
   var brand = BRANDS[family] || BRANDS.denki;
 
   document.documentElement.setAttribute("data-thanks-family", family);
+  var theme = document.querySelector('meta[name="theme-color"]');
+  if (!theme) {
+    theme = document.createElement("meta");
+    theme.name = "theme-color";
+    document.head.appendChild(theme);
+  }
+  theme.content = family === "sekoukanri" ? "#1b5e20" : "#314c85";
   if (slug) document.documentElement.setAttribute("data-thanks-lp", slug);
 
   var titleEl = document.querySelector("title");

@@ -1,6 +1,7 @@
 /* サンクス：面談予約（TimeRex）— 視認性優先 */
 .t-cal {
-  margin: 0 12px 28px;
+  margin: 0 12px 24px;
+  scroll-margin-bottom: calc(var(--t-dock-h, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
   padding: 0;
   background: #fff;
   border-radius: 20px;
@@ -414,7 +415,8 @@
 
 /* LINE優先 / メール任意（サンクス共通） */
 .t-line {
-  margin: 0 16px 24px;
+  scroll-margin-bottom: calc(var(--t-dock-h, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
+  margin: 0 12px 24px;
   padding: 24px 20px;
   background: #fff;
   border-radius: 16px;
@@ -463,6 +465,9 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
+  min-height: 52px;
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
   max-width: 320px;
   margin: 0 auto 12px;
   padding: 15px 20px;

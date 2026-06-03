@@ -44,7 +44,8 @@ jobs:
             assets/js/thanks-testimonials.js \
             assets/js/thanks-gtm.js \
             assets/js/thanks-job-preview.js \
-            assets/js/thanks-page-context.js; do
+            assets/js/thanks-page-context.js \
+            assets/js/thanks-mobile-ux.js; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
           for f in \

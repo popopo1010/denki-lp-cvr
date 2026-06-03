@@ -332,6 +332,11 @@
       user_pref: profile.pref || "",
       preview_count: jobs.length
     });
+    try {
+      document.dispatchEvent(
+        new CustomEvent("thanks_job_preview_refresh", { detail: { reason: reason } })
+      );
+    } catch (eEv) {}
   }
 
   function bindScroll() {
