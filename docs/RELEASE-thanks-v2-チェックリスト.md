@@ -50,8 +50,8 @@ node scripts/e2e-thanks-v2-release.mjs
 - [ ] 実機LP送信 → Slackスレッド（手動）
 
 ### 施工管理 `sekoukanri-kentiku-v2`（代表）
-- [x] 建築向け案件・都道府県表示（自動・v=4 ブランド修正後）
-- [ ] 「施工管理キャリア」ヘッダー（v=4 デプロイ後に自動再確認）
+- [x] 建築向け案件・都道府県表示（自動）
+- [x] 「施工管理キャリア」ヘッダー（自動・thanks-page-context v=4）
 - [ ] 実機LINE（手動）
 
 ### 年収診断 `nenshu-shindan-v2/sekoukanri`

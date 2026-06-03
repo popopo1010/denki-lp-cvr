@@ -162,4 +162,4 @@ jobs:
           echo "$html" | grep -q 'thanks-mobile-ux.js' || (echo "missing thanks-mobile-ux" && exit 1)
           echo "$html" | grep -q 'thanks-page-context.js?v=4' || (echo "missing thanks-page-context v=4" && exit 1)
           slots=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json")
-          echo "$slots" | grep -q '"staff_count": 4' || (echo "booking staff_count not 4" && exit 1)
+          echo "$slots" | grep -qE '"staff_count"[[:space:]]*:[[:space:]]*4' || (echo "booking staff_count not 4" && exit 1)
