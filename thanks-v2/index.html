@@ -103,11 +103,11 @@ body{background:#f5f7fa}
   <!-- 求人プレビュー（見たいテンション） -->
   <section class="t-jobs" id="t-jobs-preview" aria-labelledby="t-jobs-title">
     <h3 class="t-jobs__title" id="t-jobs-title">あなた向けの求人（プレビュー）</h3>
-    <p class="t-jobs__lead">登録内容から抽出した<strong>非公開求人の一例</strong>です。タップすると「詳しく聞く」へ進めます。</p>
+    <p class="t-jobs__lead">登録の<strong>資格・勤務地・転職意欲</strong>と、下の希望をもとに<strong>合いそうな求人</strong>を表示します（会社名は非公開のまま）。タップで「詳しく聞く」へ。</p>
     <p class="t-jobs__label" id="job-preview-label">求人を読み込んでいます…</p>
     <div class="t-jobs__cards" id="job-preview-root" aria-live="polite"></div>
     <p class="t-jobs__voice" id="job-preview-voice" hidden></p>
-    <p class="t-jobs__intent-title">いま一番気になるのは？（タップで記録・任意）</p>
+    <p class="t-jobs__intent-title">いま一番気になるのは？（タップで<strong>求人表示が切り替わります</strong>）</p>
     <div class="t-jobs__intent" role="group" aria-label="希望の優先">
       <button type="button" class="t-jobs__intent-btn" data-intent="salary">年収を上げたい</button>
       <button type="button" class="t-jobs__intent-btn" data-intent="area">エリア・勤務地</button>
@@ -120,7 +120,7 @@ body{background:#f5f7fa}
     </div>
     <p class="t-jobs__note">※ 表示はイメージです。社名・詳細・応募条件は本登録後に担当がご案内します。</p>
   </section>
-  <script src="../assets/js/thanks-job-preview.js?v=1" defer></script>
+  <script src="../assets/js/thanks-job-preview.js?v=2" defer></script>
 
   <!-- Calendar（独自予約）— 詳しく聞く -->
   <div class="t-cal" id="t-calendar">
@@ -148,7 +148,7 @@ body{background:#f5f7fa}
       <p class="t-cal__note">約1分で日時確保 · 予約後に<strong>LINEで本登録</strong>へ進みます</p>
     </div>
   </div>
-  <script src="../assets/js/thanks-booking-custom.js?v=15"></script>
+  <script src="../assets/js/thanks-booking-custom.js?v=16"></script>
 
   <!-- LINE（優先） -->
   <div class="t-line" id="line-section">

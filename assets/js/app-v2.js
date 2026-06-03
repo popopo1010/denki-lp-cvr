@@ -727,10 +727,25 @@
             if (fullName) sessionStorage.setItem("_name", fullName);
             if (window.__LP_ID) sessionStorage.setItem("_lp", window.__LP_ID);
             var licEl = document.getElementById("license01");
+            var firstLic = "";
             if (licEl && licEl.value) {
-              var firstLic = licEl.value.split(",")[0].trim();
+              firstLic = licEl.value.split(",")[0].trim();
               if (firstLic) sessionStorage.setItem("_license", firstLic);
             }
+            var prefEl = document.getElementById("your-pref");
+            var cityEl = document.getElementById("your-city");
+            var expEl = document.querySelector('[name="your-experience"]');
+            var willEl = document.querySelector('[name="your-willingness"]');
+            sessionStorage.setItem(
+              "dk_lead_profile",
+              JSON.stringify({
+                license: firstLic,
+                pref: (prefEl && prefEl.value) || "",
+                city: (cityEl && cityEl.value) || "",
+                experience: (expEl && expEl.value) || "",
+                willingness: (willEl && willEl.value) || ""
+              })
+            );
           } catch (e) {}
           prewarmThanksBookingSlots();
           persistLeadForThanks();

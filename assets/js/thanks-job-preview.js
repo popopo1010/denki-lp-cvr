@@ -1,5 +1,5 @@
 /**
- * サンクス: 資格マッチの求人プレビュー（見たいテンション → 話したい導線）
+ * サンクス: 資格・登録希望・プレビュー選択に合わせた求人表示
  */
 (function () {
   var root = document.getElementById("job-preview-root");
@@ -7,6 +7,60 @@
 
   var DATA_URL = "../assets/data/thanks-job-previews.json";
   var INTENT_KEY = "dk_job_intent";
+  var PROFILE_KEY = "dk_lead_profile";
+
+  var previewData = null;
+  var activeGroup = null;
+
+  var REGION_BY_PREF = {
+    北海道: "北海道",
+    青森県: "東北",
+    岩手県: "東北",
+    宮城県: "東北",
+    秋田県: "東北",
+    山形県: "東北",
+    福島県: "東北",
+    茨城県: "関東",
+    栃木県: "関東",
+    群馬県: "関東",
+    埼玉県: "関東",
+    千葉県: "関東",
+    東京都: "関東",
+    神奈川県: "関東",
+    新潟県: "中部",
+    富山県: "中部",
+    石川県: "中部",
+    福井県: "中部",
+    山梨県: "中部",
+    長野県: "中部",
+    岐阜県: "中部",
+    静岡県: "中部",
+    愛知県: "中部",
+    三重県: "近畿",
+    滋賀県: "近畿",
+    京都府: "近畿",
+    大阪府: "近畿",
+    兵庫県: "近畿",
+    奈良県: "近畿",
+    和歌山県: "近畿",
+    鳥取県: "中国",
+    島根県: "中国",
+    岡山県: "中国",
+    広島県: "中国",
+    山口県: "中国",
+    徳島県: "四国",
+    香川県: "四国",
+    愛媛県: "四国",
+    高知県: "四国",
+    福岡県: "九州",
+    佐賀県: "九州",
+    長崎県: "九州",
+    熊本県: "九州",
+    大分県: "九州",
+    宮崎県: "九州",
+    鹿児島県: "九州",
+    沖縄県: "沖縄"
+  };
 
   function pushDL(event, extra) {
     window.dataLayer = window.dataLayer || [];
@@ -19,12 +73,38 @@
     window.dataLayer.push(payload);
   }
 
-  function readLicense() {
+  function readProfile() {
+    var profile = {
+      license: "",
+      pref: "",
+      city: "",
+      experience: "",
+      willingness: "",
+      intent: ""
+    };
     try {
-      return (sessionStorage.getItem("_license") || "").trim();
-    } catch (e) {
-      return "";
+      var raw = sessionStorage.getItem(PROFILE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          profile.license = String(parsed.license || "").trim();
+          profile.pref = String(parsed.pref || "").trim();
+          profile.city = String(parsed.city || "").trim();
+          profile.experience = String(parsed.experience || "").trim();
+          profile.willingness = String(parsed.willingness || "").trim();
+        }
+      }
+    } catch (e1) {}
+    if (!profile.license) {
+      try {
+        profile.license = (sessionStorage.getItem("_license") || "").trim();
+      } catch (e2) {}
     }
+    try {
+      profile.intent = sessionStorage.getItem(INTENT_KEY) || "";
+    } catch (e3) {}
+    profile.region = REGION_BY_PREF[profile.pref] || "";
+    return profile;
   }
 
   function pickGroup(data, license) {
@@ -42,6 +122,73 @@
     return data.fallback || null;
   }
 
+  function jobMatchesPref(job, profile) {
+    if (!profile.pref) return 0;
+    var prefs = job.prefs || [];
+    for (var i = 0; i < prefs.length; i++) {
+      if (prefs[i] === profile.pref) return 14;
+      if (prefs[i].indexOf(profile.pref) >= 0 || profile.pref.indexOf(prefs[i]) >= 0) {
+        return 12;
+      }
+    }
+    if (job.area && job.area.indexOf(profile.pref) >= 0) return 11;
+    if (profile.city && job.area && job.area.indexOf(profile.city) >= 0) return 9;
+    if (profile.region && job.region === profile.region) return 8;
+    if (profile.region && job.area && job.area.indexOf(profile.region) >= 0) return 6;
+    return 0;
+  }
+
+  function scoreJob(job, profile) {
+    var score = 0;
+    score += jobMatchesPref(job, profile);
+
+    var intent = profile.intent || "";
+    var intents = job.intents || [];
+    var traits = job.traits || [];
+
+    if (intent && intents.indexOf(intent) >= 0) score += 10;
+
+    if (intent === "salary") {
+      score += (job.salary_min || 0) * 0.02;
+      if (traits.indexOf("high_salary") >= 0) score += 6;
+    }
+    if (intent === "stable") {
+      if (traits.indexOf("weekend_off") >= 0) score += 6;
+      if (traits.indexOf("low_ot") >= 0) score += 5;
+      if (traits.indexOf("direct_commute") >= 0) score += 3;
+    }
+    if (intent === "private") {
+      if (traits.indexOf("private") >= 0) score += 9;
+      var tags = job.tags || [];
+      if (tags.join(" ").indexOf("非公開") >= 0) score += 4;
+    }
+    if (intent === "area") {
+      score += jobMatchesPref(job, profile) > 0 ? 4 : 0;
+    }
+
+    if (profile.willingness.indexOf("近いうち") >= 0) {
+      score += (job.salary_min || 0) * 0.01;
+      if (traits.indexOf("high_salary") >= 0) score += 3;
+    }
+    if (profile.willingness.indexOf("情報収集") >= 0) {
+      if (traits.indexOf("weekend_off") >= 0) score += 4;
+      if (traits.indexOf("low_ot") >= 0) score += 4;
+    }
+    if (profile.experience.indexOf("未経験") >= 0) {
+      if (traits.indexOf("beginner_ok") >= 0) score += 7;
+    }
+
+    return score;
+  }
+
+  function rankJobs(group, profile) {
+    var jobs = (group && group.jobs) ? group.jobs.slice() : [];
+    jobs.sort(function (a, b) {
+      return scoreJob(b, profile) - scoreJob(a, profile);
+    });
+    return jobs.slice(0, 3);
+  }
+
   function esc(s) {
     return String(s || "")
       .replace(/&/g, "&amp;")
@@ -50,20 +197,52 @@
       .replace(/"/g, "&quot;");
   }
 
-  function renderCards(group) {
-    var jobs = (group && group.jobs) || [];
+  function buildLabel(profile, data) {
+    var labelEl = document.getElementById("job-preview-label");
+    if (!labelEl) return;
+    var parts = [];
+    if (profile.pref) parts.push(profile.pref);
+    if (profile.city) parts.push(profile.city);
+    var intentLabels = (data && data.intent_labels) || {};
+    if (profile.intent && intentLabels[profile.intent]) {
+      parts.push(intentLabels[profile.intent]);
+    } else if (profile.willingness.indexOf("近いうち") >= 0) {
+      parts.push("転職意欲高め");
+    }
+    var lic = profile.license || (activeGroup && activeGroup.label) || "電気工事士";
+    if (!parts.length) {
+      labelEl.innerHTML =
+        "「<strong>" +
+        esc(lic) +
+        "</strong>」向けに、<strong>希望に合いそうな非公開求人</strong>を表示しています";
+      return;
+    }
+    labelEl.innerHTML =
+      "<strong>" +
+      esc(parts.join("・")) +
+      "</strong>の条件に合いそうな求人（<strong>" +
+      esc(lic) +
+      "</strong>・非公開含む）";
+  }
+
+  function renderCards(jobs) {
     var html = "";
-    jobs.slice(0, 3).forEach(function (job, idx) {
+    jobs.forEach(function (job, idx) {
       var tags = (job.tags || [])
         .map(function (t) {
           return '<span class="t-job-card__tag">' + esc(t) + "</span>";
         })
         .join("");
+      var privateBadge = (job.tags || []).join(" ").indexOf("非公開") >= 0;
       html +=
         '<article class="t-job-card" data-job-index="' +
         idx +
+        '" data-job-title="' +
+        esc(job.title) +
         '" tabindex="0" role="button">' +
-        '<span class="t-job-card__badge">非公開含む</span>' +
+        '<span class="t-job-card__badge">' +
+        (privateBadge ? "非公開" : "限定公開") +
+        "</span>" +
         '<h4 class="t-job-card__title">' +
         esc(job.title) +
         "</h4>" +
@@ -75,32 +254,44 @@
         '<div class="t-job-card__tags">' +
         tags +
         "</div>" +
-        '<p class="t-job-card__lock">※ 社名・詳細は<strong>本登録後</strong>に表示</p>' +
+        '<p class="t-job-card__lock">※ 会社名・応募条件の詳細は<strong>本登録後</strong>に開示</p>" +
         "</article>";
     });
     return html;
   }
 
-  function bindScroll(selector, eventName) {
-    document.querySelectorAll(selector).forEach(function (btn) {
+  function refreshPreview(reason) {
+    if (!previewData || !activeGroup) return;
+    var profile = readProfile();
+    var jobs = rankJobs(activeGroup, profile);
+    buildLabel(profile, previewData);
+    root.innerHTML = renderCards(jobs);
+    bindJobCards();
+    pushDL("thanks_job_preview_refresh", {
+      reason: reason || "init",
+      job_intent: profile.intent || "",
+      user_pref: profile.pref || "",
+      preview_count: jobs.length
+    });
+  }
+
+  function bindScroll() {
+    document.querySelectorAll("[data-scroll-target]").forEach(function (btn) {
+      if (btn._boundScroll) return;
+      btn._boundScroll = true;
       btn.addEventListener("click", function () {
         var target = btn.getAttribute("data-scroll-target");
         var el = target ? document.querySelector(target) : null;
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        pushDL(eventName, { scroll_target: target || "" });
+        pushDL("thanks_job_preview_cta", { scroll_target: target || "" });
       });
     });
   }
 
   function bindIntentChips() {
-    var saved = "";
-    try {
-      saved = sessionStorage.getItem(INTENT_KEY) || "";
-    } catch (e1) {}
     document.querySelectorAll(".t-jobs__intent-btn").forEach(function (btn) {
-      if (btn.getAttribute("data-intent") === saved) {
-        btn.classList.add("is-active");
-      }
+      if (btn._boundIntent) return;
+      btn._boundIntent = true;
       btn.addEventListener("click", function () {
         var intent = btn.getAttribute("data-intent") || "";
         document.querySelectorAll(".t-jobs__intent-btn").forEach(function (b) {
@@ -108,17 +299,32 @@
         });
         try {
           sessionStorage.setItem(INTENT_KEY, intent);
-        } catch (e2) {}
+        } catch (e1) {}
         pushDL("thanks_job_intent_select", { job_intent: intent });
+        refreshPreview("intent");
       });
     });
+    var profile = readProfile();
+    if (profile.intent) {
+      document.querySelectorAll(".t-jobs__intent-btn").forEach(function (btn) {
+        btn.classList.toggle(
+          "is-active",
+          btn.getAttribute("data-intent") === profile.intent
+        );
+      });
+    }
   }
 
   function bindJobCards() {
     root.querySelectorAll(".t-job-card").forEach(function (card) {
       function activate() {
+        var title = card.getAttribute("data-job-title") || "";
+        try {
+          sessionStorage.setItem("dk_job_focus_title", title);
+        } catch (e0) {}
         pushDL("thanks_job_card_click", {
-          job_index: card.getAttribute("data-job-index") || ""
+          job_index: card.getAttribute("data-job-index") || "",
+          job_title: title
         });
         var cal = document.getElementById("t-calendar");
         if (cal) cal.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -133,26 +339,15 @@
     });
   }
 
-  function mountVoice(group) {
+  function mountVoice(group, profile) {
     var voiceEl = document.getElementById("job-preview-voice");
-    if (!voiceEl || !group || !group.voice) return;
-    voiceEl.textContent = group.voice;
-    voiceEl.hidden = false;
-  }
-
-  function mountLabel(group, license, data) {
-    var labelEl = document.getElementById("job-preview-label");
-    if (!labelEl) return;
-    var label = (group && group.label) || data.default_license_label || "電気工事士";
-    if (license) {
-      labelEl.innerHTML =
-        "ご登録の「<strong>" +
-        esc(license) +
-        "</strong>」に近い<strong>非公開求人</strong>の一例です";
-    } else {
-      labelEl.innerHTML =
-        "<strong>" + esc(label) + "</strong>向けの非公開求人の一例です";
+    if (!voiceEl) return;
+    var text = (group && group.voice) || "";
+    if (profile.pref && text) {
+      text = profile.pref + "エリアの方も — " + text;
     }
+    voiceEl.textContent = text;
+    voiceEl.hidden = !text;
   }
 
   fetch(DATA_URL)
@@ -160,17 +355,18 @@
       return res.json();
     })
     .then(function (data) {
-      var license = readLicense();
-      var group = pickGroup(data, license) || data.fallback;
-      mountLabel(group, license, data);
-      mountVoice(group);
-      root.innerHTML = renderCards(group);
-      bindJobCards();
+      previewData = data;
+      var profile = readProfile();
+      activeGroup = pickGroup(data, profile.license) || data.fallback;
+      mountVoice(activeGroup, profile);
       bindIntentChips();
-      bindScroll("[data-scroll-target]", "thanks_job_preview_cta");
+      bindScroll();
+      refreshPreview("init");
       pushDL("thanks_job_preview_view", {
-        license: license || "unknown",
-        preview_count: Math.min(3, (group.jobs || []).length)
+        license: profile.license || "unknown",
+        user_pref: profile.pref || "",
+        willingness: profile.willingness || "",
+        job_intent: profile.intent || ""
       });
     })
     .catch(function () {

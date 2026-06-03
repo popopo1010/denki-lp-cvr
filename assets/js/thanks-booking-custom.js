@@ -172,8 +172,16 @@
     };
 
     var jobIntent = "";
+    var jobFocus = "";
+    var userPref = "";
     try {
       jobIntent = sessionStorage.getItem("dk_job_intent") || "";
+      jobFocus = sessionStorage.getItem("dk_job_focus_title") || "";
+      var profRaw = sessionStorage.getItem("dk_lead_profile");
+      if (profRaw) {
+        var prof = JSON.parse(profRaw);
+        userPref = (prof && prof.pref) || "";
+      }
     } catch (e0) {}
 
     var q = [
@@ -186,6 +194,8 @@
       "_lp=" + encodeURIComponent(payload.lp),
       "_page=" + encodeURIComponent(payload.page),
       "job_intent=" + encodeURIComponent(jobIntent),
+      "job_focus_title=" + encodeURIComponent(jobFocus),
+      "user_pref=" + encodeURIComponent(userPref),
       "callback=" + encodeURIComponent(cb)
     ].join("&");
 
