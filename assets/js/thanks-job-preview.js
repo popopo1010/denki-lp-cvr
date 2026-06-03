@@ -236,10 +236,25 @@
 
   function rankJobs(group, profile) {
     var jobs = (group && group.jobs) ? group.jobs.slice() : [];
+    if (profile.pref) {
+      var inPref = [];
+      var other = [];
+      jobs.forEach(function (job) {
+        if (jobMatchesPref(job, profile) > 0) inPref.push(job);
+        else other.push(job);
+      });
+      jobs = inPref.length ? inPref.concat(other) : jobs;
+    }
     jobs.sort(function (a, b) {
       return scoreJob(b, profile) - scoreJob(a, profile);
     });
     return jobs.slice(0, 3);
+  }
+
+  /** カード表示用：登録都道府県があればそちらのみ（サンプル案件の他県名は出さない） */
+  function formatDisplayArea(profile, job) {
+    if (profile.pref) return profile.pref;
+    return job.area || profile.region || "";
   }
 
   function esc(s) {
@@ -255,7 +270,6 @@
     if (!labelEl) return;
     var parts = [];
     if (profile.pref) parts.push(profile.pref);
-    if (profile.city) parts.push(profile.city);
     var intentLabels = (data && data.intent_labels) || {};
     if (profile.intent && intentLabels[profile.intent]) {
       parts.push(intentLabels[profile.intent]);
@@ -284,7 +298,7 @@
       "</strong>・非公開含む）";
   }
 
-  function renderCards(jobs) {
+  function renderCards(jobs, profile) {
     var html = "";
     jobs.forEach(function (job, idx) {
       var tags = (job.tags || [])
@@ -306,7 +320,7 @@
         esc(job.title) +
         "</h4>" +
         '<p class="t-job-card__meta"><span>' +
-        esc(job.area) +
+        esc(formatDisplayArea(profile, job)) +
         "</span> · <strong>" +
         esc(formatSalary(job)) +
         "</strong></p>" +
@@ -324,7 +338,7 @@
     var profile = readProfile();
     var jobs = rankJobs(activeGroup, profile);
     buildLabel(profile, previewData);
-    root.innerHTML = renderCards(jobs);
+    root.innerHTML = renderCards(jobs, profile);
     bindJobCards();
     pushDL("thanks_job_preview_refresh", {
       reason: reason || "init",
