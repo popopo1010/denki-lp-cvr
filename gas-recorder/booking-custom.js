@@ -7,7 +7,7 @@
  *   BOOKING_SLOT_MINUTES … 枠の長さ（分）既定 15
  *   BOOKING_START_HOUR … 開始時刻 既定 9
  *   BOOKING_END_HOUR … 終了の上限（24=23:45枠まで）既定 24
- *   BOOKING_ALLOW_OVERLAP … true=既存予定と重複OK（既定 true）
+ *   BOOKING_ALLOW_OVERLAP … true=既存予定と重複OK（既定 false＝空いてる担当優先）
  *   BOOKING_LEAD_HOURS … 何時間後から予約可 既定 2
  *   BOOKING_DAYS_AHEAD … 何日先まで表示 既定 14
  */
@@ -20,8 +20,8 @@ function bookingConfig() {
     startHour: parseInt(p.getProperty("BOOKING_START_HOUR") || "9", 10),
     endHour: parseInt(p.getProperty("BOOKING_END_HOUR") || "24", 10),
     allowOverlap:
-      String(p.getProperty("BOOKING_ALLOW_OVERLAP") || "true").toLowerCase() !==
-      "false",
+      String(p.getProperty("BOOKING_ALLOW_OVERLAP") || "false").toLowerCase() ===
+      "true",
     leadHours: parseInt(p.getProperty("BOOKING_LEAD_HOURS") || "2", 10),
     daysAhead: parseInt(p.getProperty("BOOKING_DAYS_AHEAD") || "14", 10)
   };
@@ -145,6 +145,42 @@ function pickStaffRoundRobin(staffIds) {
   return pick;
 }
 
+/** その枠で空いている担当のうち、当日の予定が少ない人を優先（同数ならRR） */
+function pickStaffLeastBusyAtSlot(staffList, busyMap, slotStart, slotEnd, freeIds) {
+  if (!freeIds || !freeIds.length) throw new Error("no_staff_available");
+  if (freeIds.length === 1) return freeIds[0];
+
+  var dayStart = new Date(
+    slotStart.getFullYear(),
+    slotStart.getMonth(),
+    slotStart.getDate()
+  );
+  var dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+  var scores = [];
+
+  for (var i = 0; i < freeIds.length; i++) {
+    var id = freeIds[i];
+    var busy = busyMap[id] || [];
+    var count = 0;
+    for (var j = 0; j < busy.length; j++) {
+      if (rangesOverlap(dayStart, dayEnd, busy[j].start, busy[j].end)) count++;
+    }
+    scores.push({ id: id, count: count });
+  }
+
+  scores.sort(function (a, b) {
+    if (a.count !== b.count) return a.count - b.count;
+    return a.id.localeCompare(b.id);
+  });
+
+  var minCount = scores[0].count;
+  var tied = [];
+  for (var k = 0; k < scores.length; k++) {
+    if (scores[k].count === minCount) tied.push(scores[k].id);
+  }
+  return pickStaffRoundRobin(tied);
+}
+
 function findStaffById(staffList, staffId) {
   for (var i = 0; i < staffList.length; i++) {
     if (staffList[i].id === staffId) return staffList[i];
@@ -177,7 +213,7 @@ function resolveStaffForBooking(params, slotStart, slotEnd) {
   }
   var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd, cfg);
   if (!freeIds.length) throw new Error("slot_taken");
-  var pickId = pickStaffRoundRobin(freeIds);
+  var pickId = pickStaffLeastBusyAtSlot(staffList, busyMap, slotStart, slotEnd, freeIds);
   var picked = findStaffById(staffList, pickId);
   if (!picked) throw new Error("assign_failed");
   return picked;
@@ -275,7 +311,7 @@ function isSlotFree(slotStart, slotEnd, busy) {
   return true;
 }
 
-var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v3_";
+var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v4_";
 
 function bookingSlotsCacheKey(days) {
   return BOOKING_SLOTS_CACHE_PREFIX + days;
@@ -345,7 +381,7 @@ function buildSlotsPayload(days) {
     timezone: TZ,
     slot_minutes: bookingConfig().slotMinutes,
     staff_count: staffList.length,
-    assignment: "merged_round_robin",
+    assignment: "merged_free_staff_least_busy",
     allow_overlap: bookingConfig().allowOverlap,
     end_hour: bookingConfig().endHour,
     generated_at: Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX")

@@ -98,7 +98,8 @@ Slackメンションも使う場合は `slack_user_id` を追加（後述）。
 | ログに林のカレンダーが出ない | 共有が `yuki.shibayama@...` になっているか確認 |
 | `getBookingStaffInfo` で4人にならない | `calendar_id` の typo・全角文字を確認 |
 | 枠が増えない | `warmBookingSlotsCache` 実行 → 5分後に再確認 |
-| 予約が1人に偏る | 正常（RR）。`BOOKING_ALLOW_OVERLAP=true` なら全員常に候補 |
+| 予約が1人に偏る | 空いている人のうち **当日予定が少ない人優先**（同数はRR）。全員ビジーな枠は表示されない |
+| 被り予約に戻したい | GAS に `BOOKING_ALLOW_OVERLAP` = `true` |
 
 ---
 

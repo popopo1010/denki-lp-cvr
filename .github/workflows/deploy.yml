@@ -80,17 +80,56 @@ jobs:
           echo "--- minified sizes ---"
           ls -lh assets/js/app-v2.js assets/js/thanks-booking-bootstrap.js assets/css/thanks-page.css thanks-v2/index.html 2>/dev/null || true
 
-      - name: Setup SSH
+      - name: Setup SSH key
         env:
           SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$XSERVER_PORT" -H "$XSERVER_HOST" >> ~/.ssh/known_hosts
+          set -euo pipefail
+          if [ -z "${SSH_KEY:-}" ]; then
+            echo "::error::Secret XSERVER_SSH_KEY is not set"
+            exit 1
+          fi
+          for name in XSERVER_HOST XSERVER_PORT XSERVER_USER XSERVER_DEPLOY_PATH; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Secret or env ${name} is empty"
+              exit 1
+            fi
+          done
+          install -m 700 -d "${HOME}/.ssh"
+          printf '%s\n' "$SSH_KEY" > "${HOME}/.ssh/id_ed25519"
+          chmod 600 "${HOME}/.ssh/id_ed25519"
+
+      - name: Trust Xserver host key
+        id: hostkey
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          install -m 700 -d "${HOME}/.ssh"
+          touch "${HOME}/.ssh/known_hosts"
+          chmod 644 "${HOME}/.ssh/known_hosts"
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 20 -p "$XSERVER_PORT" -H "$XSERVER_HOST" >> "${HOME}/.ssh/known_hosts" 2>/dev/null; then
+              echo "ssh-keyscan succeeded on attempt ${attempt}"
+              echo "ok=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "ssh-keyscan attempt ${attempt} failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "::warning::ssh-keyscan failed after retries; rsync will use StrictHostKeyChecking=accept-new"
+          echo "ok=false" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Deploy via rsync
+        env:
+          HOSTKEY_OK: ${{ steps.hostkey.outputs.ok }}
         run: |
+          set -euo pipefail
+          if [ "${HOSTKEY_OK:-false}" = "true" ]; then
+            SSH_CHECK="-o StrictHostKeyChecking=yes"
+          else
+            SSH_CHECK="-o StrictHostKeyChecking=accept-new"
+          fi
           rsync -avz --delete \
             --exclude='.git' \
             --exclude='.github' \
@@ -102,8 +141,8 @@ jobs:
             --exclude='WPLP/thanks/' \
             --exclude='自前LP/thanks/' \
             --exclude='nenshu-shindan/thanks/' \
-            -e "ssh -p $XSERVER_PORT -i ~/.ssh/id_ed25519" \
-            ./ "$XSERVER_USER@$XSERVER_HOST:$XSERVER_DEPLOY_PATH/"
+            -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
+            ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/"
 
       - name: Verify deployment
         run: |
