@@ -32,14 +32,19 @@
   if (!license) return;
 
   var cards = Array.from(root.querySelectorAll(".cvr-testimonial"));
+  function tagMatches(tag) {
+    if (!tag || !license) return false;
+    if (license === tag) return true;
+    if (tag.length < 3) return false;
+    return license.indexOf(tag) >= 0 || tag.indexOf(license) >= 0;
+  }
+
   function matches(card) {
     var tags = (card.getAttribute("data-license") || "")
       .split(/[,、]/)
       .map(function (s) { return s.trim(); })
       .filter(Boolean);
-    return tags.some(function (t) {
-      return license.indexOf(t) >= 0 || t.indexOf(license) >= 0;
-    });
+    return tags.some(tagMatches);
   }
 
   var filterNote = root.querySelector(".cvr-testimonials__filter");

@@ -107,19 +107,72 @@
     return profile;
   }
 
-  function pickGroup(data, license) {
-    var groups = data.groups || [];
-    var lic = license || "";
-    for (var i = 0; i < groups.length; i++) {
-      var g = groups[i];
-      var keys = g.match || [];
-      for (var j = 0; j < keys.length; j++) {
-        if (lic.indexOf(keys[j]) >= 0 || keys[j].indexOf(lic) >= 0) {
-          return g;
-        }
-      }
+  function getLpFamily() {
+    if (window.dkThanksContext && window.dkThanksContext.family) {
+      return window.dkThanksContext.family;
     }
-    return data.fallback || null;
+    var slug = "";
+    try {
+      slug = sessionStorage.getItem("_lp") || "";
+      var qs = new URLSearchParams(location.search).get("lp");
+      if (qs) slug = qs;
+    } catch (e0) {}
+    slug = String(slug).toLowerCase();
+    if (
+      slug.indexOf("sekoukanri") >= 0 ||
+      slug.indexOf("kentiku") >= 0 ||
+      slug.indexOf("doboku") >= 0 ||
+      slug.indexOf("denkisekou") >= 0
+    ) {
+      return "sekoukanri";
+    }
+    return "denki";
+  }
+
+  function licenseMatches(lic, key) {
+    if (!lic || !key) return false;
+    if (lic === key) return true;
+    if (key.length < 3) return false;
+    return lic.indexOf(key) >= 0 || key.indexOf(lic) >= 0;
+  }
+
+  function resolveFallback(data, family) {
+    var fb =
+      (data.fallbacks && data.fallbacks[family]) ||
+      data.fallback ||
+      null;
+    if (fb && (!fb.jobs || !fb.jobs.length) && data.fallbacks) {
+      fb = data.fallbacks.denki || data.fallbacks.sekoukanri || fb;
+    }
+    return fb;
+  }
+
+  function pickGroup(data, license) {
+    var lic = license || "";
+    var best = null;
+    var bestScore = 0;
+    (data.groups || []).forEach(function (g) {
+      (g.match || []).forEach(function (key) {
+        if (!licenseMatches(lic, key)) return;
+        var score = key.length;
+        if (score > bestScore) {
+          bestScore = score;
+          best = g;
+        }
+      });
+    });
+    if (best) return best;
+    return resolveFallback(data, getLpFamily());
+  }
+
+  function formatSalary(job) {
+    if (job.salary) return job.salary;
+    var min = job.salary_min;
+    var max = job.salary_max;
+    if (min && max) return "年収" + min + "〜" + max + "万円";
+    if (min) return "年収" + min + "万円〜";
+    if (max) return "年収〜" + max + "万円";
+    return "年収応相談";
   }
 
   function jobMatchesPref(job, profile) {
@@ -209,7 +262,13 @@
     } else if (profile.willingness.indexOf("近いうち") >= 0) {
       parts.push("転職意欲高め");
     }
-    var lic = profile.license || (activeGroup && activeGroup.label) || "電気工事士";
+    var defaultLic =
+      (window.dkThanksContext &&
+        window.dkThanksContext.brand &&
+        window.dkThanksContext.brand.defaultLicense) ||
+      (previewData && previewData.default_license_label) ||
+      "電気工事士";
+    var lic = profile.license || (activeGroup && activeGroup.label) || defaultLic;
     if (!parts.length) {
       labelEl.innerHTML =
         "「<strong>" +
@@ -249,7 +308,7 @@
         '<p class="t-job-card__meta"><span>' +
         esc(job.area) +
         "</span> · <strong>" +
-        esc(job.salary) +
+        esc(formatSalary(job)) +
         "</strong></p>" +
         '<div class="t-job-card__tags">' +
         tags +
@@ -357,7 +416,8 @@
     .then(function (data) {
       previewData = data;
       var profile = readProfile();
-      activeGroup = pickGroup(data, profile.license) || data.fallback;
+      activeGroup =
+        pickGroup(data, profile.license) || resolveFallback(data, getLpFamily());
       mountVoice(activeGroup, profile);
       bindIntentChips();
       bindScroll();

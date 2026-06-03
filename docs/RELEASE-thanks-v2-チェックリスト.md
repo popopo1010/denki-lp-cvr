@@ -1,47 +1,32 @@
-# thanks-v2 リリース前チェックリスト（2026-06-03 更新）
+# thanks-v2 リリース前チェックリスト（2026-06-03）
 
-## 本番URL（要再確認）
+## 職種LP × サンクス
 
-| 項目 | URL | 期待 |
-|------|-----|------|
-| サンクス | https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/ | 200 |
-| 求人JSON | …/assets/data/thanks-job-previews.json | 200 |
-| 空き枠JSON | …/assets/data/booking-slots.json | 200・`staff_count: 4` |
-| JS | `thanks-job-preview.js?v=3` / `thanks-booking-custom.js?v=16` | 200 |
+| LP | 遷移先 | プレビュー | ブランド |
+|----|--------|------------|----------|
+| `denkikouji-v2` | `thanks-v2` | 電気系資格グループ | 電気工事バンク |
+| `sekoukanri-*-v2` | `thanks-v2` | 建築・土木・管・電気施工管理 | 施工管理キャリア |
+| `nenshu-shindan-v2/*` | `nenshu-shindan-v2/thanks/` | 専用フロー（LINE） | 年収診断 |
+| `nenshu-shindan/*` | `nenshu-shindan/thanks/` | 同上 | 年収診断 |
 
-## 登録フロー（現行）
+`?lp=` / `_lp` で GTM・表示文脈を分離。
 
-1. **仮登録** … LP送信（`dk_lead_profile` に資格・都道府県・意欲）
-2. **求人プレビュー** … 好条件サンプル3件・希望チップで再ソート（会社名非公開）
-3. **詳しく聞く** … カレンダー推奨（スキップ可）
-4. **LINE本登録** … 求人一覧・新着
+## 本番URL
 
-## GAS
-
-| プロパティ | 備考 |
-|------------|------|
-| `BOOKING_STAFF_JSON` | 4人・空きマージ |
-| `SLACK_BOT_TOKEN` + `SLACK_LEAD_CHANNEL_ID` | Bot + スレッド返信 |
-| `BOOKING_ALLOW_OVERLAP` | 未設定推奨（空き担当優先） |
+| 項目 | URL |
+|------|-----|
+| サンクス | https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/ |
+| 求人JSON | …/assets/data/thanks-job-previews.json |
+| JS | `thanks-page-context.js?v=1` / `thanks-job-preview.js?v=4` |
 
 ## 手動E2E
 
-- [ ] LP（郵便番号まで）→ サンクスで都道府県マッチ求人
-- [ ] 希望チップで求人入れ替え
-- [ ] 予約 → LINE強調 → Slackスレッド
-- [ ] GTM Preview: `thanks_job_preview_view` 等
+- [ ] 建築LP → サンクスで建築向けプレビュー3件・ヘッダー「施工管理キャリア」
+- [ ] 電気工事LP → 電気向けプレビュー・「電気工事バンク」
+- [ ] 年収診断v2 → 専用サンクス（thanks-v2 に行かない）
+- [ ] 予約 → LINE / Slack
 
 ## CI
 
-- Deploy: `main` push（minify → rsync）
-- Sync booking: 5分ごと JSON
-
-## 既知
-
-- 求人プレビューは**好条件のイメージ**（実案件は本登録後）
-- Deploy失敗時は本番HTMLが古い `?v=` のまま残る → Actions green を確認
-
-## ロールバック
-
-- `THANKS_BOOKING_MODE=timerex`（config）
-- git revert + push
+- Deploy: `main` push
+- minify: `thanks-page-context.js` 含む

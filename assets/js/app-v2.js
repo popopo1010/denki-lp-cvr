@@ -21,19 +21,33 @@
 
   // ========== サンクス遷移（thanks-v2 + GTM qualified） ==========
   const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
+  const NENSHU_THANKS_V1_PATH = "/denki-lp-cvr/nenshu-shindan/thanks/";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
 
-  function buildThanksV2Url() {
-    const u = new URL(THANKS_V2_PATH, location.origin);
+  function buildThanksQuery() {
+    const params = new URLSearchParams();
     const lp = window.__LP_ID || "";
-    if (lp) u.searchParams.set("lp", lp);
+    if (lp) params.set("lp", lp);
     const incoming = new URLSearchParams(location.search);
     UTM_KEYS.forEach((key) => {
       const val = incoming.get(key);
-      if (val) u.searchParams.set(key, val);
+      if (val) params.set(key, val);
     });
-    return u.pathname + u.search;
+    const q = params.toString();
+    return q ? `?${q}` : "";
+  }
+
+  /** 職種LP → thanks-v2、年収診断 → 専用サンクス */
+  function buildThanksUrl() {
+    const path = location.pathname;
+    if (path.includes("/nenshu-shindan-v2/") && !path.includes("/thanks")) {
+      return path.replace(/\/[^/]+\/?$/, "/thanks/") + buildThanksQuery();
+    }
+    if (path.includes("/nenshu-shindan/") && !path.includes("/thanks")) {
+      return NENSHU_THANKS_V1_PATH + buildThanksQuery();
+    }
+    return THANKS_V2_PATH + buildThanksQuery();
   }
 
   function prewarmThanksBookingSlots() {
@@ -749,7 +763,7 @@
           } catch (e) {}
           prewarmThanksBookingSlots();
           persistLeadForThanks();
-          setTimeout(() => { location.href = buildThanksV2Url(); }, 600);
+          setTimeout(() => { location.href = buildThanksUrl(); }, 600);
         }, 500);
       });
     }

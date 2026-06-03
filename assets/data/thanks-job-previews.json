@@ -6,83 +6,180 @@
     "stable": "安定・休み重視",
     "private": "非公開求人"
   },
+  "fallbacks": {
+    "denki": {
+      "label": "電気工事士",
+      "voice": "ご希望に合わせて、好条件の非公開求人を優先してご案内します",
+      "jobs": [
+        {"title": "関東エリア 高待遇・電気工事", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収480〜650万円", "salary_min": 480, "salary_max": 650, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
+        {"title": "商業施設 設備保守スタッフ", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収460〜600万円", "salary_min": 460, "salary_max": 600, "intents": ["stable", "salary"], "traits": ["weekend_off", "low_ot"], "tags": ["週休2日", "残業少なめ"]},
+        {"title": "再エネ現場 電気工事", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収500〜680万円", "salary_min": 500, "salary_max": 680, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "現場手当"]},
+        {"title": "プラント メンテナンス", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収490〜640万円", "salary_min": 490, "salary_max": 640, "intents": ["salary", "area"], "traits": ["high_salary"], "tags": ["高単価", "資格手当"]},
+        {"title": "病院設備 電気工事", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収470〜610万円", "salary_min": 470, "salary_max": 610, "intents": ["stable", "area"], "traits": ["weekend_off"], "tags": ["長期安定", "土日休み"]},
+        {"title": "データセンター協力 電気工事", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary": "年収510〜700万円", "salary_min": 510, "salary_max": 700, "intents": ["private", "salary"], "traits": ["private"], "tags": ["非公開", "直行直帰"]}
+      ]
+    },
+    "sekoukanri": {
+      "label": "施工管理技士",
+      "voice": "建築・土木・電気施工管理の方に、非公開の好条件案件を希望に合わせて紹介しています",
+      "jobs": [
+        {"title": "大手ゼネコン 建築現場 施工管理", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収600〜820万円", "salary_min": 600, "salary_max": 820, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
+        {"title": "インフラ新設 土木施工管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収580〜780万円", "salary_min": 580, "salary_max": 780, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["週休2日", "残業20h以下"]},
+        {"title": "商業施設新築 電気工事施工管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収620〜850万円", "salary_min": 620, "salary_max": 850, "intents": ["private", "salary"], "traits": ["private", "high_salary"], "tags": ["非公開", "高待遇"]},
+        {"title": "物流ターミナル 新設工事監督", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収550〜720万円", "salary_min": 550, "salary_max": 720, "intents": ["area", "stable"], "traits": ["weekend_off"], "tags": ["土日休み", "直行直帰"]},
+        {"title": "病院増築 設備施工管理", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収530〜680万円", "salary_min": 530, "salary_max": 680, "intents": ["stable", "area"], "traits": ["low_ot"], "tags": ["長期安定", "残業少なめ"]},
+        {"title": "再エネEPC 現場管理（施工管理）", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収570〜750万円", "salary_min": 570, "salary_max": 750, "intents": ["salary", "private"], "traits": ["private"], "tags": ["非公開", "資格手当"]}
+      ]
+    }
+  },
   "groups": [
     {
-      "match": ["第二種", "2種", "第2種"],
+      "match": ["1級建築施工管理技士", "1級 建築施工管理"],
+      "label": "1級建築施工管理技士",
+      "voice": "1級建築で年収700万超えの非公開案件を紹介した事例があります",
+      "jobs": [
+        {"title": "大手デベロッパー 商業施設新築 建築CM", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収720〜950万円", "salary_min": 720, "salary_max": 950, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "年収交渉代行"]},
+        {"title": "病院新築 建築施工管理（1級）", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収700〜880万円", "salary_min": 700, "salary_max": 880, "intents": ["stable", "salary"], "traits": ["weekend_off", "high_salary"], "tags": ["週休2日", "賞与2回"]},
+        {"title": "物流センター新設 建築工事管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収680〜860万円", "salary_min": 680, "salary_max": 860, "intents": ["area", "private"], "traits": ["private"], "tags": ["非公開", "高待遇"]},
+        {"title": "大学キャンパス改修 建築監督", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収650〜820万円", "salary_min": 650, "salary_max": 820, "intents": ["stable", "area"], "traits": ["low_ot"], "tags": ["残業少なめ", "長期案件"]},
+        {"title": "マンション新築 建築施工管理", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収620〜800万円", "salary_min": 620, "salary_max": 800, "intents": ["salary", "area"], "traits": ["high_salary"], "tags": ["関西・九州", "資格手当"]},
+        {"title": "公共施設新築 建築CM", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収670〜850万円", "salary_min": 670, "salary_max": 850, "intents": ["private", "stable"], "traits": ["private", "weekend_off"], "tags": ["非公開", "土日休み"]}
+      ]
+    },
+    {
+      "match": ["2級建築施工管理技士", "2級 建築施工管理"],
+      "label": "2級建築施工管理技士",
+      "voice": "2級建築でも経験を評価した好条件の非公開案件を紹介しています",
+      "jobs": [
+        {"title": "商業施設改修 建築現場監督", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収520〜680万円", "salary_min": 520, "salary_max": 680, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
+        {"title": "オフィスビル新築 建築施工管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収500〜650万円", "salary_min": 500, "salary_max": 650, "intents": ["stable", "salary"], "traits": ["weekend_off"], "tags": ["週休2日", "2級歓迎"]},
+        {"title": "病院増築 建築工事管理", "area": "兵庫県", "region": "近畿", "prefs": ["兵庫県"], "salary": "年収510〜660万円", "salary_min": 510, "salary_max": 660, "intents": ["area", "stable"], "traits": ["low_ot"], "tags": ["残業少なめ", "関西"]},
+        {"title": "マンション新築 建築監督補佐", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary": "年収490〜630万円", "salary_min": 490, "salary_max": 630, "intents": ["salary", "area"], "traits": ["beginner_ok"], "tags": ["未経験相談可", "資格手当"]},
+        {"title": "公共工事 建築施工管理", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収480〜620万円", "salary_min": 480, "salary_max": 620, "intents": ["private", "stable"], "traits": ["private"], "tags": ["非公開", "長期安定"]},
+        {"title": "商業施設 建築リニューアル", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収470〜600万円", "salary_min": 470, "salary_max": 600, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["高待遇", "直行直帰"]}
+      ]
+    },
+    {
+      "match": ["1級土木施工管理技士", "1級 土木施工管理"],
+      "label": "1級土木施工管理技士",
+      "voice": "1級土木でインフラ・大型案件の非公開求人を紹介した事例があります",
+      "jobs": [
+        {"title": "高速道路拡幅 土木施工管理（1級）", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収700〜920万円", "salary_min": 700, "salary_max": 920, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "出張手当"]},
+        {"title": "トンネル新設 土木工事管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収720〜900万円", "salary_min": 720, "salary_max": 900, "intents": ["salary", "stable"], "traits": ["high_salary"], "tags": ["高待遇", "賞与2回"]},
+        {"title": "河川改修 土木CM", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収650〜850万円", "salary_min": 650, "salary_max": 850, "intents": ["area", "private"], "traits": ["private"], "tags": ["非公開", "週休2日"]},
+        {"title": "再エネ基礎工事 土木監督", "area": "静岡県", "region": "中部", "prefs": ["静岡県"], "salary": "年収630〜800万円", "salary_min": 630, "salary_max": 800, "intents": ["stable", "salary"], "traits": ["weekend_off"], "tags": ["残業20h以下", "長期案件"]},
+        {"title": "物流用地造成 土木施工管理", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収660〜840万円", "salary_min": 660, "salary_max": 840, "intents": ["private", "salary"], "traits": ["private", "high_salary"], "tags": ["非公開", "直行直帰"]},
+        {"title": "港湾整備 土木工事管理", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収620〜780万円", "salary_min": 620, "salary_max": 780, "intents": ["area", "stable"], "traits": ["low_ot"], "tags": ["土日休み", "1級必須"]}
+      ]
+    },
+    {
+      "match": ["2級土木施工管理技士", "2級 土木施工管理"],
+      "label": "2級土木施工管理技士",
+      "voice": "2級土木でも現場経験を活かした好条件案件を紹介しています",
+      "jobs": [
+        {"title": "道路舗装・区画 土木現場監督", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収500〜660万円", "salary_min": 500, "salary_max": 660, "intents": ["salary", "private"], "traits": ["private"], "tags": ["非公開", "賞与2回"]},
+        {"title": "マンション基礎 土木施工管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収480〜620万円", "salary_min": 480, "salary_max": 620, "intents": ["stable", "area"], "traits": ["weekend_off"], "tags": ["週休2日", "2級歓迎"]},
+        {"title": "造成工事 土木工事管理", "area": "兵庫県", "region": "近畿", "prefs": ["兵庫県"], "salary": "年収490〜640万円", "salary_min": 490, "salary_max": 640, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["関西", "資格手当"]},
+        {"title": "上下水道 土木監督補佐", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary": "年収470〜610万円", "salary_min": 470, "salary_max": 610, "intents": ["stable", "private"], "traits": ["private", "low_ot"], "tags": ["非公開", "残業少なめ"]},
+        {"title": "太陽光基礎 土木施工管理", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収460〜600万円", "salary_min": 460, "salary_max": 600, "intents": ["salary", "stable"], "traits": ["beginner_ok"], "tags": ["未経験相談可", "現場手当"]},
+        {"title": "橋梁補修 土木現場管理", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収450〜580万円", "salary_min": 450, "salary_max": 580, "intents": ["area", "private"], "traits": ["private"], "tags": ["非公開", "出張手当"]}
+      ]
+    },
+    {
+      "match": ["1級管工事施工管理技士", "1級 管工事施工管理"],
+      "label": "1級管工事施工管理技士",
+      "voice": "1級管工事で設備・プラント系の高待遇案件を紹介した事例があります",
+      "jobs": [
+        {"title": "病院新築 管工事施工管理（1級）", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収680〜880万円", "salary_min": 680, "salary_max": 880, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["週休2日", "非公開"]},
+        {"title": "プラント配管 管工事CM", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収700〜900万円", "salary_min": 700, "salary_max": 900, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "高待遇"]},
+        {"title": "商業施設 空調管工事管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収650〜820万円", "salary_min": 650, "salary_max": 820, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["賞与2回", "資格手当"]},
+        {"title": "データセンター 配管工事監督", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収630〜800万円", "salary_min": 630, "salary_max": 800, "intents": ["private", "stable"], "traits": ["private", "low_ot"], "tags": ["非公開", "残業少なめ"]},
+        {"title": "工場新設 管工事施工管理", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収660〜850万円", "salary_min": 660, "salary_max": 850, "intents": ["salary", "area"], "traits": ["direct_commute"], "tags": ["直行直帰", "1級必須"]},
+        {"title": "公共施設 設備管工事管理", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収600〜760万円", "salary_min": 600, "salary_max": 760, "intents": ["stable", "private"], "traits": ["private"], "tags": ["非公開", "長期安定"]}
+      ]
+    },
+    {
+      "match": ["2級管工事施工管理技士", "2級 管工事施工管理"],
+      "label": "2級管工事施工管理技士",
+      "voice": "2級管工事でも設備現場の好条件非公開案件を紹介しています",
+      "jobs": [
+        {"title": "病院改修 管工事現場監督", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収500〜650万円", "salary_min": 500, "salary_max": 650, "intents": ["stable", "salary"], "traits": ["weekend_off"], "tags": ["週休2日", "2級歓迎"]},
+        {"title": "マンション設備 管工事管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収480〜620万円", "salary_min": 480, "salary_max": 620, "intents": ["salary", "private"], "traits": ["private"], "tags": ["非公開", "賞与2回"]},
+        {"title": "商業ビル 配管工事監督", "area": "兵庫県", "region": "近畿", "prefs": ["兵庫県"], "salary": "年収470〜610万円", "salary_min": 470, "salary_max": 610, "intents": ["area", "stable"], "traits": ["low_ot"], "tags": ["残業少なめ", "関西"]},
+        {"title": "工場メンテ 管工事施工管理", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary": "年収460〜600万円", "salary_min": 460, "salary_max": 600, "intents": ["private", "salary"], "traits": ["private"], "tags": ["非公開", "資格手当"]},
+        {"title": "公共設備 管工事現場管理", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収450〜580万円", "salary_min": 450, "salary_max": 580, "intents": ["stable", "area"], "traits": ["beginner_ok"], "tags": ["未経験相談可", "長期案件"]},
+        {"title": "物流センター 設備管工事", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収440〜570万円", "salary_min": 440, "salary_max": 570, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["高待遇", "直行直帰"]}
+      ]
+    },
+    {
+      "match": ["1級電気工事施工管理技士", "電気施工管理 1級", "電気工事施工管理 1級"],
+      "label": "1級電気工事施工管理技士",
+      "voice": "1級電気施工管理で年収700〜900万帯の非公開案件を紹介した事例があります",
+      "jobs": [
+        {"title": "再エネEPC 電気施工管理（1級）", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収720〜950万円", "salary_min": 720, "salary_max": 950, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "年収交渉代行"]},
+        {"title": "大型商業施設 監理技術者補佐", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収750〜980万円", "salary_min": 750, "salary_max": 980, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["週休2日", "賞与2回・退職金"]},
+        {"title": "データセンター 新築工事管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収700〜920万円", "salary_min": 700, "salary_max": 920, "intents": ["area", "salary"], "traits": ["high_salary", "private"], "tags": ["非公開", "高待遇"]},
+        {"title": "病院増築 電気工事管理", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収680〜880万円", "salary_min": 680, "salary_max": 880, "intents": ["stable", "area"], "traits": ["weekend_off", "low_ot"], "tags": ["長期案件", "残業20h以下"]},
+        {"title": "インフラトンネル 電気施工管理", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収710〜900万円", "salary_min": 710, "salary_max": 900, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "直行直帰"]},
+        {"title": "物流ターミナル 新設工事監督", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収660〜850万円", "salary_min": 660, "salary_max": 850, "intents": ["area", "stable"], "traits": ["direct_commute"], "tags": ["土日祝休み", "1級必須"]}
+      ]
+    },
+    {
+      "match": ["2級電気工事施工管理技士", "電気施工管理 2級", "電気工事施工管理 2級"],
+      "label": "2級電気工事施工管理技士",
+      "voice": "2級電気施工管理でも年収600万前後の非公開案件を紹介しています",
+      "jobs": [
+        {"title": "オフィスビル新築 電気施工管理", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収580〜760万円", "salary_min": 580, "salary_max": 760, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
+        {"title": "再エネ 発電所メンテ管理", "area": "静岡県", "region": "中部", "prefs": ["静岡県"], "salary": "年収540〜700万円", "salary_min": 540, "salary_max": 700, "intents": ["stable", "private"], "traits": ["private", "low_ot"], "tags": ["非公開", "週休2日"]},
+        {"title": "商業施設 設備改修 現場監督", "area": "兵庫県", "region": "近畿", "prefs": ["兵庫県"], "salary": "年収560〜720万円", "salary_min": 560, "salary_max": 720, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["関西高待遇", "資格手当"]},
+        {"title": "物流センター 新築工事管理", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary": "年収550〜690万円", "salary_min": 550, "salary_max": 690, "intents": ["stable", "area"], "traits": ["weekend_off", "beginner_ok"], "tags": ["土日休み", "2級歓迎"]},
+        {"title": "病院設備 電気工事管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収570〜740万円", "salary_min": 570, "salary_max": 740, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["残業少なめ", "退職金あり"]},
+        {"title": "プラント改修 工事監督", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収530〜680万円", "salary_min": 530, "salary_max": 680, "intents": ["private", "salary"], "traits": ["private"], "tags": ["非公開", "出張手当"]}
+      ]
+    },
+    {
+      "match": ["第二種電気工事士", "第二種 電気工事士"],
       "label": "第二種電気工事士",
       "voice": "第二種でも年収・休みにこだわった非公開案件を紹介した事例があります",
       "jobs": [
-        {"title": "大手ゼネコン案件 電気設備工事", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary_min": 520, "salary_max": 680, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回・退職金"]},
-        {"title": "データセンター 増設工事（第二種）", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary_min": 500, "salary_max": 650, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["週休2日", "残業月20h以下"]},
-        {"title": "商業施設リニューアル 電気工事", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary_min": 480, "salary_max": 620, "intents": ["area", "stable"], "traits": ["weekend_off", "direct_commute"], "tags": ["土日祝休み", "直行直帰"]},
-        {"title": "再エネEPC 現場スタッフ", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary_min": 510, "salary_max": 660, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "資格手当・現場手当"]},
-        {"title": "病院増築 電気工事（第二種歓迎）", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary_min": 490, "salary_max": 600, "intents": ["stable", "area"], "traits": ["low_ot", "weekend_off"], "tags": ["長期安定", "残業少なめ"]},
-        {"title": "物流ハブ 新設電気工事", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary_min": 470, "salary_max": 590, "intents": ["area", "private"], "traits": ["private", "beginner_ok"], "tags": ["非公開", "未経験相談可"]}
+        {"title": "大手ゼネコン案件 電気設備工事", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収520〜680万円", "salary_min": 520, "salary_max": 680, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回・退職金"]},
+        {"title": "データセンター 増設工事（第二種）", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収500〜650万円", "salary_min": 500, "salary_max": 650, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["週休2日", "残業月20h以下"]},
+        {"title": "商業施設リニューアル 電気工事", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収480〜620万円", "salary_min": 480, "salary_max": 620, "intents": ["area", "stable"], "traits": ["weekend_off", "direct_commute"], "tags": ["土日祝休み", "直行直帰"]},
+        {"title": "再エネEPC 現場スタッフ", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収510〜660万円", "salary_min": 510, "salary_max": 660, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "資格手当・現場手当"]},
+        {"title": "病院増築 電気工事（第二種歓迎）", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収490〜600万円", "salary_min": 490, "salary_max": 600, "intents": ["stable", "area"], "traits": ["low_ot", "weekend_off"], "tags": ["長期安定", "残業少なめ"]},
+        {"title": "物流ハブ 新設電気工事", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収470〜590万円", "salary_min": 470, "salary_max": 590, "intents": ["area", "private"], "traits": ["private", "beginner_ok"], "tags": ["非公開", "未経験相談可"]}
       ]
     },
     {
-      "match": ["第一種", "1種", "第1種"],
+      "match": ["第一種電気工事士", "第一種 電気工事士"],
       "label": "第一種電気工事士",
       "voice": "第一種の方に年収600万超えの非公開案件を優先紹介した声があります",
       "jobs": [
-        {"title": "半導体工場 電気工事（第一種）", "area": "茨城県", "region": "関東", "prefs": ["茨城県"], "salary_min": 580, "salary_max": 780, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "寮・社宅相談可"]},
-        {"title": "大型商業施設 電気施工", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary_min": 600, "salary_max": 820, "intents": ["salary", "area"], "traits": ["high_salary"], "tags": ["高待遇", "資格手当MAX"]},
-        {"title": "病院新築 電気工事リーダー", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary_min": 620, "salary_max": 800, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["賞与2回", "週休2日"]},
-        {"title": "再エネ 発電所メンテ（高単価）", "area": "静岡県", "region": "中部", "prefs": ["静岡県"], "salary_min": 560, "salary_max": 720, "intents": ["stable", "private"], "traits": ["private", "low_ot"], "tags": ["非公開", "残業ほぼなし"]},
-        {"title": "プラント計装 電気工事", "area": "兵庫県", "region": "近畿", "prefs": ["兵庫県"], "salary_min": 590, "salary_max": 760, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["関西", "出張手当あり"]},
-        {"title": "公共インフラ 電気設備工事", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary_min": 570, "salary_max": 740, "intents": ["private", "stable"], "traits": ["private", "weekend_off"], "tags": ["非公開", "土日休み"]}
+        {"title": "半導体工場 電気工事（第一種）", "area": "茨城県", "region": "関東", "prefs": ["茨城県"], "salary": "年収580〜780万円", "salary_min": 580, "salary_max": 780, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "寮・社宅相談可"]},
+        {"title": "大型商業施設 電気施工", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収600〜820万円", "salary_min": 600, "salary_max": 820, "intents": ["salary", "area"], "traits": ["high_salary"], "tags": ["高待遇", "資格手当MAX"]},
+        {"title": "病院新築 電気工事リーダー", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収620〜800万円", "salary_min": 620, "salary_max": 800, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["賞与2回", "週休2日"]},
+        {"title": "再エネ 発電所メンテ（高単価）", "area": "静岡県", "region": "中部", "prefs": ["静岡県"], "salary": "年収560〜720万円", "salary_min": 560, "salary_max": 720, "intents": ["stable", "private"], "traits": ["private", "low_ot"], "tags": ["非公開", "残業ほぼなし"]},
+        {"title": "プラント計装 電気工事", "area": "兵庫県", "region": "近畿", "prefs": ["兵庫県"], "salary": "年収590〜760万円", "salary_min": 590, "salary_max": 760, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["関西", "出張手当あり"]},
+        {"title": "公共インフラ 電気設備工事", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary": "年収570〜740万円", "salary_min": 570, "salary_max": 740, "intents": ["private", "stable"], "traits": ["private", "weekend_off"], "tags": ["非公開", "土日休み"]}
       ]
     },
     {
-      "match": ["1級", "施工管理 1", "電気施工管理"],
-      "label": "1級電気施工管理技士",
-      "voice": "1級で年収700〜900万帯の非公開案件を紹介した事例があります",
-      "jobs": [
-        {"title": "再エネEPC 電気施工管理（1級）", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary_min": 720, "salary_max": 950, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "年収交渉代行"]},
-        {"title": "大型商業施設 監理技術者補佐", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary_min": 750, "salary_max": 980, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["週休2日", "賞与2回・退職金"]},
-        {"title": "データセンター 新築工事管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary_min": 700, "salary_max": 920, "intents": ["area", "salary"], "traits": ["high_salary", "private"], "tags": ["非公開", "高待遇"]},
-        {"title": "病院増築 電気工事管理", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary_min": 680, "salary_max": 880, "intents": ["stable", "area"], "traits": ["weekend_off", "low_ot"], "tags": ["長期案件", "残業20h以下"]},
-        {"title": "インフラトンネル 電気施工管理", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary_min": 710, "salary_max": 900, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "直行直帰"]},
-        {"title": "物流ターミナル 新設工事監督", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary_min": 660, "salary_max": 850, "intents": ["area", "stable"], "traits": ["direct_commute"], "tags": ["土日祝休み", "1級必須"]}
-      ]
-    },
-    {
-      "match": ["2級", "施工管理 2"],
-      "label": "2級電気施工管理技士",
-      "voice": "2級でも年収600万前後の非公開案件を希望に合わせて紹介しています",
-      "jobs": [
-        {"title": "オフィスビル新築 電気施工管理", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary_min": 580, "salary_max": 760, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
-        {"title": "再エネ 発電所メンテ管理", "area": "静岡県", "region": "中部", "prefs": ["静岡県"], "salary_min": 540, "salary_max": 700, "intents": ["stable", "private"], "traits": ["private", "low_ot"], "tags": ["非公開", "週休2日"]},
-        {"title": "商業施設 設備改修 現場監督", "area": "兵庫県", "region": "近畿", "prefs": ["兵庫県"], "salary_min": 560, "salary_max": 720, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["関西高待遇", "資格手当"]},
-        {"title": "物流センター 新築工事管理", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary_min": 550, "salary_max": 690, "intents": ["stable", "area"], "traits": ["weekend_off", "beginner_ok"], "tags": ["土日休み", "2級歓迎"]},
-        {"title": "病院設備 電気工事管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary_min": 570, "salary_max": 740, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["残業少なめ", "退職金あり"]},
-        {"title": "プラント改修 工事監督", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary_min": 530, "salary_max": 680, "intents": ["private", "salary"], "traits": ["private"], "tags": ["非公開", "出張手当"]}
-      ]
-    },
-    {
-      "match": ["主任", "電気主任"],
+      "match": ["電気主任技術者", "電気主任"],
       "label": "電気主任技術者",
       "voice": "主任の方に夜勤なし・高待遇の施設管理案件を紹介した事例があります",
       "jobs": [
-        {"title": "病院施設 電気主任（夜勤なし）", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary_min": 560, "salary_max": 720, "intents": ["stable", "area"], "traits": ["weekend_off", "low_ot"], "tags": ["当直手当", "週休2日"]},
-        {"title": "データセンター 施設管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary_min": 580, "salary_max": 750, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
-        {"title": "工場 受変電設備管理", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary_min": 540, "salary_max": 680, "intents": ["stable", "private"], "traits": ["private", "low_ot"], "tags": ["非公開", "残業月15h以下"]},
-        {"title": "大学キャンパス 電気設備管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary_min": 550, "salary_max": 700, "intents": ["area", "stable"], "traits": ["weekend_off"], "tags": ["土日祝休み", "退職金"]},
-        {"title": "商業ビル 電気保守（主任）", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary_min": 520, "salary_max": 660, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["高待遇", "直行直帰"]},
-        {"title": "物流拠点 電気設備管理", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary_min": 530, "salary_max": 670, "intents": ["private", "stable"], "traits": ["private"], "tags": ["非公開", "資格手当"]}
+        {"title": "病院施設 電気主任（夜勤なし）", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収560〜720万円", "salary_min": 560, "salary_max": 720, "intents": ["stable", "area"], "traits": ["weekend_off", "low_ot"], "tags": ["当直手当", "週休2日"]},
+        {"title": "データセンター 施設管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収580〜750万円", "salary_min": 580, "salary_max": 750, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
+        {"title": "工場 受変電設備管理", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収540〜680万円", "salary_min": 540, "salary_max": 680, "intents": ["stable", "private"], "traits": ["private", "low_ot"], "tags": ["非公開", "残業月15h以下"]},
+        {"title": "大学キャンパス 電気設備管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収550〜700万円", "salary_min": 550, "salary_max": 700, "intents": ["area", "stable"], "traits": ["weekend_off"], "tags": ["土日祝休み", "退職金"]},
+        {"title": "商業ビル 電気保守（主任）", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収520〜660万円", "salary_min": 520, "salary_max": 660, "intents": ["area", "salary"], "traits": ["high_salary"], "tags": ["高待遇", "直行直帰"]},
+        {"title": "物流拠点 電気設備管理", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収530〜670万円", "salary_min": 530, "salary_max": 670, "intents": ["private", "stable"], "traits": ["private"], "tags": ["非公開", "資格手当"]}
       ]
     }
   ],
   "fallback": {
     "label": "電気工事士",
     "voice": "ご希望に合わせて、好条件の非公開求人を優先してご案内します",
-    "jobs": [
-      {"title": "関東エリア 高待遇・電気工事", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary_min": 480, "salary_max": 650, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
-      {"title": "商業施設 設備保守スタッフ", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary_min": 460, "salary_max": 600, "intents": ["stable", "salary"], "traits": ["weekend_off", "low_ot"], "tags": ["週休2日", "残業少なめ"]},
-      {"title": "再エネ現場 電気工事", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary_min": 500, "salary_max": 680, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "現場手当"]},
-      {"title": "プラント メンテナンス", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary_min": 490, "salary_max": 640, "intents": ["salary", "area"], "traits": ["high_salary"], "tags": ["高単価", "資格手当"]},
-      {"title": "病院設備 電気工事", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary_min": 470, "salary_max": 610, "intents": ["stable", "area"], "traits": ["weekend_off"], "tags": ["長期安定", "土日休み"]},
-      {"title": "データセンター協力 電気工事", "area": "千葉県", "region": "関東", "prefs": ["千葉県"], "salary_min": 510, "salary_max": 700, "intents": ["private", "salary"], "traits": ["private"], "tags": ["非公開", "直行直帰"]}
-    ]
+    "jobs": []
   }
 }
