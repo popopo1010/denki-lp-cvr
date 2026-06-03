@@ -3,5 +3,7 @@ Thumbs.db
 .cursor/
 .playwright-mcp/
 scripts/__pycache__/
+node_modules/
+package-lock.json
 *.log
 *.pyc

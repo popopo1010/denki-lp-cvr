@@ -6,7 +6,7 @@
 |------|------|----------|
 | `/thanks-v2/` | 200 | CI Verify / curl |
 | `thanks-job-preview.js?v=6` | あり | HTML grep |
-| `thanks-page-context.js?v=3` | あり | HTML grep |
+| `thanks-page-context.js?v=4` | あり（`defer`・DOMContentLoaded） | HTML grep |
 | `thanks-page.css?v=14` | あり | HTML grep |
 | `thanks-mobile-ux.js?v=1` | あり | HTML grep |
 | `booking-slots.json` | `staff_count: 4`、122枠 | JSON |
@@ -35,20 +35,27 @@
 
 ## 手動E2E（リリース前に実施）
 
+### 自動E2E（Playwright）
+```bash
+npx playwright install chromium
+npm install playwright@1.49.1 --no-save
+node scripts/e2e-thanks-v2-release.mjs
+```
+
 ### 電気 `denkikouji-v2`
-- [ ] 都道府県まで送信 → サンクス「電気工事バンク」
-- [ ] 3件の勤務地が **登録都道府県のみ**
-- [ ] 希望チップで表示切替
-- [ ] 下部スティッキーCTA（スクロール後）
-- [ ] 予約 → Slackスレッド（Bot・メンションなし）
+- [x] サンクス「電気工事バンク」・非公開求人イメージ（自動）
+- [x] 勤務地＝登録都道府県のみ（自動）
+- [x] 希望チップ・スティッキーCTA（自動）
+- [x] 予約枠表示（自動）
+- [ ] 実機LP送信 → Slackスレッド（手動）
 
 ### 施工管理 `sekoukanri-kentiku-v2`（代表）
-- [ ] 「施工管理キャリア」ヘッダー
-- [ ] 建築施工管理資格 → 建築向け案件イメージ（他県名がカードに出ない）
-- [ ] LINE本登録
+- [x] 建築向け案件・都道府県表示（自動・v=4 ブランド修正後）
+- [ ] 「施工管理キャリア」ヘッダー（v=4 デプロイ後に自動再確認）
+- [ ] 実機LINE（手動）
 
 ### 年収診断 `nenshu-shindan-v2/sekoukanri`
-- [ ] **thanks-v2 に行かない** → `nenshu-shindan-v2/thanks/`
+- [x] `nenshu-shindan-v2/thanks/` へ遷移（自動）
 
 ### GAS（変更なし・再確認）
 - [ ] `BOOKING_STAFF_JSON` 4人

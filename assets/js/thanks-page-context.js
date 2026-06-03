@@ -56,38 +56,47 @@
     }
   };
 
-  var slug = getLpSlug();
-  var family = getJobFamily(slug);
-  var brand = BRANDS[family] || BRANDS.denki;
+  function applyBrand() {
+    var slug = getLpSlug();
+    var family = getJobFamily(slug);
+    var brand = BRANDS[family] || BRANDS.denki;
 
-  document.documentElement.setAttribute("data-thanks-family", family);
-  var theme = document.querySelector('meta[name="theme-color"]');
-  if (!theme) {
-    theme = document.createElement("meta");
-    theme.name = "theme-color";
-    document.head.appendChild(theme);
+    document.documentElement.setAttribute("data-thanks-family", family);
+    if (slug) document.documentElement.setAttribute("data-thanks-lp", slug);
+
+    var theme = document.querySelector('meta[name="theme-color"]');
+    if (!theme) {
+      theme = document.createElement("meta");
+      theme.name = "theme-color";
+      document.head.appendChild(theme);
+    }
+    theme.content = family === "sekoukanri" ? "#1b5e20" : "#314c85";
+
+    var titleEl = document.querySelector("title");
+    if (titleEl) titleEl.textContent = brand.title;
+
+    var headerEl =
+      document.getElementById("thanks-header-text") ||
+      document.querySelector(".l-header__title .adtext");
+    if (headerEl) headerEl.textContent = brand.header;
+
+    var heroP = document.querySelector(".t-hero p");
+    if (heroP && !document.cookie.match(/(^| )user-name=/)) {
+      heroP.innerHTML = brand.heroSub;
+    }
+
+    window.dkThanksContext = {
+      lpSlug: slug,
+      family: family,
+      brand: brand,
+      getLpSlug: getLpSlug,
+      getJobFamily: getJobFamily
+    };
   }
-  theme.content = family === "sekoukanri" ? "#1b5e20" : "#314c85";
-  if (slug) document.documentElement.setAttribute("data-thanks-lp", slug);
 
-  var titleEl = document.querySelector("title");
-  if (titleEl) titleEl.textContent = brand.title;
-
-  var headerEl =
-    document.getElementById("thanks-header-text") ||
-    document.querySelector(".l-header__title .adtext");
-  if (headerEl) headerEl.textContent = brand.header;
-
-  var heroP = document.querySelector(".t-hero p");
-  if (heroP && !document.cookie.match(/(^| )user-name=/)) {
-    heroP.innerHTML = brand.heroSub;
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyBrand);
+  } else {
+    applyBrand();
   }
-
-  window.dkThanksContext = {
-    lpSlug: slug,
-    family: family,
-    brand: brand,
-    getLpSlug: getLpSlug,
-    getJobFamily: getJobFamily
-  };
 })();
