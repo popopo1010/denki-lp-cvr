@@ -90,10 +90,10 @@
       var h3 = line.querySelector("h3");
       var sub = line.querySelector(".t-line__sub");
       if (badge) badge.textContent = "ステップ3";
-      if (h3) h3.innerHTML = "LINEで<strong>本登録</strong>（残り1ステップ）";
+      if (h3) h3.innerHTML = "LINEで<strong>本登録</strong>—待っていればOK";
       if (sub)
-        sub.textContent =
-          "友だち追加で本登録完了。非公開求人の優先案内が受け取れます（30秒）";
+        sub.innerHTML =
+          "担当が<strong>職歴・条件</strong>をヒアリング中も<strong>法人オファー</strong>が届きます。友だち追加して<strong>待つだけ</strong>でOK（30秒）";
       setTimeout(function () {
         line.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 450);
@@ -110,7 +110,7 @@
     var heroP = document.querySelector(".t-hero p");
     if (heroP) {
       heroP.innerHTML =
-        "面談日時を確保しました。<br>続いて<strong>LINEで本登録</strong>をお願いします。";
+        "面談日時を確保しました。<br>続いて<strong>LINEで本登録</strong>すれば、ヒアリング中も<strong>法人オファー</strong>が届きます。";
     }
 
     pushDL("thanks_line_step_revealed", {
