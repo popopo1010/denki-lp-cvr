@@ -59,7 +59,8 @@ function getBookingStaffList() {
           out.push({
             id: String(row.id || "staff_" + i).trim(),
             name: String(row.name || row.id || "担当").trim(),
-            calendar_id: calendarId
+            calendar_id: calendarId,
+            slack_user_id: String(row.slack_user_id || "").trim()
           });
         }
         if (out.length) return out;
@@ -276,11 +277,40 @@ function clearBookingSlotsCache() {
   });
 }
 
+function stripSlotForClient(slot) {
+  return {
+    start: slot.start,
+    end: slot.end,
+    day: slot.day,
+    day_label: slot.day_label,
+    time_label: slot.time_label
+  };
+}
+
+function getStaffSlackMention(staffId) {
+  var id = String(staffId || "").trim();
+  if (!id) return "";
+  var list = getBookingStaffList();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id !== id) continue;
+    var uid = String(list[i].slack_user_id || "").trim();
+    if (uid.indexOf("<@") === 0) return uid;
+    if (uid.indexOf("U") === 0) return "<@" + uid + ">";
+    return "";
+  }
+  return "";
+}
+
 function buildSlotsPayload(days) {
   var staffList = getBookingStaffList();
+  var rawSlots = getAvailableSlots(days);
+  var slots = [];
+  for (var i = 0; i < rawSlots.length; i++) {
+    slots.push(stripSlotForClient(rawSlots[i]));
+  }
   return {
     ok: true,
-    slots: getAvailableSlots(days),
+    slots: slots,
     timezone: TZ,
     slot_minutes: bookingConfig().slotMinutes,
     staff_count: staffList.length,
@@ -376,7 +406,7 @@ function handleSlotsRequest(e) {
  * GASエディタ: トリガー → warmBookingSlotsCache → 分ベース 5
  */
 function warmBookingSlotsCache() {
-  var daysList = [5, 7];
+  var daysList = [3, 5];
   daysList.forEach(function (days) {
     var payload = buildSlotsPayload(days);
     writeBookingSlotsCache(days, payload);

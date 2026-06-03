@@ -3,7 +3,9 @@ window.THANKS_BOOKING_MODE = "custom";
 window.LP_BOOKING_GAS_URL =
   "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
 window.BOOKING_VISIBLE_DAYS = 3;
-window.BOOKING_FETCH_DAYS = 5;
+window.BOOKING_FETCH_DAYS = 3;
+/** サンクス表示中に GAS JSONP で裏取りしない（静的JSON+キャッシュのみで軽量化） */
+window.BOOKING_SLOTS_SKIP_GAS_REFRESH = true;
 window.BOOKING_SLOTS_STATIC_URL = "../assets/data/booking-slots.json";
 window.BOOKING_SLOTS_CACHE_KEY = "dk_booking_slots_cache";
 window.BOOKING_SLOTS_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -126,6 +128,15 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
   }
 
   function refreshInBackground() {
+    if (window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
+      fetchStaticSlots().then(function (staticData) {
+        if (staticData) {
+          window.dkBookingSlotsWriteCache(staticData.slots, staticData.source);
+          notifySlotsUpdated(staticData);
+        }
+      });
+      return;
+    }
     fetchStaticSlots().then(function (staticData) {
       if (staticData) {
         window.dkBookingSlotsWriteCache(staticData.slots, staticData.source);
@@ -156,14 +167,22 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
       .then(function (staticData) {
         if (staticData) {
           window.dkBookingSlotsWriteCache(staticData.slots, staticData.source);
-          fetchGasSlots().then(function (gasData) {
+          if (!window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
+            fetchGasSlots().then(function (gasData) {
+              window.__dkBookingSlotsInflight = null;
+              if (gasData && gasData.slots) {
+                window.dkBookingSlotsWriteCache(gasData.slots, gasData.source);
+                notifySlotsUpdated(gasData);
+              }
+            });
+          } else {
             window.__dkBookingSlotsInflight = null;
-            if (gasData && gasData.slots) {
-              window.dkBookingSlotsWriteCache(gasData.slots, gasData.source);
-              notifySlotsUpdated(gasData);
-            }
-          });
+          }
           return staticData;
+        }
+        if (window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
+          window.__dkBookingSlotsInflight = null;
+          return null;
         }
         return fetchGasSlots().then(function (gasData) {
           window.__dkBookingSlotsInflight = null;

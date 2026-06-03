@@ -51,6 +51,8 @@ const PREFERRED_COLUMNS = [
   "calendar_id",
   "calendar_staff_id",
   "calendar_staff_name",
+  "slack_thread_ts",
+  "slack_channel_id",
   "calendar_event_id",
   "_submitted_at",
   "_page",
@@ -189,7 +191,16 @@ function doPost(e) {
     }
     sheet.appendRow(row);
 
-    return jsonOk();
+    var newRow = sheet.getLastRow();
+    var slackLead = notifySlackNewLead(params);
+    if (slackLead.ok && slackLead.ts) {
+      updateRowColumns(sheet, header, newRow, {
+        slack_thread_ts: slackLead.ts,
+        slack_channel_id: slackLead.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID")
+      });
+    }
+
+    return jsonOk({ slack_lead: slackLead });
   } catch (err) {
     return jsonError(err);
   }
@@ -309,6 +320,120 @@ function postToSlack(text) {
   return { ok: res.getResponseCode() >= 200 && res.getResponseCode() < 300 };
 }
 
+function slackBotEnabled() {
+  return !!(
+    getScriptProp("SLACK_BOT_TOKEN") && getScriptProp("SLACK_LEAD_CHANNEL_ID")
+  );
+}
+
+function postSlackChatMessage(options) {
+  options = options || {};
+  var token = getScriptProp("SLACK_BOT_TOKEN");
+  var channel = options.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID");
+  if (!token || !channel) return { ok: false, note: "slack bot not configured" };
+  var body = {
+    channel: channel,
+    text: options.text || "",
+    unfurl_links: false,
+    unfurl_media: false
+  };
+  if (options.thread_ts) body.thread_ts = String(options.thread_ts);
+  var res = UrlFetchApp.fetch("https://slack.com/api/chat.postMessage", {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + token },
+    payload: JSON.stringify(body),
+    muteHttpExceptions: true
+  });
+  var json = {};
+  try {
+    json = JSON.parse(res.getContentText());
+  } catch (e) {
+    return { ok: false, error: "invalid slack response" };
+  }
+  return {
+    ok: !!json.ok,
+    ts: json.ts || "",
+    channel: json.channel || channel,
+    error: json.error || ""
+  };
+}
+
+function buildLeadSlackMessage(params) {
+  var last = params["your-last-name"] || "";
+  var first = params["your-first-name"] || "";
+  var name = (last + " " + first).trim();
+  var tel = params["your-tel"] || "";
+  var lp = params["_lp"] || "";
+  var lic = params["your-license01"] || "";
+  var lines = [":inbox_tray: *新規リード（LP登録）*"];
+  if (name) lines.push("*名前:* " + name);
+  if (tel) lines.push("*電話:* " + tel);
+  if (lic) lines.push("*資格:* " + lic);
+  if (lp) lines.push("*LP:* " + lp);
+  lines.push("_このスレッドに面談予約の返信が届きます_");
+  return lines.join("\n");
+}
+
+function notifySlackNewLead(params) {
+  if (!slackBotEnabled()) return { ok: false, note: "slack bot off" };
+  return postSlackChatMessage({ text: buildLeadSlackMessage(params) });
+}
+
+function getSlackCaMention() {
+  var raw = String(getScriptProp("SLACK_MENTION_CA") || "").trim();
+  return raw || "@ca";
+}
+
+function buildBookingThreadSlackMessage(params) {
+  var ca = getSlackCaMention();
+  var staffMention = "";
+  if (params.calendar_staff_id && typeof getStaffSlackMention === "function") {
+    staffMention = getStaffSlackMention(params.calendar_staff_id) || "";
+  }
+  var start = params.calendar_start || "";
+  var end = params.calendar_end || "";
+  var when = start;
+  if (start && end) when = start + " 〜 " + end;
+  var name = params.calendar_guest_name || params["guest_name"] || "";
+  var tel = params["your-tel"] || params["guest_phone"] || "";
+  var staffName = params.calendar_staff_name || "";
+  var head = ca;
+  if (staffMention) head = ca + " " + staffMention;
+  var lines = [head, "面談の予約がされました", "*日時:* " + (when || "要確認")];
+  if (staffName) lines.push("*担当:* " + staffName);
+  if (name) lines.push("*名前:* " + name);
+  if (tel) lines.push("*電話:* " + tel);
+  return lines.join("\n");
+}
+
+function postSlackBookingInLeadThread(params, channel, threadTs) {
+  if (!threadTs || !slackBotEnabled()) {
+    return { ok: false, note: "no thread" };
+  }
+  return postSlackChatMessage({
+    channel: channel,
+    thread_ts: threadTs,
+    text: buildBookingThreadSlackMessage(params)
+  });
+}
+
+function readRowSlackThread(sheet, header, rowNum) {
+  var threadCol = header.indexOf("slack_thread_ts");
+  var channelCol = header.indexOf("slack_channel_id");
+  var threadTs = "";
+  var channelId = getScriptProp("SLACK_LEAD_CHANNEL_ID");
+  if (rowNum < 2) return { thread_ts: "", channel: channelId };
+  if (threadCol !== -1) {
+    threadTs = String(sheet.getRange(rowNum, threadCol + 1).getValue() || "").trim();
+  }
+  if (channelCol !== -1) {
+    var ch = String(sheet.getRange(rowNum, channelCol + 1).getValue() || "").trim();
+    if (ch) channelId = ch;
+  }
+  return { thread_ts: threadTs, channel: channelId };
+}
+
 function findLatestRowByTelOrEmail(sheet, header, tel, email) {
   var telColIdx = header.indexOf("your-tel");
   var emailColIdx = header.indexOf("your-email");
@@ -392,8 +517,20 @@ function handleCalendarBooked(params) {
       sheet.appendRow(row);
     }
 
-    var slackText = buildCalendarSlackMessage(params);
-    var slackResult = postToSlack(slackText);
+    var slackResult;
+    if (matchedRow > 0) {
+      var slackMeta = readRowSlackThread(sheet, header, matchedRow);
+      if (slackMeta.thread_ts) {
+        slackResult = postSlackBookingInLeadThread(
+          params,
+          slackMeta.channel,
+          slackMeta.thread_ts
+        );
+      }
+    }
+    if (!slackResult || !slackResult.ok) {
+      slackResult = postToSlack(buildCalendarSlackMessage(params));
+    }
 
     return jsonOk({
       matched: matchedRow > 0,
