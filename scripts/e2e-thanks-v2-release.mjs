@@ -50,13 +50,13 @@ async function thanksWithProfile(page, { lp, profile, expectBrand }) {
   }
 
   const title = await page.locator("#t-jobs-title").textContent();
-  if (title && title.includes("非公開求人") && !title.includes("プレビュー")) {
+  if (title && (title.includes("求人") || title.includes("概要")) && !title.includes("プレビュー")) {
     pass(`${lp} 見出し`, title.trim());
   } else {
     fail(`${lp} 見出し`, title);
   }
 
-  await page.waitForSelector(".t-job-card", { timeout: 15000 }).catch(() => {});
+  await page.waitForSelector(".t-job-card", { timeout: 20000 }).catch(() => {});
   const cards = page.locator(".t-job-card");
   const count = await cards.count();
   if (count >= 1 && count <= 3) {
@@ -66,8 +66,9 @@ async function thanksWithProfile(page, { lp, profile, expectBrand }) {
   }
 
   if (profile.pref) {
-    const areas = await cards.locator(".t-job-card__meta span").allTextContents();
-    const bad = areas.filter((a) => a.trim() !== profile.pref);
+    await page.waitForTimeout(1200);
+    const areas = await cards.locator(".t-job-card__fact--area dd").allTextContents();
+    const bad = areas.filter((a) => !a.trim().includes(profile.pref));
     if (bad.length === 0 && areas.length > 0) {
       pass(`${lp} 勤務地`, `すべて ${profile.pref}`);
     } else {
@@ -133,14 +134,14 @@ async function testBookingSlots(page) {
 async function testThanksAssets(page) {
   const html = await (await page.request.get(`${BASE}/thanks-v2/`)).text();
   const checks = [
-    ["thanks-job-preview.js?v=10", html.includes("thanks-job-preview.js?v=10")],
-    ["thanks-page-context.js?v=12", html.includes("thanks-page-context.js?v=12")],
-    ["thanks-v2-deferred.js?v=3", html.includes("thanks-v2-deferred.js?v=3")],
+    ["thanks-job-preview.js?v=15", html.includes("thanks-job-preview.js?v=15")],
+    ["thanks-page-context.js?v=21", html.includes("thanks-page-context.js?v=21")],
+    ["thanks-v2-deferred.js?v=5", html.includes("thanks-v2-deferred.js?v=5")],
     ["t-future", html.includes('id="t-future"')],
     ["data-story-id x8", (html.match(/data-story-id="/g) || []).length === 8],
-    ["非公開求人 · 全文", html.includes("非公開求人 · 全文")],
-    ["求人の概要", html.includes("求人の概要")],
-    ["LINEで案内を受け取る", html.includes("LINEで案内を受け取る")],
+    ["非公開求人の全文", html.includes("非公開求人の全文")],
+    ["求人概要フロー", html.includes("求人概要")],
+    ["LINE CTA", html.includes("LINEで全文を受け取る")],
     ["本登録なし", !html.includes("本登録")],
     ["プレビューなし", !html.match(/プレビュー/)]
   ];

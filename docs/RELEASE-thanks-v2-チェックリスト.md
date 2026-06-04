@@ -33,10 +33,25 @@
 ## 静的チェック（push前・ローカル）
 
 ```bash
+bash scripts/release-pre-check.sh          # 一括（推奨）
+# または個別:
 node scripts/check-thanks-v2-release.mjs
+node scripts/check-lp-bridge-release.mjs   # LP→GAS・session・ミラー一致
 node scripts/sync-thanks-v2-mirrors.mjs   # WPLP / 自前LP 同期
 node scripts/sync-booking-slots.js        # 枠JSON更新
+bash scripts/verify-production-release.sh # 本番HTTP（push後も可）
+node scripts/check-slack-bot.mjs          # Slack Bot 設定（投稿なし）
 ```
+
+### LP → サンクス → 予約（ブリッジ）
+
+| 項目 | 確認方法 |
+|------|----------|
+| フォーム → GAS+Zapier | `check-lp-bridge-release.mjs` |
+| `_tel` / `dk_lead_profile` | LP送信後 sessionStorage |
+| 予約 → スプシ行更新 | 同一電話で `calendar_*` |
+| 予約 → Slackスレッド | `check-slack-bot.mjs` + 目視 |
+| WPLP/自前LP = canonical | `check-lp-bridge-release.mjs` mirror |
 
 ## E2E（Playwright・本番URL）
 

@@ -20,19 +20,63 @@
   };
 
   const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
+  const NENSHU_THANKS_V1_PATH = "/denki-lp-cvr/nenshu-shindan/thanks/";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
 
-  function buildThanksV2Url() {
-    const u = new URL(THANKS_V2_PATH, location.origin);
+  function buildThanksQuery() {
+    const params = new URLSearchParams();
     const lp = window.__LP_ID || "";
-    if (lp) u.searchParams.set("lp", lp);
+    if (lp) params.set("lp", lp);
     const incoming = new URLSearchParams(location.search);
     UTM_KEYS.forEach((key) => {
       const val = incoming.get(key);
-      if (val) u.searchParams.set(key, val);
+      if (val) params.set(key, val);
     });
-    return u.pathname + u.search;
+    const q = params.toString();
+    return q ? `?${q}` : "";
+  }
+
+  function buildThanksUrl() {
+    const path = location.pathname;
+    if (path.includes("/nenshu-shindan-v2/") && !path.includes("/thanks")) {
+      return path.replace(/\/[^/]+\/?$/, "/thanks/") + buildThanksQuery();
+    }
+    if (path.includes("/nenshu-shindan/") && !path.includes("/thanks")) {
+      return NENSHU_THANKS_V1_PATH + buildThanksQuery();
+    }
+    return THANKS_V2_PATH + buildThanksQuery();
+  }
+
+  function prewarmThanksBookingSlots() {
+    const el =
+      document.currentScript ||
+      document.querySelector('script[src*="app.js"]');
+    if (el && el.src && !document.querySelector("link[data-dk-booking-slots-preload]")) {
+      const jsonHref = el.src.replace(/app\.js(\?.*)?$/, "../data/booking-slots.json");
+      const preload = document.createElement("link");
+      preload.rel = "preload";
+      preload.as = "fetch";
+      preload.href = jsonHref;
+      preload.crossOrigin = "anonymous";
+      preload.setAttribute("data-dk-booking-slots-preload", "1");
+      document.head.appendChild(preload);
+    }
+    if (window.dkBookingSlotsFetch) {
+      window.dkBookingSlotsFetch(false);
+      return;
+    }
+    if (!el || !el.src) return;
+    const bootSrc = el.src.replace(/app\.js(\?.*)?$/, "thanks-booking-bootstrap.js?v=11");
+    if (document.querySelector('script[data-dk-booking-bootstrap]')) return;
+    const s = document.createElement("script");
+    s.src = bootSrc;
+    s.async = true;
+    s.setAttribute("data-dk-booking-bootstrap", "1");
+    s.onload = function () {
+      if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
+    };
+    document.head.appendChild(s);
   }
 
   function persistLeadForThanks() {
@@ -54,46 +98,24 @@
 
   // ========== Icon system (DOM移動方式) ==========
   let icon = null;
-  let bounceId = null;
 
-  function moveIcon(targetEl) {
+  function moveIcon(targetEl, scroll) {
     if (!icon || !targetEl) return;
-    // クマをターゲット要素の親に挿入（ターゲットの直後に配置）
-    const wrapper = targetEl.closest(".c-section, .p-first__buttonArea, .p-step05__address, .p-step06__name, .p-step07__tel, .c-nextLink, .js-form-group");
+    const wrapper = targetEl.closest(".c-section, .p-first__buttonArea, .p-step05__address, .p-step06__name, .p-step07__tel, .c-nextLink, .p-step06__birthday, .js-form-group");
     if (wrapper) {
       wrapper.style.position = "relative";
       if (icon.parentNode !== wrapper) wrapper.appendChild(icon);
     }
-    icon.style.opacity = "1";
+    icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
+    if (scroll && wrapper) {
+      setTimeout(() => wrapper.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+    }
   }
 
-  function moveIconById(id) {
+  function moveIconById(id, scroll) {
     if (!id || id === "#") return;
     const el = document.querySelector(id);
-    if (el) moveIcon(el);
-  }
-
-  function startBounce() {
-    stopBounce();
-    if (!icon) return;
-    let x = 0;
-    let dir = -1;
-    function tick() {
-      bounceId = requestAnimationFrame(tick);
-      x += dir * 0.5;
-      if (x <= -15) dir = 1;
-      if (x >= 0) dir = -1;
-      icon.style.transform = "translateX(" + x + "px)";
-    }
-    bounceId = requestAnimationFrame(tick);
-  }
-
-  function stopBounce() {
-    if (bounceId != null) {
-      cancelAnimationFrame(bounceId);
-      bounceId = null;
-    }
-    if (icon) icon.style.transform = "";
+    if (el) moveIcon(el, scroll);
   }
 
   // ========== Page transitions ==========
@@ -101,8 +123,10 @@
     const page = document.querySelector(pageId);
     if (!page) return;
 
-    stopBounce();
-    icon = page.querySelector(".cvr-kuma, .js-fixed-icon");
+    // step-firstからスタートしたkumaを各ステップで使い回す。
+    // 各stepにkuma要素は無いので、見つかった時だけ更新（無ければ前回のicon参照を保持）。
+    const foundIcon = page.querySelector(".cvr-kuma, .js-fixed-icon");
+    if (foundIcon) icon = foundIcon;
 
     // step-firstに戻った場合は通知等を再表示
     if (pageId === "#step-first") {
@@ -113,7 +137,11 @@
 
     window.scrollTo(0, 0);
 
-    if (pageId === "#step01") {
+    if (pageId === "#step-first") {
+      page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
+      var mc = page.querySelector(".cvr-micro-copy");
+      if (mc) mc.style.marginTop = "auto";
+    } else if (pageId === "#step01") {
       page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 72px);min-height:calc(100dvh - 72px);opacity:0;transform:translateX(50px);transition:none";
     } else {
       page.style.display = "block";
@@ -122,12 +150,20 @@
       page.style.transition = "none";
     }
 
-    // クマを最初のボタンエリアに配置
-    const firstBtnArea = page.querySelector(".p-first__buttonArea, .c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
-    if (firstBtnArea && icon) {
-      firstBtnArea.style.position = "relative";
-      firstBtnArea.appendChild(icon);
-      icon.style.opacity = "1";
+    // クマを最初の入力エリアに配置
+    const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
+    if (firstArea && icon) {
+      firstArea.style.position = "relative";
+      firstArea.appendChild(icon);
+      icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
+    }
+
+    // iOS Safari でキーボードを自動で開くには、ユーザータップ直後の同期focusが必須。
+    // setTimeoutの中で focus() してもキーボードは開かないため、ここで先に同期で focus する。
+    // (transition前にfocusしてもinputは見えているのでUX的に問題ない)
+    const autoFocusEl = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
+    if (autoFocusEl && !autoFocusEl.value) {
+      try { autoFocusEl.focus({ preventScroll: true }); } catch (e) { autoFocusEl.focus(); }
     }
 
     requestAnimationFrame(() => {
@@ -135,12 +171,6 @@
         page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";
         page.style.opacity = "1";
         page.style.transform = "translateX(0)";
-
-        setTimeout(() => {
-          startBounce();
-          const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
-          if (autoFocus && !autoFocus.value) autoFocus.focus();
-        }, 320);
       });
     });
   }
@@ -162,8 +192,6 @@
         nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
       }
     }
-
-    stopBounce();
 
     cur.style.display = "none";
     cur.style.opacity = "0";
@@ -236,7 +264,6 @@
       if (states.every(Boolean)) {
         // 両方選択済み → 直接ページ遷移
         nextBtn.classList.remove(DISABLE);
-        stopBounce();
         const cur = nextBtn.closest(".js-form-group");
         cur.style.display = "none";
         cur.style.opacity = "0";
@@ -282,6 +309,12 @@
         const el = document.getElementById(k);
         if (el) el.value = vals[k];
       }
+      if (vals.license01) {
+        try {
+          const first = vals.license01.split(",")[0].trim();
+          if (first) sessionStorage.setItem("_license", first);
+        } catch (e) { /* private mode */ }
+      }
     }
 
     function hasAny() {
@@ -293,9 +326,7 @@
       updateHiddens();
       if (hasAny()) {
         nextBtn.classList.remove(DISABLE);
-        // クマを次へボタンの親(c-nextLink)に移動
-        const linkArea = nextBtn.closest(".c-nextLink");
-        if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
+        moveIconById("#" + nextBtn.id, true);
         target.classList.add(SKIP);
       } else {
         nextBtn.classList.add(DISABLE);
@@ -371,6 +402,7 @@
         citySel.classList.add(SKIP);
         valid = true;
         updateBtn();
+        moveIconById("#" + nextBtn.id, true);
       } catch (e) {}
     }
 
@@ -433,12 +465,33 @@
 
     function allFilled() { return Array.from(inputs).every(i => !!i.value); }
 
-    function validate() {
+    function validate(opts) {
+      opts = opts || {};
       if (allFilled()) {
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
         if (errBox) errBox.style.display = "none";
-        moveIconById("#" + nextBtn.id);
+        // 生年月日エリアにクマを移動してスクロール
+        const bday = group.querySelector(".p-step06__birthday");
+        if (bday && icon) {
+          moveIcon(bday, true);
+        } else {
+          moveIconById("#" + nextBtn.id, true);
+        }
+        // 姓+名 両方埋まったら生年月日に視覚的誘導（first-name の入力完了時のみ）
+        // iOS Safari の <select> は focus() ではピッカーが開かない仕様。
+        // スクロール + ハイライトでユーザーにタップを促す。
+        if (opts.autoAdvance) {
+          const bdayYear = document.getElementById("bday-year");
+          if (bdayYear) {
+            setTimeout(() => {
+              bdayYear.scrollIntoView({ behavior: "smooth", block: "center" });
+              bdayYear.focus();
+              bdayYear.classList.add("js-pulse-highlight");
+              setTimeout(() => bdayYear.classList.remove("js-pulse-highlight"), 2400);
+            }, 200);
+          }
+        }
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
@@ -447,7 +500,21 @@
       }
     }
 
-    inputs.forEach(input => input.addEventListener("blur", validate));
+    inputs.forEach(input => input.addEventListener("blur", () => validate()));
+    // 名(first-name)を入力中に両方埋まったらすぐ生年月日にジャンプ
+    const firstNameInput = group.querySelector("#first-name");
+    if (firstNameInput) {
+      let advTimer = null;
+      firstNameInput.addEventListener("input", () => {
+        if (advTimer) clearTimeout(advTimer);
+        advTimer = setTimeout(() => {
+          if (allFilled() && document.activeElement === firstNameInput) {
+            firstNameInput.blur();
+            validate({ autoAdvance: true });
+          }
+        }, 700);
+      });
+    }
 
     // Initial: disable
     nextBtn.classList.add(DISABLE);
@@ -524,9 +591,34 @@
             fullName = fullName.trim();
             if (fullName) sessionStorage.setItem("_name", fullName);
             if (window.__LP_ID) sessionStorage.setItem("_lp", window.__LP_ID);
+            var licEl = document.getElementById("license01");
+            var firstLic = "";
+            if (licEl && licEl.value) {
+              firstLic = licEl.value.split(",")[0].trim();
+              if (firstLic) sessionStorage.setItem("_license", firstLic);
+            }
+            var feelingEl = document.querySelector('input[name="your-feeling"]');
+            if (feelingEl && feelingEl.value) {
+              sessionStorage.setItem("dk_job_intent", feelingEl.value.trim());
+            }
+            var prefEl = document.getElementById("your-pref");
+            var cityEl = document.getElementById("your-city");
+            var expEl = document.querySelector('[name="your-experience"]');
+            var willEl = document.querySelector('[name="your-willingness"]');
+            sessionStorage.setItem(
+              "dk_lead_profile",
+              JSON.stringify({
+                license: firstLic,
+                pref: (prefEl && prefEl.value) || "",
+                city: (cityEl && cityEl.value) || "",
+                experience: (expEl && expEl.value) || "",
+                willingness: (willEl && willEl.value) || ""
+              })
+            );
           } catch (e) {}
+          prewarmThanksBookingSlots();
           persistLeadForThanks();
-          setTimeout(() => { location.href = buildThanksV2Url(); }, 1500);
+          setTimeout(() => { location.href = buildThanksUrl(); }, 600);
         }, 500);
       });
     }
@@ -586,6 +678,7 @@
     let sentOnce = false;
     let clientIp = "";
 
+    // IP取得は初期ロード後アイドル時に実行（送信前に確実に取得するため）
     function fetchClientIp() {
       fetch("https://api.ipify.org?format=json")
         .then(r => r.ok ? r.json() : null)
@@ -776,39 +869,6 @@
     });
   }
 
-  // ========== フローティングCTA ==========
-  function initFloatingCta() {
-    var cta = document.getElementById("floating-cta");
-    var btn = document.getElementById("floating-cta-btn");
-    if (!cta || !btn) return;
-
-    var shown = false;
-    var ticking = false;
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(function () {
-        ticking = false;
-        var range = document.body.scrollHeight - window.innerHeight;
-        var scrollPct = range > 0 ? window.scrollY / range : 0;
-        if (scrollPct > 0.15 && !shown) {
-          shown = true;
-          cta.classList.add("is-visible");
-        } else if (scrollPct <= 0.1 && shown) {
-          shown = false;
-          cta.classList.remove("is-visible");
-        }
-      });
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    btn.addEventListener("click", function () {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      cta.classList.remove("is-visible");
-      shown = false;
-    });
-  }
-
   // ========== 数値カウントアップ ==========
   function initCountUp() {
     var els = document.querySelectorAll(".cvr-social-proof__number");
@@ -818,17 +878,18 @@
       if (!entries[0].isIntersecting || done) return;
       done = true;
       els.forEach(function (el) {
-        var target = parseInt(el.textContent.replace(/,/g, ""), 10);
+        var raw = el.textContent;
+        var suffix = raw.replace(/[\d,]/g, "");
+        var target = parseInt(raw.replace(/[^\d]/g, ""), 10);
         var duration = 1500;
-        var start = 0;
         var startTime = null;
         function step(ts) {
           if (!startTime) startTime = ts;
           var progress = Math.min((ts - startTime) / duration, 1);
           var val = Math.floor(progress * target);
-          el.textContent = val.toLocaleString();
+          el.textContent = val.toLocaleString() + suffix;
           if (progress < 1) requestAnimationFrame(step);
-          else el.textContent = target.toLocaleString();
+          else el.textContent = target.toLocaleString() + suffix;
         }
         requestAnimationFrame(step);
       });
@@ -846,7 +907,6 @@
     function runCvrBoostRest() {
       initNotifications();
       initFormTracking();
-      initFloatingCta();
       initCountUp();
     }
     if (typeof requestIdleCallback === "function") {
