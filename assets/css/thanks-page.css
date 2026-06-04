@@ -1182,6 +1182,41 @@ html {
   line-height: 1.4;
   margin: 0 0 8px;
 }
+.t-hero--compact {
+  padding: 18px 16px 14px;
+  margin-bottom: 10px;
+}
+.t-hero--compact h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.125rem, 4.5vw, 1.5rem);
+}
+.t-hero--compact .t-hero__chk svg {
+  width: 32px;
+  height: 32px;
+}
+.t-hero__route {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: #334155;
+  margin: 0 0 10px;
+}
+.t-hero__route strong {
+  color: var(--t-accent);
+  font-weight: 800;
+}
+.t-hero--compact .t-hero__objections {
+  margin-bottom: 0;
+}
+.t-trust + .t-jobs--first {
+  margin-top: 4px;
+}
+.t-jobs--first + .t-proof-strip {
+  margin-top: 0;
+}
+.t-proof-strip + .t-cal--primary {
+  margin-top: 8px;
+}
 .t-hero__sub {
   font-size: 0.875rem;
   color: #64748b;

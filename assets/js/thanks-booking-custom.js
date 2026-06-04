@@ -136,16 +136,8 @@
     if (heroRoot) {
       heroRoot.innerHTML =
         '<p class="t-hero__lead">日時を確保しました</p>' +
-        '<p class="t-hero__sub">続けて<strong>LINE</strong>で全文の受取口を登録してください（30秒）</p>' +
-        '<ol class="t-hero__steps">' +
-        "<li>プロと条件を<strong>10分</strong>ですり合わせ → 求人をご紹介</li>" +
-        "<li>ヒアリング後、<strong>全文</strong>をお送り</li>" +
-        "</ol>";
+        '<p class="t-hero__route">次は<strong>LINE</strong>で全文の受取口（30秒）。お電話でプロと条件をすり合わせ、合う求人をご紹介します。</p>';
     }
-    var heroCta = document.querySelector(".t-hero__cta");
-    if (heroCta) heroCta.hidden = true;
-    var heroCtaNote = document.querySelector(".t-hero__cta-note");
-    if (heroCtaNote) heroCtaNote.hidden = true;
 
     pushDL("thanks_line_step_revealed", {
       booking_tool: "custom",
@@ -224,10 +216,6 @@
       document.getElementById("thanks-hero-sub") ||
       document.querySelector(".t-hero__body");
     if (heroRoot && ui.heroHtml) heroRoot.innerHTML = ui.heroHtml;
-    var heroCta = document.querySelector(".t-hero__cta");
-    if (heroCta) heroCta.hidden = false;
-    var heroCtaNote = document.querySelector(".t-hero__cta-note");
-    if (heroCtaNote) heroCtaNote.hidden = false;
 
     if (typeof window.dkThanksRelockLine === "function") {
       window.dkThanksRelockLine();

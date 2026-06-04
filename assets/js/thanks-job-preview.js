@@ -556,6 +556,10 @@
   function startPreviewLoad() {
     var section = document.getElementById("t-jobs-preview");
     var target = section || root;
+    if (section && section.classList.contains("t-jobs--first")) {
+      loadPreview();
+      return;
+    }
     if (!("IntersectionObserver" in window)) {
       loadPreview();
       return;
