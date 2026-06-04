@@ -101,8 +101,42 @@
 .cvr-hero-badge__count { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
 .cvr-hero-badge__unit { font-size: 14px; font-weight: 700; }
 
+/* ===== step-first: 3秒FV（木下流・信頼帯はフォーム以降） ===== */
+body:not(.lp-form-step) .cvr-trust-bar,
+body:not(.lp-form-step) .cvr-social-proof,
+body:not(.lp-form-step) .cvr-live-notification {
+  display: none !important;
+}
+
+/* ===== 大分類不安の3ピル（4段階コピー） ===== */
+.cvr-objection-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0 8px;
+  list-style: none;
+}
+.cvr-objection-pills li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+}
+.cvr-objection-pills li::before {
+  content: "✓";
+  font-size: 10px;
+}
+
 /* ===== マイクロコピー・ステップ理由 ===== */
-.cvr-micro-copy { text-align: center; font-size: 12px; color: #888; margin-top: 12px; }
+.cvr-micro-copy { text-align: center; font-size: 12px; color: #888; margin-top: 12px; line-height: 1.5; }
 .cvr-step-reason { text-align: center; font-size: 11px; color: #888; margin: 4px 0; padding: 0 8px; line-height: 1.5; }
 .cvr-step-reward {
   text-align: center; font-size: 11px; color: #314c85;

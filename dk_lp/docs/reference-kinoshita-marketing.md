@@ -283,7 +283,7 @@
 
 ## 9. 実装との対応表
 
-| 木下の概念 | 施工管理LP（thanks等） | dk_lp/（LPミラー） |
+| 木下の概念 | 施工管理LP | dk_lp（本リポジトリ） |
 |-----------|------------|----------------------|
 | 工種別ファンダメンタルズ | `thanks-license-profiles.json` | `denkikouji/` `sekokanri/` 別訴求 |
 | マイクロコピー | `t-cal__micro`, thanks CTA | `cvr-micro-copy`, `cvr-tel-reassurance` |
