@@ -33,6 +33,7 @@ jobs:
         run: |
           node scripts/build-thanks-v2-deferred.mjs
           node scripts/sync-thanks-v2-mirrors.mjs
+          node scripts/generate-lp-thanks-redirects.mjs
 
       - name: Minify JS/CSS/HTML
         run: |
@@ -185,7 +186,10 @@ jobs:
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
           echo "$html" | grep -q 'thanks-v2-deferred.js?v=5' || (echo "missing thanks-v2-deferred v=5" && exit 1)
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-license-profiles.json" | head -3
-          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/p/denki_2/" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/" | head -3
+          denki_thanks=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/?lp=denkikouji")
+          echo "$denki_thanks" | grep -q '/denki-lp-cvr/thanks-v2/' || (echo "denkikouji/thanks not redirecting to thanks-v2" && exit 1)
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/" | grep -qi 'location:.*builders-job.com/thanks/' && (echo "denkikouji/thanks still WP 301" && exit 1) || true
           echo "$html" | grep -q 'thanks-page-context.js?v=21' || (echo "missing thanks-page-context v=21" && exit 1)
           echo "$html" | grep -q 'thanks-page.css?v=35' || (echo "missing thanks-page.css v=35" && exit 1)
           echo "$html" | grep -q 'thanks-booking-custom.js?v=27' || (echo "missing booking custom v=27" && exit 1)

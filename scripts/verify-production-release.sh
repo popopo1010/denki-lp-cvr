@@ -22,6 +22,22 @@ check_200 "$BASE/sekoukanri-kentiku-v2/"
 check_200 "$BASE/assets/data/booking-slots.json"
 check_200 "$BASE/assets/js/app-v2.js"
 check_200 "$BASE/assets/js/app.js"
+check_200 "$BASE/denkikouji/thanks/"
+
+echo "=== denkikouji/thanks redirect ==="
+denki_thanks=$(curl -s "$BASE/denkikouji/thanks/?lp=denkikouji")
+if echo "$denki_thanks" | grep -q '/denki-lp-cvr/thanks-v2/'; then
+  echo "✓ denkikouji/thanks → thanks-v2 redirect page"
+else
+  echo "✗ denkikouji/thanks still old WP redirect (deploy generate-lp-thanks-redirects?)" >&2
+  exit 1
+fi
+loc=$(curl -sI "$BASE/denkikouji/thanks/" | tr -d '\r' | grep -i '^location:' || true)
+if echo "$loc" | grep -q 'builders-job.com/thanks/'; then
+  echo "✗ denkikouji/thanks HTTP redirect still points to WP /thanks/" >&2
+  exit 1
+fi
+echo "✓ denkikouji/thanks not WP 301"
 
 echo "=== thanks-v2 HTML ==="
 html=$(curl -s "$BASE/thanks-v2/")

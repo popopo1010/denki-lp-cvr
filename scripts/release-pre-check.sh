@@ -12,15 +12,19 @@ echo "== 2/5 LP→GAS ブリッジ =="
 node scripts/check-lp-bridge-release.mjs
 
 echo ""
-echo "== 3/5 thanks-v2 ミラー同期 =="
+echo "== 3/6 LP /thanks/ → thanks-v2 転送 =="
+node scripts/generate-lp-thanks-redirects.mjs
+
+echo ""
+echo "== 4/6 thanks-v2 ミラー同期 =="
 node scripts/sync-thanks-v2-mirrors.mjs
 
 echo ""
-echo "== 4/5 予約枠 JSON =="
+echo "== 5/6 予約枠 JSON =="
 node scripts/sync-booking-slots.js
 
 echo ""
-echo "== 5/5 本番 HTTP =="
+echo "== 6/6 本番 HTTP =="
 bash scripts/verify-production-release.sh
 
 if [[ "${RUN_E2E:-}" == "1" ]]; then
