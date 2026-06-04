@@ -55,10 +55,7 @@
       document.currentScript ||
       document.querySelector('script[src*="app-v2.js"]');
     if (el && el.src && !document.querySelector('link[data-dk-booking-slots-preload]')) {
-      var jsonHref = el.src.replace(
-        /app-v2\.js(\?.*)?$/,
-        "../assets/data/booking-slots.json"
-      );
+      var jsonHref = el.src.replace(/app-v2\.js(\?.*)?$/, "../data/booking-slots.json");
       var preload = document.createElement("link");
       preload.rel = "preload";
       preload.as = "fetch";
@@ -745,6 +742,10 @@
             if (licEl && licEl.value) {
               firstLic = licEl.value.split(",")[0].trim();
               if (firstLic) sessionStorage.setItem("_license", firstLic);
+            }
+            var feelingEl = document.querySelector('input[name="your-feeling"]');
+            if (feelingEl && feelingEl.value) {
+              sessionStorage.setItem("dk_job_intent", feelingEl.value.trim());
             }
             var prefEl = document.getElementById("your-pref");
             var cityEl = document.getElementById("your-city");

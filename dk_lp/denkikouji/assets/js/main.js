@@ -21,7 +21,11 @@
 
   // ========== GTM / サンクス連携 ==========
   const LP_SLUG = "denkikouji";
+  window.__LP_ID = LP_SLUG;
   const THANKS_BASE = "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
+  const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
+  const CVR_ASSETS_BASE = "https://denkilp.builders-job.com/denki-lp-cvr/assets";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
   const LEAD_SESSION_TTL_MS = 30 * 60 * 1000;
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
@@ -49,7 +53,33 @@
     return Cookie.get("user-name") || storageGet("dk_lp_user_name") || "";
   }
 
-  function persistLeadContext() {
+  function prewarmThanksBookingSlots() {
+    const slotsUrl = CVR_ASSETS_BASE + "/data/booking-slots.json";
+    if (!document.querySelector("link[data-dk-booking-slots-preload]")) {
+      const preload = document.createElement("link");
+      preload.rel = "preload";
+      preload.as = "fetch";
+      preload.href = slotsUrl;
+      preload.crossOrigin = "anonymous";
+      preload.setAttribute("data-dk-booking-slots-preload", "1");
+      document.head.appendChild(preload);
+    }
+    if (window.dkBookingSlotsFetch) {
+      window.dkBookingSlotsFetch(false);
+      return;
+    }
+    if (document.querySelector("script[data-dk-booking-bootstrap]")) return;
+    const s = document.createElement("script");
+    s.src = CVR_ASSETS_BASE + "/js/thanks-booking-bootstrap.js?v=11";
+    s.async = true;
+    s.setAttribute("data-dk-booking-bootstrap", "1");
+    s.onload = function () {
+      if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
+    };
+    document.head.appendChild(s);
+  }
+
+  function persistThanksBridgeSession() {
     const name = getDisplayName();
     if (name) {
       if (Cookie.get("user-name") !== name) {
@@ -57,7 +87,35 @@
         Cookie.set("user-name", name, 3);
       }
       storageSet("dk_lp_user_name", name);
+      storageSet("_name", name);
     }
+    const telEl = document.querySelector('input[name="your-tel"]');
+    const tel = telEl && telEl.value ? telEl.value.trim() : "";
+    if (tel) storageSet("_tel", tel);
+    storageSet("_lp", LP_SLUG);
+
+    const licEl = document.getElementById("license01");
+    let firstLic = "";
+    if (licEl && licEl.value) {
+      firstLic = licEl.value.split(",")[0].trim();
+      if (firstLic) storageSet("_license", firstLic);
+    }
+
+    const feelingEl = document.querySelector('input[name="your-feeling"]');
+    if (feelingEl && feelingEl.value) storageSet("dk_job_intent", feelingEl.value.trim());
+
+    const prefEl = document.getElementById("your-pref");
+    const cityEl = document.getElementById("your-city");
+    const expEl = document.querySelector('[name="your-experience"]');
+    const willEl = document.querySelector('[name="your-willingness"]');
+    storageSet("dk_lead_profile", JSON.stringify({
+      license: firstLic,
+      pref: (prefEl && prefEl.value) || "",
+      city: (cityEl && cityEl.value) || "",
+      experience: (expEl && expEl.value) || "",
+      willingness: (willEl && willEl.value) || ""
+    }));
+
     storageSet(LEAD_SESSION_KEY, JSON.stringify({
       ts: Date.now(),
       lp: LP_SLUG,
@@ -88,13 +146,14 @@
   }
 
   function completeLeadSubmit() {
-    persistLeadContext();
+    persistThanksBridgeSession();
     pushDataLayer({
       event: "lead_form_submit",
       lp_slug: LP_SLUG,
       page_location: location.href,
       page_path: location.pathname
     });
+    prewarmThanksBookingSlots();
     location.href = buildThanksUrl();
   }
 
@@ -556,8 +615,8 @@
           item.addEventListener("input", () => {
             const len = item.value.length;
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
-            else if (len === 11) { telNotice.style.display = "none"; }
-            else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
+            else if (len >= 10) { telNotice.style.display = "none"; }
+            else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (10 - len) + "桁以上"; }
           });
         }
       }
@@ -570,7 +629,7 @@
           if (errBox) errBox.style.display = "none";
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
-        if (item.name === "your-tel" && item.value && !/^[0-9]+$/.test(item.value)) {
+        if (item.name === "your-tel" && item.value && !/^[0-9]{10,11}$/.test(item.value)) {
           if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
@@ -596,7 +655,7 @@
           // Zapier送信（存在すれば）
           const form = document.querySelector(".wpcf7-form");
           if (form) form.dispatchEvent(new Event("submit", { bubbles: true }));
-          setTimeout(completeLeadSubmit, 1500);
+          setTimeout(completeLeadSubmit, 600);
         }, 500);
       });
     }
@@ -647,15 +706,38 @@
     if (d) { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
   }
 
-  // ========== Zapier Webhook mirror ==========
-  function initZapierMirror() {
-    const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
+  // ========== Form mirror (Zapier + GAS / スプシ・Slack連携) ==========
+  function initFormMirrors() {
     const form = document.querySelector(".wpcf7-form");
     if (!form) return;
     let sentOnce = false;
+    let clientIp = "";
 
-    function sendToZapier() {
+    function fetchClientIp() {
+      fetch("https://api.ipify.org?format=json")
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d && d.ip) clientIp = d.ip; })
+        .catch(() => {});
+    }
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(fetchClientIp, { timeout: 5000 });
+    } else {
+      setTimeout(fetchClientIp, 2000);
+    }
+
+    function postTo(url, body) {
+      if (!url) return;
+      const blob = new Blob([body], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+      const sent = navigator.sendBeacon && navigator.sendBeacon(url, blob);
+      if (!sent) fetch(url, { method: "POST", mode: "no-cors", keepalive: true, body }).catch(() => {});
+    }
+
+    function sendToMirrors() {
       if (sentOnce) return;
+      const tel = (form.querySelector('input[name="your-tel"]') || {}).value || "";
+      const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
+      const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
+      if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
       sentOnce = true;
       try {
         const fd = new FormData(form);
@@ -664,15 +746,18 @@
         params.append("_page", location.href);
         params.append("_referrer", document.referrer || "");
         params.append("_submitted_at", new Date().toISOString());
-        const blob = new Blob([params.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
-        const sent = navigator.sendBeacon && navigator.sendBeacon(ZAPIER_URL, blob);
-        if (!sent) fetch(ZAPIER_URL, { method: "POST", mode: "no-cors", keepalive: true, body: params.toString() }).catch(() => {});
-      } catch (e) { sentOnce = false; }
+        params.append("_lp", LP_SLUG);
+        params.append("_ip", clientIp);
+        params.append("_user_agent", navigator.userAgent || "");
+        const body = params.toString();
+        postTo(ZAPIER_URL, body);
+        postTo(GAS_URL, body);
+      } catch (e) {
+        sentOnce = false;
+      }
     }
 
-    form.addEventListener("submit", sendToZapier, { capture: true });
-    const submitBtn = form.querySelector('#submit-button, input[type="submit"]');
-    if (submitBtn) submitBtn.addEventListener("click", sendToZapier, { capture: true });
+    form.addEventListener("submit", sendToMirrors, { capture: true });
   }
 
   // ========== Init ==========
@@ -692,7 +777,7 @@
         initRequiredItems(g);
       });
       initCookieName();
-      initZapierMirror();
+      initFormMirrors();
       preventEnter();
     });
   }

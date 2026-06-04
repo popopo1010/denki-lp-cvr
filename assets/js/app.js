@@ -48,6 +48,37 @@
     return THANKS_V2_PATH + buildThanksQuery();
   }
 
+  function prewarmThanksBookingSlots() {
+    const el =
+      document.currentScript ||
+      document.querySelector('script[src*="app.js"]');
+    if (el && el.src && !document.querySelector("link[data-dk-booking-slots-preload]")) {
+      const jsonHref = el.src.replace(/app\.js(\?.*)?$/, "../data/booking-slots.json");
+      const preload = document.createElement("link");
+      preload.rel = "preload";
+      preload.as = "fetch";
+      preload.href = jsonHref;
+      preload.crossOrigin = "anonymous";
+      preload.setAttribute("data-dk-booking-slots-preload", "1");
+      document.head.appendChild(preload);
+    }
+    if (window.dkBookingSlotsFetch) {
+      window.dkBookingSlotsFetch(false);
+      return;
+    }
+    if (!el || !el.src) return;
+    const bootSrc = el.src.replace(/app\.js(\?.*)?$/, "thanks-booking-bootstrap.js?v=11");
+    if (document.querySelector('script[data-dk-booking-bootstrap]')) return;
+    const s = document.createElement("script");
+    s.src = bootSrc;
+    s.async = true;
+    s.setAttribute("data-dk-booking-bootstrap", "1");
+    s.onload = function () {
+      if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
+    };
+    document.head.appendChild(s);
+  }
+
   function persistLeadForThanks() {
     const lp = window.__LP_ID || "unknown";
     try {
@@ -566,6 +597,10 @@
               firstLic = licEl.value.split(",")[0].trim();
               if (firstLic) sessionStorage.setItem("_license", firstLic);
             }
+            var feelingEl = document.querySelector('input[name="your-feeling"]');
+            if (feelingEl && feelingEl.value) {
+              sessionStorage.setItem("dk_job_intent", feelingEl.value.trim());
+            }
             var prefEl = document.getElementById("your-pref");
             var cityEl = document.getElementById("your-city");
             var expEl = document.querySelector('[name="your-experience"]');
@@ -581,8 +616,9 @@
               })
             );
           } catch (e) {}
+          prewarmThanksBookingSlots();
           persistLeadForThanks();
-          setTimeout(() => { location.href = buildThanksUrl(); }, 1500);
+          setTimeout(() => { location.href = buildThanksUrl(); }, 600);
         }, 500);
       });
     }
