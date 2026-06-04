@@ -5,7 +5,7 @@
  */
 import { chromium, devices } from "playwright";
 
-const BASE = "https://denkilp.builders-job.com/denki-lp-cvr";
+const BASE = process.env.THANKS_E2E_BASE || "https://denkilp.builders-job.com/denki-lp-cvr";
 const results = [];
 
 function pass(name, detail) {
@@ -133,13 +133,27 @@ async function testBookingSlots(page) {
 async function testThanksAssets(page) {
   const html = await (await page.request.get(`${BASE}/thanks-v2/`)).text();
   const checks = [
-    ["thanks-job-preview.js?v=6", html.includes("thanks-job-preview.js?v=6")],
-    ["thanks-page-context.js?v=4", html.includes("thanks-page-context.js?v=4")],
-    ["thanks-mobile-ux.js", html.includes("thanks-mobile-ux.js")],
-    ["非公開求人（イメージ）", html.includes("非公開求人（イメージ）")],
+    ["thanks-job-preview.js?v=10", html.includes("thanks-job-preview.js?v=10")],
+    ["thanks-page-context.js?v=12", html.includes("thanks-page-context.js?v=12")],
+    ["thanks-v2-deferred.js?v=3", html.includes("thanks-v2-deferred.js?v=3")],
+    ["t-future", html.includes('id="t-future"')],
+    ["data-story-id x8", (html.match(/data-story-id="/g) || []).length === 8],
+    ["非公開求人 · 全文", html.includes("非公開求人 · 全文")],
+    ["比較軸の輪郭", html.includes("比較軸の輪郭")],
+    ["LINEで案内を受け取る", html.includes("LINEで案内を受け取る")],
+    ["本登録なし", !html.includes("本登録")],
     ["プレビューなし", !html.match(/プレビュー/)]
   ];
-  checks.forEach(([k, v]) => (v ? pass("本番HTML", k) : fail("本番HTML", k)));
+  checks.forEach(([k, v]) => (v ? pass("HTML", k) : fail("HTML", k)));
+
+  const storiesRes = await page.request.get(`${BASE}/assets/data/thanks-testimonial-stories.json`);
+  if (storiesRes.ok()) {
+    const stories = await storiesRes.json();
+    const n = Object.keys(stories.stories || {}).length;
+    n === 8 ? pass("stories.json", "8 entries") : fail("stories.json", String(n));
+  } else {
+    fail("stories.json", "fetch failed");
+  }
 }
 
 async function main() {

@@ -29,6 +29,11 @@ jobs:
         continue-on-error: true
         run: node scripts/sync-booking-slots.js
 
+      - name: Build thanks-v2 bundles
+        run: |
+          node scripts/build-thanks-v2-deferred.mjs
+          node scripts/sync-thanks-v2-mirrors.mjs
+
       - name: Minify JS/CSS/HTML
         run: |
           ESBUILD="npx -y --package=esbuild@0.23.1 -- esbuild"
@@ -36,6 +41,8 @@ jobs:
             assets/js/app.js \
             assets/js/app-v2.js \
             assets/js/denki-suite.js \
+            assets/js/thanks-v2-shared.js \
+            assets/js/thanks-v2-deferred.js \
             assets/js/thanks-booking-bootstrap.js \
             assets/js/thanks-booking-custom.js \
             assets/js/thanks-booking-config.js \
@@ -43,8 +50,10 @@ jobs:
             assets/js/thanks-booking-loader.js \
             assets/js/thanks-testimonials.js \
             assets/js/thanks-gtm.js \
+            assets/js/thanks-line-beacon.js \
             assets/js/thanks-job-preview.js \
             assets/js/thanks-page-context.js \
+            assets/js/thanks-license-profile.js \
             assets/js/thanks-mobile-ux.js; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
@@ -57,20 +66,9 @@ jobs:
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
           HTML_MIN="npx -y --package=html-minifier-terser@7.2.0 -- html-minifier-terser"
-          for f in \
-            thanks-v2/index.html \
-            denkikouji-v2/index.html \
-            sekoukanri-v2/index.html \
-            sekoukanri-kentiku-v2/index.html \
-            sekoukanri-doboku-v2/index.html \
-            sekoukanri-denkisekou-v2/index.html \
-            densen-bank-v3/index.html \
-            denki-koji-bank-v3/index.html \
-            index.html denkikouji/index.html sekoukanri/index.html \
-            sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
-            if [ ! -f "$f" ]; then
-              echo "skip (not in repo): $f"; continue
-            fi
+          minify_html() {
+            local f="$1"
+            [ -f "$f" ] || return 0
             $HTML_MIN "$f" \
               --collapse-whitespace --remove-comments \
               --minify-css true --minify-js true \
@@ -79,6 +77,34 @@ jobs:
               --continue-on-parse-error \
               -o "$f.min"
             mv "$f.min" "$f"
+          }
+          for f in \
+            thanks-v2/index.html \
+            WPLP/thanks-v2/index.html \
+            自前LP/thanks-v2/index.html \
+            denkikouji-v2/index.html \
+            WPLP/denkikouji-v2/index.html \
+            自前LP/denkikouji-v2/index.html \
+            sekoukanri-v2/index.html \
+            sekoukanri-kentiku-v2/index.html \
+            sekoukanri-doboku-v2/index.html \
+            sekoukanri-denkisekou-v2/index.html \
+            WPLP/sekoukanri-v2/index.html \
+            WPLP/sekoukanri-kentiku-v2/index.html \
+            WPLP/sekoukanri-doboku-v2/index.html \
+            WPLP/sekoukanri-denkisekou-v2/index.html \
+            自前LP/sekoukanri-v2/index.html \
+            自前LP/sekoukanri-kentiku-v2/index.html \
+            自前LP/sekoukanri-doboku-v2/index.html \
+            自前LP/sekoukanri-denkisekou-v2/index.html \
+            densen-bank-v3/index.html \
+            denki-koji-bank-v3/index.html \
+            index.html denkikouji/index.html sekoukanri/index.html \
+            sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
+            minify_html "$f"
+          done
+          find thanks-v2/p WPLP/thanks-v2/p 自前LP/thanks-v2/p -name index.html 2>/dev/null | while read -r f; do
+            minify_html "$f"
           done
           echo "--- minified sizes ---"
           ls -lh assets/js/app-v2.js assets/js/thanks-booking-bootstrap.js assets/css/thanks-page.css thanks-v2/index.html 2>/dev/null || true
@@ -157,9 +183,19 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-job-previews.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
-          echo "$html" | grep -q 'thanks-job-preview.js?v=6' || (echo "missing thanks-job-preview v=6" && exit 1)
-          echo "$html" | grep -q '非公開求人（イメージ）' || (echo "missing thanks copy" && exit 1)
-          echo "$html" | grep -q 'thanks-mobile-ux.js' || (echo "missing thanks-mobile-ux" && exit 1)
-          echo "$html" | grep -q 'thanks-page-context.js?v=4' || (echo "missing thanks-page-context v=4" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-deferred.js?v=3' || (echo "missing thanks-v2-deferred v=3" && exit 1)
+          echo "$html" | grep -q 't-hero__points' || (echo "missing hero points layout" && exit 1)
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-license-profiles.json" | head -3
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/p/denki_2/" | head -3
+          echo "$html" | grep -q 'thanks-page-context.js?v=13' || (echo "missing thanks-page-context v=13" && exit 1)
+          echo "$html" | grep -q 'thanks-page.css?v=21' || (echo "missing thanks-page.css v=21" && exit 1)
+          echo "$html" | grep -q 'thanks-license-profile.js' || (echo "missing thanks-license-profile" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-shared.js' || (echo "missing thanks-v2-shared" && exit 1)
+          echo "$html" | grep -q 'id="t-future"' || (echo "missing t-future section" && exit 1)
+          echo "$html" | grep -q 'data-story-id' || (echo "missing testimonial stories" && exit 1)
+          echo "$html" | grep -q '非公開求人 · 全文' || (echo "missing thanks copy" && exit 1)
+          curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-testimonial-stories.json" | head -3
+          stories=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-testimonial-stories.json")
+          echo "$stories" | grep -q '"kt"' || (echo "missing stories json kt" && exit 1)
           slots=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json")
           echo "$slots" | grep -qE '"staff_count"[[:space:]]*:[[:space:]]*4' || (echo "booking staff_count not 4" && exit 1)

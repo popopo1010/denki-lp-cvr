@@ -191,6 +191,22 @@ function findStaffById(staffList, staffId) {
 function resolveStaffForBooking(params, slotStart, slotEnd) {
   var cfg = bookingConfig();
   var staffList = getBookingStaffList();
+  var explicit = String(params.calendar_staff_id || "").trim();
+  if (explicit) {
+    var chosen = findStaffById(staffList, explicit);
+    if (!chosen) throw new Error("invalid_staff");
+    if (!cfg.allowOverlap) {
+      var busy = getBusyRanges(
+        getCalendarForStaff(chosen),
+        slotStart,
+        new Date(slotEnd.getTime() + 60000)
+      );
+      if (!isSlotFree(slotStart, slotEnd, busy)) {
+        throw new Error("slot_taken");
+      }
+    }
+    return chosen;
+  }
   var busyMap = null;
   if (!cfg.allowOverlap) {
     busyMap = getStaffBusyMap(
@@ -198,18 +214,6 @@ function resolveStaffForBooking(params, slotStart, slotEnd) {
       slotStart,
       new Date(slotEnd.getTime() + 60000)
     );
-  }
-  var explicit = String(params.calendar_staff_id || "").trim();
-  if (explicit) {
-    var chosen = findStaffById(staffList, explicit);
-    if (!chosen) throw new Error("invalid_staff");
-    if (
-      !cfg.allowOverlap &&
-      !isSlotFree(slotStart, slotEnd, busyMap[chosen.id])
-    ) {
-      throw new Error("slot_taken");
-    }
-    return chosen;
   }
   var freeIds = staffFreeAtSlot(staffList, busyMap, slotStart, slotEnd, cfg);
   if (!freeIds.length) throw new Error("slot_taken");
@@ -311,7 +315,7 @@ function isSlotFree(slotStart, slotEnd, busy) {
   return true;
 }
 
-var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v4_";
+var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v5_";
 
 function bookingSlotsCacheKey(days) {
   return BOOKING_SLOTS_CACHE_PREFIX + days;
@@ -345,13 +349,15 @@ function clearBookingSlotsCache() {
 }
 
 function stripSlotForClient(slot) {
-  return {
+  var out = {
     start: slot.start,
     end: slot.end,
     day: slot.day,
     day_label: slot.day_label,
     time_label: slot.time_label
   };
+  if (slot.staff_id) out.staff_id = slot.staff_id;
+  return out;
 }
 
 function getStaffSlackMention(staffId) {
@@ -440,7 +446,17 @@ function getAvailableSlots(daysAhead) {
   return Object.keys(slotMap)
     .sort()
     .map(function (k) {
-      return slotMap[k];
+      var slot = slotMap[k];
+      var slotStart = parseIsoToDate(slot.start);
+      var slotEnd = parseIsoToDate(slot.end);
+      slot.staff_id = pickStaffLeastBusyAtSlot(
+        staffList,
+        busyMap,
+        slotStart,
+        slotEnd,
+        slot.staff_ids
+      );
+      return slot;
     });
 }
 

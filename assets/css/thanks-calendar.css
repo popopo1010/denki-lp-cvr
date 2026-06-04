@@ -1,4 +1,4 @@
-/* サンクス：面談予約（TimeRex）— 視認性優先 */
+/* サンクス：面談予約 — 編集用パーシャル（本番は thanks-page.css v20 に結合） */
 .t-cal {
   margin: 0 12px 24px;
   scroll-margin-bottom: calc(var(--t-dock-h, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
@@ -212,6 +212,21 @@
   line-height: 1.6;
 }
 
+.t-booking-retry {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 8px auto 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #314c85, #5c6bc0);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
 .t-booking-nav {
   display: flex;
   justify-content: space-between;
@@ -357,7 +372,32 @@
   border-top: 1px dashed #6ee7b7;
 }
 
-/* 予約 → LINE の順序フロー（面談スキップ時も本登録可能） */
+/* 予約 → LINE（予約後に求人詳細を見る） */
+.thanks-flow.is-line-locked #line-section {
+  border-style: dashed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  opacity: 0.96;
+}
+.thanks-flow.is-line-locked #line-section .t-line__badge {
+  background: #888;
+}
+.thanks-flow.is-line-locked #line-cta {
+  pointer-events: none;
+  opacity: 0.42;
+  filter: grayscale(0.35);
+  animation: none;
+  box-shadow: none;
+}
+.thanks-flow.is-line-locked .t-line__gate {
+  display: block;
+}
+.thanks-flow.is-line-locked .t-line__sub {
+  display: none;
+}
+.thanks-flow.is-booked .t-line__gate,
+.thanks-flow.is-line-unlocked .t-line__gate {
+  display: none;
+}
 .thanks-flow.is-awaiting-booking #line-section {
   border-style: dashed;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -417,10 +457,10 @@
 .t-line {
   scroll-margin-bottom: calc(var(--t-dock-h, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
   margin: 0 12px 24px;
-  padding: 24px 20px;
+  padding: 40px 16px 20px;
   background: #fff;
   border-radius: 16px;
-  text-align: center;
+  text-align: left;
   box-shadow: 0 2px 12px rgba(6, 199, 85, 0.15);
   border: 2px solid #06c755;
   position: relative;
@@ -443,9 +483,10 @@
   font-size: 16px;
   font-weight: 800;
   color: #333;
-  text-align: center;
-  margin: 0 0 6px;
-  line-height: 1.5;
+  text-align: left;
+  margin: 0 0 8px;
+  padding-right: 72px;
+  line-height: 1.55;
 }
 
 .t-line h3 strong {
@@ -453,10 +494,28 @@
 }
 
 .t-line__sub {
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 16px;
-  line-height: 1.5;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 14px;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.t-line__gate {
+  display: none;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px dashed #94a3b8;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.t-line__gate strong {
+  color: #047857;
 }
 
 .t-line__btn {
@@ -502,6 +561,43 @@
 .t-line__note {
   font-size: 11px;
   color: #888;
+  text-align: center;
+  line-height: 1.55;
+}
+
+.t-bene {
+  text-align: left !important;
+}
+
+@media (max-width: 480px) {
+  .t-line {
+    margin: 0 10px 20px;
+    padding: 38px 14px 18px;
+  }
+  .t-line h3 {
+    font-size: 15px;
+    padding-right: 64px;
+  }
+  .t-line__gate {
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .t-cal {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  .t-cal__sub {
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .t-cal h3 {
+    text-align: left;
+    font-size: 1.05rem;
+  }
+  .t-cal__head {
+    text-align: left;
+  }
 }
 
 .t-email {

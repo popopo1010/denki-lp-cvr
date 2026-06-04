@@ -2,6 +2,7 @@
  * thanks-v2 GTM（dk_lp main.js と同じ qualified / conversion ルール）
  */
 (function () {
+  var dk = window.dkThanks || {};
   var LEAD_SESSION_KEY = "dk_lp_lead_v1";
   var LEAD_SESSION_TTL_MS = 30 * 60 * 1000;
   var CONVERSION_FIRED_KEY = "dk_lp_conversion_fired";
@@ -23,19 +24,11 @@
   }
 
   function getLpSlug() {
-    var params = new URLSearchParams(location.search);
-    var fromQs = params.get("lp");
-    if (fromQs) return fromQs;
-    try {
-      var raw = sessionStorage.getItem(LEAD_SESSION_KEY);
-      if (raw) {
-        var data = JSON.parse(raw);
-        if (data && data.lp) return data.lp;
-      }
-      return sessionStorage.getItem("_lp") || "unknown";
-    } catch (e2) {
-      return "unknown";
+    if (dk.getLpSlug) {
+      var slug = dk.getLpSlug();
+      return slug || "unknown";
     }
+    return "unknown";
   }
 
   var qualified = isQualified();

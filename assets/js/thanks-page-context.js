@@ -2,37 +2,20 @@
  * thanks-v2: LP slug に応じたブランド・フォールバック職種
  */
 (function () {
-  var LEAD_SESSION_KEY = "dk_lp_lead_v1";
+  var dk = window.dkThanks || {};
+  var HERO_POINTS =
+    "<ul class=\"t-hero__points\">" +
+    "<li><strong>現職</strong>と<strong>選択肢</strong>を比べて、納得して選ぶ</li>" +
+    "<li>まず<strong>比較軸の輪郭</strong>をお見せします</li>" +
+    "<li>全文は<strong>10分のお電話</strong>ですり合わせ後にお送りします</li>" +
+    "</ul>";
 
   function getLpSlug() {
-    try {
-      var params = new URLSearchParams(location.search);
-      var fromQs = params.get("lp");
-      if (fromQs) return fromQs;
-      var raw = sessionStorage.getItem(LEAD_SESSION_KEY);
-      if (raw) {
-        var data = JSON.parse(raw);
-        if (data && data.lp) return data.lp;
-      }
-      return sessionStorage.getItem("_lp") || "";
-    } catch (e) {
-      return "";
-    }
+    return dk.getLpSlug ? dk.getLpSlug() : "";
   }
 
   function getJobFamily(slug) {
-    var s = String(slug || "").toLowerCase();
-    if (!s) return "denki";
-    if (s.indexOf("nenshu-shindan") >= 0) return "nenshu";
-    if (
-      s.indexOf("sekoukanri") >= 0 ||
-      s.indexOf("kentiku") >= 0 ||
-      s.indexOf("doboku") >= 0 ||
-      s.indexOf("denkisekou") >= 0
-    ) {
-      return "sekoukanri";
-    }
-    return "denki";
+    return dk.getJobFamily ? dk.getJobFamily(slug) : "denki";
   }
 
   var BRANDS = {
@@ -40,21 +23,43 @@
       siteName: "電気工事バンク",
       header:
         "電気工事士の求人募集・転職サイト[国内最大級] | 電気工事バンク",
-      title: "仮登録完了 | 電気工事バンク",
+      title: "登録完了 | 電気工事バンク",
       defaultLicense: "電気工事士",
-      heroSub:
-        "ご登録内容に合う<strong>非公開求人のイメージ</strong>を下に表示しています。<br>気になる案件は<strong>10分で相談</strong>、全文・新着は<strong>LINE本登録後</strong>に届きます。"
+      heroPoints: HERO_POINTS
     },
     sekoukanri: {
       siteName: "施工管理キャリア",
       header:
         "施工管理技士の求人募集・転職サイト[国内最大級] | 施工管理キャリア",
-      title: "仮登録完了 | 施工管理キャリア",
+      title: "登録完了 | 施工管理キャリア",
       defaultLicense: "施工管理技士",
-      heroSub:
-        "ご登録の<strong>資格・勤務地</strong>に合う<strong>非公開求人のイメージ</strong>を下に表示しています。<br>全文・<strong>企業からの声がけ</strong>はLINE本登録後に届きます。"
+      heroPoints: HERO_POINTS
     }
   };
+
+  function escHtml(s) {
+    return dk.esc ? dk.esc(s) : String(s || "");
+  }
+
+  function getUserName() {
+    return dk.getName ? dk.getName() : "";
+  }
+
+  function applyHero(brand) {
+    var heroRoot =
+      document.getElementById("thanks-hero-sub") ||
+      document.querySelector(".t-hero__body");
+    if (!heroRoot) return;
+    var name = getUserName();
+    var lead = name
+      ? "<strong>" + escHtml(name) + "</strong>さん、登録ありがとうございます。"
+      : "登録ありがとうございます。";
+    heroRoot.innerHTML =
+      "<p class=\"t-hero__lead\">" +
+      lead +
+      "転職を勧める場所ではありません。</p>" +
+      (brand.heroPoints || HERO_POINTS);
+  }
 
   function applyBrand() {
     var slug = getLpSlug();
@@ -80,10 +85,7 @@
       document.querySelector(".l-header__title .adtext");
     if (headerEl) headerEl.textContent = brand.header;
 
-    var heroP = document.querySelector(".t-hero p");
-    if (heroP && !document.cookie.match(/(^| )user-name=/)) {
-      heroP.innerHTML = brand.heroSub;
-    }
+    applyHero(brand);
 
     window.dkThanksContext = {
       lpSlug: slug,
@@ -92,6 +94,19 @@
       getLpSlug: getLpSlug,
       getJobFamily: getJobFamily
     };
+
+    if (window.dkThanksWhenProfileReady) {
+      window.dkThanksWhenProfileReady(function (profile) {
+        if (profile && profile.job_family) {
+          document.documentElement.setAttribute(
+            "data-thanks-family",
+            profile.job_family
+          );
+          window.dkThanksContext.family = profile.job_family;
+          window.dkThanksContext.licenseProfile = profile;
+        }
+      });
+    }
   }
 
   if (document.readyState === "loading") {

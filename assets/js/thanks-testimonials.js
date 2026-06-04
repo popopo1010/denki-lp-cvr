@@ -1,4 +1,11 @@
 (function () {
+  var STORIES_URL =
+    (window.dkThanks && window.dkThanks.assetUrl
+      ? window.dkThanks.assetUrl("data/thanks-testimonial-stories.json")
+      : null) || "../assets/data/thanks-testimonial-stories.json";
+  var storiesCache = null;
+  var storiesPromise = null;
+
   function setOpen(wrap, open) {
     var btn = wrap.querySelector(".cvr-testimonial__toggle");
     var body = wrap.querySelector(".cvr-testimonial__body");
@@ -8,80 +15,162 @@
     wrap.classList.toggle("is-open", open);
   }
 
+  function esc(s) {
+    var dk = window.dkThanks;
+    if (dk && dk.esc) return dk.esc(s);
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function renderStory(story) {
+    if (!story) return "";
+    var needs = (story.needs || [])
+      .map(function (n) {
+        return '<span class="cvr-story__need">' + esc(n) + "</span>";
+      })
+      .join("");
+    return (
+      '<div class="cvr-story">' +
+      '<p class="cvr-story__lead-label">転職の背景・ニーズ</p>' +
+      '<div class="cvr-story__needs">' +
+      needs +
+      "</div>" +
+      '<p class="cvr-story__text">' +
+      esc(story.text) +
+      "</p>" +
+      "</div>"
+    );
+  }
+
+  function mountStories(stories) {
+    if (!stories) return;
+    document.querySelectorAll(".cvr-testimonial[data-story-id]").forEach(function (card) {
+      var id = card.getAttribute("data-story-id");
+      var mount = card.querySelector(".cvr-story-mount");
+      var story = stories[id];
+      if (!mount || !story || mount.dataset.storyMounted) return;
+      mount.innerHTML = renderStory(story);
+      mount.dataset.storyMounted = "1";
+    });
+  }
+
+  function loadStories() {
+    if (storiesCache) return Promise.resolve(storiesCache);
+    if (storiesPromise) return storiesPromise;
+    storiesPromise = fetch(STORIES_URL, { credentials: "same-origin", cache: "default" })
+      .then(function (res) {
+        return res.ok ? res.json() : null;
+      })
+      .then(function (json) {
+        storiesCache = (json && json.stories) || null;
+        return storiesCache;
+      })
+      .catch(function () {
+        return null;
+      });
+    return storiesPromise;
+  }
+
+  function ensureStoriesMounted() {
+    return loadStories().then(function (stories) {
+      if (stories) mountStories(stories);
+      return stories;
+    });
+  }
+
   document.querySelectorAll(".cvr-testimonial__more").forEach(function (wrap) {
     var btn = wrap.querySelector(".cvr-testimonial__toggle");
     if (!btn) return;
     btn.addEventListener("click", function () {
-      setOpen(wrap, btn.getAttribute("aria-expanded") !== "true");
+      var opening = btn.getAttribute("aria-expanded") !== "true";
+      if (opening) {
+        ensureStoriesMounted().finally(function () {
+          setOpen(wrap, true);
+        });
+        return;
+      }
+      setOpen(wrap, false);
     });
   });
 
-  var root = document.querySelector(".cvr-testimonials--rich");
-  if (!root) return;
+  function applyLicenseProfile(profile) {
+    var root = document.querySelector(".cvr-testimonials--rich");
+    if (!root || !profile) return;
 
-  var featured = root.querySelector(".cvr-testimonial--featured");
-  var trust = root.querySelector(".cvr-testimonial--trust");
-  if (featured && trust && trust.previousElementSibling !== featured) {
-    featured.insertAdjacentElement("afterend", trust);
-  }
+    var cards = Array.from(root.querySelectorAll(".cvr-testimonial"));
+    var byStory = {};
+    cards.forEach(function (card) {
+      byStory[card.getAttribute("data-story-id")] = card;
+    });
 
-  var license = "";
-  try {
-    license = (sessionStorage.getItem("_license") || "").trim();
-  } catch (e) { /* private mode */ }
-  if (!license) return;
+    cards.forEach(function (card) {
+      card.style.display = "";
+      card.classList.remove("cvr-testimonial--featured", "cvr-testimonial--match");
+    });
 
-  var cards = Array.from(root.querySelectorAll(".cvr-testimonial"));
-  function tagMatches(tag) {
-    if (!tag || !license) return false;
-    if (license === tag) return true;
-    if (tag.length < 3) return false;
-    return license.indexOf(tag) >= 0 || tag.indexOf(license) >= 0;
-  }
+    (profile.hidden_stories || []).forEach(function (id) {
+      if (byStory[id]) byStory[id].style.display = "none";
+    });
 
-  function matches(card) {
-    var tags = (card.getAttribute("data-license") || "")
-      .split(/[,、]/)
-      .map(function (s) { return s.trim(); })
-      .filter(Boolean);
-    return tags.some(tagMatches);
-  }
+    var order = [];
+    if (profile.featured_story) order.push(profile.featured_story);
+    (profile.story_order || []).forEach(function (id) {
+      if (order.indexOf(id) === -1) order.push(id);
+    });
 
-  var filterNote = root.querySelector(".cvr-testimonials__filter");
-  if (!filterNote) {
-    filterNote = document.createElement("p");
-    filterNote.className = "cvr-testimonials__filter";
-    var summary = root.querySelector(".cvr-testimonials__summary");
-    if (summary) summary.insertAdjacentElement("afterend", filterNote);
-    else root.insertBefore(filterNote, cards[0] || null);
-  }
-  filterNote.textContent =
-    "ご登録の「" + license + "」に近い事例を先に表示しています";
+    var anchor =
+      root.querySelector(".cvr-testimonials__filter") ||
+      root.querySelector(".cvr-testimonials__summary");
 
-  var matched = [];
-  var rest = [];
-  cards.forEach(function (card) {
-    if (matches(card)) {
+    order.forEach(function (id) {
+      var card = byStory[id];
+      if (!card || card.style.display === "none") return;
+      if (id === profile.featured_story) {
+        card.classList.add("cvr-testimonial--featured");
+      }
       card.classList.add("cvr-testimonial--match");
-      matched.push(card);
-    } else {
-      rest.push(card);
+      if (anchor) {
+        anchor.insertAdjacentElement("afterend", card);
+        anchor = card;
+      }
+    });
+
+    cards.forEach(function (card) {
+      if (card.style.display === "none") return;
+      if (order.indexOf(card.getAttribute("data-story-id")) >= 0) return;
+      if (anchor) {
+        anchor.insertAdjacentElement("afterend", card);
+        anchor = card;
+      }
+    });
+
+    var filterNote = root.querySelector(".cvr-testimonials__filter");
+    if (!filterNote) {
+      filterNote = document.createElement("p");
+      filterNote.className = "cvr-testimonials__filter";
+      var summary = root.querySelector(".cvr-testimonials__summary");
+      if (summary) summary.insertAdjacentElement("afterend", filterNote);
+      else root.insertBefore(filterNote, cards[0] || null);
     }
-  });
-  if (!matched.length) {
-    filterNote.hidden = true;
-    return;
+    filterNote.textContent =
+      "ご登録の「" + (profile.label || "資格") + "」に近い事例を先に表示しています";
+    filterNote.hidden = !profile.label;
   }
 
-  var anchor = featured || matched[0];
-  matched.forEach(function (card) {
-    if (card === anchor) return;
-    anchor.insertAdjacentElement("afterend", card);
-    anchor = card;
-  });
-  rest.forEach(function (card) {
-    if (card === featured) return;
-    anchor.insertAdjacentElement("afterend", card);
-    anchor = card;
-  });
+  function initTestimonials() {
+    if (window.dkThanksWhenProfileReady) {
+      window.dkThanksWhenProfileReady(applyLicenseProfile);
+    } else if (window.dkThanksLicenseProfile) {
+      applyLicenseProfile(window.dkThanksLicenseProfile);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTestimonials);
+  } else {
+    initTestimonials();
+  }
 })();

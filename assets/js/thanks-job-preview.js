@@ -5,64 +5,23 @@
   var root = document.getElementById("job-preview-root");
   if (!root) return;
 
-  var DATA_URL = "../assets/data/thanks-job-previews.json";
+  var DATA_URL =
+    (window.dkThanks && window.dkThanks.assetUrl
+      ? window.dkThanks.assetUrl("data/thanks-job-previews.json")
+      : null) || "../assets/data/thanks-job-previews.json";
   var INTENT_KEY = "dk_job_intent";
   var PROFILE_KEY = "dk_lead_profile";
 
   var previewData = null;
   var activeGroup = null;
-
-  var REGION_BY_PREF = {
-    北海道: "北海道",
-    青森県: "東北",
-    岩手県: "東北",
-    宮城県: "東北",
-    秋田県: "東北",
-    山形県: "東北",
-    福島県: "東北",
-    茨城県: "関東",
-    栃木県: "関東",
-    群馬県: "関東",
-    埼玉県: "関東",
-    千葉県: "関東",
-    東京都: "関東",
-    神奈川県: "関東",
-    新潟県: "中部",
-    富山県: "中部",
-    石川県: "中部",
-    福井県: "中部",
-    山梨県: "中部",
-    長野県: "中部",
-    岐阜県: "中部",
-    静岡県: "中部",
-    愛知県: "中部",
-    三重県: "近畿",
-    滋賀県: "近畿",
-    京都府: "近畿",
-    大阪府: "近畿",
-    兵庫県: "近畿",
-    奈良県: "近畿",
-    和歌山県: "近畿",
-    鳥取県: "中国",
-    島根県: "中国",
-    岡山県: "中国",
-    広島県: "中国",
-    山口県: "中国",
-    徳島県: "四国",
-    香川県: "四国",
-    愛媛県: "四国",
-    高知県: "四国",
-    福岡県: "九州",
-    佐賀県: "九州",
-    長崎県: "九州",
-    熊本県: "九州",
-    大分県: "九州",
-    宮崎県: "九州",
-    鹿児島県: "九州",
-    沖縄県: "沖縄"
-  };
+  var regionByPref = {};
 
   function pushDL(event, extra) {
+    var dk = window.dkThanks;
+    if (dk && dk.pushDL) {
+      dk.pushDL(event, extra);
+      return;
+    }
     window.dataLayer = window.dataLayer || [];
     var payload = { event: event, page_type: "thanks-v2" };
     if (extra) {
@@ -100,16 +59,33 @@
         profile.license = (sessionStorage.getItem("_license") || "").trim();
       } catch (e2) {}
     }
+    if (
+      !profile.license &&
+      window.dkThanksLicenseProfile &&
+      window.dkThanksLicenseProfile.label
+    ) {
+      profile.license = window.dkThanksLicenseProfile.label;
+    }
     try {
       profile.intent = sessionStorage.getItem(INTENT_KEY) || "";
     } catch (e3) {}
-    profile.region = REGION_BY_PREF[profile.pref] || "";
+    profile.region = regionByPref[profile.pref] || "";
     return profile;
   }
 
   function getLpFamily() {
+    if (
+      window.dkThanksLicenseProfile &&
+      window.dkThanksLicenseProfile.job_family
+    ) {
+      return window.dkThanksLicenseProfile.job_family;
+    }
     if (window.dkThanksContext && window.dkThanksContext.family) {
       return window.dkThanksContext.family;
+    }
+    var dk = window.dkThanks;
+    if (dk && dk.getLpSlug && dk.getJobFamily) {
+      return dk.getJobFamily(dk.getLpSlug());
     }
     var slug = "";
     try {
@@ -258,6 +234,8 @@
   }
 
   function esc(s) {
+    var dk = window.dkThanks;
+    if (dk && dk.esc) return dk.esc(s);
     return String(s || "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -274,9 +252,10 @@
     if (profile.intent && intentLabels[profile.intent]) {
       parts.push(intentLabels[profile.intent]);
     } else if (profile.willingness.indexOf("近いうち") >= 0) {
-      parts.push("転職意欲高め");
+      parts.push("比較意欲高め");
     }
     var defaultLic =
+      (window.dkThanksLicenseProfile && window.dkThanksLicenseProfile.label) ||
       (window.dkThanksContext &&
         window.dkThanksContext.brand &&
         window.dkThanksContext.brand.defaultLicense) ||
@@ -287,47 +266,72 @@
       labelEl.innerHTML =
         "「<strong>" +
         esc(lic) +
-        "</strong>」向けに、<strong>希望に合いそうな非公開求人</strong>を表示しています";
+        "</strong>」で、<strong>現職と比べられる選択肢</strong>の輪郭（全文はお電話後）";
       return;
     }
     labelEl.innerHTML =
       "<strong>" +
       esc(parts.join("・")) +
-      "</strong>の条件に合いそうな求人（<strong>" +
+      "</strong>で比較したい方向性 — <strong>" +
       esc(lic) +
-      "</strong>・非公開含む）";
+      "</strong>向け（全文はヒアリング後）";
+  }
+
+  function teaserHeadline(job, profile) {
+    var traits = job.traits || [];
+    var tags = (job.tags || []).join(" ");
+    if (traits.indexOf("high_salary") >= 0 || tags.indexOf("高待遇") >= 0) {
+      return "非公開 · 年収を軸に現職と比べられる枠";
+    }
+    if (traits.indexOf("weekend_off") >= 0 || traits.indexOf("low_ot") >= 0) {
+      return "非公開 · 残業・休日を軸に比較できる枠";
+    }
+    if (traits.indexOf("private") >= 0 || tags.indexOf("非公開") >= 0) {
+      return "サイト非掲載 · 現職と並べて比較できる枠";
+    }
+    if (profile.pref) {
+      return "非公開 · " + profile.pref + "で比較材料になる枠";
+    }
+    return "非公開 · 現職と比べられる選択肢";
+  }
+
+  function teaserCompareAxis(job) {
+    var traits = job.traits || [];
+    var axes = [];
+    if (traits.indexOf("high_salary") >= 0) axes.push("年収");
+    if (traits.indexOf("weekend_off") >= 0) axes.push("休日");
+    if (traits.indexOf("low_ot") >= 0) axes.push("残業");
+    if (traits.indexOf("direct_commute") >= 0) axes.push("通勤");
+    if (!axes.length) axes.push("条件");
+    return "比較軸: " + axes.join(" · ");
   }
 
   function renderCards(jobs, profile) {
     var html = "";
     jobs.forEach(function (job, idx) {
       var tags = (job.tags || [])
+        .slice(0, 2)
         .map(function (t) {
           return '<span class="t-job-card__tag">' + esc(t) + "</span>";
         })
         .join("");
-      var privateBadge = (job.tags || []).join(" ").indexOf("非公開") >= 0;
       html +=
         '<article class="t-job-card" data-job-index="' +
         idx +
         '" data-job-title="' +
-        esc(job.title) +
+        esc(teaserHeadline(job, profile)) +
         '" tabindex="0" role="button">' +
-        '<span class="t-job-card__badge">' +
-        (privateBadge ? "非公開" : "限定公開") +
-        "</span>" +
+        '<span class="t-job-card__badge">非公開</span>' +
         '<h4 class="t-job-card__title">' +
-        esc(job.title) +
+        esc(teaserHeadline(job, profile)) +
         "</h4>" +
         '<p class="t-job-card__meta"><span>' +
-        esc(formatDisplayArea(profile, job)) +
-        "</span> · <strong>" +
-        esc(formatSalary(job)) +
-        "</strong></p>" +
+        esc(teaserCompareAxis(job)) +
+        "</span></p>" +
         '<div class="t-job-card__tags">' +
         tags +
         "</div>" +
-        '<p class="t-job-card__lock">※ 会社名・応募条件の詳細は<strong>本登録後</strong>に開示</p>' +
+        '<p class="t-job-card__lock">社名・年収・条件の<strong>全文</strong>は<strong>10分のお電話後</strong>にご案内 — 現職と並べて比較できます</p>' +
         "</article>";
     });
     return html;
@@ -428,28 +432,43 @@
     voiceEl.hidden = !text;
   }
 
-  fetch(DATA_URL)
-    .then(function (res) {
-      return res.json();
-    })
-    .then(function (data) {
-      previewData = data;
-      var profile = readProfile();
-      activeGroup =
-        pickGroup(data, profile.license) || resolveFallback(data, getLpFamily());
-      mountVoice(activeGroup, profile);
-      bindIntentChips();
-      bindScroll();
-      refreshPreview("init");
-      pushDL("thanks_job_preview_view", {
-        license: profile.license || "unknown",
-        user_pref: profile.pref || "",
-        willingness: profile.willingness || "",
-        job_intent: profile.intent || ""
-      });
-    })
-    .catch(function () {
-      root.innerHTML =
-        '<p class="t-jobs__error">案件の表示に失敗しました。下の日時からご相談いただけます。</p>';
+  function bootPreview(data) {
+    previewData = data;
+    regionByPref = (data && data.pref_regions) || {};
+    var profile = readProfile();
+    activeGroup =
+      pickGroup(data, profile.license) || resolveFallback(data, getLpFamily());
+    mountVoice(activeGroup, profile);
+    bindIntentChips();
+    bindScroll();
+    refreshPreview("init");
+    pushDL("thanks_job_preview_view", {
+      license: profile.license || "unknown",
+      user_pref: profile.pref || "",
+      willingness: profile.willingness || "",
+      job_intent: profile.intent || ""
     });
+  }
+
+  function loadPreview() {
+    fetch(DATA_URL)
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (data) {
+        if (window.dkThanksWhenProfileReady) {
+          window.dkThanksWhenProfileReady(function () {
+            bootPreview(data);
+          });
+        } else {
+          bootPreview(data);
+        }
+      })
+      .catch(function () {
+        root.innerHTML =
+          '<p class="t-jobs__error">案件の表示に失敗しました。下の日時からご相談いただけます。</p>';
+      });
+  }
+
+  loadPreview();
 })();

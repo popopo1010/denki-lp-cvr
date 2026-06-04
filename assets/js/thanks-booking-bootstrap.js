@@ -1,10 +1,10 @@
-/** サンクス予約: 設定 + 空き枠取得（静的JSON優先） */
+/** サンクス予約: 設定 + 空き枠取得（静的JSON優先・期限切れ時はGASへ） */
 window.THANKS_BOOKING_MODE = "custom";
 window.LP_BOOKING_GAS_URL =
   "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
 window.BOOKING_VISIBLE_DAYS = 3;
 window.BOOKING_FETCH_DAYS = 3;
-/** サンクス表示中に GAS JSONP で裏取りしない（静的JSON+キャッシュのみで軽量化） */
+/** true=常時GAS裏取りしない / false=静的が古い・空のときだけGAS */
 window.BOOKING_SLOTS_SKIP_GAS_REFRESH = true;
 window.BOOKING_SLOTS_STATIC_URL = "../assets/data/booking-slots.json";
 window.BOOKING_SLOTS_CACHE_KEY = "dk_booking_slots_cache";
@@ -21,12 +21,42 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
   var LS_KEY = window.BOOKING_SLOTS_LS_KEY;
   var LS_TTL = window.BOOKING_SLOTS_LS_TTL_MS;
 
+  function filterFutureSlots(slots) {
+    var now = Date.now();
+    return (slots || []).filter(function (s) {
+      if (!s || !s.start) return false;
+      var t = new Date(s.start).getTime();
+      return !isNaN(t) && t > now;
+    });
+  }
+
+  function isPayloadFresh(json) {
+    if (!json || !json.generated_at) return true;
+    var ttlMs = (Number(json.ttl_sec) || 300) * 1000;
+    return Date.now() - new Date(json.generated_at).getTime() <= ttlMs;
+  }
+
+  function normalizeStaticPayload(json) {
+    if (!json || !json.ok || !json.slots || !json.slots.length) return null;
+    var future = filterFutureSlots(json.slots);
+    if (!future.length) return null;
+    return {
+      ts: Date.now(),
+      slots: future,
+      source: isPayloadFresh(json) ? "static" : "static-stale",
+      stale: !isPayloadFresh(json)
+    };
+  }
+
   function parseCache(raw, ttl) {
     if (!raw) return null;
     try {
       var data = JSON.parse(raw);
       if (!data || !data.slots || !data.slots.length) return null;
       if (Date.now() - data.ts > ttl) return null;
+      var future = filterFutureSlots(data.slots);
+      if (!future.length) return null;
+      data.slots = future;
       return data;
     } catch (e) {
       return null;
@@ -72,20 +102,12 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
     var url = STATIC_URL;
     var sep = url.indexOf("?") >= 0 ? "&" : "?";
     url += sep + "t=" + Math.floor(Date.now() / 300000);
-    return fetch(url, { credentials: "same-origin", cache: "default" })
+    return fetch(url, { credentials: "same-origin", cache: "no-store" })
       .then(function (res) {
         return res.ok ? res.json() : null;
       })
       .then(function (json) {
-        if (!json || !json.ok || !json.slots || !json.slots.length) return null;
-        var ttlMs = (Number(json.ttl_sec) || 300) * 1000;
-        if (
-          json.generated_at &&
-          Date.now() - new Date(json.generated_at).getTime() > ttlMs
-        ) {
-          return null;
-        }
-        return { ts: Date.now(), slots: json.slots, source: "static" };
+        return normalizeStaticPayload(json);
       })
       .catch(function () {
         return null;
@@ -106,7 +128,12 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
         var script = document.getElementById("booking-slots-jsonp-pre");
         if (script && script.parentNode) script.parentNode.removeChild(script);
         if (payload && payload.ok && payload.slots) {
-          resolve({ ts: Date.now(), slots: payload.slots, source: "gas" });
+          var future = filterFutureSlots(payload.slots);
+          if (!future.length) {
+            resolve(null);
+            return;
+          }
+          resolve({ ts: Date.now(), slots: future, source: "gas" });
           return;
         }
         resolve(null);
@@ -128,20 +155,17 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
   }
 
   function refreshInBackground() {
-    if (window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
-      fetchStaticSlots().then(function (staticData) {
-        if (staticData) {
-          window.dkBookingSlotsWriteCache(staticData.slots, staticData.source);
-          notifySlotsUpdated(staticData);
-        }
-      });
-      return;
-    }
     fetchStaticSlots().then(function (staticData) {
       if (staticData) {
         window.dkBookingSlotsWriteCache(staticData.slots, staticData.source);
         notifySlotsUpdated(staticData);
-        return null;
+        if (!staticData.stale || window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
+          return null;
+        }
+        return fetchGasSlots();
+      }
+      if (window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
+        return fetchGasSlots();
       }
       return fetchGasSlots();
     }).then(function (gasData) {
@@ -167,7 +191,7 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
       .then(function (staticData) {
         if (staticData) {
           window.dkBookingSlotsWriteCache(staticData.slots, staticData.source);
-          if (!window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
+          if (staticData.stale) {
             fetchGasSlots().then(function (gasData) {
               window.__dkBookingSlotsInflight = null;
               if (gasData && gasData.slots) {
@@ -180,10 +204,6 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
           }
           return staticData;
         }
-        if (window.BOOKING_SLOTS_SKIP_GAS_REFRESH) {
-          window.__dkBookingSlotsInflight = null;
-          return null;
-        }
         return fetchGasSlots().then(function (gasData) {
           window.__dkBookingSlotsInflight = null;
           if (gasData && gasData.slots) {
@@ -195,10 +215,37 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
       })
       .catch(function () {
         window.__dkBookingSlotsInflight = null;
-        return null;
+        return fetchGasSlots();
       });
     return window.__dkBookingSlotsInflight;
   };
+
+  function prewarmGasRuntime() {
+    if (!GAS_URL || window.__dkBookingGasPrewarm) return;
+    window.__dkBookingGasPrewarm = true;
+    var cb = "lpBookingPrewarm_" + Date.now();
+    window[cb] = function () {
+      try {
+        delete window[cb];
+      } catch (e0) {}
+      var script = document.getElementById("booking-gas-prewarm");
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+    };
+    var script = document.createElement("script");
+    script.id = "booking-gas-prewarm";
+    script.src =
+      GAS_URL +
+      "?action=slots&days=1&callback=" +
+      encodeURIComponent(cb);
+    script.onerror = function () {
+      try {
+        delete window[cb];
+      } catch (e1) {}
+    };
+    document.head.appendChild(script);
+  }
+
+  prewarmGasRuntime();
 
   var primed = window.dkBookingSlotsReadCache();
   if (primed) {

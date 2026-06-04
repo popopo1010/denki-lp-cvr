@@ -2,7 +2,7 @@
  * 独自予約UI: 3日分の空き枠を表示 → タップで予約 → GAS → スプシ + Slack
  */
 (function () {
-  var GAS_URL = window.LP_BOOKING_GAS_URL || "";
+  var GAS_URL = window.LP_BOOKING_GAS_URL || (window.dkThanks && window.dkThanks.GAS_URL) || "";
   var section = document.getElementById("t-calendar");
   var mount = document.getElementById("booking-slot-root");
   if (!section || !mount || !GAS_URL) {
@@ -13,29 +13,42 @@
   var tel = "";
   var name = "";
   var lp = "thanks";
-  try {
-    var qs = new URLSearchParams(location.search);
-    if (qs.get("_tel")) {
-      sessionStorage.setItem("_tel", qs.get("_tel"));
-      tel = qs.get("_tel");
+  if (window.dkThanks) {
+    if (window.dkThanks.captureTelNameFromQs) window.dkThanks.captureTelNameFromQs();
+    tel = window.dkThanks.getTel ? window.dkThanks.getTel() : "";
+    name = window.dkThanks.getName ? window.dkThanks.getName() : "";
+  } else {
+    try {
+      var qs = new URLSearchParams(location.search);
+      if (qs.get("_tel")) {
+        sessionStorage.setItem("_tel", qs.get("_tel"));
+        tel = qs.get("_tel");
+      }
+      if (qs.get("_name")) {
+        sessionStorage.setItem("_name", qs.get("_name"));
+        name = qs.get("_name");
+      }
+      if (!tel) tel = sessionStorage.getItem("_tel") || "";
+      if (!name) name = sessionStorage.getItem("_name") || "";
+    } catch (e) {}
+    if (!name) {
+      var m = document.cookie.match(/(^| )user-name=([^;]+)/);
+      if (m) name = decodeURIComponent(m[2]).trim();
     }
-    if (qs.get("_name")) {
-      sessionStorage.setItem("_name", qs.get("_name"));
-      name = qs.get("_name");
-    }
-    if (!tel) tel = sessionStorage.getItem("_tel") || "";
-    if (!name) name = sessionStorage.getItem("_name") || "";
-    lp = sessionStorage.getItem("_lp") || lp;
-  } catch (e) {}
-  if (!name) {
-    var m = document.cookie.match(/(^| )user-name=([^;]+)/);
-    if (m) name = decodeURIComponent(m[2]).trim();
   }
+  try {
+    lp = sessionStorage.getItem("_lp") || lp;
+  } catch (eLp) {}
   var hasTel = !!tel;
 
   var BOOKING_DONE_KEY = "dk_booking_done";
 
   function pushDL(event, extra) {
+    var dk = window.dkThanks;
+    if (dk && dk.pushDL) {
+      dk.pushDL(event, extra);
+      return;
+    }
     window.dataLayer = window.dataLayer || [];
     var payload = { event: event, page_type: "thanks" };
     if (extra) {
@@ -49,7 +62,7 @@
   function renderDoneHtml(info) {
     return (
       '<div class="t-booking-done t-booking-done--hero">' +
-      '<p class="t-booking-done__title">面談日時を確保しました</p>' +
+      '<p class="t-booking-done__title">お電話の日時を確保しました</p>' +
       "<p class=\"t-booking-done__when\"><strong>" +
       info.day_label +
       " " +
@@ -57,10 +70,10 @@
       "</strong> 開始</p>" +
       '<p class="t-booking-done__sub">' +
       (info.staff_name
-        ? "この時間に<strong>" + info.staff_name + "</strong>よりご連絡します"
-        : "この時間に担当よりご連絡します") +
+        ? "この時間に<strong>" + info.staff_name + "</strong>より<strong>お電話</strong>します — 現職と希望のすり合わせ（10分）"
+        : "この時間に担当より<strong>お電話</strong>します — 現職と希望のすり合わせ（10分）") +
       "</p>" +
-      '<p class="t-booking-done__next">次は <strong>LINEで求人一覧を開く</strong>（本登録・30秒）</p>' +
+      '<p class="t-booking-done__next">お電話後、合う<strong>非公開求人の全文</strong>をお送りします。続けて<strong>LINEで案内を受け取る</strong>（30秒）</p>' +
       "</div>"
     );
   }
@@ -71,7 +84,7 @@
     section.classList.add("t-cal--booked");
 
     var headTitle = section.querySelector(".t-cal__head h3");
-    if (headTitle) headTitle.textContent = "面談日時を確保しました";
+    if (headTitle) headTitle.textContent = "お電話の日時を確保しました";
 
     var calBody = section.querySelector(".t-cal__body");
     if (calBody) {
@@ -86,18 +99,25 @@
     var line = document.getElementById("line-section");
     if (line) {
       line.classList.add("t-line--revealed");
-      var badge = line.querySelector(".t-line__badge");
+      var badge = line.querySelector(".t-line__badge") || document.getElementById("line-section-badge");
       var h3 = line.querySelector("h3");
       var sub = line.querySelector(".t-line__sub");
-      if (badge) badge.textContent = "ステップ3";
-      if (h3) h3.innerHTML = "LINEで<strong>本登録</strong>—求人一覧を開く";
+      if (badge) badge.textContent = "【今すぐ】案内を受け取る";
+      if (h3) h3.innerHTML = "全文の受け取り・追加案内は<strong>LINE</strong>でも";
       if (sub)
         sub.innerHTML =
-          "<strong>ここより多くの非公開求人</strong>がLINEで届きます。ヒアリング中は<strong>法人からの声がけ</strong>も—友だち追加（30秒）";
+          "お電話のあと、<strong>非公開求人の全文</strong>や追加案内をLINEでも受け取れます。<strong>見るだけOK</strong> · 30秒";
       setTimeout(function () {
         line.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 450);
     }
+
+    if (typeof window.dkThanksUnlockLine === "function") {
+      window.dkThanksUnlockLine();
+    }
+    try {
+      document.dispatchEvent(new CustomEvent("thanks_line_unlocked"));
+    } catch (eEv) {}
 
     var stepBooking = document.querySelector('[data-step="booking"]');
     var stepLine = document.querySelector('[data-step="line"]');
@@ -110,7 +130,7 @@
     var heroP = document.querySelector(".t-hero p");
     if (heroP) {
       heroP.innerHTML =
-        "面談日時を確保しました。<br>担当が気になった案件の<strong>詳細</strong>をお伝えします。続けて<strong>LINEで非公開求人一覧</strong>をご確認ください。";
+        "お電話の日時を確保しました。<br>この時間に<strong>10分 · 現職と希望のすり合わせ</strong>のお電話があります。<br>続けて<strong>LINEで案内を受け取る</strong>（30秒）もおすすめです。";
     }
 
     pushDL("thanks_line_step_revealed", {
@@ -124,6 +144,72 @@
       booking_day: info.day_label || "",
       booking_time: info.time_label || ""
     });
+  }
+
+  function capturePreBookingUi() {
+    var line = document.getElementById("line-section");
+    var headTitle = section.querySelector(".t-cal__head h3");
+    var heroP = document.querySelector(".t-hero p");
+    var contact = document.querySelector(".t-contact");
+    var badge = line ? line.querySelector(".t-line__badge") : null;
+    return {
+      headTitle: headTitle ? headTitle.textContent : "",
+      heroHtml: heroP ? heroP.innerHTML : "",
+      contactDisplay: contact ? contact.style.display : "",
+      lineClassName: line ? line.className : "",
+      lineBadge: badge ? badge.textContent : "",
+      lineH3: line && line.querySelector("h3") ? line.querySelector("h3").innerHTML : "",
+      lineSub: line && line.querySelector(".t-line__sub") ? line.querySelector(".t-line__sub").innerHTML : "",
+      stepBookingClass: (document.querySelector('[data-step="booking"]') || {}).className || "",
+      stepLineClass: (document.querySelector('[data-step="line"]') || {}).className || ""
+    };
+  }
+
+  function revertOptimisticBooking(ui) {
+    if (!ui) return;
+    try {
+      sessionStorage.removeItem(BOOKING_DONE_KEY);
+    } catch (eRm) {}
+
+    document.body.classList.remove("is-booked", "is-line-unlocked");
+    document.body.classList.add("is-awaiting-booking", "is-line-locked");
+    section.classList.remove("t-cal--booked");
+
+    var headTitle = section.querySelector(".t-cal__head h3");
+    if (headTitle) headTitle.textContent = ui.headTitle;
+
+    var calBody = section.querySelector(".t-cal__body");
+    if (calBody) {
+      calBody.querySelectorAll(".t-cal__sub, .t-cal__note").forEach(function (el) {
+        el.style.display = "";
+      });
+    }
+
+    var contact = document.querySelector(".t-contact");
+    if (contact) contact.style.display = ui.contactDisplay;
+
+    var line = document.getElementById("line-section");
+    if (line) {
+      line.className = ui.lineClassName;
+      var badge = line.querySelector(".t-line__badge") || document.getElementById("line-section-badge");
+      var h3 = line.querySelector("h3");
+      var sub = line.querySelector(".t-line__sub");
+      if (badge) badge.textContent = ui.lineBadge;
+      if (h3) h3.innerHTML = ui.lineH3;
+      if (sub) sub.innerHTML = ui.lineSub;
+    }
+
+    var stepBooking = document.querySelector('[data-step="booking"]');
+    var stepLine = document.querySelector('[data-step="line"]');
+    if (stepBooking) stepBooking.className = ui.stepBookingClass;
+    if (stepLine) stepLine.className = ui.stepLineClass;
+
+    var heroP = document.querySelector(".t-hero p");
+    if (heroP && ui.heroHtml) heroP.innerHTML = ui.heroHtml;
+
+    if (typeof window.dkThanksRelockLine === "function") {
+      window.dkThanksRelockLine();
+    }
   }
 
   function applyBookedState(info, skipSave) {
@@ -197,7 +283,11 @@
       "job_focus_title=" + encodeURIComponent(jobFocus),
       "user_pref=" + encodeURIComponent(userPref),
       "callback=" + encodeURIComponent(cb)
-    ].join("&");
+    ];
+    if (payload.staff_id) {
+      q.splice(q.length - 1, 0, "calendar_staff_id=" + encodeURIComponent(payload.staff_id));
+    }
+    q = q.join("&");
 
     var script = document.createElement("script");
     script.id = "booking-book-jsonp";
@@ -331,21 +421,32 @@
           return;
         }
         confirm.disabled = true;
-        confirm.textContent = "予約中...";
+        var slotForBook = selected;
+        var preUi = capturePreBookingUi();
+        var optimisticInfo = {
+          day_label: slotForBook.day_label,
+          time_label: slotForBook.time_label,
+          start: slotForBook.start,
+          end: slotForBook.end,
+          staff_name: ""
+        };
+        applyBookedState(optimisticInfo, true);
 
         bookSlotViaJsonp(
           {
-            start: selected.start,
-            end: selected.end,
+            start: slotForBook.start,
+            end: slotForBook.end,
             name: name,
             tel: tel,
             lp: lp,
-            page: location.href
+            page: location.href,
+            staff_id: slotForBook.staff_id || ""
           },
           function (res) {
             if (!res || !res.ok) {
-              confirm.disabled = false;
-              confirm.textContent = "この日時で予約する";
+              revertOptimisticBooking(preUi);
+              selected = slotForBook;
+              render();
               var errMsg =
                 res && res.error === "slot_taken"
                   ? "この枠は直前で埋まりました。別の時間をお選びください。"
@@ -358,10 +459,10 @@
             }
 
             var bookingInfo = {
-              day_label: selected.day_label,
-              time_label: selected.time_label,
-              start: selected.start,
-              end: selected.end,
+              day_label: slotForBook.day_label,
+              time_label: slotForBook.time_label,
+              start: slotForBook.start,
+              end: slotForBook.end,
               staff_name: (res && res.calendar_staff_name) || ""
             };
             applyBookedState(bookingInfo, false);
@@ -381,7 +482,21 @@
 
   function showSlotsError() {
     mount.innerHTML =
-      '<p class="t-booking-empty">空き枠の取得に失敗しました。時間をおいて再度お試しください。</p>';
+      '<p class="t-booking-empty">空き枠の取得に失敗しました。時間をおいて再度お試しください。</p>' +
+      '<button type="button" class="t-booking-retry" id="booking-retry">再読み込み</button>';
+    var retry = document.getElementById("booking-retry");
+    if (retry) {
+      retry.addEventListener("click", function () {
+        allSlots = [];
+        selected = null;
+        try {
+          sessionStorage.removeItem(window.BOOKING_SLOTS_CACHE_KEY || "dk_booking_slots_cache");
+        } catch (e0) {}
+        window.__dkBookingSlotsPromise = null;
+        window.__dkBookingSlotsInflight = null;
+        loadSlots();
+      });
+    }
   }
 
   function bookingSkeletonHtml() {
@@ -419,13 +534,27 @@
       (window.dkBookingSlotsFetch ? window.dkBookingSlotsFetch(false) : null);
 
     if (promise) {
-      promise.then(function (data) {
-        if (data && data.slots && data.slots.length) {
-          applySlots(data.slots);
-        } else if (!allSlots.length) {
-          showSlotsError();
-        }
-      });
+      promise
+        .then(function (data) {
+          if (data && data.slots && data.slots.length) {
+            applySlots(data.slots);
+            return;
+          }
+          if (allSlots.length) return;
+          return window.dkBookingSlotsFetch
+            ? window.dkBookingSlotsFetch(true)
+            : null;
+        })
+        .then(function (retryData) {
+          if (retryData && retryData.slots && retryData.slots.length) {
+            applySlots(retryData.slots);
+          } else if (!allSlots.length) {
+            showSlotsError();
+          }
+        })
+        .catch(function () {
+          if (!allSlots.length) showSlotsError();
+        });
     } else if (!allSlots.length) {
       showSlotsError();
     }

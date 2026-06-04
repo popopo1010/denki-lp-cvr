@@ -1,5 +1,5 @@
 /**
- * thanks-v2: スマホUX（フロー表示・スティッキーCTA・スクロール連動）
+ * thanks-v2: スマホUX（フロー表示・スティッキーCTA・予約→LINEゲート）
  */
 (function () {
   "use strict";
@@ -7,6 +7,11 @@
   var dock = document.getElementById("thanks-dock");
   var flowItems = document.querySelectorAll(".t-flow__item");
   var body = document.body;
+  var lineCta = document.getElementById("line-cta");
+  var dockLine = document.getElementById("thanks-dock-line");
+  var dockBook = document.getElementById("thanks-dock-book");
+  var lineGateMsg = document.getElementById("line-gate-msg");
+  var lineBadge = document.getElementById("line-section-badge");
 
   function scrollToTarget(sel) {
     var el = typeof sel === "string" ? document.querySelector(sel) : sel;
@@ -23,6 +28,58 @@
       });
     });
   }
+
+  function isLineUnlocked() {
+    return (
+      body.classList.contains("is-booked") ||
+      body.classList.contains("is-line-unlocked")
+    );
+  }
+
+  function onLockedLineClick(e) {
+    if (isLineUnlocked()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    scrollToTarget("#t-calendar");
+    if (lineGateMsg) {
+      lineGateMsg.classList.add("is-nudge");
+      setTimeout(function () {
+        lineGateMsg.classList.remove("is-nudge");
+      }, 1200);
+    }
+  }
+
+  function lockLineStep() {
+    if (isLineUnlocked()) return;
+    body.classList.add("is-line-locked");
+    if (lineCta) {
+      lineCta.setAttribute("aria-disabled", "true");
+      lineCta.addEventListener("click", onLockedLineClick, true);
+    }
+    if (dockLine) {
+      dockLine.setAttribute("aria-disabled", "true");
+      dockLine.hidden = true;
+    }
+    if (dockBook) dockBook.hidden = false;
+  }
+
+  function unlockLineStep() {
+    body.classList.remove("is-line-locked");
+    body.classList.add("is-line-unlocked");
+    if (lineCta) {
+      lineCta.removeAttribute("aria-disabled");
+      lineCta.removeEventListener("click", onLockedLineClick, true);
+    }
+    if (lineBadge) lineBadge.textContent = "【今すぐ】案内を受け取る";
+    if (dockLine) {
+      dockLine.hidden = false;
+      dockLine.removeAttribute("aria-disabled");
+    }
+    if (dockBook) dockBook.hidden = true;
+  }
+
+  window.dkThanksUnlockLine = unlockLineStep;
+  window.dkThanksRelockLine = lockLineStep;
 
   function updateDock() {
     if (!dock) return;
@@ -64,12 +121,14 @@
   bindScrollTriggers(document);
   if (dock) {
     bindScrollTriggers(dock);
-    var lineHref = document.getElementById("line-cta");
-    var dockLine = dock.querySelector(".t-dock__btn--line");
-    if (lineHref && dockLine) {
-      dockLine.href = lineHref.href;
-      dockLine.addEventListener("click", function () {
-        lineHref.click();
+    if (lineCta && dockLine) {
+      dockLine.href = lineCta.href;
+      dockLine.addEventListener("click", function (e) {
+        if (!isLineUnlocked()) {
+          onLockedLineClick(e);
+          return;
+        }
+        lineCta.click();
       });
     }
   }
@@ -78,12 +137,23 @@
     item.addEventListener("click", function (e) {
       var href = item.getAttribute("href");
       if (!href || href.charAt(0) !== "#") return;
+      if (href === "#line-section" && !isLineUnlocked()) {
+        e.preventDefault();
+        scrollToTarget("#t-calendar");
+        return;
+      }
       e.preventDefault();
       scrollToTarget(href);
     });
   });
 
   window.addEventListener("scroll", onScroll, { passive: true });
+  document.addEventListener("thanks_line_unlocked", unlockLineStep);
+  if (body.classList.contains("is-booked")) {
+    unlockLineStep();
+  } else {
+    lockLineStep();
+  }
   onScroll();
 
   document.addEventListener("thanks_job_preview_refresh", onScroll);

@@ -195,7 +195,7 @@ function doPost(e) {
     var slackLead = notifySlackNewLead(params);
     if (slackLead.ok && slackLead.ts) {
       updateRowColumns(sheet, header, newRow, {
-        slack_thread_ts: slackLead.ts,
+        slack_thread_ts: String(slackLead.ts),
         slack_channel_id: slackLead.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID")
       });
     }
@@ -326,6 +326,73 @@ function slackBotEnabled() {
   );
 }
 
+/** Slack Bot トークンが有効か（投稿せず auth.test のみ） */
+function slackAuthTest() {
+  var token = getScriptProp("SLACK_BOT_TOKEN");
+  if (!token) return { ok: false, note: "no token" };
+  var res = UrlFetchApp.fetch("https://slack.com/api/auth.test", {
+    method: "post",
+    headers: { Authorization: "Bearer " + token },
+    muteHttpExceptions: true
+  });
+  var json = {};
+  try {
+    json = JSON.parse(res.getContentText());
+  } catch (e) {
+    return { ok: false, error: "invalid slack response" };
+  }
+  return {
+    ok: !!json.ok,
+    team: json.team || "",
+    team_id: json.team_id || "",
+    user: json.user || "",
+    user_id: json.user_id || "",
+    bot_id: json.bot_id || "",
+    error: json.error || ""
+  };
+}
+
+/** ?action=slack_health — Bot 設定・auth.test（チャンネルには投稿しない） */
+function getSlackBotHealthPayload() {
+  var payload = {
+    checked_at: toJst(new Date()),
+    bot_enabled: slackBotEnabled(),
+    bot_token_set: !!getScriptProp("SLACK_BOT_TOKEN"),
+    lead_channel_set: !!getScriptProp("SLACK_LEAD_CHANNEL_ID"),
+    lead_channel_id: getScriptProp("SLACK_LEAD_CHANNEL_ID")
+      ? "(set)"
+      : "",
+    mention_ca_set: !!getScriptProp("SLACK_MENTION_CA"),
+    webhook_fallback_set: !!getScriptProp("SLACK_WEBHOOK_URL"),
+    auth: { ok: false, note: "slack bot off" }
+  };
+  if (payload.bot_enabled) {
+    try {
+      payload.auth = slackAuthTest();
+    } catch (err) {
+      payload.auth = {
+        ok: false,
+        note:
+          "auth.test は GAS エディタの testSlackBotHealth で実行してください（Webアプリ初回は外部接続の再承認が必要な場合あり）",
+        error: String(err)
+      };
+    }
+  }
+  return payload;
+}
+
+function handleSlackHealthRequest(e) {
+  if (!webhookAuthorized(e)) return jsonError("unauthorized");
+  return jsonOk(getSlackBotHealthPayload());
+}
+
+/** GASエディタ: testSlackBotHealth → 実行ログで Bot 状態を確認 */
+function testSlackBotHealth() {
+  var info = getSlackBotHealthPayload();
+  Logger.log(JSON.stringify(info, null, 2));
+  return info;
+}
+
 function postSlackChatMessage(options) {
   options = options || {};
   var token = getScriptProp("SLACK_BOT_TOKEN");
@@ -427,13 +494,77 @@ function readRowSlackThread(sheet, header, rowNum) {
   var channelId = getScriptProp("SLACK_LEAD_CHANNEL_ID");
   if (rowNum < 2) return { thread_ts: "", channel: channelId };
   if (threadCol !== -1) {
-    threadTs = String(sheet.getRange(rowNum, threadCol + 1).getValue() || "").trim();
+    threadTs = String(
+      sheet.getRange(rowNum, threadCol + 1).getDisplayValue() || ""
+    ).trim();
   }
   if (channelCol !== -1) {
-    var ch = String(sheet.getRange(rowNum, channelCol + 1).getValue() || "").trim();
+    var ch = String(
+      sheet.getRange(rowNum, channelCol + 1).getDisplayValue() || ""
+    ).trim();
     if (ch) channelId = ch;
   }
   return { thread_ts: threadTs, channel: channelId };
+}
+
+function readRowAsParams(sheet, header, rowNum) {
+  var out = {};
+  if (rowNum < 2) return out;
+  for (var i = 0; i < header.length; i++) {
+    var key = header[i];
+    if (!key) continue;
+    out[key] = String(sheet.getRange(rowNum, i + 1).getDisplayValue() || "").trim();
+  }
+  return out;
+}
+
+function mergeParamsForSlack(base, extra) {
+  var merged = {};
+  var k;
+  for (k in base) {
+    if (base.hasOwnProperty(k)) merged[k] = base[k];
+  }
+  for (k in extra) {
+    if (!extra.hasOwnProperty(k)) continue;
+    if (extra[k] !== "" && extra[k] != null) merged[k] = extra[k];
+  }
+  return merged;
+}
+
+/** 行に slack_thread_ts が無ければ新規リード投稿して保存（予約のみ先行の行も救済） */
+function ensureSlackLeadThread(sheet, header, rowNum, params) {
+  var meta = readRowSlackThread(sheet, header, rowNum);
+  if (meta.thread_ts && slackBotEnabled()) return meta;
+  if (!slackBotEnabled()) return meta;
+
+  var leadParams = mergeParamsForSlack(readRowAsParams(sheet, header, rowNum), params);
+  var slackLead = notifySlackNewLead(leadParams);
+  if (!slackLead.ok || !slackLead.ts) return meta;
+
+  var threadTs = String(slackLead.ts);
+  updateRowColumns(sheet, header, rowNum, {
+    slack_thread_ts: threadTs,
+    slack_channel_id: slackLead.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID")
+  });
+  return {
+    thread_ts: threadTs,
+    channel: slackLead.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID")
+  };
+}
+
+function notifySlackBooking(sheet, header, rowNum, params) {
+  if (!slackBotEnabled()) {
+    return postToSlack(buildCalendarSlackMessage(params));
+  }
+  var slackMeta = ensureSlackLeadThread(sheet, header, rowNum, params);
+  if (slackMeta.thread_ts) {
+    return postSlackBookingInLeadThread(
+      params,
+      slackMeta.channel,
+      slackMeta.thread_ts
+    );
+  }
+  return postToSlack(buildCalendarSlackMessage(params));
 }
 
 function findLatestRowByTelOrEmail(sheet, header, tel, email) {
@@ -444,7 +575,9 @@ function findLatestRowByTelOrEmail(sheet, header, tel, email) {
 
   if (tel && telColIdx !== -1) {
     var telKey = normalizeTel(tel);
-    var telVals = sheet.getRange(2, telColIdx + 1, lastRow - 1, 1).getValues();
+    var telVals = sheet
+      .getRange(2, telColIdx + 1, lastRow - 1, 1)
+      .getDisplayValues();
     for (var i = telVals.length - 1; i >= 0; i--) {
       if (normalizeTel(telVals[i][0]) === telKey) return i + 2;
     }
@@ -472,7 +605,13 @@ function updateRowColumns(sheet, header, rowNum, updates) {
   for (var key in updates) {
     if (!updates.hasOwnProperty(key) || updates[key] === "" || updates[key] == null) continue;
     var colIdx = ensureColumn(sheet, header, key);
-    sheet.getRange(rowNum, colIdx + 1).setValue(updates[key]);
+    var cell = sheet.getRange(rowNum, colIdx + 1);
+    var val = updates[key];
+    if (key === "slack_thread_ts") {
+      cell.setNumberFormat("@");
+      val = String(val);
+    }
+    cell.setValue(val);
   }
 }
 
@@ -517,22 +656,10 @@ function handleCalendarBooked(params) {
         row.push((h in params) ? params[h] : ((h in updates) ? updates[h] : ""));
       }
       sheet.appendRow(row);
+      matchedRow = sheet.getLastRow();
     }
 
-    var slackResult;
-    if (matchedRow > 0) {
-      var slackMeta = readRowSlackThread(sheet, header, matchedRow);
-      if (slackMeta.thread_ts) {
-        slackResult = postSlackBookingInLeadThread(
-          params,
-          slackMeta.channel,
-          slackMeta.thread_ts
-        );
-      }
-    }
-    if (!slackResult || !slackResult.ok) {
-      slackResult = postToSlack(buildCalendarSlackMessage(params));
-    }
+    var slackResult = notifySlackBooking(sheet, header, matchedRow, params);
 
     return jsonOk({
       matched: matchedRow > 0,
@@ -623,6 +750,9 @@ function doGet(e) {
   }
   if (e && e.parameter && e.parameter.action === "book") {
     return handleBookRequest(e);
+  }
+  if (e && e.parameter && e.parameter.action === "slack_health") {
+    return handleSlackHealthRequest(e);
   }
   // ?setup=legend で凡例シートを構築・更新
   if (e && e.parameter && e.parameter.setup === "legend") {
