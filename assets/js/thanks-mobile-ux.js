@@ -70,7 +70,7 @@
       lineCta.removeAttribute("aria-disabled");
       lineCta.removeEventListener("click", onLockedLineClick, true);
     }
-    if (lineBadge) lineBadge.textContent = "【今すぐ】案内を受け取る";
+    if (lineBadge) lineBadge.textContent = "③ 今すぐ — 全文の受取口";
     if (dockLine) {
       dockLine.hidden = false;
       dockLine.removeAttribute("aria-disabled");
@@ -83,11 +83,9 @@
 
   function updateDock() {
     if (!dock) return;
-    var y = window.scrollY || window.pageYOffset;
-    var show = y > 280;
-    dock.classList.toggle("is-visible", show);
-    dock.hidden = !show;
-    body.classList.toggle("is-dock-visible", show);
+    dock.classList.add("is-visible");
+    dock.hidden = false;
+    body.classList.add("is-dock-visible");
   }
 
   function updateFlowActive() {

@@ -70,10 +70,13 @@
       "</strong> 開始</p>" +
       '<p class="t-booking-done__sub">' +
       (info.staff_name
-        ? "この時間に<strong>" + info.staff_name + "</strong>より<strong>お電話</strong>します — 現職と希望のすり合わせ（10分）"
-        : "この時間に担当より<strong>お電話</strong>します — 現職と希望のすり合わせ（10分）") +
+        ? "この時間に<strong>" + info.staff_name + "</strong>より<strong>お電話</strong>します（10分）"
+        : "この時間に担当より<strong>お電話</strong>します（10分）") +
       "</p>" +
-      '<p class="t-booking-done__next">お電話後、合う<strong>非公開求人の全文</strong>をお送りします。続けて<strong>LINEで案内を受け取る</strong>（30秒）</p>' +
+      '<p class="t-booking-done__next">お電話後、合う<strong>非公開求人の全文</strong>をお送りします</p>' +
+      '<a href="https://lin.ee/PzFJp7H" class="t-booking-done__line" target="_blank" rel="noopener">' +
+      '<span class="t-booking-done__line-main">LINEで全文を受け取る</span>' +
+      '<span class="t-booking-done__line-sub">30秒 · 無料</span></a>' +
       "</div>"
     );
   }
@@ -127,11 +130,22 @@
     }
     if (stepLine) stepLine.classList.add("is-cur");
 
-    var heroP = document.querySelector(".t-hero p");
-    if (heroP) {
-      heroP.innerHTML =
-        "お電話の日時を確保しました。<br>この時間に<strong>10分 · 現職と希望のすり合わせ</strong>のお電話があります。<br>続けて<strong>LINEで案内を受け取る</strong>（30秒）もおすすめです。";
+    var heroRoot =
+      document.getElementById("thanks-hero-sub") ||
+      document.querySelector(".t-hero__body");
+    if (heroRoot) {
+      heroRoot.innerHTML =
+        '<p class="t-hero__lead">日時を確保しました</p>' +
+        '<p class="t-hero__sub">続けて<strong>LINE</strong>で全文の受取口を登録してください（30秒）</p>' +
+        '<ol class="t-hero__steps">' +
+        "<li>お電話で現職と希望を<strong>10分</strong>ですり合わせ</li>" +
+        "<li>ヒアリング後、<strong>全文</strong>をお送り</li>" +
+        "</ol>";
     }
+    var heroCta = document.querySelector(".t-hero__cta");
+    if (heroCta) heroCta.hidden = true;
+    var heroCtaNote = document.querySelector(".t-hero__cta-note");
+    if (heroCtaNote) heroCtaNote.hidden = true;
 
     pushDL("thanks_line_step_revealed", {
       booking_tool: "custom",
@@ -149,12 +163,14 @@
   function capturePreBookingUi() {
     var line = document.getElementById("line-section");
     var headTitle = section.querySelector(".t-cal__head h3");
-    var heroP = document.querySelector(".t-hero p");
+    var heroRoot =
+      document.getElementById("thanks-hero-sub") ||
+      document.querySelector(".t-hero__body");
     var contact = document.querySelector(".t-contact");
     var badge = line ? line.querySelector(".t-line__badge") : null;
     return {
       headTitle: headTitle ? headTitle.textContent : "",
-      heroHtml: heroP ? heroP.innerHTML : "",
+      heroHtml: heroRoot ? heroRoot.innerHTML : "",
       contactDisplay: contact ? contact.style.display : "",
       lineClassName: line ? line.className : "",
       lineBadge: badge ? badge.textContent : "",
@@ -204,8 +220,14 @@
     if (stepBooking) stepBooking.className = ui.stepBookingClass;
     if (stepLine) stepLine.className = ui.stepLineClass;
 
-    var heroP = document.querySelector(".t-hero p");
-    if (heroP && ui.heroHtml) heroP.innerHTML = ui.heroHtml;
+    var heroRoot =
+      document.getElementById("thanks-hero-sub") ||
+      document.querySelector(".t-hero__body");
+    if (heroRoot && ui.heroHtml) heroRoot.innerHTML = ui.heroHtml;
+    var heroCta = document.querySelector(".t-hero__cta");
+    if (heroCta) heroCta.hidden = false;
+    var heroCtaNote = document.querySelector(".t-hero__cta-note");
+    if (heroCtaNote) heroCtaNote.hidden = false;
 
     if (typeof window.dkThanksRelockLine === "function") {
       window.dkThanksRelockLine();
@@ -367,13 +389,13 @@
         selected.time_label +
         "</strong></p>";
       html +=
-        '<button type="button" class="t-booking-confirm" id="booking-confirm">この日時で予約する</button>';
+        '<button type="button" class="t-booking-confirm" id="booking-confirm">この日時で10分の電話を予約（無料）</button>';
     } else {
       html += '<p class="t-booking-hint">希望の時間をタップしてください</p>';
     }
     if (!hasTel) {
       html +=
-        '<p class="t-booking-hint" style="margin-top:8px">※ 予約確定にはLP登録時の電話番号が必要です</p>';
+        '<p class="t-booking-hint" style="margin-top:8px">※ 確定後、担当がこの時間にお電話します。合わなければその場でお断りください。</p>';
     }
     html += "</div>";
 

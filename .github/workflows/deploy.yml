@@ -188,7 +188,7 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-license-profiles.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/p/denki_2/" | head -3
           echo "$html" | grep -q 'thanks-page-context.js?v=13' || (echo "missing thanks-page-context v=13" && exit 1)
-          echo "$html" | grep -q 'thanks-page.css?v=21' || (echo "missing thanks-page.css v=21" && exit 1)
+          echo "$html" | grep -q 'thanks-page.css?v=22' || (echo "missing thanks-page.css v=22" && exit 1)
           echo "$html" | grep -q 'thanks-license-profile.js' || (echo "missing thanks-license-profile" && exit 1)
           echo "$html" | grep -q 'thanks-v2-shared.js' || (echo "missing thanks-v2-shared" && exit 1)
           echo "$html" | grep -q 'id="t-future"' || (echo "missing t-future section" && exit 1)

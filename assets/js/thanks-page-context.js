@@ -3,12 +3,18 @@
  */
 (function () {
   var dk = window.dkThanks || {};
-  var HERO_POINTS =
-    "<ul class=\"t-hero__points\">" +
-    "<li><strong>現職</strong>と<strong>選択肢</strong>を比べて、納得して選ぶ</li>" +
-    "<li>まず<strong>比較軸の輪郭</strong>をお見せします</li>" +
-    "<li>全文は<strong>10分のお電話</strong>ですり合わせ後にお送りします</li>" +
+  var HERO_OBJECTIONS =
+    "<ul class=\"t-hero__objections\" aria-label=\"よくある不安\">" +
+    "<li>押し売りなし</li>" +
+    "<li>10分だけ</li>" +
+    "<li>転職しなくてOK</li>" +
     "</ul>";
+  var HERO_STEPS =
+    "<ol class=\"t-hero__steps\">" +
+    "<li><span class=\"t-hero__step-text\">求人の<strong>概要</strong>を見る</span></li>" +
+    "<li><span class=\"t-hero__step-text\"><strong>10分</strong>の電話で日時を選ぶ</span></li>" +
+    "<li><span class=\"t-hero__step-text\">ヒアリング後、<strong>全文</strong>をお送り</span></li>" +
+    "</ol>";
 
   function getLpSlug() {
     return dk.getLpSlug ? dk.getLpSlug() : "";
@@ -25,7 +31,7 @@
         "電気工事士の求人募集・転職サイト[国内最大級] | 電気工事バンク",
       title: "登録完了 | 電気工事バンク",
       defaultLicense: "電気工事士",
-      heroPoints: HERO_POINTS
+      heroSteps: HERO_STEPS
     },
     sekoukanri: {
       siteName: "施工管理キャリア",
@@ -33,7 +39,7 @@
         "施工管理技士の求人募集・転職サイト[国内最大級] | 施工管理キャリア",
       title: "登録完了 | 施工管理キャリア",
       defaultLicense: "施工管理技士",
-      heroPoints: HERO_POINTS
+      heroSteps: HERO_STEPS
     }
   };
 
@@ -51,14 +57,18 @@
       document.querySelector(".t-hero__body");
     if (!heroRoot) return;
     var name = getUserName();
-    var lead = name
-      ? "<strong>" + escHtml(name) + "</strong>さん、登録ありがとうございます。"
-      : "登録ありがとうございます。";
+    var nameLine = name
+      ? "<p class=\"t-hero__name\">" + escHtml(name) + "さん</p>"
+      : "";
     heroRoot.innerHTML =
-      "<p class=\"t-hero__lead\">" +
-      lead +
-      "転職を勧める場所ではありません。</p>" +
-      (brand.heroPoints || HERO_POINTS);
+      nameLine +
+      "<p class=\"t-hero__lead\">登録ありがとうございます</p>" +
+      "<p class=\"t-hero__sub\">転職を勧める場所ではありません。現職と選択肢を比べて、納得して選んでください。</p>" +
+      HERO_OBJECTIONS +
+      (brand.heroSteps || HERO_STEPS);
+    if (window.dkThanksSectionVisuals && window.dkThanksSectionVisuals.decorateHeroSteps) {
+      window.dkThanksSectionVisuals.decorateHeroSteps();
+    }
   }
 
   function applyBrand() {

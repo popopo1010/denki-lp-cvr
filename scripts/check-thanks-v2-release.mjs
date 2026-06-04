@@ -32,19 +32,29 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=2", "shared v2"],
   ["thanks-license-profile.js?v=1", "license profile v1"],
-  ["thanks-page-context.js?v=13", "context v13"],
-  ["thanks-page.css?v=21", "css v21 readability"],
+  ["thanks-page-context.js?v=17", "context v17"],
+  ["thanks-section-visuals.js?v=1", "section visuals"],
+  ["thanks-page.css?v=30", "css v30"],
   ["thanks-booking-bootstrap.js?v=14", "booking bootstrap v14"],
-  ["thanks-booking-custom.js?v=22", "booking custom v22"],
-  ["thanks-job-preview.js?v=10", "job preview v10"],
-  ["thanks-v2-deferred.js?v=3", "deferred bundle v3"],
-  ["t-hero__points", "hero scannable layout"],
-  ["id=\"t-future\"", "未来セクション"],
+  ["thanks-booking-custom.js?v=25", "booking custom v25"],
+  ["thanks-job-preview.js?v=13", "job preview v13 intent bands"],
+  ["thanks-v2-deferred.js?v=5", "deferred bundle v5"],
+  ["t-license-badge", "license badge"],
+  ["t-sec-head", "section illustration head"],
+  ["t-hero__objections", "objection-killing pills"],
+  ["t-cal__micro", "calendar reassurance microcopy"],
+  ["t-hero__steps", "hero step list layout"],
+  ["t-hero__cta", "hero primary booking CTA"],
+  ["t-flow-diagram", "flow diagram html ja"],
+  ["t-proof-strip", "social proof before calendar"],
+  ["t-cal--primary", "calendar primary emphasis"],
+  ["id=\"t-future\"", "未来セクション（折りたたみ）"],
   ["data-story-id", "転職ストーリー"],
   ["cvr-story-mount", "ストーリーマウント"],
-  ["非公開求人 · 全文", "非公開求人見出し"],
-  ["LINEで案内を受け取る", "LINE CTA"],
-  ["10分 · 電話ですり合わせ", "電話CTA"],
+  ["非公開求人の全文", "非公開求人全文表記"],
+  ["LINEで全文を受け取る", "LINE CTA"],
+  ["概要</strong>を見る", "plain language hero step"],
+  ["いま日時を選ぶ", "outcome-focused CTA"],
   ["見るだけOK", "低ハードル文言"]
 ];
 
@@ -90,6 +100,7 @@ if (exists("assets/data/booking-slots.json")) {
   "assets/js/thanks-v2-shared.js",
   "assets/js/thanks-v2-deferred.js",
   "assets/js/thanks-page-context.js",
+  "assets/js/thanks-section-visuals.js",
   "assets/js/thanks-license-profile.js",
   "assets/data/thanks-license-profiles.json"
 ].forEach((f) => (exists(f) ? pass("asset", f) : fail("asset", `missing ${f}`)));
@@ -115,19 +126,20 @@ const pageCss = read("assets/css/thanks-page.css");
 pageCss.includes("thanks-calendar merged")
   ? pass("css", "calendar merged into page.css")
   : fail("css", "calendar not merged");
-pageCss.includes("readability v21")
-  ? pass("css", "readability v21 typography")
-  : fail("css", "readability block missing");
+pageCss.includes("visuals v26")
+  ? pass("css", "visuals v26 section icons")
+  : fail("css", "visuals v26 block missing");
 
 const testimonials = read("assets/js/thanks-testimonials.js");
-testimonials.includes("applyLicenseProfile")
-  ? pass("testimonials", "profile-based story order")
-  : fail("testimonials", "applyLicenseProfile missing");
+testimonials.includes("limitVisibleTestimonials")
+  ? pass("testimonials", "collapse extra stories after 3")
+  : fail("testimonials", "limitVisibleTestimonials missing");
 
 const jobPreview = read("assets/js/thanks-job-preview.js");
-jobPreview.includes("teaserHeadline")
-  ? pass("job-preview", "abstract comparison cards")
-  : fail("job-preview", "teaser cards missing");
+jobPreview.includes("t-job-card__facts") &&
+  jobPreview.includes("resolveSalaryBand")
+  ? pass("job-preview", "job facts cards (area / salary band)")
+  : fail("job-preview", "job facts cards missing");
 
 const deploy = read(".github/workflows/deploy.yml");
 deploy.includes("build-thanks-v2-deferred.mjs")

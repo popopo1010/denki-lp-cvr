@@ -289,6 +289,37 @@
     filterNote.textContent =
       "ご登録の「" + (profile.label || "資格") + "」に近い事例を先に表示しています";
     filterNote.hidden = !profile.label;
+
+    limitVisibleTestimonials(root);
+  }
+
+  function limitVisibleTestimonials(root) {
+    if (!root) return;
+    root.querySelectorAll(".cvr-testimonials__more-btn").forEach(function (b) {
+      b.remove();
+    });
+    root.querySelectorAll(".cvr-testimonial--extra").forEach(function (c) {
+      c.classList.remove("cvr-testimonial--extra");
+    });
+    var visible = Array.from(root.querySelectorAll(".cvr-testimonial")).filter(function (c) {
+      return c.style.display !== "none";
+    });
+    if (visible.length <= 3) return;
+    var hiddenCount = visible.length - 3;
+    visible.forEach(function (card, i) {
+      if (i >= 3) card.classList.add("cvr-testimonial--extra");
+    });
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cvr-testimonials__more-btn";
+    btn.textContent = "他の体験談を見る（" + hiddenCount + "件）";
+    btn.addEventListener("click", function () {
+      visible.forEach(function (c) {
+        c.classList.remove("cvr-testimonial--extra");
+      });
+      btn.remove();
+    });
+    root.appendChild(btn);
   }
 
   function initTestimonials() {
@@ -378,7 +409,7 @@
       lineCta.removeAttribute("aria-disabled");
       lineCta.removeEventListener("click", onLockedLineClick, true);
     }
-    if (lineBadge) lineBadge.textContent = "【今すぐ】案内を受け取る";
+    if (lineBadge) lineBadge.textContent = "③ 今すぐ — 全文の受取口";
     if (dockLine) {
       dockLine.hidden = false;
       dockLine.removeAttribute("aria-disabled");
@@ -391,11 +422,9 @@
 
   function updateDock() {
     if (!dock) return;
-    var y = window.scrollY || window.pageYOffset;
-    var show = y > 280;
-    dock.classList.toggle("is-visible", show);
-    dock.hidden = !show;
-    body.classList.toggle("is-dock-visible", show);
+    dock.classList.add("is-visible");
+    dock.hidden = false;
+    body.classList.add("is-dock-visible");
   }
 
   function updateFlowActive() {

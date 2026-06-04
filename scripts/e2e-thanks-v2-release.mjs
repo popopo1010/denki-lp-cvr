@@ -139,7 +139,7 @@ async function testThanksAssets(page) {
     ["t-future", html.includes('id="t-future"')],
     ["data-story-id x8", (html.match(/data-story-id="/g) || []).length === 8],
     ["非公開求人 · 全文", html.includes("非公開求人 · 全文")],
-    ["比較軸の輪郭", html.includes("比較軸の輪郭")],
+    ["求人の概要", html.includes("求人の概要")],
     ["LINEで案内を受け取る", html.includes("LINEで案内を受け取る")],
     ["本登録なし", !html.includes("本登録")],
     ["プレビューなし", !html.match(/プレビュー/)]

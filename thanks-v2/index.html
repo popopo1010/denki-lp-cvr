@@ -8,7 +8,8 @@
 <script src="../assets/js/thanks-v2-shared.js?v=2"></script>
 <script>window.dkThanks&&window.dkThanks.captureTelNameFromQs();</script>
 <script src="../assets/js/thanks-license-profile.js?v=1"></script>
-<script src="../assets/js/thanks-page-context.js?v=13" defer></script>
+<script src="../assets/js/thanks-section-visuals.js?v=1"></script>
+<script src="../assets/js/thanks-page-context.js?v=17" defer></script>
 <script>
 (function(){
   function loadGTM(){
@@ -28,7 +29,7 @@
 <link rel="preload" href="../assets/data/booking-slots.json" as="fetch" crossorigin>
 <link rel="preload" href="../assets/data/thanks-job-previews.json" as="fetch" crossorigin>
 <script src="../assets/js/thanks-booking-bootstrap.js?v=14"></script>
-<link rel="stylesheet" href="../assets/css/thanks-page.css?v=21">
+<link rel="stylesheet" href="../assets/css/thanks-page.css?v=30">
 </head>
 <body class="wp-singular page-template-default page p-pageThanks wp-theme-original-thema thanks-flow">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KV525PZ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -47,58 +48,51 @@
     <div class="t-hero__chk"><svg viewBox="0 0 24 24" width="36" height="36"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg></div>
     <h2>登録が完了しました</h2>
     <div class="t-hero__body" id="thanks-hero-sub">
-      <p class="t-hero__lead">登録ありがとうございます。転職を勧める場所ではありません。</p>
-      <ul class="t-hero__points">
-        <li><strong>現職</strong>と<strong>選択肢</strong>を比べて、納得して選ぶ</li>
-        <li>まず<strong>比較軸の輪郭</strong>をお見せします</li>
-        <li>全文は<strong>10分のお電話</strong>ですり合わせ後にお送りします</li>
+      <p class="t-hero__lead">登録ありがとうございます</p>
+      <p class="t-hero__sub">転職を勧める場所ではありません。現職と選択肢を比べて、納得して選んでください。</p>
+      <ul class="t-hero__objections" aria-label="よくある不安">
+        <li>押し売りなし</li>
+        <li>10分だけ</li>
+        <li>転職しなくてOK</li>
       </ul>
+      <ol class="t-hero__steps">
+        <li><span class="t-hero__step-text">求人の<strong>概要</strong>を見る</span></li>
+        <li><span class="t-hero__step-text"><strong>10分</strong>の電話で日時を選ぶ</span></li>
+        <li><span class="t-hero__step-text">ヒアリング後、<strong>全文</strong>をお送り</span></li>
+      </ol>
     </div>
-    <span class="t-hero__preview-hint">まず「現職 vs 選択肢」の比較軸へ</span>
+    <button type="button" class="t-hero__cta" data-scroll-target="#t-calendar">いま日時を選ぶ（無料 · 約1分）</button>
+    <p class="t-hero__cta-note">確定後、担当が<strong>10分</strong>お電話。合わなければその場でお断りください。</p>
   </div>
 
   <nav class="t-flow" aria-label="次のステップ">
-    <a href="#t-jobs-preview" class="t-flow__item is-active" data-step="1">比較</a>
-    <a href="#t-calendar" class="t-flow__item" data-step="2">予約</a>
-    <a href="#line-section" class="t-flow__item" data-step="3">案内受取</a>
+    <a href="#t-jobs-preview" class="t-flow__item" data-step="1">求人概要</a>
+    <a href="#t-calendar" class="t-flow__item is-active t-flow__item--primary" data-step="2">10分電話</a>
+    <a href="#line-section" class="t-flow__item" data-step="3">全文</a>
   </nav>
 
-  <!-- 未来の想起（行動 vs 機会損失） -->
-  <section class="t-future" id="t-future" aria-labelledby="t-future-title">
-    <h3 class="t-future__title" id="t-future-title">1年後の納得感は、「比較したか」で決まります</h3>
-    <p class="t-future__lead">転職を勧める場所ではありません。<strong>現職と選択肢を並べて比較</strong>するための材料を、手元に置いてほしい — それがこの先の目的です。</p>
-    <div class="t-future__grid">
-      <div class="t-future__card t-future__card--gain">
-        <p class="t-future__card-label"><span class="t-future__icon" aria-hidden="true">→</span>比較できた人が手に入れるもの</p>
-        <ul class="t-future__list">
-          <li>「<strong>あ、こんな選択肢があったのか</strong>」 — ヒアリング後に<strong>全文</strong>が届いたとき、比較の解像度が一気に上がる</li>
-          <li><strong>現職</strong>（年収・残業・休み）と<strong>非公開求人</strong>を並べて、自分に合うか判断できる</li>
-          <li><strong>10分のお電話</strong>で現職と希望をすり合わせ — 「比較してみたい」が具体になる</li>
-          <li>知ったうえで<strong>現職を選ぶ</strong> — それも、十分に正しい判断</li>
-        </ul>
-      </div>
-      <div class="t-future__card t-future__card--loss">
-        <p class="t-future__card-label"><span class="t-future__icon" aria-hidden="true">!</span>比較しないままだと、起きやすいこと</p>
-        <ul class="t-future__list">
-          <li>非公開求人は<strong>転職サイトに載らない</strong> — 比較相手がそもそも手元にない</li>
-          <li>「全文、見てみたい」と思ったのに先延ばし → <strong>1年後も同じ条件</strong>で過ごすパターン</li>
-          <li><strong>知らないまま選ぶ</strong>と、後から「他に何があった？」が残りやすい</li>
-          <li>10分の電話を逃すと、<strong>全文を受け取るタイミング</strong>も先延ばしになる</li>
-        </ul>
-      </div>
-    </div>
-    <p class="t-future__foot">
-      <span class="t-future__foot-lead">この先の流れ</span>
-      <span class="t-future__foot-flow" aria-hidden="true">
-        <span class="t-future__foot-chip">比較軸を見る</span>
-        <span class="t-future__foot-arrow">→</span>
-        <span class="t-future__foot-chip">10分 · 電話ですり合わせ</span>
-        <span class="t-future__foot-arrow">→</span>
-        <span class="t-future__foot-chip">全文を受け取る</span>
-      </span>
-      <span class="t-future__foot-note">「全文、見て比較したい」 — その気持ちが起点です</span>
-    </p>
-  </section>
+  <div class="t-flow-diagram" role="group" aria-label="このあとの流れ">
+    <p class="t-flow-diagram__lead">このあと、次の順で進みます</p>
+    <ol class="t-flow-diagram__list">
+      <li class="t-flow-diagram__step t-flow-diagram__step--1">
+        <span class="t-flow-diagram__num" aria-hidden="true">1</span>
+        <span class="t-flow-diagram__title">求人概要を見る</span>
+        <span class="t-flow-diagram__desc">勤務地・仕事内容・年収帯</span>
+      </li>
+      <li class="t-flow-diagram__arrow" aria-hidden="true">→</li>
+      <li class="t-flow-diagram__step t-flow-diagram__step--2">
+        <span class="t-flow-diagram__num" aria-hidden="true">2</span>
+        <span class="t-flow-diagram__title">10分の電話</span>
+        <span class="t-flow-diagram__desc">日時を選ぶだけ（無料）</span>
+      </li>
+      <li class="t-flow-diagram__arrow" aria-hidden="true">→</li>
+      <li class="t-flow-diagram__step t-flow-diagram__step--3">
+        <span class="t-flow-diagram__num" aria-hidden="true">3</span>
+        <span class="t-flow-diagram__title">求人全文</span>
+        <span class="t-flow-diagram__desc">LINEでも受け取れます</span>
+      </li>
+    </ol>
+  </div>
 
   <!-- Trust -->
   <div class="t-trust">
@@ -109,24 +103,28 @@
     </div>
   </div>
 
-  <!-- Contact notice -->
-  <div class="t-contact">
-    <div class="t-contact__ic"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z" fill="#fff"/></svg></div>
-    <div class="t-contact__tx">
-      <p class="t-contact__lead">「全文、見て比較したい」 — その一歩は<strong>10分のお電話</strong></p>
-      <p class="t-contact__sub">現職と希望を<strong>電話ですり合わせ</strong>。合う非公開求人の<strong>全文</strong>は、ヒアリング後にお送りします。<span class="t-contact__pill">転職しなくてもOK</span></p>
-      <p class="t-contact__note">※ 10分のお電話は任意です。予約がない場合、平日9:00〜18時に1回ご連絡することがあります</p>
-    </div>
-  </div>
-
-  <!-- 現職 vs 選択肢（比較の視点・全文はヒアリング後） -->
+  <!-- 現職 vs 選択肢 -->
   <section class="t-jobs" id="t-jobs-preview" aria-labelledby="t-jobs-title">
-    <h3 class="t-jobs__title" id="t-jobs-title">現職と比べられる「選択肢」の輪郭（全文はこのあと）</h3>
-    <p class="t-jobs__lead">登録内容に合いそうな<strong>比較軸</strong>だけ、先にお見せします。社名・年収・条件の<strong>全文は載せていません</strong> — 「これ、全文読んで現職と比べたい」と思ったら、<strong>10分のお電話</strong>で十分です。</p>
+    <div class="t-license-badge" id="thanks-license-badge" hidden>
+      <div class="t-license-badge__icon" id="thanks-license-icon" aria-hidden="true"></div>
+      <div class="t-license-badge__text">
+        <p class="t-license-badge__label" id="thanks-license-label">登録資格向け</p>
+        <p class="t-license-badge__hint">この資格に合う求人概要を表示しています</p>
+      </div>
+    </div>
+    <div class="t-sec-head t-sec-head--jobs">
+      <div class="t-sec-head__illus" aria-hidden="true">
+        <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#eef2fa"/><rect x="14" y="16" width="16" height="20" rx="2" fill="#fff" stroke="#314c85" stroke-width="1.5"/><rect x="26" y="20" width="16" height="20" rx="2" fill="#fff" stroke="#5c6bc0" stroke-width="1.5" stroke-dasharray="3 2"/><text x="22" y="28" text-anchor="middle" font-size="8" font-weight="700" fill="#64748b">現</text><text x="34" y="32" text-anchor="middle" font-size="8" font-weight="700" fill="#314c85">先</text></svg>
+      </div>
+      <div class="t-sec-head__body">
+        <h3 class="t-jobs__title" id="t-jobs-title">現職と比べられる求人（概要）</h3>
+        <p class="t-jobs__lead">登録内容に合う求人の<strong>勤務地・仕事内容・年収帯</strong>を先にお見せします。社名・詳細条件は<strong>10分の電話後</strong>にご案内します。</p>
+      </div>
+    </div>
     <p class="t-jobs__label" id="job-preview-label">あなた向けの案件を表示しています…</p>
     <div class="t-jobs__cards" id="job-preview-root" aria-live="polite"></div>
     <p class="t-jobs__voice" id="job-preview-voice" hidden></p>
-    <p class="t-jobs__intent-title">いま<strong>現職と比べたい軸</strong>は？（タップで切り替え）</p>
+    <p class="t-jobs__intent-title"><span class="t-jobs__intent-title-icon" aria-hidden="true"><svg viewBox="0 0 18 18" width="16" height="16"><path d="M3 9h12M9 3v12" stroke="#314c85" stroke-width="2" stroke-linecap="round"/></svg></span>いま<strong>現職と比べたい軸</strong>は？（タップで切り替え）</p>
     <div class="t-jobs__intent" role="group" aria-label="希望の優先">
       <button type="button" class="t-jobs__intent-btn" data-intent="salary">年収を上げたい</button>
       <button type="button" class="t-jobs__intent-btn" data-intent="area">勤務地（登録エリア）</button>
@@ -134,21 +132,40 @@
       <button type="button" class="t-jobs__intent-btn" data-intent="private">非公開求人</button>
     </div>
     <div class="t-jobs__cta">
-      <button type="button" class="t-jobs__cta-primary" data-scroll-target="#t-calendar">10分 · 電話ですり合わせを予約</button>
-      <p class="t-jobs__cta-hint">「全文を見て比較したい」方は、ここから。ヒアリング後に<strong>非公開求人の全文</strong>をお送りします</p>
+      <button type="button" class="t-jobs__cta-primary" data-scroll-target="#t-calendar">いま日時を選ぶ（無料 · 約1分）</button>
+      <p class="t-jobs__cta-hint">全文を見たい方はここから。押し売りはしません。</p>
     </div>
-    <p class="t-jobs__note">※ 上記は比較の<strong>輪郭</strong>のみ。社名・条件<strong>全文</strong>は<strong>お電話後</strong>にご案内します。</p>
+    <p class="t-jobs__note">※ 年収・勤務地のラベルは上の「比べたい軸」で切り替わります。社名・詳細条件の全文は<strong>お電話後</strong>。</p>
   </section>
-  <script src="../assets/js/thanks-job-preview.js?v=10" defer></script>
+  <script src="../assets/js/thanks-job-preview.js?v=13" defer></script>
 
-  <!-- Calendar（独自予約）— 詳しく聞く -->
-  <div class="t-cal" id="t-calendar">
-    <div class="t-cal__head">
-      <p class="t-cal__step">ステップ2 · 10分 · 電話ですり合わせ</p>
-      <h3>お電話の日時を選ぶ（10分 · 無料）</h3>
+  <div class="t-proof-strip" role="note">
+    <span class="t-proof-strip__item"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 1l2 4 4 .6-3 3 .7 4-3.6-2.1L8 13 5.9 9.2 2.3 11.3l.7-4-3-3L6 5 8 1z" fill="#f59e0b"/></svg><strong>★4.8</strong> 満足度</span>
+    <span class="t-proof-strip__dot" aria-hidden="true">·</span>
+    <span class="t-proof-strip__item"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 4h10v8H3z" fill="#eef2fa" stroke="#314c85" stroke-width="1"/><path d="M6 7h4" stroke="#314c85" stroke-width="1.2" stroke-linecap="round"/></svg>10分の電話 → <strong>全文</strong></span>
+    <span class="t-proof-strip__dot" aria-hidden="true">·</span>
+    <span class="t-proof-strip__item"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2z" fill="none" stroke="#2e7d32" stroke-width="1.2"/><path d="M5 8l2 2 4-4" fill="none" stroke="#2e7d32" stroke-width="1.5" stroke-linecap="round"/></svg>転職しなくてOK</span>
+  </div>
+
+  <!-- Calendar（独自予約）— 主CTA -->
+  <div class="t-cal t-cal--primary" id="t-calendar">
+    <div class="t-cal__head t-sec-head t-sec-head--cal">
+      <div class="t-sec-head__illus t-sec-head__illus--cal" aria-hidden="true">
+        <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#ecfdf5"/><rect x="16" y="12" width="24" height="32" rx="4" fill="#fff" stroke="#059669" stroke-width="1.5"/><circle cx="28" cy="36" r="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/><path d="M25 36c0-1.7 1.3-3 3-3s3 1.3 3 3-1.3 3-3 3-3-1.3-3-3z" fill="#059669"/><path d="M22 18h12" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="t-sec-head__body">
+      <p class="t-cal__step">いまやること · 10分 · 無料</p>
+      <h3>お電話の日時を選ぶ</h3>
+      <p class="t-cal__head-lead">全文を見る入口はここだけ。<strong>約1分</strong>で確保できます。</p>
+      </div>
     </div>
     <div class="t-cal__body">
-      <p class="t-cal__sub">現職の条件と、あなたの希望を<strong>10分のお電話</strong>ですり合わせます。終わったあと、合う<strong>非公開求人の全文</strong>をお送り — 現職と並べて比較してください。転職しなくても、比較材料として使えます。</p>
+      <ul class="t-cal__micro" aria-label="予約前の確認">
+        <li><span class="t-cal__micro-icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 8l3 3 7-7" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round"/></svg></span>日時を選ぶだけ（入力不要）</li>
+        <li><span class="t-cal__micro-icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 3h8v10H4z" fill="#eef2fa" stroke="#314c85" stroke-width="1"/></svg></span>10分の電話は現職とのすり合わせ</li>
+        <li><span class="t-cal__micro-icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2v12M2 8h12" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/></svg></span>転職の強制はありません</li>
+      </ul>
+      <p class="t-cal__sub">合う非公開求人の全文は、お電話後にお送りします。</p>
       <div id="booking-slot-root">
         <div class="t-booking-skeleton" aria-busy="true">
           <p class="t-booking-loading" style="margin-bottom:8px">空き枠を表示しています…</p>
@@ -164,81 +181,63 @@
           <div class="t-cal__widget" id="timerex_calendar" data-url=""></div>
         </div>
       </div>
-      <p class="t-cal__note">約1分で日時確保 · この時間に<strong>担当よりお電話</strong>します</p>
+      <p class="t-cal__note">10分の電話は任意 · 予約がない場合、平日9–18時に1回ご連絡することがあります</p>
     </div>
   </div>
-  <script src="../assets/js/thanks-booking-custom.js?v=22"></script>
+  <script src="../assets/js/thanks-booking-custom.js?v=25"></script>
 
-  <!-- LINE（詳細の続き） -->
+  <!-- LINE（予約後に全文の受取口） -->
   <div class="t-line" id="line-section">
-    <span class="t-line__badge" id="line-section-badge">ステップ3 · 予約後に開きます</span>
-    <h3>全文の受け取り・追加案内は<strong>LINE</strong>でも</h3>
-    <p class="t-line__gate" id="line-gate-msg">10分のお電話<strong>予約後</strong>、ヒアリング後にお送りする<strong>非公開求人の全文</strong>や新着案内を、LINEでも受け取れます。<strong>見るだけOK</strong></p>
-    <p class="t-line__sub">比較の主役は<strong>お電話でのすり合わせ</strong>。LINEは全文の受け取り口と、追加の非公開求人の案内用です。</p>
+    <div class="t-line__head t-sec-head t-sec-head--line">
+      <div class="t-sec-head__illus t-sec-head__illus--line" aria-hidden="true">
+        <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#f0fdf4"/><rect x="12" y="14" width="32" height="26" rx="6" fill="#fff" stroke="#06c755" stroke-width="1.5"/><path d="M18 22h20M18 28h14M18 34h10" stroke="#86efac" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="18" r="8" fill="#06c755"/><path d="M37 18h6M40 15v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="t-sec-head__body">
+    <span class="t-line__badge" id="line-section-badge">③ 予約後に開きます</span>
+    <h3>全文の受け取り口は<strong>LINE</strong>（30秒）</h3>
+      </div>
+    </div>
+    <p class="t-line__gate" id="line-gate-msg">日時を選んだあと、ここからLINE登録。ヒアリング後の<strong>全文</strong>や新着案内の受取口です。<strong>見るだけOK</strong></p>
+    <p class="t-line__sub">比較の主役は10分のお電話。LINEは全文の受け取り口だけです。</p>
     <div class="t-bene" style="margin-bottom:16px;text-align:left">
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>ヒアリング後、<strong>非公開求人の全文</strong>が届く</span></div>
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span>現職と<strong>並べて比較</strong>できる形式でお届け</span></div>
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#4CAF50"/></svg><span><strong>見るだけOK</strong> · 転職しなくても大丈夫</span></div>
     </div>
     <a href="https://lin.ee/PzFJp7H" class="t-line__btn" id="line-cta" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="#fff"/></svg>
-      LINEで案内を受け取る
+      <svg class="t-line__btn-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="#fff"/></svg>
+      <span class="t-line__btn-text">
+        <span class="t-line__btn-main">LINEで全文を受け取る</span>
+        <span class="t-line__btn-sub">30秒 · 無料</span>
+      </span>
     </a>
-    <p class="t-line__note">30秒 · 無料 · 全文はヒアリング後 · しつこい勧誘はしません</p>
+    <p class="t-line__note">友だち追加のみ · しつこい勧誘はしません</p>
   </div>
 
-  <!-- Timeline -->
-  <div class="t-tl">
-    <p class="t-tl__title">今後の流れ</p>
-    <div class="t-step is-done">
-      <div class="t-step__n"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#fff"/></svg></div>
-      <div class="t-step__b"><p class="t-step__l">登録 完了</p><p class="t-step__d">フォームのご登録を受け付けました</p></div>
-    </div>
-    <div class="t-step is-cur" data-step="booking">
-      <div class="t-step__n">2</div>
-      <div class="t-step__b">
-        <div class="t-step__head">
-          <p class="t-step__l">10分 · 電話ですり合わせ</p>
-          <span class="t-step__tag t-step__tag--recommend">推奨</span>
+  <details class="t-future-collapse" id="t-future">
+    <summary>比較しないと損をする？ — 詳しく読む（任意）</summary>
+    <div class="t-future-collapse__body">
+      <p class="t-future__lead">転職を勧める場所ではありません。<strong>現職と選択肢を並べて比較</strong>するための材料を、手元に置いてほしい — それがこの先の目的です。</p>
+      <div class="t-future__grid">
+        <div class="t-future__card t-future__card--gain">
+          <p class="t-future__card-label"><span class="t-future__icon" aria-hidden="true">→</span>比較できた人が手に入れるもの</p>
+          <ul class="t-future__list">
+            <li>ヒアリング後に<strong>全文</strong>が届いたとき、比較の解像度が一気に上がる</li>
+            <li><strong>現職</strong>と<strong>非公開求人</strong>を並べて判断できる</li>
+            <li><strong>10分のお電話</strong>で「比較してみたい」が具体になる</li>
+          </ul>
         </div>
-        <p class="t-step__d">現職と希望を<strong>10分のお電話</strong>で整理。<br>「全文、見て現職と比べたい」 — そのすり合わせがここです。</p>
+        <div class="t-future__card t-future__card--loss">
+          <p class="t-future__card-label"><span class="t-future__icon" aria-hidden="true">!</span>比較しないままだと</p>
+          <ul class="t-future__list">
+            <li>非公開求人は<strong>転職サイトに載らない</strong></li>
+            <li>「全文、見てみたい」のまま先延ばしになりやすい</li>
+            <li>10分の電話を逃すと、<strong>全文を受け取るタイミング</strong>も後ろ倒し</li>
+          </ul>
+        </div>
       </div>
     </div>
-    <div class="t-step" data-step="line">
-      <div class="t-step__n">3</div>
-      <div class="t-step__b">
-        <div class="t-step__head">
-          <p class="t-step__l">非公開求人 · 全文のご案内</p>
-          <span class="t-step__tag t-step__tag--line">ヒアリング後</span>
-        </div>
-        <p class="t-step__d">お電話のあと、合う<strong>非公開求人の全文</strong>をお送り。<br>現職と<strong>並べて比較</strong> — 転職しなくてもOK</p>
-      </div>
-    </div>
-    <div class="t-step">
-      <div class="t-step__n">4</div>
-      <div class="t-step__b">
-        <div class="t-step__head">
-          <p class="t-step__l">LINEで案内を受け取る</p>
-          <span class="t-step__tag t-step__tag--later">30秒</span>
-        </div>
-        <p class="t-step__d">全文の受け取り口として<strong>LINE</strong>もご利用ください。<br>追加の非公開求人・新着も届きます。</p>
-      </div>
-    </div>
-    <div class="t-step">
-      <div class="t-step__n">5</div>
-      <div class="t-step__b">
-        <div class="t-step__head">
-          <p class="t-step__l">必要なら · 応募〜内定</p>
-          <span class="t-step__tag t-step__tag--free">任意</span>
-        </div>
-        <ul class="t-step__benefits">
-          <li>比較の結果、<strong>動きたい</strong>と思った場合のみ — 完全無料サポート</li>
-          <li>履歴書添削・面接対策・<strong>年収交渉</strong>まで担当が伴走</li>
-          <li>「現職が正解」と分かった場合も、それでOK</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+  </details>
 
   <!-- Testimonials -->
   <div class="t-testi">
@@ -488,11 +487,11 @@
   </div>
 </footer>
 
-<nav class="t-dock" id="thanks-dock" aria-label="クイック操作" hidden>
-  <button type="button" class="t-dock__btn t-dock__btn--book" id="thanks-dock-book" data-scroll-target="#t-calendar">10分 · 電話ですり合わせ</button>
-  <a href="https://lin.ee/PzFJp7H" class="t-dock__btn t-dock__btn--line" id="thanks-dock-line" target="_blank" rel="noopener" hidden>LINEで案内を受け取る</a>
+<nav class="t-dock is-visible" id="thanks-dock" aria-label="クイック操作">
+  <button type="button" class="t-dock__btn t-dock__btn--book" id="thanks-dock-book" data-scroll-target="#t-calendar">日時を選ぶ（約1分）</button>
+  <a href="https://lin.ee/PzFJp7H" class="t-dock__btn t-dock__btn--line" id="thanks-dock-line" target="_blank" rel="noopener" hidden>LINEで全文を受け取る</a>
 </nav>
 
-<script src="../assets/js/thanks-v2-deferred.js?v=3" defer></script>
+<script src="../assets/js/thanks-v2-deferred.js?v=5" defer></script>
 </body>
 </html>

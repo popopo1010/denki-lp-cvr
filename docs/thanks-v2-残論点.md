@@ -47,3 +47,9 @@
 - [x] thanks-v2 / booking-slots.json / 主要JS・SVG が 200（2026-06-03 確認）
 - [ ] Slack Bot 導入後 E2E（リード→予約スレッド）
 - [ ] 口コミ・資格マッチ・予約→LINE（手動）
+
+## 設計リファレンス
+
+- **`docs/reference-kinoshita-marketing.md`** — 木下勝寿（北の達人）マーケ・LP・サンクス設計の調査蓄積（9段階ニーズ、4段階コピー、マイクロコピー、thanks-v2対応表）
+- **`LP作成リファレンス.md`** §2 — 当社LPへの短い転用・チェックリスト
+- **`docs/reference-build-job-lp-thanks.md`** — 競合 thanks

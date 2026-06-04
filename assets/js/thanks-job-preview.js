@@ -141,14 +141,94 @@
     return resolveFallback(data, getLpFamily());
   }
 
-  function formatSalary(job) {
-    if (job.salary) return job.salary;
+  function normalizeBandLabels(raw) {
+    var labels = raw || {};
+    return {
+      high: labels.high || "相場より高め",
+      mid: labels.mid || "相場程度",
+      low: labels.low || "相場よりちょい安め"
+    };
+  }
+
+  function salaryBandLabels(data) {
+    return normalizeBandLabels((data && data.salary_band_labels) || {});
+  }
+
+  function getIntentBandLabels(data, intent) {
+    var byIntent = (data && data.intent_band_labels) || {};
+    if (intent && byIntent[intent]) return normalizeBandLabels(byIntent[intent]);
+    return salaryBandLabels(data);
+  }
+
+  function getMarketMid(data, group) {
+    var byGrade = (data && data.market_mid_by_grade) || {};
+    var label = (group && group.label) || "";
+    var keys = Object.keys(byGrade);
+    for (var i = 0; i < keys.length; i++) {
+      if (label.indexOf(keys[i]) >= 0) return byGrade[keys[i]];
+    }
+    var family = getLpFamily();
+    var byFamily = (data && data.market_mid_by_family) || {};
+    return byFamily[family] || byFamily.denki || 520;
+  }
+
+  function bandFromRatio(ratio, labels) {
+    if (ratio >= 1.06) return { key: "high", label: labels.high };
+    if (ratio <= 0.94) return { key: "low", label: labels.low };
+    return { key: "mid", label: labels.mid };
+  }
+
+  function resolveSalaryBand(job, data, group, labelsOverride) {
+    var labels = labelsOverride || salaryBandLabels(data);
+    if (job.salary_band && labels[job.salary_band]) {
+      return { key: job.salary_band, label: labels[job.salary_band] };
+    }
     var min = job.salary_min;
     var max = job.salary_max;
-    if (min && max) return "年収" + min + "〜" + max + "万円";
-    if (min) return "年収" + min + "万円〜";
-    if (max) return "年収〜" + max + "万円";
-    return "年収応相談";
+    if (!min && !max) return { key: "mid", label: labels.mid };
+    var mid = ((min || max) + (max || min)) / 2;
+    var market = getMarketMid(data, group);
+    return bandFromRatio(mid / market, labels);
+  }
+
+  function resolveLocationBand(job, profile, labels) {
+    if (job.location_band && labels[job.location_band]) {
+      return { key: job.location_band, label: labels[job.location_band] };
+    }
+    var traits = job.traits || [];
+    var prefScore = jobMatchesPref(job, profile);
+    if (prefScore >= 11) return { key: "high", label: labels.high };
+    if (prefScore >= 6) return { key: "mid", label: labels.mid };
+    if (traits.indexOf("direct_commute") >= 0 || traits.indexOf("low_ot") >= 0) {
+      return { key: "low", label: labels.low };
+    }
+    return { key: "mid", label: labels.mid };
+  }
+
+  function resolveJobBands(job, data, group, profile) {
+    var intent = profile.intent || "";
+    if (intent === "area") {
+      var areaLabels = getIntentBandLabels(data, "area");
+      var stableLabels = getIntentBandLabels(data, "stable");
+      return {
+        areaBand: resolveLocationBand(job, profile, areaLabels),
+        salaryBand: resolveSalaryBand(job, data, group, stableLabels)
+      };
+    }
+    var salaryLabels = getIntentBandLabels(data, intent);
+    return {
+      areaBand: null,
+      salaryBand: resolveSalaryBand(job, data, group, salaryLabels)
+    };
+  }
+
+  function formatSalaryRange(job) {
+    var min = job.salary_min;
+    var max = job.salary_max;
+    if (min && max) return min + "〜" + max + "万円";
+    if (min) return min + "万円〜";
+    if (max) return "〜" + max + "万円";
+    return "";
   }
 
   function jobMatchesPref(job, profile) {
@@ -266,7 +346,7 @@
       labelEl.innerHTML =
         "「<strong>" +
         esc(lic) +
-        "</strong>」で、<strong>現職と比べられる選択肢</strong>の輪郭（全文はお電話後）";
+        "」向けの<strong>求人概要</strong>（全文はお電話後）";
       return;
     }
     labelEl.innerHTML =
@@ -277,38 +357,31 @@
       "</strong>向け（全文はヒアリング後）";
   }
 
-  function teaserHeadline(job, profile) {
-    var traits = job.traits || [];
-    var tags = (job.tags || []).join(" ");
-    if (traits.indexOf("high_salary") >= 0 || tags.indexOf("高待遇") >= 0) {
-      return "非公開 · 年収を軸に現職と比べられる枠";
-    }
-    if (traits.indexOf("weekend_off") >= 0 || traits.indexOf("low_ot") >= 0) {
-      return "非公開 · 残業・休日を軸に比較できる枠";
-    }
-    if (traits.indexOf("private") >= 0 || tags.indexOf("非公開") >= 0) {
-      return "サイト非掲載 · 現職と並べて比較できる枠";
-    }
-    if (profile.pref) {
-      return "非公開 · " + profile.pref + "で比較材料になる枠";
-    }
-    return "非公開 · 現職と比べられる選択肢";
-  }
-
-  function teaserCompareAxis(job) {
-    var traits = job.traits || [];
-    var axes = [];
-    if (traits.indexOf("high_salary") >= 0) axes.push("年収");
-    if (traits.indexOf("weekend_off") >= 0) axes.push("休日");
-    if (traits.indexOf("low_ot") >= 0) axes.push("残業");
-    if (traits.indexOf("direct_commute") >= 0) axes.push("通勤");
-    if (!axes.length) axes.push("条件");
-    return "比較軸: " + axes.join(" · ");
+  function jobDisplayTitle(job) {
+    return String(job.title || job.duty || "求人案件").trim();
   }
 
   function renderCards(jobs, profile) {
     var html = "";
     jobs.forEach(function (job, idx) {
+      var title = jobDisplayTitle(job);
+      var area = formatDisplayArea(profile, job);
+      var bands = resolveJobBands(job, previewData, activeGroup, profile);
+      var range = formatSalaryRange(job);
+      var areaDd = esc(area || "要ヒアリング");
+      if (bands.areaBand) {
+        areaDd +=
+          ' <span class="t-job-card__band t-job-card__band--' +
+          esc(bands.areaBand.key) +
+          '">（' +
+          esc(bands.areaBand.label) +
+          "）</span>";
+      }
+      var salaryDd =
+        esc(bands.salaryBand.label) +
+        (range
+          ? ' <span class="t-job-card__range">（' + esc(range) + "）</span>"
+          : "");
       var tags = (job.tags || [])
         .slice(0, 2)
         .map(function (t) {
@@ -319,19 +392,29 @@
         '<article class="t-job-card" data-job-index="' +
         idx +
         '" data-job-title="' +
-        esc(teaserHeadline(job, profile)) +
+        esc(title) +
         '" tabindex="0" role="button">' +
         '<span class="t-job-card__badge">非公開</span>' +
+        '<p class="t-job-card__kicker">仕事内容</p>' +
         '<h4 class="t-job-card__title">' +
-        esc(teaserHeadline(job, profile)) +
+        esc(title) +
         "</h4>" +
-        '<p class="t-job-card__meta"><span>' +
-        esc(teaserCompareAxis(job)) +
-        "</span></p>" +
+        '<dl class="t-job-card__facts">' +
+        '<div class="t-job-card__fact t-job-card__fact--area">' +
+        "<dt>勤務地</dt><dd>" +
+        areaDd +
+        "</dd></div>" +
+        '<div class="t-job-card__fact t-job-card__fact--salary">' +
+        "<dt>年収</dt><dd class=\"is-" +
+        esc(bands.salaryBand.key) +
+        '">' +
+        salaryDd +
+        "</dd></div>" +
+        "</dl>" +
         '<div class="t-job-card__tags">' +
         tags +
         "</div>" +
-        '<p class="t-job-card__lock">社名・年収・条件の<strong>全文</strong>は<strong>10分のお電話後</strong>にご案内 — 現職と並べて比較できます</p>' +
+        '<p class="t-job-card__lock">社名・詳細条件の<strong>全文</strong>は<strong>10分のお電話後</strong> — 現職と並べて比較できます</p>' +
         "</article>";
     });
     return html;

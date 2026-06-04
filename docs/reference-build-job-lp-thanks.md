@@ -3,7 +3,8 @@
 競合・参考実装として保管。自社（電気工事バンク / `denki-lp-cvr`）との差分整理用。  
 調査日: 2026-06-02
 
-> `dk_lp` リポジトリにも同一ファイルあり: `../dk_lp/docs/reference-build-job-lp-thanks.md`
+> `dk_lp` リポジトリにも同一ファイルあり: `../dk_lp/docs/reference-build-job-lp-thanks.md`  
+> **木下マーケ**: [`reference-kinoshita-marketing.md`](reference-kinoshita-marketing.md)
 
 ---
 

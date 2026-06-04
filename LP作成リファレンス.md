@@ -119,6 +119,7 @@
 
 | 木下の意図 | HTML / CSS / JS |
 |-----------|-----------------|
+| 木下理論の詳細 | `docs/reference-kinoshita-marketing.md` |
 | 工種・専門性 | `cvr-specialty-badge`, `cvr-fv-note`, 工種別ディレクトリ |
 | 返報明示 | `cvr-step-reward`（全ステップに統一） |
 | 理由・不安解消 | `cvr-step-reason` |
@@ -209,6 +210,9 @@
 - `CLAUDE.md` — エージェント作業原則・要確認項目
 - `本番反映手順書.md` — URL一覧・GTM・デプロイ
 - `index.html` — ローカルLP一覧
+- **`docs/reference-kinoshita-marketing.md`** — 木下マーケ総合
+- **`docs/reference-kinoshita-83-methods.md`** — 書籍83手法×当社マッピング
+- **`docs/reference-kinoshita-kaitekikobo-lp.md`** — 北の快適工房LP構造・スクショ
 - **`docs/reference-build-job-lp-thanks.md`** — 競合リファレンス（ビルドジョブ LP / thanks A・B）
 - **`docs/thanks-v2-残論点.md`** — サンクス v2 の完了項目・運用TODO・本番チェックリスト
 

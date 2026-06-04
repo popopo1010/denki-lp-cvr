@@ -98,11 +98,11 @@
     var jobsLead = document.querySelector(".t-jobs__lead");
     if (jobsLead && profile.comparison_line) {
       var base =
-        "登録内容に合いそうな<strong>比較軸</strong>だけ、先にお見せします。社名・年収・条件の<strong>全文は載せていません</strong> — ";
+        "登録内容に合う求人の概要を、先にお見せします。";
       jobsLead.innerHTML =
         base +
         profile.comparison_line +
-        "。「全文、見て現職と比べたい」と思ったら、<strong>10分のお電話</strong>で十分です。";
+        "。全文は<strong>10分の電話後</strong>にお送りします。";
     }
 
     window.dkThanksLicenseProfile = profile;

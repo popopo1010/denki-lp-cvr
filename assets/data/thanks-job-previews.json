@@ -49,6 +49,45 @@
     "沖縄県": "沖縄"
   },
   "default_license_label": "電気工事士",
+  "salary_band_labels": {
+    "high": "相場より高め",
+    "mid": "相場程度",
+    "low": "相場よりちょい安め"
+  },
+  "intent_band_labels": {
+    "salary": {
+      "high": "相場より高くてもOK",
+      "mid": "相場程度",
+      "low": "相場よりやや低め"
+    },
+    "stable": {
+      "high": "相場より高め",
+      "mid": "相場程度",
+      "low": "相場よりちょい安め"
+    },
+    "area": {
+      "high": "いい勤務地",
+      "mid": "標準",
+      "low": "やすい"
+    },
+    "private": {
+      "high": "相場より高くてもOK",
+      "mid": "相場程度",
+      "low": "相場よりやや低め"
+    }
+  },
+  "market_mid_by_family": {
+    "denki": 520,
+    "sekoukanri": 620
+  },
+  "market_mid_by_grade": {
+    "1級": 700,
+    "2級": 540,
+    "主任": 580,
+    "第一種": 520,
+    "第二種": 460,
+    "第三種": 420
+  },
   "intent_labels": {
     "salary": "年収重視",
     "area": "勤務地重視",

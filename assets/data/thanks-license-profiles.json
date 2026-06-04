@@ -10,9 +10,10 @@
       "story_order": ["tn", "sm", "hs", "mk"],
       "hidden_stories": ["ak", "ro", "yh", "kt"],
       "job_family": "denki",
+      "visual_key": "denki",
       "testimonials_title": "第一種電気工事士の方の体験談",
       "testimonials_lead": "同じ第一種で、<strong>現職と選択肢を比較</strong>した方のストーリー（タップで約400字）",
-      "jobs_title": "第一種向け · 現職と比べられる選択肢（全文はお電話後）",
+      "jobs_title": "第一種向け · 求人概要（全文はお電話後）",
       "comparison_line": "第一種の<strong>市場価値</strong>と、現職の条件を並べて比較できます"
     },
     "denki_2": {
@@ -24,9 +25,10 @@
       "story_order": ["tn", "sm", "hs", "mk"],
       "hidden_stories": ["ak", "ro", "yh", "kt"],
       "job_family": "denki",
+      "visual_key": "denki",
       "testimonials_title": "第二種電気工事士の方の体験談",
       "testimonials_lead": "第二種から<strong>残業・年収・家族時間</strong>を比較した方のストーリー（タップで約400字）",
-      "jobs_title": "第二種向け · 現職と比べられる選択肢（全文はお電話後）",
+      "jobs_title": "第二種向け · 求人概要（全文はお電話後）",
       "comparison_line": "第二種を<strong>現場で評価される強み</strong>として、現職と比較できます"
     },
     "denki_sekou_1": {
@@ -42,9 +44,10 @@
       "story_order": ["kt", "mk", "yh", "sm"],
       "hidden_stories": ["ak", "ro", "hs", "tn"],
       "job_family": "denki",
+      "visual_key": "denki_sekou",
       "testimonials_title": "1級電気施工管理の方の体験談",
       "testimonials_lead": "1級で<strong>年収と非公開求人</strong>を比較した方のストーリー（タップで約400字）",
-      "jobs_title": "1級電気施工管理向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "1級電気施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "1級の<strong>管理経験</strong>を軸に、現職と市場の選択肢を比較"
     },
     "denki_sekou_2": {
@@ -56,9 +59,10 @@
       "story_order": ["mk", "kt", "sm", "tn"],
       "hidden_stories": ["ak", "ro", "yh", "hs"],
       "job_family": "denki",
+      "visual_key": "denki_sekou",
       "testimonials_title": "2級電気施工管理の方の体験談",
       "testimonials_lead": "2級から<strong>次のキャリア</strong>を比較した方のストーリー（タップで約400字）",
-      "jobs_title": "2級電気施工管理向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "2級電気施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "2級の<strong>現場経験</strong>と、現職の条件を並べて比較"
     },
     "denki_shunin": {
@@ -70,9 +74,10 @@
       "story_order": ["yh", "kt", "mk", "sm"],
       "hidden_stories": ["ak", "ro", "hs", "tn"],
       "job_family": "denki",
+      "visual_key": "denki_shunin",
       "testimonials_title": "電気主任技術者の方の体験談",
       "testimonials_lead": "主任技術者として<strong>年収交渉・市場価値</strong>を比較した方のストーリー（タップで約400字）",
-      "jobs_title": "電気主任技術者向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "電気主任技術者向け · 求人概要（全文はお電話後）",
       "comparison_line": "主任技術者の<strong>専門性</strong>と、現職の待遇を比較できます"
     },
     "kentiku_1": {
@@ -84,9 +89,10 @@
       "story_order": ["ak", "kt", "mk", "ro"],
       "hidden_stories": ["sm", "yh", "hs", "tn"],
       "job_family": "sekoukanri",
+      "visual_key": "kentiku",
       "testimonials_title": "1級建築施工管理の方の体験談",
       "testimonials_lead": "建築1級で<strong>ゼネコンから年収を比較</strong>した方のストーリー（タップで約400字）",
-      "jobs_title": "1級建築施工管理向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "1級建築施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "建築1級の<strong>監理経験</strong>を、現職と非公開枠で比較"
     },
     "kentiku_2": {
@@ -98,9 +104,10 @@
       "story_order": ["ak", "kt", "mk"],
       "hidden_stories": ["ro", "sm", "yh", "hs", "tn"],
       "job_family": "sekoukanri",
+      "visual_key": "kentiku",
       "testimonials_title": "2級建築施工管理の方の体験談",
       "testimonials_lead": "建築2級から<strong>キャリアの選択肢</strong>を比較した方のストーリー（タップで約400字）",
-      "jobs_title": "2級建築施工管理向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "2級建築施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "建築2級の<strong>現場経験</strong>と、現職を並べて比較"
     },
     "doboku_1": {
@@ -112,9 +119,10 @@
       "story_order": ["ro", "ak", "kt", "mk"],
       "hidden_stories": ["sm", "yh", "hs", "tn"],
       "job_family": "sekoukanri",
+      "visual_key": "doboku",
       "testimonials_title": "1級土木施工管理の方の体験談",
       "testimonials_lead": "土木1級で<strong>残業と年収</strong>を現職と比較した方のストーリー（タップで約400字）",
-      "jobs_title": "1級土木施工管理向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "1級土木施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "土木1級 · インフラ系の<strong>非公開枠</strong>と現職を比較"
     },
     "doboku_2": {
@@ -126,9 +134,10 @@
       "story_order": ["ro", "ak", "kt"],
       "hidden_stories": ["sm", "yh", "hs", "tn", "mk"],
       "job_family": "sekoukanri",
+      "visual_key": "doboku",
       "testimonials_title": "2級土木施工管理の方の体験談",
       "testimonials_lead": "土木2級の方が<strong>条件を比較</strong>したストーリー（タップで約400字）",
-      "jobs_title": "2級土木施工管理向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "2級土木施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "土木2級の<strong>キャリア</strong>と、現職の条件を比較"
     },
     "denki_lp": {
@@ -140,9 +149,10 @@
       "story_order": ["sm", "tn", "hs", "yh", "kt", "mk"],
       "hidden_stories": ["ak", "ro"],
       "job_family": "denki",
+      "visual_key": "denki",
       "testimonials_title": "電気工事士の方の体験談",
       "testimonials_lead": "電気系資格で<strong>現職と選択肢を比較</strong>した方のストーリー（タップで約400字）",
-      "jobs_title": "電気工事士向け · 現職と比べられる選択肢（全文はお電話後）",
+      "jobs_title": "電気工事士向け · 求人概要（全文はお電話後）",
       "comparison_line": "電気系の<strong>非公開枠</strong>と、現職を並べて比較"
     },
     "sekoukanri_lp": {
@@ -154,9 +164,10 @@
       "story_order": ["ak", "ro", "kt", "mk", "sm"],
       "hidden_stories": ["yh", "hs", "tn"],
       "job_family": "sekoukanri",
+      "visual_key": "sekoukanri",
       "testimonials_title": "施工管理技士の方の体験談",
       "testimonials_lead": "建築・土木・電気施工管理で<strong>比較した方</strong>のストーリー（タップで約400字）",
-      "jobs_title": "施工管理向け · 比較の輪郭（全文はお電話後）",
+      "jobs_title": "施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "施工管理の<strong>経験</strong>を軸に、現職と選択肢を比較"
     }
   }
