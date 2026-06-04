@@ -553,5 +553,23 @@
       });
   }
 
-  loadPreview();
+  function startPreviewLoad() {
+    var section = document.getElementById("t-jobs-preview");
+    var target = section || root;
+    if (!("IntersectionObserver" in window)) {
+      loadPreview();
+      return;
+    }
+    var obs = new IntersectionObserver(
+      function (entries) {
+        if (!entries[0] || !entries[0].isIntersecting) return;
+        obs.disconnect();
+        loadPreview();
+      },
+      { rootMargin: "280px 0px 0px 0px", threshold: 0.01 }
+    );
+    obs.observe(target);
+  }
+
+  startPreviewLoad();
 })();

@@ -183,17 +183,19 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-job-previews.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
-          echo "$html" | grep -q 'thanks-v2-deferred.js?v=3' || (echo "missing thanks-v2-deferred v=3" && exit 1)
-          echo "$html" | grep -q 't-hero__points' || (echo "missing hero points layout" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-deferred.js?v=5' || (echo "missing thanks-v2-deferred v=5" && exit 1)
+          echo "$html" | grep -q 't-hero__steps' || (echo "missing hero steps layout" && exit 1)
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-license-profiles.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/p/denki_2/" | head -3
-          echo "$html" | grep -q 'thanks-page-context.js?v=13' || (echo "missing thanks-page-context v=13" && exit 1)
-          echo "$html" | grep -q 'thanks-page.css?v=22' || (echo "missing thanks-page.css v=22" && exit 1)
-          echo "$html" | grep -q 'thanks-license-profile.js' || (echo "missing thanks-license-profile" && exit 1)
-          echo "$html" | grep -q 'thanks-v2-shared.js' || (echo "missing thanks-v2-shared" && exit 1)
+          echo "$html" | grep -q 'thanks-page-context.js?v=17' || (echo "missing thanks-page-context v=17" && exit 1)
+          echo "$html" | grep -q 'thanks-page.css?v=31' || (echo "missing thanks-page.css v=31" && exit 1)
+          echo "$html" | grep -q 'thanks-license-profile.js?v=2' || (echo "missing thanks-license-profile v=2" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-shared.js?v=2' || (echo "missing thanks-v2-shared v=2" && exit 1)
+          echo "$html" | grep -q 'thanks-booking-bootstrap.js?v=15' || (echo "missing booking bootstrap v=15" && exit 1)
           echo "$html" | grep -q 'id="t-future"' || (echo "missing t-future section" && exit 1)
           echo "$html" | grep -q 'data-story-id' || (echo "missing testimonial stories" && exit 1)
-          echo "$html" | grep -q '非公開求人 · 全文' || (echo "missing thanks copy" && exit 1)
+          echo "$html" | grep -q '非公開求人の全文' || (echo "missing thanks copy" && exit 1)
+          echo "$html" | grep -q 'thanks-job-previews.json" as="fetch"' && (echo "job previews preload should be removed" && exit 1) || true
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-testimonial-stories.json" | head -3
           stories=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-testimonial-stories.json")
           echo "$stories" | grep -q '"kt"' || (echo "missing stories json kt" && exit 1)

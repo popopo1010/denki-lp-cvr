@@ -31,13 +31,13 @@ const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
   ["thanks-v2-shared.js?v=2", "shared v2"],
-  ["thanks-license-profile.js?v=1", "license profile v1"],
+  ["thanks-license-profile.js?v=2", "license profile v2"],
   ["thanks-page-context.js?v=17", "context v17"],
-  ["thanks-section-visuals.js?v=1", "section visuals"],
-  ["thanks-page.css?v=30", "css v30"],
-  ["thanks-booking-bootstrap.js?v=14", "booking bootstrap v14"],
-  ["thanks-booking-custom.js?v=25", "booking custom v25"],
-  ["thanks-job-preview.js?v=13", "job preview v13 intent bands"],
+  ["thanks-section-visuals.js?v=2", "section visuals v2"],
+  ["thanks-page.css?v=31", "css v31"],
+  ["thanks-booking-bootstrap.js?v=15", "booking bootstrap v15 defer"],
+  ["thanks-booking-custom.js?v=26", "booking custom v26 defer"],
+  ["thanks-job-preview.js?v=14", "job preview v14 lazy"],
   ["thanks-v2-deferred.js?v=5", "deferred bundle v5"],
   ["t-license-badge", "license badge"],
   ["t-sec-head", "section illustration head"],
@@ -65,6 +65,7 @@ requiredStrings.forEach(([needle, label]) => {
 const forbidden = [
   ["thanks-calendar.css", "calendar css link（page.cssに統合）"],
   ["thanks-testimonial-stories.json\" as=\"fetch\"", "stories preload（遅延取得）"],
+  ["thanks-job-previews.json\" as=\"fetch\"", "job previews preload（ビューポート近傍で取得）"],
   ["thanks-gtm.js", "gtm 単体（bundle化）"],
   ["本登録", "本登録表記"],
   ["仮登録完了", "仮登録表記（登録完了に統一）"],
@@ -140,6 +141,9 @@ jobPreview.includes("t-job-card__facts") &&
   jobPreview.includes("resolveSalaryBand")
   ? pass("job-preview", "job facts cards (area / salary band)")
   : fail("job-preview", "job facts cards missing");
+jobPreview.includes("IntersectionObserver")
+  ? pass("job-preview", "lazy load near viewport")
+  : fail("job-preview", "IntersectionObserver lazy load missing");
 
 const deploy = read(".github/workflows/deploy.yml");
 deploy.includes("build-thanks-v2-deferred.mjs")

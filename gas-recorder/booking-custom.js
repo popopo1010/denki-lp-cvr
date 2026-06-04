@@ -10,6 +10,7 @@
  *   BOOKING_ALLOW_OVERLAP … true=既存予定と重複OK（既定 false＝空いてる担当優先）
  *   BOOKING_LEAD_HOURS … 何時間後から予約可 既定 2
  *   BOOKING_DAYS_AHEAD … 何日先まで表示 既定 14
+ *   BOOKING_INCLUDE_WEEKENDS … true=土日も枠生成（既定 true）
  */
 
 function bookingConfig() {
@@ -23,7 +24,10 @@ function bookingConfig() {
       String(p.getProperty("BOOKING_ALLOW_OVERLAP") || "false").toLowerCase() ===
       "true",
     leadHours: parseInt(p.getProperty("BOOKING_LEAD_HOURS") || "2", 10),
-    daysAhead: parseInt(p.getProperty("BOOKING_DAYS_AHEAD") || "14", 10)
+    daysAhead: parseInt(p.getProperty("BOOKING_DAYS_AHEAD") || "14", 10),
+    includeWeekends:
+      String(p.getProperty("BOOKING_INCLUDE_WEEKENDS") || "true").toLowerCase() !==
+      "false"
   };
 }
 
@@ -285,7 +289,8 @@ function formatDayLabel(d) {
   return Utilities.formatDate(d, TZ, "M/d") + "（" + w[d.getDay()] + "）";
 }
 
-function isWorkday(d) {
+function isBookableDay(d, cfg) {
+  if (cfg && cfg.includeWeekends) return true;
   var day = d.getDay();
   return day >= 1 && day <= 5;
 }
@@ -315,7 +320,7 @@ function isSlotFree(slotStart, slotEnd, busy) {
   return true;
 }
 
-var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v5_";
+var BOOKING_SLOTS_CACHE_PREFIX = "booking_slots_v6_";
 
 function bookingSlotsCacheKey(days) {
   return BOOKING_SLOTS_CACHE_PREFIX + days;
@@ -390,6 +395,7 @@ function buildSlotsPayload(days) {
     assignment: "merged_free_staff_least_busy",
     allow_overlap: bookingConfig().allowOverlap,
     end_hour: bookingConfig().endHour,
+    include_weekends: bookingConfig().includeWeekends,
     generated_at: Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX")
   };
 }
@@ -413,7 +419,7 @@ function getAvailableSlots(daysAhead) {
 
   for (var d = 0; d < daysAhead; d++) {
     var day = new Date(rangeStart.getTime() + d * 24 * 60 * 60 * 1000);
-    if (!isWorkday(day)) continue;
+    if (!isBookableDay(day, cfg)) continue;
 
     var win = getDayBookingWindow(day, cfg);
     for (var t = win.dayStart.getTime(); t + slotMs <= win.dayEnd.getTime(); t += slotMs) {

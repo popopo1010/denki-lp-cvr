@@ -4,6 +4,12 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, Meiryo, sans-serif;
   color: #333;
 }
+.thanks-flow,
+.thanks-flow *,
+.thanks-flow *::before,
+.thanks-flow *::after {
+  box-sizing: border-box;
+}
 .l-header__container {
   padding: 6px 8px;
   background: #4d4d4d;
@@ -1109,6 +1115,8 @@ html {
 .thanks-flow {
   background: linear-gradient(180deg, #f0f4f8 0%, #f5f7fa 32%, #f5f7fa 100%);
   padding-bottom: calc(var(--t-dock-h) + var(--t-safe-bottom) + 16px);
+  overflow-x: clip;
+  max-width: 100%;
 }
 .thanks-flow.is-dock-visible {
   --t-dock-h: 72px;
@@ -2456,7 +2464,7 @@ html {
 .t-line {
   scroll-margin-bottom: calc(var(--t-dock-h, 0px) + env(safe-area-inset-bottom, 0px) + 16px);
   margin: 0 12px 24px;
-  padding: 40px 16px 20px;
+  padding: 18px 16px 20px;
   background: #fff;
   border-radius: 16px;
   text-align: left;
@@ -2464,18 +2472,19 @@ html {
   border: 2px solid #06c755;
   position: relative;
   overflow: hidden;
+  max-width: calc(100% - 24px);
 }
 
 .t-line__badge {
-  position: absolute;
-  top: 0;
-  right: 0;
+  display: inline-block;
   background: #06c755;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
-  padding: 4px 14px 4px 18px;
-  border-radius: 0 0 0 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  line-height: 1.35;
+  max-width: 100%;
 }
 
 .t-line h3 {
@@ -2484,7 +2493,7 @@ html {
   color: #333;
   text-align: left;
   margin: 0 0 8px;
-  padding-right: 72px;
+  padding-right: 0;
   line-height: 1.55;
 }
 
@@ -2522,12 +2531,13 @@ html {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
   min-height: 52px;
   -webkit-tap-highlight-color: transparent;
-  max-width: 100%;
   margin: 0 auto 12px;
-  padding: 12px 16px;
+  padding: 12px 14px;
   background: #06c755;
   color: #fff;
   font-weight: 700;
@@ -2545,11 +2555,12 @@ html {
 .t-line__btn-text {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 2px;
   line-height: 1.25;
   min-width: 0;
-  text-align: left;
+  flex: 1;
+  text-align: center;
 }
 .t-line__btn-main {
   font-size: 15px;
@@ -2570,10 +2581,10 @@ html {
 @keyframes t-line-pulse {
   0%,
   100% {
-    box-shadow: 0 3px 0 #05a847, 0 0 0 0 rgba(6, 199, 85, 0.35);
+    box-shadow: 0 3px 0 #05a847;
   }
   50% {
-    box-shadow: 0 3px 0 #05a847, 0 0 0 8px rgba(6, 199, 85, 0);
+    box-shadow: 0 3px 0 #05a847, 0 6px 14px rgba(6, 199, 85, 0.28);
   }
 }
 
@@ -2591,11 +2602,12 @@ html {
 @media (max-width: 480px) {
   .t-line {
     margin: 0 10px 20px;
-    padding: 38px 14px 18px;
+    padding: 16px 14px 18px;
+    max-width: calc(100% - 20px);
   }
   .t-line h3 {
     font-size: 15px;
-    padding-right: 64px;
+    padding-right: 0;
   }
   .t-line__gate {
     font-size: 13px;
@@ -2884,12 +2896,21 @@ html {
 .t-line__head.t-sec-head {
   margin-bottom: 10px;
 }
+.t-line__head .t-sec-head__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
 .t-line__head .t-line__badge {
   display: inline-block;
   margin: 0 0 6px;
+  max-width: 100%;
 }
 .t-line__head h3 {
   margin: 0;
+  width: 100%;
 }
 .t-hero__steps li {
   display: flex;

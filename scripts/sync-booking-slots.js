@@ -12,8 +12,25 @@ const path = require("path");
 const GAS_URL =
   process.env.BOOKING_GAS_URL ||
   "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
-const DAYS = process.env.BOOKING_FETCH_DAYS || "5";
+const DAYS = process.env.BOOKING_FETCH_DAYS || "3";
+const VISIBLE_DAYS = Number(process.env.BOOKING_VISIBLE_DAYS || "3");
 const OUT = path.join(__dirname, "../assets/data/booking-slots.json");
+
+function trimSlotsToDays(slots, maxDays) {
+  if (!maxDays || maxDays <= 0 || !Array.isArray(slots)) return slots;
+  var dayOrder = [];
+  var out = [];
+  for (var i = 0; i < slots.length; i++) {
+    var d = slots[i] && slots[i].day;
+    if (!d) continue;
+    if (dayOrder.indexOf(d) < 0) {
+      if (dayOrder.length >= maxDays) continue;
+      dayOrder.push(d);
+    }
+    if (dayOrder.indexOf(d) >= 0) out.push(slots[i]);
+  }
+  return out;
+}
 
 function fetchUrl(url, redirects) {
   redirects = redirects || 0;
@@ -68,7 +85,7 @@ async function main() {
     assignment: data.assignment,
     allow_overlap: data.allow_overlap,
     end_hour: data.end_hour,
-    slots: data.slots
+    slots: trimSlotsToDays(data.slots, VISIBLE_DAYS)
   };
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify(out) + "\n", "utf8");

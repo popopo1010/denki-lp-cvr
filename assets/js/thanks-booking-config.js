@@ -13,7 +13,7 @@ window.LP_BOOKING_GAS_URL =
 window.BOOKING_VISIBLE_DAYS = 3;
 
 /** GASへ問い合わせる日数（sync-booking-slots.js と揃える。表示は BOOKING_VISIBLE_DAYS=3） */
-window.BOOKING_FETCH_DAYS = 5;
+window.BOOKING_FETCH_DAYS = 3;
 /** サンクスでは静的JSONのみ（bootstrap と同様） */
 window.BOOKING_SLOTS_SKIP_GAS_REFRESH = true;
 
