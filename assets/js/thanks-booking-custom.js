@@ -138,7 +138,7 @@
         '<p class="t-hero__lead">日時を確保しました</p>' +
         '<p class="t-hero__sub">続けて<strong>LINE</strong>で全文の受取口を登録してください（30秒）</p>' +
         '<ol class="t-hero__steps">' +
-        "<li>お電話で現職と希望を<strong>10分</strong>ですり合わせ</li>" +
+        "<li>プロと条件を<strong>10分</strong>ですり合わせ → 求人をご紹介</li>" +
         "<li>ヒアリング後、<strong>全文</strong>をお送り</li>" +
         "</ol>";
     }

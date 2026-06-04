@@ -32,10 +32,10 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=2", "shared v2"],
   ["thanks-license-profile.js?v=2", "license profile v2"],
-  ["thanks-page-context.js?v=17", "context v17"],
+  ["thanks-page-context.js?v=19", "context v19 kanda-soft copy"],
   ["thanks-section-visuals.js?v=2", "section visuals v2"],
-  ["thanks-page.css?v=31", "css v31"],
-  ["thanks-booking-bootstrap.js?v=15", "booking bootstrap v15 defer"],
+  ["thanks-page.css?v=34", "css v34"],
+  ["thanks-booking-bootstrap.js?v=16", "booking bootstrap v16 fetch 7d"],
   ["thanks-booking-custom.js?v=26", "booking custom v26 defer"],
   ["thanks-job-preview.js?v=14", "job preview v14 lazy"],
   ["thanks-v2-deferred.js?v=5", "deferred bundle v5"],
@@ -43,6 +43,9 @@ const requiredStrings = [
   ["t-sec-head", "section illustration head"],
   ["t-hero__objections", "objection-killing pills"],
   ["t-cal__micro", "calendar reassurance microcopy"],
+  ["t-hero__merit", "hero gain/loss merit"],
+  ["このあと進むこと", "hero soft benefit framing"],
+  ["プロと条件をすり合わせ", "hero pro job intro"],
   ["t-hero__steps", "hero step list layout"],
   ["t-hero__cta", "hero primary booking CTA"],
   ["t-flow-diagram", "flow diagram html ja"],
@@ -53,8 +56,8 @@ const requiredStrings = [
   ["cvr-story-mount", "ストーリーマウント"],
   ["非公開求人の全文", "非公開求人全文表記"],
   ["LINEで全文を受け取る", "LINE CTA"],
-  ["概要</strong>を見る", "plain language hero step"],
-  ["いま日時を選ぶ", "outcome-focused CTA"],
+  ["求人概要</strong>を見る", "plain language hero step"],
+  ["希望の日時を選ぶ", "invitation-style CTA"],
   ["見るだけOK", "低ハードル文言"]
 ];
 
@@ -135,6 +138,9 @@ const testimonials = read("assets/js/thanks-testimonials.js");
 testimonials.includes("limitVisibleTestimonials")
   ? pass("testimonials", "collapse extra stories after 3")
   : fail("testimonials", "limitVisibleTestimonials missing");
+testimonials.includes("cvr-story__para")
+  ? pass("testimonials", "story paragraph breaks")
+  : fail("testimonials", "cvr-story__para missing");
 
 const jobPreview = read("assets/js/thanks-job-preview.js");
 jobPreview.includes("t-job-card__facts") &&

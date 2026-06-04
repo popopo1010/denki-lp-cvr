@@ -3,7 +3,7 @@ window.THANKS_BOOKING_MODE = "custom";
 window.LP_BOOKING_GAS_URL =
   "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
 window.BOOKING_VISIBLE_DAYS = 3;
-window.BOOKING_FETCH_DAYS = 3;
+window.BOOKING_FETCH_DAYS = 7;
 /** true=常時GAS裏取りしない / false=静的が古い・空のときだけGAS */
 window.BOOKING_SLOTS_SKIP_GAS_REFRESH = true;
 window.BOOKING_SLOTS_STATIC_URL = "../assets/data/booking-slots.json";

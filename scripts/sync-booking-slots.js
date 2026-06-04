@@ -12,8 +12,10 @@ const path = require("path");
 const GAS_URL =
   process.env.BOOKING_GAS_URL ||
   "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
-const DAYS = process.env.BOOKING_FETCH_DAYS || "3";
-const VISIBLE_DAYS = Number(process.env.BOOKING_VISIBLE_DAYS || "3");
+/** GAS へ問い合わせる日数（UIの「次の3日」用に余裕を持たせる） */
+const DAYS = process.env.BOOKING_FETCH_DAYS || "7";
+/** JSON に残す日数（省略時は DAYS と同じ） */
+const TRIM_DAYS = Number(process.env.BOOKING_TRIM_DAYS || DAYS);
 const OUT = path.join(__dirname, "../assets/data/booking-slots.json");
 
 function trimSlotsToDays(slots, maxDays) {
@@ -85,7 +87,7 @@ async function main() {
     assignment: data.assignment,
     allow_overlap: data.allow_overlap,
     end_hour: data.end_hour,
-    slots: trimSlotsToDays(data.slots, VISIBLE_DAYS)
+    slots: trimSlotsToDays(data.slots, TRIM_DAYS)
   };
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify(out) + "\n", "utf8");

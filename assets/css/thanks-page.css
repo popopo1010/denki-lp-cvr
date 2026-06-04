@@ -377,10 +377,16 @@ body {
 }
 .cvr-story__text {
   margin: 0;
+  text-align: left;
+}
+.cvr-story__para {
+  margin: 0 0 12px;
   font-size: 13px;
   line-height: 1.85;
   color: #334155;
-  text-align: left;
+}
+.cvr-story__para:last-child {
+  margin-bottom: 0;
 }
 .cvr-testimonial__more.is-open .cvr-story__text {
   animation: t-story-in 0.35s ease;
@@ -1181,6 +1187,74 @@ html {
   color: #64748b;
   line-height: 1.65;
   margin: 0 0 12px;
+}
+.t-hero__merit {
+  margin: 0 0 14px;
+}
+.t-hero__merit-lead {
+  margin: 0 0 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.55;
+  color: #334155;
+}
+.t-hero__merit-lead strong {
+  color: var(--t-accent);
+}
+.t-hero__merit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.t-hero__merit-card {
+  padding: 10px 10px 8px;
+  border-radius: var(--t-radius-md);
+  border: 1px solid transparent;
+}
+.t-hero__merit-card--gain {
+  background: linear-gradient(145deg, #ecfdf5 0%, #fff 100%);
+  border-color: #a7f3d0;
+}
+.t-hero__merit-card--loss,
+.t-hero__merit-card--gap {
+  background: linear-gradient(145deg, #f8fafc 0%, #fff 100%);
+  border-color: #e2e8f0;
+}
+.t-hero__merit-label {
+  margin: 0 0 6px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+.t-hero__merit-card--gain .t-hero__merit-label {
+  color: #047857;
+}
+.t-hero__merit-card--loss .t-hero__merit-label,
+.t-hero__merit-card--gap .t-hero__merit-label {
+  color: #475569;
+}
+.t-hero__merit-list {
+  margin: 0;
+  padding: 0 0 0 1em;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: #475569;
+}
+.t-hero__merit-list li {
+  margin: 0 0 4px;
+}
+.t-hero__merit-list li:last-child {
+  margin-bottom: 0;
+}
+.t-hero__merit-list strong {
+  color: inherit;
+  font-weight: 800;
+}
+@media (max-width: 380px) {
+  .t-hero__merit-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .t-hero__objections {
   display: flex;
@@ -2977,6 +3051,10 @@ html {
   line-height: 0;
   margin-top: 1px;
 }
+.t-cal__micro-text {
+  display: inline-block;
+  line-height: 1.55;
+}
 html[data-thanks-family="sekoukanri"] .t-license-badge__label {
   color: #1b5e20;
 }
@@ -3009,7 +3087,7 @@ html[data-thanks-family="sekoukanri"] .t-license-badge__label {
   line-height: var(--t-leading);
 }
 
-.cvr-story__text {
+.cvr-story__para {
   font-size: var(--t-text-base);
   line-height: 1.8;
 }

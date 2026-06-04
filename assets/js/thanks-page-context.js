@@ -3,6 +3,25 @@
  */
 (function () {
   var dk = window.dkThanks || {};
+  var HERO_MERIT =
+    "<div class=\"t-hero__merit\" aria-label=\"このあとのご案内\">" +
+    "<p class=\"t-hero__merit-lead\">転職サイトだけでは、<strong>非公開求人の全文</strong>までは見えにくいことがあります。お電話でプロが条件を整理し、<strong>現職と比べられる求人</strong>をご紹介します。</p>" +
+    "<div class=\"t-hero__merit-grid\">" +
+    "<div class=\"t-hero__merit-card t-hero__merit-card--gain\">" +
+    "<p class=\"t-hero__merit-label\">このあと進むこと</p>" +
+    "<ul class=\"t-hero__merit-list\">" +
+    "<li>プロと<strong>希望条件</strong>をすり合わせ</li>" +
+    "<li>合う<strong>非公開求人</strong>をご紹介</li>" +
+    "<li>ヒアリング後、<strong>全文</strong>をお届け</li>" +
+    "</ul></div>" +
+    "<div class=\"t-hero__merit-card t-hero__merit-card--gap\">" +
+    "<p class=\"t-hero__merit-label\">知っておくと安心</p>" +
+    "<ul class=\"t-hero__merit-list\">" +
+    "<li>全文は<strong>載らないこと</strong>が多い</li>" +
+    "<li>概要だけでは<strong>並べにくい</strong>場合も</li>" +
+    "<li>日時を決めると<strong>流れが明確</strong>に</li>" +
+    "</ul></div>" +
+    "</div></div>";
   var HERO_OBJECTIONS =
     "<ul class=\"t-hero__objections\" aria-label=\"よくある不安\">" +
     "<li>押し売りなし</li>" +
@@ -11,9 +30,9 @@
     "</ul>";
   var HERO_STEPS =
     "<ol class=\"t-hero__steps\">" +
-    "<li><span class=\"t-hero__step-text\">求人の<strong>概要</strong>を見る</span></li>" +
-    "<li><span class=\"t-hero__step-text\"><strong>10分</strong>の電話で日時を選ぶ</span></li>" +
-    "<li><span class=\"t-hero__step-text\">ヒアリング後、<strong>全文</strong>をお送り</span></li>" +
+    "<li><span class=\"t-hero__step-text\">上の<strong>求人概要</strong>を見る</span></li>" +
+    "<li><span class=\"t-hero__step-text\"><strong>10分の電話</strong>でプロと条件をすり合わせ</span></li>" +
+    "<li><span class=\"t-hero__step-text\">合う<strong>非公開求人</strong>の全文をお届け</span></li>" +
     "</ol>";
 
   function getLpSlug() {
@@ -63,7 +82,8 @@
     heroRoot.innerHTML =
       nameLine +
       "<p class=\"t-hero__lead\">登録ありがとうございます</p>" +
-      "<p class=\"t-hero__sub\">転職を勧める場所ではありません。現職と選択肢を比べて、納得して選んでください。</p>" +
+      "<p class=\"t-hero__sub\">転職を勧める場所ではありません。ご自身のペースで、<strong>比べてから</strong>選んでください。</p>" +
+      HERO_MERIT +
       HERO_OBJECTIONS +
       (brand.heroSteps || HERO_STEPS);
     if (window.dkThanksSectionVisuals && window.dkThanksSectionVisuals.decorateHeroSteps) {
