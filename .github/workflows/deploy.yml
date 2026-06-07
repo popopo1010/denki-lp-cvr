@@ -178,6 +178,9 @@ jobs:
             -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
             ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/"
 
+      - name: Apply WP legacy redirects (.htaccess)
+        run: bash scripts/apply-wp-root-redirects.sh
+
       - name: Verify deployment
         run: |
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" | head -3
@@ -217,6 +220,7 @@ jobs:
             echo "denkikouji still on stale app.js after retries"
             exit 1
           fi
+          bash scripts/verify-wp-legacy-redirects.sh
           echo "$html" | grep -q 'thanks-page-context.js?v=21' || (echo "missing thanks-page-context v=21" && exit 1)
           echo "$html" | grep -q 'thanks-page.css?v=35' || (echo "missing thanks-page.css v=35" && exit 1)
           echo "$html" | grep -q 'thanks-booking-custom.js?v=27' || (echo "missing booking custom v=27" && exit 1)
