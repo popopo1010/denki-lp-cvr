@@ -6,10 +6,14 @@
   "use strict";
   var ORIGIN = "https://denkilp.builders-job.com";
   var MAP = {
+    "/denkikouji-kyujin-2-v2": "/denki-lp-cvr/denkikouji-v2/",
+    "/denkikouji-kyujin-2-v2/": "/denki-lp-cvr/denkikouji-v2/",
     "/denkikouji-kyujin-2": "/denki-lp-cvr/denkikouji/",
     "/denkikouji-kyujin-2/": "/denki-lp-cvr/denkikouji/",
     "/sekokan": "/denki-lp-cvr/sekoukanri/",
-    "/sekokan/": "/denki-lp-cvr/sekoukanri/"
+    "/sekokan/": "/denki-lp-cvr/sekoukanri/",
+    "/thanks": "/denki-lp-cvr/thanks-v2/",
+    "/thanks/": "/denki-lp-cvr/thanks-v2/"
   };
   var dest = MAP[location.pathname];
   if (!dest) return;

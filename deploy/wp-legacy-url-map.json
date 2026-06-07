@@ -1,0 +1,40 @@
+{
+  "comment": "WP旧slug → 静的LP。長いパスを先に並べる（generate-wp-redirects-fragment.mjs が長さ順にソート）",
+  "redirects": [
+    { "from": "/denkikouji-kyujin-2-v2/", "to": "/denki-lp-cvr/denkikouji-v2/" },
+    { "from": "/denkikouji-kyujin-2/", "to": "/denki-lp-cvr/denkikouji/" },
+    { "from": "/sekokan/", "to": "/denki-lp-cvr/sekoukanri/" },
+    { "from": "/thanks/", "to": "/denki-lp-cvr/thanks-v2/" }
+  ],
+  "adLandingUrls": [
+    {
+      "lp": "denkikouji",
+      "legacy": [
+        "https://denkilp.builders-job.com/denkikouji-kyujin-2/",
+        "https://denkilp.builders-job.com/denkikouji-kyujin-2-v2/"
+      ],
+      "recommended": "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/",
+      "metaShort": "https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/denkikouji/"
+    },
+    {
+      "lp": "sekoukanri",
+      "legacy": ["https://denkilp.builders-job.com/sekokan/"],
+      "recommended": "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/"
+    },
+    {
+      "lp": "sekoukanri-kentiku",
+      "legacy": [],
+      "recommended": "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku/"
+    },
+    {
+      "lp": "sekoukanri-doboku",
+      "legacy": [],
+      "recommended": "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-doboku/"
+    },
+    {
+      "lp": "sekoukanri-denkisekou",
+      "legacy": [],
+      "recommended": "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-denkisekou/"
+    }
+  ]
+}

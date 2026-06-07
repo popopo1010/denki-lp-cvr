@@ -32,6 +32,9 @@ jobs:
       - name: Sync LP canonical URLs
         run: node scripts/sync-lp-canonical-urls.mjs
 
+      - name: Generate WP redirect fragment
+        run: node scripts/generate-wp-redirects-fragment.mjs
+
       - name: Build thanks-v2 bundles
         run: |
           node scripts/build-thanks-v2-deferred.mjs

@@ -1,8 +1,11 @@
 # BEGIN dk-lp-legacy-redirects
 # WP旧LP slug → 静的LP（denki-lp-cvr）。deploy.yml が自動適用。
+# 生成: node scripts/generate-wp-redirects-fragment.mjs
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteRule ^denkikouji-kyujin-2/?(.*)$ /denki-lp-cvr/denkikouji/$1 [R=301,L,QSA,NC]
-RewriteRule ^sekokan/?(.*)$ /denki-lp-cvr/sekoukanri/$1 [R=301,L,QSA,NC]
+RewriteRule ^denkikouji-kyujin-2-v2/?$ /denki-lp-cvr/denkikouji-v2/ [R=301,L,QSA,NC]
+RewriteRule ^denkikouji-kyujin-2/?$ /denki-lp-cvr/denkikouji/ [R=301,L,QSA,NC]
+RewriteRule ^sekokan/?$ /denki-lp-cvr/sekoukanri/ [R=301,L,QSA,NC]
+RewriteRule ^thanks/?$ /denki-lp-cvr/thanks-v2/ [R=301,L,QSA,NC]
 </IfModule>
 # END dk-lp-legacy-redirects
