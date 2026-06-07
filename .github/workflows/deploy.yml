@@ -190,6 +190,10 @@ jobs:
           denki_thanks=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/?lp=denkikouji")
           echo "$denki_thanks" | grep -q '/denki-lp-cvr/thanks-v2/' || (echo "denkikouji/thanks not redirecting to thanks-v2" && exit 1)
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/" | grep -qi 'location:.*builders-job.com/thanks/' && (echo "denkikouji/thanks still WP 301" && exit 1) || true
+          denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
+          echo "$denki_lp" | grep -q 'app.js?v1780920000' || (echo "denkikouji still on stale app.js cache buster" && exit 1)
+          app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
+          echo "$app_js" | grep -q 'thanks-v2' || (echo "app.js missing thanks-v2 redirect" && exit 1)
           echo "$html" | grep -q 'thanks-page-context.js?v=21' || (echo "missing thanks-page-context v=21" && exit 1)
           echo "$html" | grep -q 'thanks-page.css?v=35' || (echo "missing thanks-page.css v=35" && exit 1)
           echo "$html" | grep -q 'thanks-booking-custom.js?v=27' || (echo "missing booking custom v=27" && exit 1)

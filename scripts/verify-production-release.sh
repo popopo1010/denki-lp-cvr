@@ -75,5 +75,29 @@ for needle in dk_job_intent dk_lead_profile '_tel' 'AKfycbzC4fMEbOhaymimRwaLDJ34
   fi
 done
 
+echo "=== LP bridge (app.js + denkikouji HTML) ==="
+denki_html=$(curl -s "$BASE/denkikouji/")
+app_js=$(curl -s "$BASE/assets/js/app.js")
+if echo "$denki_html" | grep -q 'app.js?v1780920000'; then
+  echo "✓ denkikouji uses app.js cache buster v1780920000"
+else
+  echo "✗ denkikouji still on stale app.js (expect v1780920000)" >&2
+  exit 1
+fi
+if echo "$denki_html" | grep -q 'app.js?v1779240000'; then
+  echo "✗ denkikouji still references old app.js?v1779240000" >&2
+  exit 1
+fi
+if echo "$app_js" | grep -q 'thanks-v2'; then
+  echo "✓ app.js redirects to thanks-v2"
+else
+  echo "✗ app.js missing thanks-v2 path" >&2
+  exit 1
+fi
+if echo "$app_js" | grep -q 'location.href = "/thanks/"'; then
+  echo "✗ app.js still has old /thanks/ redirect" >&2
+  exit 1
+fi
+
 echo ""
 echo "All production checks passed."
