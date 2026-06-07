@@ -30,6 +30,8 @@
 | O3 | 実体験談への差し替え | 許諾取得後、文言・写真を実データに |
 | O4 | 計測・A/B | GTMで口コミ展開率・予約完了率。順序・文言の検証 |
 | O5 | 旧 `thanks/` | シェアブロック削除・看護系誤字があれば修正（v2本番化後） |
+| O6 | WP旧URL→静的LP | GTMに `v2-deploy/gtm/wp-redirect-snippet.html` を追加（`/denkikouji-kyujin-2/` → `/denki-lp-cvr/denkikouji/`） |
+| O7 | E2Eテストデータ | `app.js` / `app-v2.js` が 09012345678・テスト太郎・`?dk_test=1` で Zapier/GAS 送信をスキップ |
 
 ## 将来の改善（優先低〜中）
 

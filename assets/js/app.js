@@ -669,6 +669,19 @@
   }
 
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
+  function isTestLeadSubmission(tel, last, first) {
+    const t = String(tel || "").trim();
+    const ln = String(last || "").trim();
+    const fn = String(first || "").trim();
+    if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return true;
+    if (ln === "テスト" && (fn === "太郎" || fn === "テスト")) return true;
+    if (/テスト/.test(ln + fn)) return true;
+    try {
+      if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return true;
+    } catch (e) { /* noop */ }
+    return false;
+  }
+
   function initZapierMirror() {
     const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
     // GAS Web App URL（デプロイ後にここへ貼る。空のままなら GAS送信は無効）
@@ -707,6 +720,7 @@
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
+      if (isTestLeadSubmission(tel, last, first)) return;
       sentOnce = true;
       try {
         const fd = new FormData(form);

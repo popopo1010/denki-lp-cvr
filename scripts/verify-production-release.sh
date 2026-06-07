@@ -2,6 +2,9 @@
 # 本番リリース前 HTTP 確認（Deploy Verify と同等 + LP ブリッジ）
 set -euo pipefail
 BASE="${RELEASE_VERIFY_BASE:-https://denkilp.builders-job.com/denki-lp-cvr}"
+CACHE_BUSTER="${RELEASE_APP_JS_CACHE:-v1780930000}"
+MAX_ATTEMPTS="${RELEASE_VERIFY_ATTEMPTS:-6}"
+RETRY_SLEEP="${RELEASE_VERIFY_SLEEP:-15}"
 
 check_200() {
   local url="$1"
@@ -66,7 +69,7 @@ echo "✓ staff_count=4"
 
 echo "=== LP bridge (app-v2.js) ==="
 app=$(curl -s "$BASE/assets/js/app-v2.js")
-for needle in dk_job_intent dk_lead_profile '_tel' 'AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw' 'thanks-v2'; do
+for needle in dk_job_intent dk_lead_profile '_tel' 'AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw' 'thanks-v2' '09012345678'; do
   if echo "$app" | grep -q "$needle"; then
     echo "✓ app-v2.js has $needle"
   else
@@ -76,26 +79,32 @@ for needle in dk_job_intent dk_lead_profile '_tel' 'AKfycbzC4fMEbOhaymimRwaLDJ34
 done
 
 echo "=== LP bridge (app.js + denkikouji HTML) ==="
-denki_html=$(curl -s "$BASE/denkikouji/")
-app_js=$(curl -s "$BASE/assets/js/app.js")
-if echo "$denki_html" | grep -q 'app.js?v1780920000'; then
-  echo "✓ denkikouji uses app.js cache buster v1780920000"
-else
-  echo "✗ denkikouji still on stale app.js (expect v1780920000)" >&2
-  exit 1
-fi
-if echo "$denki_html" | grep -q 'app.js?v1779240000'; then
-  echo "✗ denkikouji still references old app.js?v1779240000" >&2
-  exit 1
-fi
-if echo "$app_js" | grep -q 'thanks-v2'; then
-  echo "✓ app.js redirects to thanks-v2"
-else
-  echo "✗ app.js missing thanks-v2 path" >&2
-  exit 1
-fi
-if echo "$app_js" | grep -q 'location.href = "/thanks/"'; then
-  echo "✗ app.js still has old /thanks/ redirect" >&2
+verify_denki_lp() {
+  local denki_html app_js
+  denki_html=$(curl -s "$BASE/denkikouji/")
+  app_js=$(curl -s "$BASE/assets/js/app.js")
+  echo "$denki_html" | grep -q "app.js?${CACHE_BUSTER}" || return 1
+  echo "$denki_html" | grep -q 'app.js?v1779240000' && return 1
+  echo "$app_js" | grep -q 'thanks-v2' || return 1
+  echo "$app_js" | grep -q 'location.href = "/thanks/"' && return 1
+  echo "$app_js" | grep -q '09012345678' || return 1
+  return 0
+}
+
+verified=false
+for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+  if verify_denki_lp; then
+    echo "✓ denkikouji uses app.js cache buster ${CACHE_BUSTER} (attempt ${attempt})"
+    echo "✓ app.js redirects to thanks-v2"
+    echo "✓ app.js has test-lead guard"
+    verified=true
+    break
+  fi
+  echo "… denkikouji LP not propagated yet (${attempt}/${MAX_ATTEMPTS}), waiting ${RETRY_SLEEP}s"
+  sleep "$RETRY_SLEEP"
+done
+if [[ "$verified" != "true" ]]; then
+  echo "✗ denkikouji still on stale app.js (expect ${CACHE_BUSTER})" >&2
   exit 1
 fi
 

@@ -29,6 +29,9 @@ jobs:
         continue-on-error: true
         run: node scripts/sync-booking-slots.js
 
+      - name: Sync LP canonical URLs
+        run: node scripts/sync-lp-canonical-urls.mjs
+
       - name: Build thanks-v2 bundles
         run: |
           node scripts/build-thanks-v2-deferred.mjs
@@ -41,6 +44,7 @@ jobs:
           for f in \
             assets/js/app.js \
             assets/js/app-v2.js \
+            assets/js/wp-lp-redirect.js \
             assets/js/denki-suite.js \
             assets/js/thanks-v2-shared.js \
             assets/js/thanks-v2-deferred.js \
@@ -190,10 +194,29 @@ jobs:
           denki_thanks=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/?lp=denkikouji")
           echo "$denki_thanks" | grep -q '/denki-lp-cvr/thanks-v2/' || (echo "denkikouji/thanks not redirecting to thanks-v2" && exit 1)
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/" | grep -qi 'location:.*builders-job.com/thanks/' && (echo "denkikouji/thanks still WP 301" && exit 1) || true
-          denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
-          echo "$denki_lp" | grep -q 'app.js?v1780920000' || (echo "denkikouji still on stale app.js cache buster" && exit 1)
-          app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
-          echo "$app_js" | grep -q 'thanks-v2' || (echo "app.js missing thanks-v2 redirect" && exit 1)
+          verify_denki_lp() {
+            local denki_lp app_js
+            denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
+            echo "$denki_lp" | grep -q 'app.js?v1780930000' || return 1
+            app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
+            echo "$app_js" | grep -q 'thanks-v2' || return 1
+            echo "$app_js" | grep -q '09012345678' || return 1
+            return 0
+          }
+          verified=false
+          for attempt in 1 2 3 4 5 6; do
+            if verify_denki_lp; then
+              echo "denkikouji LP cache buster + app.js OK (attempt ${attempt})"
+              verified=true
+              break
+            fi
+            echo "denkikouji LP not propagated yet (attempt ${attempt}/6), waiting 15s..."
+            sleep 15
+          done
+          if [ "$verified" != "true" ]; then
+            echo "denkikouji still on stale app.js after retries"
+            exit 1
+          fi
           echo "$html" | grep -q 'thanks-page-context.js?v=21' || (echo "missing thanks-page-context v=21" && exit 1)
           echo "$html" | grep -q 'thanks-page.css?v=35' || (echo "missing thanks-page.css v=35" && exit 1)
           echo "$html" | grep -q 'thanks-booking-custom.js?v=27' || (echo "missing booking custom v=27" && exit 1)
