@@ -44,6 +44,16 @@
     page_type: "thanks-v2"
   });
 
+  // 既存 GTM GA4 タグ（thanks_pageview）との互換
+  pushDL({
+    event: "thanks_pageview",
+    lp_slug: lpSlug,
+    thanks_qualified: qualified,
+    page_location: location.href,
+    page_path: location.pathname,
+    page_type: "thanks-v2"
+  });
+
   pushDL({ event: "form_complete", page_type: "thanks-v2" });
 
   pushDL({

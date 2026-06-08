@@ -195,6 +195,10 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
           echo "$html" | grep -q 'thanks-v2-deferred.js?v=5' || (echo "missing thanks-v2-deferred v=5" && exit 1)
+          echo "$html" | grep -q 'GTM-KV525PZ' || (echo "missing GTM on thanks-v2" && exit 1)
+          echo "$html" | grep -q 'requestIdleCallback(loadGTM' && (echo "thanks-v2 still lazy-loads GTM" && exit 1) || true
+          deferred=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/thanks-v2-deferred.js")
+          echo "$deferred" | grep -q 'lead_conversion' || (echo "thanks-v2-deferred missing lead_conversion" && exit 1)
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-license-profiles.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/" | head -3
           denki_thanks=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/?lp=denkikouji")
