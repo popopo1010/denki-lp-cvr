@@ -233,7 +233,8 @@ jobs:
           fi
           bash scripts/verify-wp-legacy-redirects.sh
           echo "$html" | grep -q 'thanks-page-context.js?v=27' || (echo "missing thanks-page-context v=27" && exit 1)
-          echo "$html" | grep -q 'thanks-page.css?v=44' || (echo "missing thanks-page.css v=44" && exit 1)
+          echo "$html" | grep -q 'thanks-page.css?v=45' || (echo "missing thanks-page.css v=45" && exit 1)
+          echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
           echo "$html" | grep -q 'thanks-job-preview.js?v=17' || (echo "missing job preview v=17" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)
           echo "$html" | grep -q 'thanks-booking-custom.js?v=31' || (echo "missing booking custom v=31" && exit 1)
@@ -260,6 +261,6 @@ jobs:
           echo "$html" | grep -q 'thanks-job-previews.json" as="fetch"' && (echo "job previews preload should be removed" && exit 1) || true
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-testimonial-stories.json" | head -3
           stories=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-testimonial-stories.json")
-          echo "$stories" | grep -q '"kt"' || (echo "missing stories json kt" && exit 1)
+          echo "$stories" | grep -q '"nw"' || (echo "missing stories json nw" && exit 1)
           slots=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/booking-slots.json")
           echo "$slots" | grep -qE '"staff_count"[[:space:]]*:[[:space:]]*4' || (echo "booking staff_count not 4" && exit 1)

@@ -620,7 +620,7 @@
       (window.dkThanksContext && window.dkThanksContext.family) ||
       document.documentElement.getAttribute("data-thanks-family") ||
       "denki";
-    var fallbackId = family === "sekoukanri" ? "kt" : "sm";
+    var fallbackId = family === "sekoukanri" ? "nw" : "sm";
     return (
       cards.find(function (card) {
         return card.getAttribute("data-story-id") === fallbackId;

@@ -141,6 +141,14 @@ body {
   padding: 3px 10px;
   border-radius: 20px;
 }
+.cvr-testimonial--preview.cvr-testimonial--featured {
+  border-color: rgba(198, 138, 0, 0.45);
+  box-shadow: 0 4px 16px rgba(198, 138, 0, 0.14);
+}
+.cvr-testimonial--preview.cvr-testimonial--featured::before {
+  content: "これからの流れ";
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+}
 .cvr-testimonial__header {
   display: flex;
   align-items: flex-start;

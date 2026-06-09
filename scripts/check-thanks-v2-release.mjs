@@ -32,7 +32,7 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=3", "shared v3 early page events"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=44", "css v44 perf pass"],
+  ["thanks-page.css?v=45", "css v45 preview story badge"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP", "noto font"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
@@ -65,7 +65,8 @@ const requiredStrings = [
   ["しつこい勧誘はありません", "no hard-sell outbound copy"],
   ["t-cal--primary", "calendar primary emphasis"],
   ["id=\"t-future\"", "未来セクション（折りたたみ）"],
-  ["data-story-id", "転職ストーリー"],
+  ["これから相談する方へ", "preview-experience testimonials title"],
+  ["data-story-id=\"nw\"", "career inventory preview story"],
   ["cvr-story-mount", "ストーリーマウント"],
   ["非公開求人の全文", "非公開求人全文表記"],
   ["LINEで全文を受け取る", "LINE CTA"],
@@ -109,7 +110,9 @@ storyIds === 8 ? pass("ストーリー", "8 cards") : fail("ストーリー", `c
 if (exists("assets/data/thanks-testimonial-stories.json")) {
   const stories = JSON.parse(read("assets/data/thanks-testimonial-stories.json"));
   const keys = Object.keys(stories.stories || {});
-  keys.length === 8 ? pass("stories.json", "8 entries") : fail("stories.json", `count=${keys.length}`);
+  keys.length === 8 && keys.includes("nw")
+    ? pass("stories.json", "8 entries incl. nw preview")
+    : fail("stories.json", `count=${keys.length} keys=${keys.join(",")}`);
 } else {
   fail("stories.json", "missing file");
 }
