@@ -1,20 +1,9 @@
 /**
- * thanks-v2: LP slug に応じたブランド・ヒーロー（感情→返報→行動→大分類）
+ * thanks-v2: LP slug に応じたブランド・ヒーロー（便益ファースト）
  */
 (function () {
   var dk = window.dkThanks || {};
   var currentBrand = null;
-
-  var HERO_REASSURE =
-    "<p class=\"t-hero__reassure\">" +
-    "「転職エージェント＝長い面談・押し売り」というイメージは<strong>当社では当てはまりません</strong>" +
-    "（10分・合わなければその場で終了）" +
-    "</p>";
-
-  var HERO_ROUTE =
-    "<p class=\"t-hero__route\">" +
-    "まず下の<strong>概要</strong>をご覧ください。気になる方は<strong>日時</strong>を選ぶだけ。" +
-    "</p>";
 
   var HERO_JOB_COUNT = 3;
 
@@ -29,15 +18,13 @@
   var BRANDS = {
     denki: {
       siteName: "電気工事バンク",
-      header:
-        "電気工事士の求人募集・転職サイト[国内最大級] | 電気工事バンク",
+      header: "登録ありがとうございます | 電気工事バンク",
       title: "登録完了 | 電気工事バンク",
       defaultLicense: "電気工事士",
     },
     sekoukanri: {
       siteName: "施工管理キャリア",
-      header:
-        "施工管理技士の求人募集・転職サイト[国内最大級] | 施工管理キャリア",
+      header: "登録ありがとうございます | 施工管理キャリア",
       title: "登録完了 | 施工管理キャリア",
       defaultLicense: "施工管理技士",
     },
@@ -104,62 +91,41 @@
     return s;
   }
 
-  function buildHeroStatsHtml(profile, brand) {
-    var lic = escHtml(shortLicenseLabel(profile.license, brand));
-    var items = [
-      '<li class="t-hero__stat"><strong>' +
-        HERO_JOB_COUNT +
-        '</strong><span>件 非公開</span></li>',
-      '<li class="t-hero__stat"><strong>' + lic + '</strong><span>向け</span></li>',
-    ];
-    if (profile.pref) {
-      items.push(
-        '<li class="t-hero__stat"><strong>' +
-          escHtml(profile.pref) +
-          '</strong><span>エリア</span></li>'
-      );
-    }
-    items.push(
-      '<li class="t-hero__stat"><strong>10分</strong><span>· 1回</span></li>'
-    );
-    return (
-      '<ul class="t-hero__stats" id="thanks-hero-stats" aria-label="返報の内容">' +
-      items.join("") +
-      "</ul>"
-    );
-  }
-
-  function buildHeroGiftHtml(profile, brand) {
-    return buildHeroStatsHtml(profile, brand);
-  }
-
   function buildHeroTitle(name) {
     var display = formatDisplayName(name);
     return display
-      ? display + "、登録だけで終わってOKです"
-      : "登録だけで終わってOKです";
+      ? display + "、3件届きました"
+      : "3件、届きました";
   }
 
-  function buildHeroBody(profile, brand) {
-    var p = profile || readLeadProfile();
+  function buildHeroGiftLine(profile, brand) {
     var b = brand || currentBrand || BRANDS.denki;
-    return buildHeroGiftHtml(p, b) + HERO_ROUTE + HERO_REASSURE;
+    var lic = shortLicenseLabel(profile.license, b);
+    var parts = [lic + "向け"];
+    if (profile.pref) parts.push(profile.pref);
+    parts.push("非公開" + HERO_JOB_COUNT + "件");
+    return parts.join(" · ");
   }
 
   function applyHero() {
     var name = getUserName();
+    var profile = readLeadProfile();
     var titleEl = document.getElementById("thanks-hero-title");
     if (titleEl) titleEl.textContent = buildHeroTitle(name);
 
-    var heroRoot =
-      document.getElementById("thanks-hero-sub") ||
-      document.querySelector(".t-hero__body");
-    if (!heroRoot) return;
-    heroRoot.innerHTML = buildHeroBody(readLeadProfile(), currentBrand);
+    var giftLine = document.getElementById("thanks-hero-gift-line");
+    if (giftLine) {
+      giftLine.textContent = buildHeroGiftLine(profile, currentBrand);
+    }
+
+    var moreEl = document.querySelector(".t-hero__more");
+    if (moreEl) {
+      moreEl.hidden = false;
+    }
   }
 
   dk.buildHeroTitle = buildHeroTitle;
-  dk.buildHeroBody = buildHeroBody;
+  dk.buildHeroGiftLine = buildHeroGiftLine;
   dk.applyInitialHero = applyHero;
   dk.readLeadProfile = readLeadProfile;
 

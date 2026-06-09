@@ -11,56 +11,61 @@
 <!-- End Google Tag Manager -->
 <script src="../../assets/js/thanks-v2-shared.js?v=2"></script>
 <script>window.dkThanks&&window.dkThanks.captureTelNameFromQs();</script>
-<script src="../../assets/js/thanks-page-context.js?v=25" defer></script>
+<script src="../../assets/js/thanks-page-context.js?v=27" defer></script>
 <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <link rel="dns-prefetch" href="https://script.google.com">
 <link rel="preload" href="../../assets/data/booking-slots.json" as="fetch" crossorigin>
 <script src="../../assets/js/thanks-booking-bootstrap.js?v=16" defer></script>
-<link rel="stylesheet" href="../../assets/css/thanks-page.css?v=40">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/thanks-page.css?v=42">
 </head>
 <body class="wp-singular page-template-default page p-pageThanks wp-theme-original-thema thanks-flow">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KV525PZ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <header class="l-header" id="header">
   <div class="l-header__container"><div class="l-header__content">
-    <h1 class="l-header__title"><span class="adtext" id="thanks-header-text">電気工事士の求人募集・転職サイト[国内最大級] | 電気工事バンク</span></h1>
+    <h1 class="l-header__title"><span class="adtext" id="thanks-header-text">登録ありがとうございます | 電気工事バンク</span></h1>
   </div></div>
 </header>
 
 <main id="main" class="l-main">
 <div class="t-s">
 
-  <!-- Hero（完了 → すぐ下が求人概要） -->
-  <div class="t-hero t-hero--compact">
-    <div class="t-hero__chk"><svg viewBox="0 0 24 24" width="36" height="36"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#314c85"/></svg></div>
-    <h2 id="thanks-hero-title">登録だけで終わってOKです</h2>
+  <!-- Hero（便益ファースト：1件目を即表示） -->
+  <div class="t-hero t-hero--compact t-hero--gift">
+    <div class="t-hero__chk"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff" opacity="0.25"/><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#fff"/></svg></div>
+    <p class="t-hero__eyebrow">あなた向けの返報</p>
+    <h2 id="thanks-hero-title">3件、届きました</h2>
     <div class="t-hero__body" id="thanks-hero-sub">
-      <ul class="t-hero__stats" id="thanks-hero-stats" aria-label="返報の内容">
-        <li class="t-hero__stat"><strong>3</strong><span>件 非公開</span></li>
-        <li class="t-hero__stat"><strong>電気工事士</strong><span>向け</span></li>
-        <li class="t-hero__stat"><strong>10分</strong><span>· 1回</span></li>
-      </ul>
-      <p class="t-hero__route">まず下の<strong>概要</strong>をご覧ください。気になる方は<strong>日時</strong>を選ぶだけ。</p>
-      <p class="t-hero__reassure">「転職エージェント＝長い面談・押し売り」というイメージは<strong>当社では当てはまりません</strong>（10分・合わなければその場で終了）</p>
+      <p class="t-hero__gift-line" id="thanks-hero-gift-line">電気工事士向け · 非公開3件</p>
+      <div id="job-preview-hero" class="t-hero-gift" aria-live="polite" aria-busy="true">
+        <div class="t-hero-gift__skeleton" aria-hidden="true">
+          <div class="t-hero-gift__sk-line"></div>
+          <div class="t-hero-gift__sk-line t-hero-gift__sk-line--mid"></div>
+          <div class="t-hero-gift__sk-line t-hero-gift__sk-line--short"></div>
+        </div>
+      </div>
+      <p class="t-hero__more"><a href="#t-jobs-preview">他2件も下に表示しています</a></p>
+      <p class="t-hero__reassure">押し売り・長い面談は<strong>当社では当てはまりません</strong>（10分 · 合わなければその場で終了）</p>
     </div>
   </div>
 
-  <nav class="t-flow" aria-label="次のステップ">
-    <a href="#t-jobs-preview" class="t-flow__item is-active t-flow__item--primary" data-step="1">求人概要</a>
-    <a href="#t-calendar" class="t-flow__item" data-step="2">日時を選ぶ</a>
-    <a href="#line-section" class="t-flow__item" data-step="3">全文</a>
-  </nav>
-
-  <div class="t-trust">
-    <div class="cvr-trust-bar">
-      <div class="cvr-trust-bar__item"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z" fill="#314c85"/></svg><span>厚生労働大臣許可</span></div>
-      <div class="cvr-trust-bar__item"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" fill="#314c85"/></svg><span>SSL暗号化通信</span></div>
-      <div class="cvr-trust-bar__item"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z" fill="#5c6bc0"/></svg><span>完全無料</span></div>
+  <aside class="t-social-strip" id="thanks-social-strip" aria-label="同じ資格の体験談">
+    <div class="t-social-strip__score"><span class="t-social-strip__stars">★4.8</span><span class="t-social-strip__score-label">満足度（自社調査）</span></div>
+    <div class="t-social-strip__body">
+      <img class="t-social-strip__avatar" src="../../assets/img/testimonials/avatar-sm.svg" alt="" width="40" height="40" loading="lazy" decoding="async">
+      <div class="t-social-strip__tx">
+        <p class="t-social-strip__meta"><strong>S.Mさん（28）</strong> · 電気工事士 · 関西</p>
+        <p class="t-social-strip__quote">「第二種をちゃんと評価してくれる求人だけに絞って紹介。履歴書・面接の想定問答まで無料で伴走してくれました。」</p>
+      </div>
     </div>
-  </div>
+    <a class="t-social-strip__link" href="#t-testi">ほかの体験談を見る</a>
+  </aside>
 
-  <!-- 求人概要（登録直後の第一期待） -->
+  <!-- 求人概要（2–3件目） -->
   <section class="t-jobs t-jobs--first" id="t-jobs-preview" aria-labelledby="t-jobs-title">
     <div class="t-license-badge" id="thanks-license-badge" hidden>
       <div class="t-license-badge__icon" id="thanks-license-icon" aria-hidden="true"></div>
@@ -74,8 +79,8 @@
         <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#eef2fa"/><rect x="14" y="16" width="16" height="20" rx="2" fill="#fff" stroke="#314c85" stroke-width="1.5"/><rect x="26" y="20" width="16" height="20" rx="2" fill="#fff" stroke="#5c6bc0" stroke-width="1.5" stroke-dasharray="3 2"/><text x="22" y="28" text-anchor="middle" font-size="8" font-weight="700" fill="#64748b">現</text><text x="34" y="32" text-anchor="middle" font-size="8" font-weight="700" fill="#314c85">先</text></svg>
       </div>
       <div class="t-sec-head__body">
-        <h3 class="t-jobs__title" id="t-jobs-title">現職と比べられる求人（概要）</h3>
-        <p class="t-jobs__lead">勤務地・仕事内容・年収帯を、<strong>現職と並べて比較</strong>できます。社名・詳細の全文は<strong>10分の電話後</strong>。</p>
+        <h3 class="t-jobs__title" id="t-jobs-title">残り2件も、同じ形式で比べられます</h3>
+        <p class="t-jobs__lead">勤務地・年収帯を<strong>現職と並べて比較</strong>できます。社名・詳細の全文は<strong>10分の電話後</strong>。</p>
       </div>
     </div>
     <p class="t-jobs__label" id="job-preview-label">あなた向けの案件を表示しています…</p>
@@ -90,11 +95,11 @@
     </div>
     <div class="t-jobs__cta">
       <button type="button" class="t-jobs__cta-primary" data-scroll-target="#t-calendar">10分だけ話を聞く（無料）</button>
-      <p class="t-jobs__cta-hint">合わなければ登録だけでOK · 押し売りなし</p>
+      <p class="t-jobs__cta-hint">見るだけ · 断るだけでもOK · 押し売りなし</p>
     </div>
     <p class="t-jobs__note">※ 年収・勤務地のラベルは上の「比べたい軸」で切り替わります。社名・詳細条件の全文は<strong>お電話後</strong>。</p>
   </section>
-  <script src="../../assets/js/thanks-job-preview.js?v=15" defer></script>
+  <script src="../../assets/js/thanks-job-preview.js?v=16" defer></script>
 
   <!-- 日時（概要のあと · 気になったら） -->
   <div class="t-cal t-cal--primary" id="t-calendar">
@@ -187,7 +192,7 @@
   </details>
 
   <!-- Testimonials -->
-  <div class="t-testi">
+  <div class="t-testi" id="t-testi">
     <div class="cvr-testimonials cvr-testimonials--rich">
       <h3 class="cvr-testimonials__title">あなたと近い条件の方の体験談</h3>
       <p class="cvr-testimonials__lead">現職と<strong>比較したうえで</strong>動いた方の<strong>体験談</strong>（タップで約400字）</p>
@@ -411,6 +416,14 @@
 
 </div>
 </main>
+
+<div class="t-trust t-trust--footer">
+  <div class="cvr-trust-bar">
+    <div class="cvr-trust-bar__item"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z" fill="#314c85"/></svg><span>厚生労働大臣許可</span></div>
+    <div class="cvr-trust-bar__item"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" fill="#314c85"/></svg><span>SSL暗号化通信</span></div>
+    <div class="cvr-trust-bar__item"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z" fill="#5c6bc0"/></svg><span>完全無料</span></div>
+  </div>
+</div>
 
 <footer class="l-footer">
   <div class="l-footer__info">

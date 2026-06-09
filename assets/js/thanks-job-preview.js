@@ -3,7 +3,8 @@
  */
 (function () {
   var root = document.getElementById("job-preview-root");
-  if (!root) return;
+  var heroRoot = document.getElementById("job-preview-hero");
+  if (!root && !heroRoot) return;
 
   var DATA_URL =
     (window.dkThanks && window.dkThanks.assetUrl
@@ -361,63 +362,103 @@
     return String(job.title || job.duty || "求人案件").trim();
   }
 
-  function renderCards(jobs, profile) {
+  function renderOneCard(job, idx, profile, opts) {
+    opts = opts || {};
+    var title = jobDisplayTitle(job);
+    var area = formatDisplayArea(profile, job);
+    var bands = resolveJobBands(job, previewData, activeGroup, profile);
+    var range = formatSalaryRange(job);
+    var areaDd = esc(area || "要ヒアリング");
+    if (bands.areaBand) {
+      areaDd +=
+        ' <span class="t-job-card__band t-job-card__band--' +
+        esc(bands.areaBand.key) +
+        '">（' +
+        esc(bands.areaBand.label) +
+        "）</span>";
+    }
+    var salaryDd =
+      esc(bands.salaryBand.label) +
+      (range
+        ? ' <span class="t-job-card__range">（' + esc(range) + "）</span>"
+        : "");
+    var tags = (job.tags || [])
+      .slice(0, 2)
+      .map(function (t) {
+        return '<span class="t-job-card__tag">' + esc(t) + "</span>";
+      })
+      .join("");
+    var heroClass = opts.hero ? " t-job-card--hero" : "";
+    var lockCopy = opts.hero
+      ? "社名・詳細条件の<strong>全文</strong>は<strong>10分のお電話後</strong>"
+      : "社名・詳細条件の<strong>全文</strong>は<strong>10分のお電話後</strong> — 現職と並べて比較できます";
+    return (
+      '<article class="t-job-card' +
+      heroClass +
+      '" data-job-index="' +
+      idx +
+      '" data-job-title="' +
+      esc(title) +
+      '" tabindex="0" role="button">' +
+      '<span class="t-job-card__badge">非公開</span>' +
+      '<p class="t-job-card__kicker">仕事内容</p>' +
+      '<h4 class="t-job-card__title">' +
+      esc(title) +
+      "</h4>" +
+      '<dl class="t-job-card__facts">' +
+      '<div class="t-job-card__fact t-job-card__fact--area">' +
+      "<dt>勤務地</dt><dd>" +
+      areaDd +
+      "</dd></div>" +
+      '<div class="t-job-card__fact t-job-card__fact--salary">' +
+      "<dt>年収</dt><dd class=\"is-" +
+      esc(bands.salaryBand.key) +
+      '">' +
+      salaryDd +
+      "</dd></div>" +
+      "</dl>" +
+      '<div class="t-job-card__tags">' +
+      tags +
+      "</div>" +
+      '<p class="t-job-card__lock">' +
+      lockCopy +
+      "</p>" +
+      "</article>"
+    );
+  }
+
+  function renderCards(jobs, profile, startIndex) {
+    var base = startIndex || 0;
     var html = "";
-    jobs.forEach(function (job, idx) {
-      var title = jobDisplayTitle(job);
-      var area = formatDisplayArea(profile, job);
-      var bands = resolveJobBands(job, previewData, activeGroup, profile);
-      var range = formatSalaryRange(job);
-      var areaDd = esc(area || "要ヒアリング");
-      if (bands.areaBand) {
-        areaDd +=
-          ' <span class="t-job-card__band t-job-card__band--' +
-          esc(bands.areaBand.key) +
-          '">（' +
-          esc(bands.areaBand.label) +
-          "）</span>";
-      }
-      var salaryDd =
-        esc(bands.salaryBand.label) +
-        (range
-          ? ' <span class="t-job-card__range">（' + esc(range) + "）</span>"
-          : "");
-      var tags = (job.tags || [])
-        .slice(0, 2)
-        .map(function (t) {
-          return '<span class="t-job-card__tag">' + esc(t) + "</span>";
-        })
-        .join("");
-      html +=
-        '<article class="t-job-card" data-job-index="' +
-        idx +
-        '" data-job-title="' +
-        esc(title) +
-        '" tabindex="0" role="button">' +
-        '<span class="t-job-card__badge">非公開</span>' +
-        '<p class="t-job-card__kicker">仕事内容</p>' +
-        '<h4 class="t-job-card__title">' +
-        esc(title) +
-        "</h4>" +
-        '<dl class="t-job-card__facts">' +
-        '<div class="t-job-card__fact t-job-card__fact--area">' +
-        "<dt>勤務地</dt><dd>" +
-        areaDd +
-        "</dd></div>" +
-        '<div class="t-job-card__fact t-job-card__fact--salary">' +
-        "<dt>年収</dt><dd class=\"is-" +
-        esc(bands.salaryBand.key) +
-        '">' +
-        salaryDd +
-        "</dd></div>" +
-        "</dl>" +
-        '<div class="t-job-card__tags">' +
-        tags +
-        "</div>" +
-        '<p class="t-job-card__lock">社名・詳細条件の<strong>全文</strong>は<strong>10分のお電話後</strong> — 現職と並べて比較できます</p>' +
-        "</article>";
+    jobs.forEach(function (job, i) {
+      html += renderOneCard(job, base + i, profile, {});
     });
     return html;
+  }
+
+  function updateHeroMoreLink(restCount) {
+    var moreEl = document.querySelector(".t-hero__more");
+    if (!moreEl) return;
+    if (restCount <= 0) {
+      moreEl.hidden = true;
+      return;
+    }
+    moreEl.hidden = false;
+    var link = moreEl.querySelector("a");
+    if (link) {
+      link.textContent = "他" + restCount + "件も下に表示しています";
+    }
+  }
+
+  function updateJobsSectionTitle(restCount) {
+    var titleEl = document.getElementById("t-jobs-title");
+    if (!titleEl) return;
+    if (restCount <= 0) {
+      titleEl.textContent = "気になる方は日時を選ぶだけ";
+      return;
+    }
+    titleEl.textContent =
+      "残り" + restCount + "件も、同じ形式で比べられます";
   }
 
   function refreshPreview(reason) {
@@ -425,13 +466,37 @@
     var profile = readProfile();
     var jobs = rankJobs(activeGroup, profile);
     buildLabel(profile, previewData);
-    root.innerHTML = renderCards(jobs, profile);
+
+    if (heroRoot) {
+      heroRoot.setAttribute("aria-busy", "false");
+      if (jobs[0]) {
+        heroRoot.innerHTML = renderOneCard(jobs[0], 0, profile, { hero: true });
+      } else {
+        heroRoot.innerHTML =
+          '<p class="t-hero-gift__empty">あなた向けの概要を準備しています…</p>';
+      }
+    }
+
+    var rest = jobs.slice(1);
+    updateHeroMoreLink(rest.length);
+    updateJobsSectionTitle(rest.length);
+
+    if (root) {
+      if (rest.length) {
+        root.innerHTML = renderCards(rest, profile, 1);
+      } else {
+        root.innerHTML =
+          '<p class="t-jobs__rest-note">上の1件をご確認ください。気になる方は下の日時から。</p>';
+      }
+    }
+
     bindJobCards();
     pushDL("thanks_job_preview_refresh", {
       reason: reason || "init",
       job_intent: profile.intent || "",
       user_pref: profile.pref || "",
-      preview_count: jobs.length
+      preview_count: jobs.length,
+      hero_gift: jobs.length > 0 ? 1 : 0
     });
     try {
       document.dispatchEvent(
@@ -481,7 +546,16 @@
   }
 
   function bindJobCards() {
-    root.querySelectorAll(".t-job-card").forEach(function (card) {
+    var cards = [];
+    if (heroRoot) {
+      cards = cards.concat(Array.prototype.slice.call(heroRoot.querySelectorAll(".t-job-card")));
+    }
+    if (root) {
+      cards = cards.concat(Array.prototype.slice.call(root.querySelectorAll(".t-job-card")));
+    }
+    cards.forEach(function (card) {
+      if (card._boundJobCard) return;
+      card._boundJobCard = true;
       function activate() {
         var title = card.getAttribute("data-job-title") || "";
         try {
@@ -489,7 +563,8 @@
         } catch (e0) {}
         pushDL("thanks_job_card_click", {
           job_index: card.getAttribute("data-job-index") || "",
-          job_title: title
+          job_title: title,
+          hero_card: card.classList.contains("t-job-card--hero") ? 1 : 0
         });
         var cal = document.getElementById("t-calendar");
         if (cal) cal.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -548,14 +623,21 @@
         }
       })
       .catch(function () {
-        root.innerHTML =
-          '<p class="t-jobs__error">案件の表示に失敗しました。下の日時からご相談いただけます。</p>';
+        if (heroRoot) {
+          heroRoot.setAttribute("aria-busy", "false");
+          heroRoot.innerHTML =
+            '<p class="t-hero-gift__empty">概要の表示に失敗しました</p>';
+        }
+        if (root) {
+          root.innerHTML =
+            '<p class="t-jobs__error">案件の表示に失敗しました。下の日時からご相談いただけます。</p>';
+        }
       });
   }
 
   function startPreviewLoad() {
     var section = document.getElementById("t-jobs-preview");
-    var target = section || root;
+    var target = section || root || heroRoot;
     if (section && section.classList.contains("t-jobs--first")) {
       loadPreview();
       return;
