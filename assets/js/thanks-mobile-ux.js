@@ -24,6 +24,17 @@
     el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function mountBookingWhenReady() {
+    var dk = window.dkThanks;
+    if (dk && dk.ensureBookingScripts) {
+      return dk.ensureBookingScripts().then(function () {
+        if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+      });
+    }
+    if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+    return Promise.resolve();
+  }
+
   function expandCalendar(opts) {
     opts = opts || {};
     var cal = document.getElementById("t-calendar");
@@ -33,7 +44,7 @@
     panel.hidden = false;
     cal.classList.remove("t-cal--collapsed");
     btn.setAttribute("aria-expanded", "true");
-    if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+    mountBookingWhenReady();
     try {
       document.dispatchEvent(new CustomEvent("thanks_calendar_expand"));
     } catch (e0) {}
@@ -90,7 +101,9 @@
         function (entries) {
           if (!entries[0] || !entries[0].isIntersecting) return;
           calObs.disconnect();
-          if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+          if (window.dkThanks && window.dkThanks.ensureBookingScripts) {
+            window.dkThanks.ensureBookingScripts();
+          }
         },
         { rootMargin: "160px 0px 0px 0px", threshold: 0.01 }
       );

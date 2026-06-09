@@ -30,16 +30,14 @@ function exists(rel) {
 const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
-  ["thanks-v2-shared.js?v=4", "shared v4 prefetch json cache"],
+  ["thanks-v2-shared.js?v=5", "shared v5 lazy booking loader"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=46", "css v46 preview story copy pass"],
+  ["thanks-page.css?v=47", "css v47 dead-code trim"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP", "noto font"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
-  ["thanks-booking-bootstrap.js?v=17", "booking bootstrap v17 lazy slots"],
-  ["thanks-booking-custom.js?v=31", "booking custom v31 benefit CTA"],
   ["thanks-job-preview.js?v=18", "job preview v18 shared json cache"],
-  ["thanks-v2-deferred.js?v=8", "deferred bundle v8 profile eager load"],
+  ["thanks-v2-deferred.js?v=9", "deferred bundle v9 lazy booking mount"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -93,6 +91,8 @@ const forbidden = [
   ["thanks-license-profile.js", "license profile 単体（deferred bundle化）"],
   ["thanks-section-visuals.js", "section visuals 単体（deferred bundle化）"],
   ["booking-slots.json\" as=\"fetch\"", "booking slots preload（カレンダー展開時取得）"],
+  ["thanks-booking-bootstrap.js", "booking bootstrap inline（動的読込）"],
+  ["thanks-booking-custom.js", "booking custom inline（動的読込）"],
   ["10分だけ話を聞く", "removed talk-first CTA"],
   ["本登録", "本登録表記"],
   ["仮登録完了", "仮登録表記（登録完了に統一）"],
@@ -159,6 +159,9 @@ pageCss.includes("visuals v26")
 pageCss.includes("t-cal__toggle")
   ? pass("css", "calendar collapse toggle styles")
   : fail("css", "t-cal__toggle styles missing");
+!pageCss.includes(".t-flow {") && !pageCss.includes(".t-hero__merit {")
+  ? pass("css", "removed dead flow/merit blocks")
+  : fail("css", "dead css blocks remain");
 
 const testimonials = read("assets/js/thanks-testimonials.js");
 testimonials.includes("applySocialStrip")
@@ -178,6 +181,14 @@ sharedJs.includes("fireThanksPageEvents")
 sharedJs.includes("fetchJson") && sharedJs.includes("prefetchThanksData")
   ? pass("shared.js", "json prefetch cache")
   : fail("shared.js", "fetchJson / prefetchThanksData missing");
+sharedJs.includes("ensureBookingScripts")
+  ? pass("shared.js", "lazy booking script loader")
+  : fail("shared.js", "ensureBookingScripts missing");
+
+const mobileUx = read("assets/js/thanks-mobile-ux.js");
+mobileUx.includes("ensureBookingScripts") && mobileUx.includes("mountBookingWhenReady")
+  ? pass("mobile-ux", "calendar expand loads booking js")
+  : fail("mobile-ux", "lazy booking mount missing");
 
 const licenseJs = read("assets/js/thanks-license-profile.js");
 licenseJs.includes("thanks_profile_ready")
