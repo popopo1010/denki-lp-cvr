@@ -30,7 +30,7 @@ function exists(rel) {
 const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
-  ["thanks-v2-shared.js?v=3", "shared v3 early page events"],
+  ["thanks-v2-shared.js?v=4", "shared v4 prefetch json cache"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
   ["thanks-page.css?v=46", "css v46 preview story copy pass"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
@@ -38,8 +38,8 @@ const requiredStrings = [
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
   ["thanks-booking-bootstrap.js?v=17", "booking bootstrap v17 lazy slots"],
   ["thanks-booking-custom.js?v=31", "booking custom v31 benefit CTA"],
-  ["thanks-job-preview.js?v=17", "job preview v17 family json"],
-  ["thanks-v2-deferred.js?v=7", "deferred bundle v7 expanded"],
+  ["thanks-job-preview.js?v=18", "job preview v18 shared json cache"],
+  ["thanks-v2-deferred.js?v=8", "deferred bundle v8 profile eager load"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -148,11 +148,6 @@ profileIds.length >= 10
     : fail("license-page", `missing thanks-v2/p/${id}/`);
 });
 
-const licenseJs = read("assets/js/thanks-license-profile.js");
-licenseJs.includes("thanks_profile_ready")
-  ? pass("license-profile.js", "profile ready event")
-  : fail("license-profile.js", "missing thanks_profile_ready");
-
 const pageCss = read("assets/css/thanks-page.css");
 pageCss.includes("thanks-calendar merged")
   ? pass("css", "calendar merged into page.css")
@@ -180,6 +175,17 @@ const sharedJs = read("assets/js/thanks-v2-shared.js");
 sharedJs.includes("fireThanksPageEvents")
   ? pass("shared.js", "early thanks page events")
   : fail("shared.js", "fireThanksPageEvents missing");
+sharedJs.includes("fetchJson") && sharedJs.includes("prefetchThanksData")
+  ? pass("shared.js", "json prefetch cache")
+  : fail("shared.js", "fetchJson / prefetchThanksData missing");
+
+const licenseJs = read("assets/js/thanks-license-profile.js");
+licenseJs.includes("thanks_profile_ready")
+  ? pass("license-profile.js", "profile ready event")
+  : fail("license-profile.js", "missing thanks_profile_ready");
+licenseJs.includes("requestIdleCallback")
+  ? fail("license-profile.js", "profile should not idle-defer")
+  : pass("license-profile.js", "eager profile load");
 
 const bootstrapJs = read("assets/js/thanks-booking-bootstrap.js");
 bootstrapJs.includes("dkThanksEnsureBookingSlots")
@@ -202,6 +208,9 @@ const jobPreview = read("assets/js/thanks-job-preview.js");
 jobPreview.includes("thanks-job-previews-") && jobPreview.includes("resolveDataUrl")
   ? pass("job-preview", "family-scoped preview json")
   : fail("job-preview", "family preview fetch missing");
+jobPreview.includes("fetchJson")
+  ? pass("job-preview", "shared json cache reuse")
+  : fail("job-preview", "fetchJson reuse missing");
 jobPreview.includes("t-job-card__facts") &&
   jobPreview.includes("resolveSalaryBand")
   ? pass("job-preview", "job facts cards (area / salary band)")

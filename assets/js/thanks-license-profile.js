@@ -132,19 +132,19 @@
   };
 
   function loadProfile() {
-    fetch(DATA_URL, { credentials: "same-origin", cache: "default" })
-      .then(function (res) {
-        return res.ok ? res.json() : null;
-      })
+    var load = dk.fetchJson
+      ? dk.fetchJson("data/thanks-license-profiles.json")
+      : fetch(DATA_URL, { credentials: "same-origin", cache: "default" }).then(
+          function (res) {
+            return res.ok ? res.json() : null;
+          }
+        );
+    load
       .then(function (data) {
         if (data) boot(data);
       })
       .catch(function () {});
   }
 
-  if ("requestIdleCallback" in window) {
-    requestIdleCallback(loadProfile, { timeout: 2000 });
-  } else {
-    setTimeout(loadProfile, 0);
-  }
+  loadProfile();
 })();

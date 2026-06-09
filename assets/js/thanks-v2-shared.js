@@ -103,6 +103,27 @@
     return prefix + "assets/" + sub;
   };
 
+  var jsonCache = Object.create(null);
+  dk.fetchJson = function (rel) {
+    var key = String(rel || "");
+    if (!key) return Promise.reject(new Error("empty rel"));
+    if (jsonCache[key]) return jsonCache[key];
+    jsonCache[key] = fetch(dk.assetUrl(key), {
+      credentials: "same-origin",
+      cache: "default"
+    }).then(function (res) {
+      if (!res.ok) throw new Error("fetch failed: " + key);
+      return res.json();
+    });
+    return jsonCache[key];
+  };
+
+  dk.prefetchThanksData = function () {
+    dk.fetchJson("data/thanks-license-profiles.json").catch(function () {});
+    var family = dk.getJobFamily(dk.getLpSlug());
+    dk.fetchJson("data/thanks-job-previews-" + family + ".json").catch(function () {});
+  };
+
   dk.fireThanksPageEvents = function () {
     if (window.__dkThanksPageEventsFired) return;
     window.__dkThanksPageEventsFired = true;
@@ -145,4 +166,5 @@
   };
 
   dk.fireThanksPageEvents();
+  dk.prefetchThanksData();
 })();

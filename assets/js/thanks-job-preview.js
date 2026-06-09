@@ -620,11 +620,17 @@
   }
 
   function loadPreview() {
-    fetch(resolveDataUrl())
-      .then(function (res) {
-        if (!res.ok) throw new Error("family preview missing");
-        return res.json();
-      })
+    var family = getLpFamily();
+    var rel = "data/thanks-job-previews-" + family + ".json";
+    var load =
+      window.dkThanks && window.dkThanks.fetchJson
+        ? window.dkThanks.fetchJson(rel)
+        : fetch(resolveDataUrl()).then(function (res) {
+            if (!res.ok) throw new Error("family preview missing");
+            return res.json();
+          });
+
+    load
       .then(function (data) {
         if (window.dkThanksWhenProfileReady) {
           window.dkThanksWhenProfileReady(function () {
@@ -643,10 +649,13 @@
           showPreviewError();
           return;
         }
-        fetch(fallbackUrl)
-          .then(function (res) {
-            return res.json();
-          })
+        var fallbackLoad =
+          window.dkThanks && window.dkThanks.fetchJson
+            ? window.dkThanks.fetchJson("data/thanks-job-previews.json")
+            : fetch(fallbackUrl).then(function (res) {
+                return res.json();
+              });
+        fallbackLoad
           .then(function (data) {
             if (window.dkThanksWhenProfileReady) {
               window.dkThanksWhenProfileReady(function () {
