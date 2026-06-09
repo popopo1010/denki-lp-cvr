@@ -102,4 +102,47 @@
     for (var i = 0; i < depth; i++) prefix = "../" + prefix;
     return prefix + "assets/" + sub;
   };
+
+  dk.fireThanksPageEvents = function () {
+    if (window.__dkThanksPageEventsFired) return;
+    window.__dkThanksPageEventsFired = true;
+    var LEAD_SESSION_TTL_MS = 30 * 60 * 1000;
+    var CONVERSION_FIRED_KEY = "dk_lp_conversion_fired";
+    function isQualified() {
+      try {
+        var raw = sessionStorage.getItem(LEAD_SESSION_KEY);
+        if (!raw) return false;
+        var data = JSON.parse(raw);
+        return !!(data && data.lp && Date.now() - data.ts < LEAD_SESSION_TTL_MS);
+      } catch (e) {
+        return false;
+      }
+    }
+    var qualified = isQualified();
+    var lpSlug = dk.getLpSlug() || "unknown";
+    var base = {
+      lp_slug: lpSlug,
+      thanks_qualified: qualified,
+      page_location: location.href,
+      page_path: location.pathname,
+      page_type: "thanks-v2"
+    };
+    dk.pushDL("thanks_page_view", base);
+    dk.pushDL("thanks_pageview", base);
+    dk.pushDL("form_complete", { page_type: "thanks-v2" });
+    dk.pushDL("thanks_provisional_registration", base);
+    if (qualified) {
+      try {
+        if (!sessionStorage.getItem(CONVERSION_FIRED_KEY)) {
+          sessionStorage.setItem(CONVERSION_FIRED_KEY, "1");
+          dk.pushDL("lead_conversion", {
+            lp_slug: lpSlug,
+            conversion_source: "lp_form"
+          });
+        }
+      } catch (e3) {}
+    }
+  };
+
+  dk.fireThanksPageEvents();
 })();

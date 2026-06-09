@@ -6,10 +6,18 @@
   var heroRoot = document.getElementById("job-preview-hero");
   if (!root && !heroRoot) return;
 
-  var DATA_URL =
-    (window.dkThanks && window.dkThanks.assetUrl
-      ? window.dkThanks.assetUrl("data/thanks-job-previews.json")
-      : null) || "../assets/data/thanks-job-previews.json";
+  var DATA_URL = null;
+
+  function resolveDataUrl() {
+    if (DATA_URL) return DATA_URL;
+    var family = getLpFamily();
+    var rel = "data/thanks-job-previews-" + family + ".json";
+    DATA_URL =
+      (window.dkThanks && window.dkThanks.assetUrl
+        ? window.dkThanks.assetUrl(rel)
+        : null) || "../assets/data/thanks-job-previews-" + family + ".json";
+    return DATA_URL;
+  }
   var INTENT_KEY = "dk_job_intent";
   var PROFILE_KEY = "dk_lead_profile";
 
@@ -612,8 +620,9 @@
   }
 
   function loadPreview() {
-    fetch(DATA_URL)
+    fetch(resolveDataUrl())
       .then(function (res) {
+        if (!res.ok) throw new Error("family preview missing");
         return res.json();
       })
       .then(function (data) {
@@ -626,16 +635,41 @@
         }
       })
       .catch(function () {
-        if (heroRoot) {
-          heroRoot.setAttribute("aria-busy", "false");
-          heroRoot.innerHTML =
-            '<p class="t-hero-gift__empty">概要の表示に失敗しました</p>';
+        var fallbackUrl =
+          (window.dkThanks && window.dkThanks.assetUrl
+            ? window.dkThanks.assetUrl("data/thanks-job-previews.json")
+            : null) || "../assets/data/thanks-job-previews.json";
+        if (fallbackUrl === resolveDataUrl()) {
+          showPreviewError();
+          return;
         }
-        if (root) {
-          root.innerHTML =
-            '<p class="t-jobs__error">案件の表示に失敗しました。下の日時からご相談いただけます。</p>';
-        }
+        fetch(fallbackUrl)
+          .then(function (res) {
+            return res.json();
+          })
+          .then(function (data) {
+            if (window.dkThanksWhenProfileReady) {
+              window.dkThanksWhenProfileReady(function () {
+                bootPreview(data);
+              });
+            } else {
+              bootPreview(data);
+            }
+          })
+          .catch(showPreviewError);
       });
+  }
+
+  function showPreviewError() {
+    if (heroRoot) {
+      heroRoot.setAttribute("aria-busy", "false");
+      heroRoot.innerHTML =
+        '<p class="t-hero-gift__empty">概要の表示に失敗しました</p>';
+    }
+    if (root) {
+      root.innerHTML =
+        '<p class="t-jobs__error">案件の表示に失敗しました。下の日時からご相談いただけます。</p>';
+    }
   }
 
   function startPreviewLoad() {

@@ -30,17 +30,16 @@ function exists(rel) {
 const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
-  ["thanks-v2-shared.js?v=2", "shared v2"],
-  ["thanks-license-profile.js?v=2", "license profile v2"],
+  ["thanks-v2-shared.js?v=3", "shared v3 early page events"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-section-visuals.js?v=2", "section visuals v2"],
-  ["thanks-page.css?v=43", "css v43 calendar collapse"],
+  ["thanks-page.css?v=44", "css v44 perf pass"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP", "noto font"],
-  ["thanks-booking-bootstrap.js?v=16", "booking bootstrap v16 fetch 7d"],
-  ["thanks-booking-custom.js?v=29", "booking custom v29 calendar expand on book"],
-  ["thanks-job-preview.js?v=16", "job preview v16 hero split"],
-  ["thanks-v2-deferred.js?v=6", "deferred bundle v6 social strip + cal collapse"],
+  ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
+  ["thanks-booking-bootstrap.js?v=17", "booking bootstrap v17 lazy slots"],
+  ["thanks-booking-custom.js?v=30", "booking custom v30 lazy mount"],
+  ["thanks-job-preview.js?v=17", "job preview v17 family json"],
+  ["thanks-v2-deferred.js?v=7", "deferred bundle v7 expanded"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -88,6 +87,9 @@ const forbidden = [
   ["thanks-testimonial-stories.json\" as=\"fetch\"", "stories preload（遅延取得）"],
   ["thanks-job-previews.json\" as=\"fetch\"", "job previews preload（ビューポート近傍で取得）"],
   ["thanks-gtm.js", "gtm 単体（bundle化）"],
+  ["thanks-license-profile.js", "license profile 単体（deferred bundle化）"],
+  ["thanks-section-visuals.js", "section visuals 単体（deferred bundle化）"],
+  ["booking-slots.json\" as=\"fetch\"", "booking slots preload（カレンダー展開時取得）"],
   ["本登録", "本登録表記"],
   ["仮登録完了", "仮登録表記（登録完了に統一）"],
   ["t-proof-strip", "removed redundant proof strip"],
@@ -168,12 +170,32 @@ testimonials.includes("cvr-story__para")
   ? pass("testimonials", "story paragraph breaks")
   : fail("testimonials", "cvr-story__para missing");
 
+const sharedJs = read("assets/js/thanks-v2-shared.js");
+sharedJs.includes("fireThanksPageEvents")
+  ? pass("shared.js", "early thanks page events")
+  : fail("shared.js", "fireThanksPageEvents missing");
+
+const bootstrapJs = read("assets/js/thanks-booking-bootstrap.js");
+bootstrapJs.includes("dkThanksEnsureBookingSlots")
+  ? pass("booking-bootstrap", "lazy slot fetch gate")
+  : fail("booking-bootstrap", "dkThanksEnsureBookingSlots missing");
+
+const bookingCustom = read("assets/js/thanks-booking-custom.js");
+bookingCustom.includes("dkThanksMountBooking")
+  ? pass("booking-custom", "lazy booking UI mount")
+  : fail("booking-custom", "dkThanksMountBooking missing");
+
 const deferred = read("assets/js/thanks-v2-deferred.js");
-deferred.includes("applySocialStrip") && deferred.includes("dkThanksExpandCalendar")
-  ? pass("deferred", "social strip + calendar expand")
-  : fail("deferred", "missing social strip or calendar expand");
+deferred.includes("applySocialStrip") &&
+  deferred.includes("dkThanksExpandCalendar") &&
+  deferred.includes("thanks_profile_ready")
+  ? pass("deferred", "social strip + calendar + license profile")
+  : fail("deferred", "missing bundled thanks modules");
 
 const jobPreview = read("assets/js/thanks-job-preview.js");
+jobPreview.includes("thanks-job-previews-") && jobPreview.includes("resolveDataUrl")
+  ? pass("job-preview", "family-scoped preview json")
+  : fail("job-preview", "family preview fetch missing");
 jobPreview.includes("t-job-card__facts") &&
   jobPreview.includes("resolveSalaryBand")
   ? pass("job-preview", "job facts cards (area / salary band)")
@@ -182,7 +204,16 @@ jobPreview.includes("IntersectionObserver")
   ? pass("job-preview", "lazy load near viewport")
   : fail("job-preview", "IntersectionObserver lazy load missing");
 
+["denki", "sekoukanri"].forEach((family) => {
+  exists(`assets/data/thanks-job-previews-${family}.json`)
+    ? pass("job-previews", `family json ${family}`)
+    : fail("job-previews", `missing thanks-job-previews-${family}.json`);
+});
+
 const deploy = read(".github/workflows/deploy.yml");
+deploy.includes("build-thanks-job-previews-family.mjs")
+  ? pass("deploy", "family job preview build step")
+  : fail("deploy", "add build-thanks-job-previews-family.mjs to deploy.yml");
 deploy.includes("build-thanks-v2-deferred.mjs")
   ? pass("deploy", "deferred bundle build step")
   : fail("deploy", "add build-thanks-v2-deferred.mjs to deploy.yml");

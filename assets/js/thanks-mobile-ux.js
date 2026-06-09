@@ -5,7 +5,6 @@
   "use strict";
 
   var dock = document.getElementById("thanks-dock");
-  var flowItems = document.querySelectorAll(".t-flow__item");
   var body = document.body;
   var lineCta = document.getElementById("line-cta");
   var dockLine = document.getElementById("thanks-dock-line");
@@ -34,6 +33,10 @@
     panel.hidden = false;
     cal.classList.remove("t-cal--collapsed");
     btn.setAttribute("aria-expanded", "true");
+    if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+    try {
+      document.dispatchEvent(new CustomEvent("thanks_calendar_expand"));
+    } catch (e0) {}
     if (opts.scroll !== false) {
       cal.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -81,6 +84,18 @@
         expandCalendar({ scroll: false });
       }
     });
+
+    if ("IntersectionObserver" in window) {
+      var calObs = new IntersectionObserver(
+        function (entries) {
+          if (!entries[0] || !entries[0].isIntersecting) return;
+          calObs.disconnect();
+          if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+        },
+        { rootMargin: "160px 0px 0px 0px", threshold: 0.01 }
+      );
+      calObs.observe(cal);
+    }
   }
 
   window.dkThanksExpandCalendar = expandCalendar;
@@ -154,32 +169,8 @@
     body.classList.add("is-dock-visible");
   }
 
-  function updateFlowActive() {
-    if (!flowItems.length) return;
-    var sections = [
-      { id: "t-jobs-preview", step: "1" },
-      { id: "t-calendar", step: "2" },
-      { id: "line-section", step: "3" }
-    ];
-    var scrollY = (window.scrollY || 0) + 120;
-    var current = sections[0].step;
-    sections.forEach(function (s) {
-      var el = document.getElementById(s.id);
-      if (el && el.offsetTop <= scrollY) current = s.step;
-    });
-    flowItems.forEach(function (item) {
-      var step = item.getAttribute("data-step");
-      item.classList.toggle("is-active", step === current);
-      item.classList.toggle(
-        "is-done",
-        step && parseInt(step, 10) < parseInt(current, 10)
-      );
-    });
-  }
-
   function onScroll() {
     updateDock();
-    updateFlowActive();
   }
 
   bindScrollTriggers(document);
@@ -196,20 +187,6 @@
       });
     }
   }
-
-  flowItems.forEach(function (item) {
-    item.addEventListener("click", function (e) {
-      var href = item.getAttribute("href");
-      if (!href || href.charAt(0) !== "#") return;
-      if (href === "#line-section" && !isLineUnlocked()) {
-        e.preventDefault();
-        scrollToTarget("#t-calendar");
-        return;
-      }
-      e.preventDefault();
-      scrollToTarget(href);
-    });
-  });
 
   window.addEventListener("scroll", onScroll, { passive: true });
   document.addEventListener("thanks_line_unlocked", unlockLineStep);

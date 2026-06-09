@@ -583,5 +583,18 @@
     });
   }
 
-  loadSlots();
+  var slotsMounted = false;
+  function ensureBookingUi() {
+    if (slotsMounted) return;
+    slotsMounted = true;
+    if (window.dkThanksEnsureBookingSlots) window.dkThanksEnsureBookingSlots();
+    loadSlots();
+  }
+  window.dkThanksMountBooking = ensureBookingUi;
+  document.addEventListener("thanks_calendar_expand", ensureBookingUi);
+
+  var calPanel = document.getElementById("t-cal-panel");
+  if (calPanel && !calPanel.hidden) {
+    ensureBookingUi();
+  }
 })();

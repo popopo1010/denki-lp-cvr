@@ -45,7 +45,7 @@ echo "✓ denkikouji/thanks not WP 301"
 echo "=== thanks-v2 HTML ==="
 html=$(curl -s "$BASE/thanks-v2/")
 for needle in \
-  'thanks-v2-deferred.js?v=6' \
+  'thanks-v2-deferred.js?v=7' \
   'thanks-page-context.js?v=21' \
   'thanks-booking-custom.js?v=27' \
   't-hero--compact' \

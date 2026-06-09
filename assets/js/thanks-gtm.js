@@ -1,11 +1,10 @@
 /**
- * thanks-v2 GTM（dk_lp main.js と同じ qualified / conversion ルール）
+ * thanks-v2 GTM（LINEクリック計測 — ページview/CVは shared.js で即時発火）
  */
 (function () {
   var dk = window.dkThanks || {};
   var LEAD_SESSION_KEY = "dk_lp_lead_v1";
   var LEAD_SESSION_TTL_MS = 30 * 60 * 1000;
-  var CONVERSION_FIRED_KEY = "dk_lp_conversion_fired";
 
   function pushDL(payload) {
     window.dataLayer = window.dataLayer || [];
@@ -31,6 +30,35 @@
     return "unknown";
   }
 
+  function bindLineClicks() {
+    var qualified = isQualified();
+    var lpSlug = getLpSlug();
+
+    function onLineClick() {
+      var payload = {
+        lp_slug: lpSlug,
+        thanks_qualified: qualified,
+        registration_step: "line_friend_add",
+        page_type: "thanks-v2"
+      };
+      pushDL(Object.assign({ event: "thanks_line_click" }, payload));
+      pushDL(Object.assign({ event: "thanks_full_registration_click" }, payload));
+    }
+
+    document
+      .querySelectorAll('a[href*="lin.ee"], a[href*="line.me"], #line-cta')
+      .forEach(function (link) {
+        if (link._dkLineBound) return;
+        link._dkLineBound = true;
+        link.addEventListener("click", onLineClick);
+      });
+  }
+
+  if (window.__dkThanksPageEventsFired) {
+    bindLineClicks();
+    return;
+  }
+
   var qualified = isQualified();
   var lpSlug = getLpSlug();
 
@@ -43,7 +71,6 @@
     page_type: "thanks-v2"
   });
 
-  // 既存 GTM GA4 タグ（thanks_pageview）との互換
   pushDL({
     event: "thanks_pageview",
     lp_slug: lpSlug,
@@ -64,6 +91,7 @@
 
   if (qualified) {
     try {
+      var CONVERSION_FIRED_KEY = "dk_lp_conversion_fired";
       if (!sessionStorage.getItem(CONVERSION_FIRED_KEY)) {
         sessionStorage.setItem(CONVERSION_FIRED_KEY, "1");
         pushDL({
@@ -75,20 +103,5 @@
     } catch (e3) {}
   }
 
-  function onLineClick() {
-    var payload = {
-      lp_slug: lpSlug,
-      thanks_qualified: qualified,
-      registration_step: "line_friend_add",
-      page_type: "thanks-v2"
-    };
-    pushDL(Object.assign({ event: "thanks_line_click" }, payload));
-    pushDL(Object.assign({ event: "thanks_full_registration_click" }, payload));
-  }
-
-  document
-    .querySelectorAll('a[href*="lin.ee"], a[href*="line.me"], #line-cta')
-    .forEach(function (link) {
-      link.addEventListener("click", onLineClick);
-    });
+  bindLineClicks();
 })();

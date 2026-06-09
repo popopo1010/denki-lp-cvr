@@ -1,12 +1,11 @@
 /** thanks-v2 deferred bundle — edit parts in assets/js/, then: node scripts/build-thanks-v2-deferred.mjs */
 /**
- * thanks-v2 GTM（dk_lp main.js と同じ qualified / conversion ルール）
+ * thanks-v2 GTM（LINEクリック計測 — ページview/CVは shared.js で即時発火）
  */
 (function () {
   var dk = window.dkThanks || {};
   var LEAD_SESSION_KEY = "dk_lp_lead_v1";
   var LEAD_SESSION_TTL_MS = 30 * 60 * 1000;
-  var CONVERSION_FIRED_KEY = "dk_lp_conversion_fired";
 
   function pushDL(payload) {
     window.dataLayer = window.dataLayer || [];
@@ -32,6 +31,35 @@
     return "unknown";
   }
 
+  function bindLineClicks() {
+    var qualified = isQualified();
+    var lpSlug = getLpSlug();
+
+    function onLineClick() {
+      var payload = {
+        lp_slug: lpSlug,
+        thanks_qualified: qualified,
+        registration_step: "line_friend_add",
+        page_type: "thanks-v2"
+      };
+      pushDL(Object.assign({ event: "thanks_line_click" }, payload));
+      pushDL(Object.assign({ event: "thanks_full_registration_click" }, payload));
+    }
+
+    document
+      .querySelectorAll('a[href*="lin.ee"], a[href*="line.me"], #line-cta')
+      .forEach(function (link) {
+        if (link._dkLineBound) return;
+        link._dkLineBound = true;
+        link.addEventListener("click", onLineClick);
+      });
+  }
+
+  if (window.__dkThanksPageEventsFired) {
+    bindLineClicks();
+    return;
+  }
+
   var qualified = isQualified();
   var lpSlug = getLpSlug();
 
@@ -44,7 +72,6 @@
     page_type: "thanks-v2"
   });
 
-  // 既存 GTM GA4 タグ（thanks_pageview）との互換
   pushDL({
     event: "thanks_pageview",
     lp_slug: lpSlug,
@@ -65,6 +92,7 @@
 
   if (qualified) {
     try {
+      var CONVERSION_FIRED_KEY = "dk_lp_conversion_fired";
       if (!sessionStorage.getItem(CONVERSION_FIRED_KEY)) {
         sessionStorage.setItem(CONVERSION_FIRED_KEY, "1");
         pushDL({
@@ -76,22 +104,7 @@
     } catch (e3) {}
   }
 
-  function onLineClick() {
-    var payload = {
-      lp_slug: lpSlug,
-      thanks_qualified: qualified,
-      registration_step: "line_friend_add",
-      page_type: "thanks-v2"
-    };
-    pushDL(Object.assign({ event: "thanks_line_click" }, payload));
-    pushDL(Object.assign({ event: "thanks_full_registration_click" }, payload));
-  }
-
-  document
-    .querySelectorAll('a[href*="lin.ee"], a[href*="line.me"], #line-cta')
-    .forEach(function (link) {
-      link.addEventListener("click", onLineClick);
-    });
+  bindLineClicks();
 })();
 
 /**
@@ -137,6 +150,285 @@
 
   var lineBtn = document.getElementById("line-cta");
   if (lineBtn) lineBtn.addEventListener("click", notifyLineClick);
+})();
+
+/**
+ * thanks-v2: 登録資格 / LP slug からプロファイルを解決し、ページを資格別に最適化
+ */
+(function () {
+  "use strict";
+
+  var DATA_URL =
+    (window.dkThanks && window.dkThanks.assetUrl
+      ? window.dkThanks.assetUrl("data/thanks-license-profiles.json")
+      : null) || "../assets/data/thanks-license-profiles.json";
+  var dk = window.dkThanks || {};
+
+  function readLicense() {
+    try {
+      var lic = sessionStorage.getItem("_license") || "";
+      if (lic) return lic.trim();
+    } catch (e1) {}
+    try {
+      var raw = sessionStorage.getItem("dk_lead_profile");
+      if (raw) {
+        var p = JSON.parse(raw);
+        if (p && p.license) return String(p.license).trim();
+      }
+    } catch (e2) {}
+    return "";
+  }
+
+  function readLpSlug() {
+    if (dk.getLpSlug) return dk.getLpSlug();
+    try {
+      return sessionStorage.getItem("_lp") || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function readProfileHint() {
+    try {
+      var qs = new URLSearchParams(location.search);
+      if (qs.get("dk_profile")) return qs.get("dk_profile");
+    } catch (e0) {}
+    var m = location.pathname.match(/\/thanks-v2\/p\/([^/]+)\/?/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+
+  function licenseMatches(license, patterns) {
+    if (!license || !patterns || !patterns.length) return false;
+    var lic = String(license);
+    for (var i = 0; i < patterns.length; i++) {
+      var p = patterns[i];
+      if (!p) continue;
+      if (lic === p) return true;
+      if (p.length >= 3 && (lic.indexOf(p) >= 0 || p.indexOf(lic) >= 0)) return true;
+    }
+    return false;
+  }
+
+  function resolveProfile(data) {
+    var profiles = data.profiles || {};
+    var fallbackId = data.fallback_profile || "denki_lp";
+    var hint = readProfileHint();
+    if (hint && profiles[hint]) return profiles[hint];
+
+    var license = readLicense();
+    var slug = readLpSlug();
+    var keys = Object.keys(profiles);
+    var i;
+
+    for (i = 0; i < keys.length; i++) {
+      if (licenseMatches(license, profiles[keys[i]].license_match)) {
+        return profiles[keys[i]];
+      }
+    }
+
+    for (i = 0; i < keys.length; i++) {
+      var slugs = profiles[keys[i]].lp_slugs || [];
+      if (slug && slugs.indexOf(slug) >= 0) return profiles[keys[i]];
+    }
+
+    return profiles[fallbackId] || profiles.denki_lp;
+  }
+
+  function applyDom(profile) {
+    if (!profile) return;
+    document.documentElement.setAttribute("data-thanks-profile", profile.id || "");
+    if (profile.label) {
+      document.documentElement.setAttribute("data-thanks-license", profile.label);
+    }
+
+    var tTitle = document.querySelector(".cvr-testimonials__title");
+    var tLead = document.querySelector(".cvr-testimonials__lead");
+    if (tTitle && profile.testimonials_title) tTitle.textContent = profile.testimonials_title;
+    if (tLead && profile.testimonials_lead) tLead.innerHTML = profile.testimonials_lead;
+
+    var jobsTitle = document.getElementById("t-jobs-title");
+    if (jobsTitle && profile.jobs_title) jobsTitle.textContent = profile.jobs_title;
+
+    var jobsLead = document.querySelector(".t-jobs__lead");
+    if (jobsLead && profile.comparison_line) {
+      var base =
+        "登録内容に合う求人の概要を、先にお見せします。";
+      jobsLead.innerHTML =
+        base +
+        profile.comparison_line +
+        "。全文は<strong>10分の電話後</strong>にお送りします。";
+    }
+
+    window.dkThanksLicenseProfile = profile;
+    try {
+      document.dispatchEvent(
+        new CustomEvent("thanks_profile_ready", { detail: profile })
+      );
+    } catch (eEv) {}
+  }
+
+  function boot(data) {
+    var profile = resolveProfile(data);
+    applyDom(profile);
+    window.__dkThanksProfileReady = true;
+    return profile;
+  }
+
+  window.dkThanksWhenProfileReady = function (fn) {
+    if (window.dkThanksLicenseProfile) {
+      fn(window.dkThanksLicenseProfile);
+      return;
+    }
+    document.addEventListener("thanks_profile_ready", function handler(ev) {
+      document.removeEventListener("thanks_profile_ready", handler);
+      fn((ev && ev.detail) || window.dkThanksLicenseProfile);
+    });
+  };
+
+  function loadProfile() {
+    fetch(DATA_URL, { credentials: "same-origin", cache: "default" })
+      .then(function (res) {
+        return res.ok ? res.json() : null;
+      })
+      .then(function (data) {
+        if (data) boot(data);
+      })
+      .catch(function () {});
+  }
+
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(loadProfile, { timeout: 2000 });
+  } else {
+    setTimeout(loadProfile, 0);
+  }
+})();
+
+/**
+ * thanks-v2: セクション見出し・資格バッジ・ステップ／チップのアイコン
+ */
+(function () {
+  "use strict";
+
+  var LICENSE_ILLUS = {
+    denki:
+      '<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#eef2fa"/><path d="M26 8L16 26h7l-3 14 14-22h-8l4-10z" fill="#f59e0b" stroke="#d97706" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+    denki_sekou:
+      '<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#eef2fa"/><rect x="14" y="12" width="20" height="26" rx="3" fill="#fff" stroke="#314c85" stroke-width="1.5"/><path d="M18 18h12M18 23h12M18 28h8" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/><path d="M30 10l-6 8h4l-2 10 8-12h-5l1-6z" fill="#f59e0b"/></svg>',
+    denki_shunin:
+      '<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#eef2fa"/><circle cx="24" cy="22" r="10" fill="none" stroke="#314c85" stroke-width="2"/><path d="M24 12v4M24 28v4M16 22h-4M32 22h4" stroke="#314c85" stroke-width="2" stroke-linecap="round"/><path d="M26 8L18 22h5l-2 12 11-16h-6l0-10z" fill="#f59e0b"/></svg>',
+    kentiku:
+      '<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#eef2fa"/><path d="M12 34V18l12-8 12 8v16" fill="#fff" stroke="#314c85" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 34v-8h4v8M26 34v-12h4v12" fill="#cbd5e1"/></svg>',
+    doboku:
+      '<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#eef2fa"/><path d="M10 32h28" stroke="#64748b" stroke-width="2" stroke-linecap="round"/><path d="M14 32l4-14h12l4 14" fill="#fff" stroke="#314c85" stroke-width="1.5" stroke-linejoin="round"/><circle cx="20" cy="32" r="3" fill="#f59e0b"/></svg>',
+    sekoukanri:
+      '<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#e8f5e9"/><path d="M16 32c0-6 3.5-10 8-10s8 4 8 10" fill="#fff" stroke="#1b5e20" stroke-width="1.5"/><path d="M20 22h8l2 6H18l2-6z" fill="#2e7d32"/><rect x="17" y="14" width="14" height="6" rx="2" fill="#1b5e20"/></svg>'
+  };
+
+  var INTENT_ICONS = {
+    salary:
+      '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#eef2fa"/><text x="10" y="14" text-anchor="middle" font-size="11" font-weight="800" fill="#314c85">¥</text></svg>',
+    area:
+      '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 2C7 8 4 9 4 13a6 6 0 0 0 12 0c0-4-3-5-6-11z" fill="#eef2fa" stroke="#314c85" stroke-width="1.2"/><circle cx="10" cy="13" r="2" fill="#314c85"/></svg>',
+    stable:
+      '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="3" y="8" width="14" height="9" rx="2" fill="#eef2fa" stroke="#314c85" stroke-width="1.2"/><path d="M6 8V6a4 4 0 0 1 8 0v2" fill="none" stroke="#314c85" stroke-width="1.2"/></svg>',
+    private:
+      '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="2" fill="#eef2fa" stroke="#314c85" stroke-width="1.2"/><path d="M7 9V7a3 3 0 0 1 6 0v2" fill="none" stroke="#314c85" stroke-width="1.2"/><circle cx="10" cy="13" r="1.5" fill="#314c85"/></svg>'
+  };
+
+  var STEP_ICONS = [
+    '<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="3" y="2" width="14" height="16" rx="2" fill="#fff" stroke="#314c85" stroke-width="1.2"/><path d="M6 7h8M6 10h8M6 13h5" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round"/></svg>',
+    '<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="5" y="3" width="10" height="14" rx="2" fill="#ecfdf5" stroke="#059669" stroke-width="1.2"/><path d="M8 14h4" stroke="#059669" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    '<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="14" height="11" rx="2" fill="#f0fdf4" stroke="#06c755" stroke-width="1.2"/><path d="M6 9h8M6 12h5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>'
+  ];
+
+  function visualKeyFromProfile(profile) {
+    if (profile.visual_key) return profile.visual_key;
+    var id = profile.id || "";
+    if (id.indexOf("denki_sekou") === 0) return "denki_sekou";
+    if (id.indexOf("denki_shunin") === 0) return "denki_shunin";
+    if (id.indexOf("kentiku") === 0) return "kentiku";
+    if (id.indexOf("doboku") === 0) return "doboku";
+    if (id.indexOf("sekoukanri") === 0) return "sekoukanri";
+    if (profile.job_family === "sekoukanri") return "sekoukanri";
+    return "denki";
+  }
+
+  function applyLicenseBadge(profile) {
+    var badge = document.getElementById("thanks-license-badge");
+    var icon = document.getElementById("thanks-license-icon");
+    var label = document.getElementById("thanks-license-label");
+    if (!badge || !profile) return;
+    var key = visualKeyFromProfile(profile);
+    if (icon) icon.innerHTML = LICENSE_ILLUS[key] || LICENSE_ILLUS.denki;
+    if (label) label.textContent = profile.label || "登録資格向け";
+    badge.hidden = false;
+    badge.classList.add("is-ready");
+  }
+
+  function decorateHeroSteps() {
+    var steps = document.querySelectorAll(".t-hero__steps li");
+    steps.forEach(function (li, i) {
+      if (li.querySelector(".t-hero__step-icon")) return;
+      var icon = document.createElement("span");
+      icon.className = "t-hero__step-icon";
+      icon.innerHTML = STEP_ICONS[i] || STEP_ICONS[0];
+      var text = document.createElement("span");
+      text.className = "t-hero__step-text";
+      while (li.firstChild) {
+        text.appendChild(li.firstChild);
+      }
+      li.appendChild(icon);
+      li.appendChild(text);
+    });
+  }
+
+  function decorateIntentButtons() {
+    document.querySelectorAll(".t-jobs__intent-btn[data-intent]").forEach(function (btn) {
+      if (btn.querySelector(".t-jobs__intent-icon")) return;
+      var key = btn.getAttribute("data-intent");
+      var icon = document.createElement("span");
+      icon.className = "t-jobs__intent-icon";
+      icon.innerHTML = INTENT_ICONS[key] || INTENT_ICONS.salary;
+      btn.insertBefore(icon, btn.firstChild);
+    });
+  }
+
+  function decorateJobCards() {
+    var cardIcon =
+      '<span class="t-job-card__icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="16" height="16"><rect x="2" y="1" width="12" height="14" rx="1.5" fill="#eef2fa" stroke="#314c85" stroke-width="1"/><path d="M5 5h6M5 8h6" stroke="#94a3b8" stroke-width="1" stroke-linecap="round"/></svg></span>';
+    document.querySelectorAll(".t-job-card").forEach(function (card) {
+      if (card.querySelector(".t-job-card__icon")) return;
+      card.insertAdjacentHTML("afterbegin", cardIcon);
+    });
+  }
+
+  function init() {
+    decorateHeroSteps();
+    decorateIntentButtons();
+    decorateJobCards();
+    if (window.dkThanksWhenProfileReady) {
+      window.dkThanksWhenProfileReady(applyLicenseBadge);
+    } else if (window.dkThanksLicenseProfile) {
+      applyLicenseBadge(window.dkThanksLicenseProfile);
+    }
+  }
+
+  document.addEventListener("thanks_profile_ready", function (ev) {
+    applyLicenseBadge((ev && ev.detail) || window.dkThanksLicenseProfile);
+  });
+
+  document.addEventListener("thanks_job_preview_refresh", decorateJobCards);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  window.dkThanksSectionVisuals = {
+    decorateHeroSteps: decorateHeroSteps,
+    STEP_ICONS: STEP_ICONS
+  };
 })();
 
 (function () {
@@ -499,7 +791,6 @@
   "use strict";
 
   var dock = document.getElementById("thanks-dock");
-  var flowItems = document.querySelectorAll(".t-flow__item");
   var body = document.body;
   var lineCta = document.getElementById("line-cta");
   var dockLine = document.getElementById("thanks-dock-line");
@@ -528,6 +819,10 @@
     panel.hidden = false;
     cal.classList.remove("t-cal--collapsed");
     btn.setAttribute("aria-expanded", "true");
+    if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+    try {
+      document.dispatchEvent(new CustomEvent("thanks_calendar_expand"));
+    } catch (e0) {}
     if (opts.scroll !== false) {
       cal.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -575,6 +870,18 @@
         expandCalendar({ scroll: false });
       }
     });
+
+    if ("IntersectionObserver" in window) {
+      var calObs = new IntersectionObserver(
+        function (entries) {
+          if (!entries[0] || !entries[0].isIntersecting) return;
+          calObs.disconnect();
+          if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+        },
+        { rootMargin: "160px 0px 0px 0px", threshold: 0.01 }
+      );
+      calObs.observe(cal);
+    }
   }
 
   window.dkThanksExpandCalendar = expandCalendar;
@@ -648,32 +955,8 @@
     body.classList.add("is-dock-visible");
   }
 
-  function updateFlowActive() {
-    if (!flowItems.length) return;
-    var sections = [
-      { id: "t-jobs-preview", step: "1" },
-      { id: "t-calendar", step: "2" },
-      { id: "line-section", step: "3" }
-    ];
-    var scrollY = (window.scrollY || 0) + 120;
-    var current = sections[0].step;
-    sections.forEach(function (s) {
-      var el = document.getElementById(s.id);
-      if (el && el.offsetTop <= scrollY) current = s.step;
-    });
-    flowItems.forEach(function (item) {
-      var step = item.getAttribute("data-step");
-      item.classList.toggle("is-active", step === current);
-      item.classList.toggle(
-        "is-done",
-        step && parseInt(step, 10) < parseInt(current, 10)
-      );
-    });
-  }
-
   function onScroll() {
     updateDock();
-    updateFlowActive();
   }
 
   bindScrollTriggers(document);
@@ -690,20 +973,6 @@
       });
     }
   }
-
-  flowItems.forEach(function (item) {
-    item.addEventListener("click", function (e) {
-      var href = item.getAttribute("href");
-      if (!href || href.charAt(0) !== "#") return;
-      if (href === "#line-section" && !isLineUnlocked()) {
-        e.preventDefault();
-        scrollToTarget("#t-calendar");
-        return;
-      }
-      e.preventDefault();
-      scrollToTarget(href);
-    });
-  });
 
   window.addEventListener("scroll", onScroll, { passive: true });
   document.addEventListener("thanks_line_unlocked", unlockLineStep);

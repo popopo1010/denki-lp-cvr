@@ -245,13 +245,19 @@ window.BOOKING_SLOTS_LS_TTL_MS = 30 * 60 * 1000;
     document.head.appendChild(script);
   }
 
-  prewarmGasRuntime();
-
-  var primed = window.dkBookingSlotsReadCache();
-  if (primed) {
-    window.__dkBookingSlotsPromise = Promise.resolve(primed);
-    refreshInBackground();
-  } else {
-    window.__dkBookingSlotsPromise = window.dkBookingSlotsFetch(false);
-  }
+  window.dkThanksEnsureBookingSlots = function () {
+    if (window.__dkBookingSlotsStarted) {
+      return window.__dkBookingSlotsPromise || Promise.resolve(null);
+    }
+    window.__dkBookingSlotsStarted = true;
+    prewarmGasRuntime();
+    var primed = window.dkBookingSlotsReadCache();
+    if (primed) {
+      window.__dkBookingSlotsPromise = Promise.resolve(primed);
+      refreshInBackground();
+    } else {
+      window.__dkBookingSlotsPromise = window.dkBookingSlotsFetch(false);
+    }
+    return window.__dkBookingSlotsPromise;
+  };
 })();

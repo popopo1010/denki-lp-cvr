@@ -11,6 +11,8 @@ const OUT = path.join(ROOT, "assets/js/thanks-v2-deferred.js");
 const PARTS = [
   "assets/js/thanks-gtm.js",
   "assets/js/thanks-line-beacon.js",
+  "assets/js/thanks-license-profile.js",
+  "assets/js/thanks-section-visuals.js",
   "assets/js/thanks-testimonials.js",
   "assets/js/thanks-mobile-ux.js"
 ];
