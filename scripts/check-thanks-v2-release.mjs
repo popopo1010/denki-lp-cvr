@@ -30,14 +30,16 @@ function exists(rel) {
 const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
-  ["thanks-v2-shared.js?v=5", "shared v5 lazy booking loader"],
+  ["thanks-v2-shared.js?v=6", "shared v6 prefetch json cache"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
   ["thanks-page.css?v=47", "css v47 dead-code trim"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP", "noto font"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
+  ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
+  ["thanks-booking-custom.js?v=32", "booking custom v32 eager for CTA"],
   ["thanks-job-preview.js?v=18", "job preview v18 shared json cache"],
-  ["thanks-v2-deferred.js?v=9", "deferred bundle v9 lazy booking mount"],
+  ["thanks-v2-deferred.js?v=10", "deferred bundle v10 eager booking"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -91,8 +93,6 @@ const forbidden = [
   ["thanks-license-profile.js", "license profile 単体（deferred bundle化）"],
   ["thanks-section-visuals.js", "section visuals 単体（deferred bundle化）"],
   ["booking-slots.json\" as=\"fetch\"", "booking slots preload（カレンダー展開時取得）"],
-  ["thanks-booking-bootstrap.js", "booking bootstrap inline（動的読込）"],
-  ["thanks-booking-custom.js", "booking custom inline（動的読込）"],
   ["10分だけ話を聞く", "removed talk-first CTA"],
   ["本登録", "本登録表記"],
   ["仮登録完了", "仮登録表記（登録完了に統一）"],
@@ -181,14 +181,14 @@ sharedJs.includes("fireThanksPageEvents")
 sharedJs.includes("fetchJson") && sharedJs.includes("prefetchThanksData")
   ? pass("shared.js", "json prefetch cache")
   : fail("shared.js", "fetchJson / prefetchThanksData missing");
-sharedJs.includes("ensureBookingScripts")
-  ? pass("shared.js", "lazy booking script loader")
-  : fail("shared.js", "ensureBookingScripts missing");
+!sharedJs.includes("ensureBookingScripts")
+  ? pass("shared.js", "booking js eager in html")
+  : fail("shared.js", "lazy booking loader should be removed");
 
 const mobileUx = read("assets/js/thanks-mobile-ux.js");
-mobileUx.includes("ensureBookingScripts") && mobileUx.includes("mountBookingWhenReady")
-  ? pass("mobile-ux", "calendar expand loads booking js")
-  : fail("mobile-ux", "lazy booking mount missing");
+mobileUx.includes("dkThanksMountBooking") && !mobileUx.includes("ensureBookingScripts")
+  ? pass("mobile-ux", "calendar expand mounts booking ui")
+  : fail("mobile-ux", "booking mount on expand missing");
 
 const licenseJs = read("assets/js/thanks-license-profile.js");
 licenseJs.includes("thanks_profile_ready")

@@ -196,7 +196,7 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-job-previews.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
-          echo "$html" | grep -q 'thanks-v2-deferred.js?v=9' || (echo "missing thanks-v2-deferred v=9" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-deferred.js?v=10' || (echo "missing thanks-v2-deferred v=10" && exit 1)
           echo "$html" | grep -q 't-cal__toggle' || (echo "missing calendar collapse toggle" && exit 1)
           echo "$html" | grep -q 'booking-slots.json" as="fetch"' && (echo "booking-slots preload should be removed" && exit 1) || true
           echo "$html" | grep -q 'GTM-KV525PZ' || (echo "missing GTM on thanks-v2" && exit 1)
@@ -237,11 +237,9 @@ jobs:
           echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
           echo "$html" | grep -q 'thanks-job-preview.js?v=18' || (echo "missing job preview v=18" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)
-          echo "$html" | grep -q 'thanks-v2-shared.js?v=5' || (echo "missing thanks-v2-shared v=5" && exit 1)
-          echo "$html" | grep -q 'thanks-booking-bootstrap.js' && (echo "booking bootstrap should be lazy-loaded" && exit 1) || true
-          echo "$html" | grep -q 'thanks-booking-custom.js' && (echo "booking custom should be lazy-loaded" && exit 1) || true
-          shared_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/thanks-v2-shared.js")
-          echo "$shared_js" | grep -q 'ensureBookingScripts' || (echo "shared missing ensureBookingScripts" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-shared.js?v=6' || (echo "missing thanks-v2-shared v=6" && exit 1)
+          echo "$html" | grep -q 'thanks-booking-bootstrap.js?v=18' || (echo "missing booking bootstrap v=18" && exit 1)
+          echo "$html" | grep -q 'thanks-booking-custom.js?v=32' || (echo "missing booking custom v=32" && exit 1)
           echo "$html" | grep -q 'thanks-social-meta' || (echo "missing social strip profile mount" && exit 1)
           echo "$html" | grep -q 'id="t-cal-panel"' || (echo "missing calendar collapse panel" && exit 1)
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "license profile should be bundled in deferred" && exit 1) || true

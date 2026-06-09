@@ -124,42 +124,6 @@
     dk.fetchJson("data/thanks-job-previews-" + family + ".json").catch(function () {});
   };
 
-  function loadScript(url) {
-    return new Promise(function (resolve, reject) {
-      var sel = 'script[data-dk-src="' + String(url).replace(/"/g, "") + '"]';
-      var existing = document.querySelector(sel);
-      if (existing) {
-        if (existing.getAttribute("data-dk-loaded") === "1") {
-          resolve();
-          return;
-        }
-        existing.addEventListener("load", function () { resolve(); }, { once: true });
-        existing.addEventListener("error", reject, { once: true });
-        return;
-      }
-      var s = document.createElement("script");
-      s.src = url;
-      s.defer = true;
-      s.setAttribute("data-dk-src", url);
-      s.onload = function () {
-        s.setAttribute("data-dk-loaded", "1");
-        resolve();
-      };
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  }
-
-  dk.ensureBookingScripts = function () {
-    if (window.__dkBookingScriptsPromise) return window.__dkBookingScriptsPromise;
-    var bootstrap = dk.assetUrl("js/thanks-booking-bootstrap.js?v=18");
-    var custom = dk.assetUrl("js/thanks-booking-custom.js?v=32");
-    window.__dkBookingScriptsPromise = loadScript(bootstrap).then(function () {
-      return loadScript(custom);
-    });
-    return window.__dkBookingScriptsPromise;
-  };
-
   dk.fireThanksPageEvents = function () {
     if (window.__dkThanksPageEventsFired) return;
     window.__dkThanksPageEventsFired = true;
