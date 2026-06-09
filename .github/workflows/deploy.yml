@@ -228,8 +228,8 @@ jobs:
             exit 1
           fi
           bash scripts/verify-wp-legacy-redirects.sh
-          echo "$html" | grep -q 'thanks-page-context.js?v=24' || (echo "missing thanks-page-context v=24" && exit 1)
-          echo "$html" | grep -q 'thanks-page.css?v=38' || (echo "missing thanks-page.css v=38" && exit 1)
+          echo "$html" | grep -q 'thanks-page-context.js?v=25' || (echo "missing thanks-page-context v=25" && exit 1)
+          echo "$html" | grep -q 'thanks-page.css?v=40' || (echo "missing thanks-page.css v=40" && exit 1)
           echo "$html" | grep -q 'thanks-booking-custom.js?v=28' || (echo "missing booking custom v=28" && exit 1)
           echo "$html" | grep -q 't-hero--compact' || (echo "missing compact hero" && exit 1)
           echo "$html" | grep -q 't-hero__stats' || (echo "missing hero stats grid" && exit 1)

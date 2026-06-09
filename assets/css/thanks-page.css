@@ -32,7 +32,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 8px 4px;
-  background: linear-gradient(135deg, #f0f7ff, #e8f5e9);
+  background: var(--t-accent-soft, #eef2fa);
+  border: 1px solid var(--t-accent-border, #cbd5e1);
   border-radius: 8px;
   margin-bottom: 12px;
 }
@@ -369,9 +370,9 @@ body {
 .cvr-story__need {
   font-size: 10px;
   font-weight: 700;
-  color: #047857;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  color: var(--t-accent);
+  background: var(--t-accent-soft);
+  border: 1px solid var(--t-accent-border);
   padding: 4px 8px;
   border-radius: 20px;
 }
@@ -587,7 +588,7 @@ body {
   color: #666;
 }
 .t-job-card__meta strong {
-  color: #2e7d32;
+  color: var(--t-accent);
 }
 .t-job-card__tags {
   display: flex;
@@ -676,7 +677,7 @@ body {
   text-align: center;
 }
 .t-jobs__cta-hint strong {
-  color: #047857;
+  color: var(--t-accent);
 }
 .t-line__gate.is-nudge {
   animation: t-gate-nudge 0.45s ease;
@@ -825,7 +826,7 @@ body {
   content: "✓";
   position: absolute;
   left: 0;
-  color: var(--t-success);
+  color: var(--t-accent);
   font-weight: 800;
 }
 .t-cal__micro li + li {
@@ -838,8 +839,8 @@ body {
   color: #64748b;
 }
 .t-flow__item--primary.is-active {
-  background: linear-gradient(135deg, #314c85, #5c6bc0);
-  color: #fff;
+  background: var(--t-accent-soft);
+  color: var(--t-accent);
 }
 .t-future-collapse {
   margin: 0 12px 24px;
@@ -988,13 +989,13 @@ body {
   color: #888;
 }
 .t-step.is-done .t-step__n {
-  background: #4caf50;
+  background: var(--t-accent);
   color: #fff;
 }
 .t-step.is-cur .t-step__n {
-  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  background: linear-gradient(135deg, var(--t-accent), var(--t-accent-muted, #5c6bc0));
   color: #fff;
-  box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 3px 8px rgba(49, 76, 133, 0.3);
   animation: t-glow 2s infinite;
 }
 .t-step__b {
@@ -1090,9 +1091,14 @@ body {
 :root {
   --t-accent: #314c85;
   --t-accent-soft: #eef2fa;
-  --t-success: #2e7d32;
-  --t-success-bg: #e8f5e9;
+  --t-accent-border: #cbd5e1;
+  --t-accent-muted: #5c6bc0;
+  /* メイン導線（ヒーロー〜予約）は青に統一。緑は LINE セクションのみ */
+  --t-success: var(--t-accent);
+  --t-success-bg: var(--t-accent-soft);
   --t-line: #06c755;
+  --t-line-soft: #ecfdf5;
+  --t-line-border: #86efac;
   --t-radius-lg: 16px;
   --t-radius-md: 12px;
   --t-shadow-card: 0 4px 20px rgba(30, 58, 110, 0.08);
@@ -1188,11 +1194,14 @@ html {
 }
 .t-hero__stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin: 0 0 10px;
   padding: 0;
   list-style: none;
+}
+.t-hero__stats:has(li:nth-child(4):last-child) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .t-hero__stat {
   display: flex;
@@ -1209,10 +1218,12 @@ html {
   box-shadow: 0 1px 0 rgba(49, 76, 133, 0.06);
 }
 .t-hero__stat strong {
-  font-size: 0.9375rem;
+  font-size: clamp(0.6875rem, 3.2vw, 0.9375rem);
   font-weight: 900;
   color: var(--t-accent);
   line-height: 1.15;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .t-hero__stat span {
   font-size: 0.625rem;
@@ -1226,12 +1237,19 @@ html {
 }
 @media (max-width: 380px) {
   .t-hero__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .t-hero__stats:has(li:nth-child(4):last-child) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 .t-hero--compact {
   padding: 18px 16px 14px;
   margin-bottom: 10px;
+  text-align: center;
+}
+.t-hero--compact .t-hero__body {
+  text-align: center;
 }
 .t-hero--compact h2 {
   margin: 0 0 10px;
@@ -1247,6 +1265,7 @@ html {
   line-height: 1.55;
   color: #334155;
   margin: 0 0 10px;
+  text-align: center;
 }
 .t-hero__route strong {
   color: var(--t-accent);
@@ -1261,13 +1280,14 @@ html {
   line-height: 1.55;
   color: #475569;
   margin: 0 0 14px;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border-left: 3px solid #059669;
-  border-radius: 0 6px 6px 0;
+  padding: 10px 12px;
+  background: var(--t-accent-soft);
+  border: 1px solid var(--t-accent-border);
+  border-radius: var(--t-radius-md);
+  text-align: center;
 }
 .t-hero__reassure strong {
-  color: #047857;
+  color: var(--t-accent);
   font-weight: 800;
 }
 .t-hero--compact .t-hero__objections {
@@ -1312,8 +1332,8 @@ html {
   border: 1px solid transparent;
 }
 .t-hero__merit-card--gain {
-  background: linear-gradient(145deg, #ecfdf5 0%, #fff 100%);
-  border-color: #a7f3d0;
+  background: linear-gradient(145deg, var(--t-accent-soft) 0%, #fff 100%);
+  border-color: var(--t-accent-border);
 }
 .t-hero__merit-card--loss,
 .t-hero__merit-card--gap {
@@ -1328,7 +1348,7 @@ html {
   line-height: 1.3;
 }
 .t-hero__merit-card--gain .t-hero__merit-label {
-  color: #047857;
+  color: var(--t-accent);
 }
 .t-hero__merit-card--loss .t-hero__merit-label,
 .t-hero__merit-card--gap .t-hero__merit-label {
@@ -1371,9 +1391,9 @@ html {
   padding: 5px 10px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #047857;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  color: var(--t-accent);
+  background: var(--t-accent-soft);
+  border: 1px solid var(--t-accent-border);
   border-radius: 999px;
 }
 .t-hero__objections li::before {
@@ -1457,9 +1477,9 @@ html {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--t-success);
+  background: var(--t-accent);
   transform: translateY(-50%);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+  box-shadow: 0 0 0 3px rgba(49, 76, 133, 0.15);
 }
 .t-hero p {
   font-size: clamp(0.9375rem, 3.8vw, 1rem);
@@ -1472,12 +1492,14 @@ html {
   font-weight: 700;
 }
 .t-hero__chk {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 12px;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--t-accent-soft);
+  border-radius: 50%;
 }
 .t-trust {
   margin: 0 12px 16px;
@@ -1525,8 +1547,8 @@ html {
   padding: 5px 10px;
   font-size: 11px;
   font-weight: 700;
-  color: #047857;
-  background: #ecfdf5;
+  color: var(--t-accent);
+  background: var(--t-accent-soft);
   border-radius: 999px;
   line-height: 1.3;
 }
@@ -1607,8 +1629,8 @@ html {
   border: 1px solid transparent;
 }
 .t-future__card--gain {
-  background: linear-gradient(145deg, #ecfdf5 0%, #fff 100%);
-  border-color: #a7f3d0;
+  background: linear-gradient(145deg, var(--t-accent-soft) 0%, #fff 100%);
+  border-color: var(--t-accent-border);
 }
 .t-future__card--loss {
   background: linear-gradient(145deg, #fffbeb 0%, #fff 100%);
@@ -1624,7 +1646,7 @@ html {
   line-height: 1.4;
 }
 .t-future__card--gain .t-future__card-label {
-  color: #047857;
+  color: var(--t-accent);
 }
 .t-future__card--loss .t-future__card-label {
   color: #b45309;
@@ -1641,7 +1663,7 @@ html {
   flex-shrink: 0;
 }
 .t-future__card--gain .t-future__icon {
-  background: #059669;
+  background: var(--t-accent);
   color: #fff;
 }
 .t-future__card--loss .t-future__icon {
@@ -1728,7 +1750,7 @@ html {
 }
 .t-flow__item.is-done::before {
   content: "✓";
-  background: var(--t-success);
+  background: var(--t-accent);
   color: #fff;
 }
 .t-flow__item.is-active {
@@ -1785,12 +1807,12 @@ html {
   background: linear-gradient(180deg, #eef2fa 0%, #fff 100%);
 }
 .t-flow-diagram__step--2 {
-  border-color: #6ee7b7;
-  background: linear-gradient(180deg, #ecfdf5 0%, #fff 100%);
+  border-color: var(--t-accent-border);
+  background: linear-gradient(180deg, var(--t-accent-soft) 0%, #fff 100%);
 }
 .t-flow-diagram__step--3 {
-  border-color: #86efac;
-  background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%);
+  border-color: var(--t-line-border);
+  background: linear-gradient(180deg, var(--t-line-soft) 0%, #fff 100%);
 }
 .t-flow-diagram__num {
   display: flex;
@@ -1806,10 +1828,10 @@ html {
   line-height: 1;
 }
 .t-flow-diagram__step--2 .t-flow-diagram__num {
-  background: #059669;
+  background: var(--t-accent);
 }
 .t-flow-diagram__step--3 .t-flow-diagram__num {
-  background: #06c755;
+  background: var(--t-line);
 }
 .t-flow-diagram__title {
   font-size: 11px;
@@ -2512,20 +2534,20 @@ html {
 .t-booking-done {
   text-align: center;
   padding: 20px 12px;
-  background: #ecfdf5;
-  border: 2px solid #6ee7b7;
+  background: var(--t-accent-soft);
+  border: 2px solid var(--t-accent-border);
   border-radius: 14px;
 }
 
 .t-booking-done p {
   margin: 0 0 8px;
   font-size: 16px;
-  color: #065f46;
+  color: #1e293b;
 }
 
 .t-booking-done__sub {
   font-size: 14px !important;
-  color: #047857 !important;
+  color: var(--t-accent) !important;
 }
 
 .t-booking-done--hero {
@@ -2535,7 +2557,7 @@ html {
 .t-booking-done__title {
   font-size: 20px;
   font-weight: 800;
-  color: #065f46;
+  color: var(--t-accent);
   margin: 0 0 10px !important;
 }
 
@@ -2547,10 +2569,10 @@ html {
 
 .t-booking-done__next {
   font-size: 14px !important;
-  color: #047857 !important;
+  color: var(--t-accent) !important;
   margin: 12px 0 0 !important;
   padding-top: 12px;
-  border-top: 1px dashed #6ee7b7;
+  border-top: 1px dashed var(--t-accent-border);
 }
 
 /* 予約 → LINE（予約後に求人詳細を見る） */
@@ -2593,7 +2615,7 @@ html {
 }
 
 .t-cal.t-cal--booked .t-cal__head {
-  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 55%, #43a047 100%);
+  background: linear-gradient(135deg, #1a3568 0%, #314c85 55%, #3d5f9a 100%);
 }
 
 .t-line--revealed {
@@ -2697,7 +2719,7 @@ html {
 }
 
 .t-line__gate strong {
-  color: #047857;
+  color: #048c44;
 }
 
 .t-line__btn {
@@ -2955,7 +2977,7 @@ html {
   justify-content: center;
   width: 48px;
   height: 48px;
-  background: #e8f5e9;
+  background: var(--t-accent-soft);
   border-radius: 50%;
   margin-bottom: 12px;
 }
@@ -2963,7 +2985,7 @@ html {
 .t-email__done-tx {
   font-size: 15px;
   font-weight: 700;
-  color: #2e7d32;
+  color: var(--t-accent);
   margin-bottom: 4px;
 }
 

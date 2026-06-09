@@ -130,19 +130,7 @@
   }
 
   function buildHeroGiftHtml(profile, brand) {
-    var lic = escHtml(shortLicenseLabel(profile.license, brand));
-    var area = profile.pref ? escHtml(profile.pref) : "";
-    var qualPart = area
-      ? "（<strong>" + lic + "</strong> · <strong>" + area + "</strong>向け）"
-      : "（<strong>" + lic + "</strong>向け）";
-    return (
-      '<p class="t-hero__lead" id="thanks-hero-gift">非公開求人<strong>' +
-      HERO_JOB_COUNT +
-      "件</strong>" +
-      qualPart +
-      "の概要を表示中</p>" +
-      buildHeroStatsHtml(profile, brand)
-    );
+    return buildHeroStatsHtml(profile, brand);
   }
 
   function buildHeroTitle(name) {
