@@ -1182,6 +1182,53 @@ html {
   line-height: 1.4;
   margin: 0 0 8px;
 }
+.t-hero__lead strong {
+  color: var(--t-accent);
+  font-weight: 900;
+}
+.t-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.t-hero__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 4px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  box-shadow: 0 1px 0 rgba(49, 76, 133, 0.06);
+}
+.t-hero__stat strong {
+  font-size: 0.9375rem;
+  font-weight: 900;
+  color: var(--t-accent);
+  line-height: 1.15;
+}
+.t-hero__stat span {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+.t-hero--compact .t-hero__stats {
+  margin-bottom: 8px;
+}
+@media (max-width: 380px) {
+  .t-hero__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .t-hero--compact {
   padding: 18px 16px 14px;
   margin-bottom: 10px;
@@ -1203,6 +1250,24 @@ html {
 }
 .t-hero__route strong {
   color: var(--t-accent);
+  font-weight: 800;
+}
+.t-hero--compact .t-hero__reassure {
+  margin-bottom: 0;
+}
+.t-hero__reassure {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: #475569;
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-left: 3px solid #059669;
+  border-radius: 0 6px 6px 0;
+}
+.t-hero__reassure strong {
+  color: #047857;
   font-weight: 800;
 }
 .t-hero--compact .t-hero__objections {

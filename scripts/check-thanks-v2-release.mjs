@@ -32,34 +32,38 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=2", "shared v2"],
   ["thanks-license-profile.js?v=2", "license profile v2"],
-  ["thanks-page-context.js?v=21", "context v21 jobs-first route"],
+  ["thanks-page-context.js?v=24", "context v24 hero stats gift"],
   ["thanks-section-visuals.js?v=2", "section visuals v2"],
-  ["thanks-page.css?v=35", "css v35 compact hero"],
+  ["thanks-page.css?v=38", "css v38 hero stats grid"],
   ["thanks-booking-bootstrap.js?v=16", "booking bootstrap v16 fetch 7d"],
-  ["thanks-booking-custom.js?v=27", "booking custom v27 defer"],
+  ["thanks-booking-custom.js?v=28", "booking custom v28 kinoshita CTA"],
   ["thanks-job-preview.js?v=15", "job preview v15 eager when first"],
   ["thanks-v2-deferred.js?v=5", "deferred bundle v5"],
   ["t-license-badge", "license badge"],
   ["t-sec-head", "section illustration head"],
-  ["t-hero__objections", "objection-killing pills"],
+  ["t-hero__reassure", "major-category objection one-liner"],
+  ["当社では当てはまりません", "hero reassure copy"],
   ["t-cal__micro", "calendar reassurance microcopy"],
   ["t-hero--compact", "compact hero layout"],
   ["t-hero__route", "single-line action route copy"],
+  ["thanks-hero-title", "hero title id for name personalization"],
+  ["登録だけで終わってOK", "emotional hero headline"],
+  ["t-hero__stats", "hero numeric gift stats"],
+  ["thanks-hero-gift", "personalized gift line id"],
   ["まず下の", "hero route: jobs first"],
   ["気になったら", "calendar soft step label"],
   ["t-jobs--first", "jobs section immediately after trust"],
   ["1回だけ", "outbound call reassurance"],
   ["しつこい勧誘はありません", "no hard-sell outbound copy"],
   ["求人概要", "flow nav step 1 label"],
-  ["t-proof-strip", "social proof strip"],
   ["t-cal--primary", "calendar primary emphasis"],
   ["id=\"t-future\"", "未来セクション（折りたたみ）"],
   ["data-story-id", "転職ストーリー"],
   ["cvr-story-mount", "ストーリーマウント"],
   ["非公開求人の全文", "非公開求人全文表記"],
   ["LINEで全文を受け取る", "LINE CTA"],
-  ["気になる方は日時を選ぶ", "jobs section scroll-down CTA"],
-  ["見るだけOK", "低ハードル文言"]
+  ["10分だけ話を聞く", "unified primary CTA microcopy"],
+  ["見るだけOK", "低ハードル文言"],
 ];
 
 requiredStrings.forEach(([needle, label]) => {
@@ -76,7 +80,8 @@ const forbidden = [
   ["thanks-gtm.js", "gtm 単体（bundle化）"],
   ["本登録", "本登録表記"],
   ["仮登録完了", "仮登録表記（登録完了に統一）"],
-  [/プレビュー/, "プレビュー表記"]
+  ["t-proof-strip", "removed redundant proof strip"],
+  [/プレビュー/, "プレビュー表記"],
 ];
 forbidden.forEach(([needle, label]) => {
   const hit = typeof needle === "string" ? html.includes(needle) : needle.test(html);

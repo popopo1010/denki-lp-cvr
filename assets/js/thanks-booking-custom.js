@@ -377,7 +377,7 @@
         selected.time_label +
         "</strong></p>";
       html +=
-        '<button type="button" class="t-booking-confirm" id="booking-confirm">この日時で10分の電話を予約（無料）</button>';
+        '<button type="button" class="t-booking-confirm" id="booking-confirm">この日時で10分だけ話を聞く（無料）</button>';
     } else {
       html += '<p class="t-booking-hint">希望の時間をタップしてください</p>';
     }
