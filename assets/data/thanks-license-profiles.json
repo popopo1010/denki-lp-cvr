@@ -45,8 +45,8 @@
       "hidden_stories": ["ak", "ro", "tn"],
       "job_family": "denki",
       "visual_key": "denki_sekou",
-      "testimonials_title": "1級電気施工管理 — これから相談する方の体験",
-      "testimonials_lead": "条件を伝える → キャリア整理 → <strong>あなた向けのオファー</strong>まで（タップで約400字）",
+      "testimonials_title": "1級電気施工管理 — 知らないまま損する前の体験",
+      "testimonials_lead": "条件を伝える → 棚卸し → <strong>あなた向けのオファー</strong>まで（タップで約400字）",
       "jobs_title": "1級電気施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "1級の<strong>管理経験</strong>を軸に、現職と市場の選択肢を比較"
     },
@@ -60,8 +60,8 @@
       "hidden_stories": ["ak", "ro", "yh"],
       "job_family": "denki",
       "visual_key": "denki_sekou",
-      "testimonials_title": "2級電気施工管理の方の体験談",
-      "testimonials_lead": "2級から<strong>次のキャリア</strong>を比較した方のストーリー（タップで約400字）",
+      "testimonials_title": "2級電気施工管理 — 相談の流れがわかる体験談",
+      "testimonials_lead": "条件を伝える → 棚卸し → <strong>次のキャリア</strong>の見え方（タップで約400字）",
       "jobs_title": "2級電気施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "2級の<strong>現場経験</strong>と、現職の条件を並べて比較"
     },
@@ -165,8 +165,8 @@
       "hidden_stories": ["yh", "tn"],
       "job_family": "sekoukanri",
       "visual_key": "sekoukanri",
-      "testimonials_title": "施工管理 — これから相談する方の体験",
-      "testimonials_lead": "条件を伝える → キャリア整理 → <strong>プレミアム案内</strong>まで（タップで約400字）",
+      "testimonials_title": "施工管理 — 知らないまま損する前の体験",
+      "testimonials_lead": "条件を伝える → 棚卸し → <strong>プレミアム案内</strong>まで（タップで約400字）",
       "jobs_title": "施工管理向け · 求人概要（全文はお電話後）",
       "comparison_line": "施工管理の<strong>経験</strong>を軸に、現職と選択肢を比較"
     }
