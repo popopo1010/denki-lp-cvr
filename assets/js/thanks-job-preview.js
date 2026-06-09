@@ -566,6 +566,9 @@
           job_title: title,
           hero_card: card.classList.contains("t-job-card--hero") ? 1 : 0
         });
+        if (window.dkThanksExpandCalendar) {
+          window.dkThanksExpandCalendar({ scroll: false });
+        }
         var cal = document.getElementById("t-calendar");
         if (cal) cal.scrollIntoView({ behavior: "smooth", block: "start" });
       }

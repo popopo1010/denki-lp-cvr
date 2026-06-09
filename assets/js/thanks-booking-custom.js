@@ -86,6 +86,12 @@
     document.body.classList.add("is-booked");
     section.classList.add("t-cal--booked");
 
+    if (window.dkThanksExpandCalendar) {
+      window.dkThanksExpandCalendar({ scroll: false });
+    }
+    var toggleBtn = document.getElementById("t-cal-toggle");
+    if (toggleBtn) toggleBtn.hidden = true;
+
     var headTitle = section.querySelector(".t-cal__head h3");
     if (headTitle) headTitle.textContent = "お電話の日時を確保しました";
 

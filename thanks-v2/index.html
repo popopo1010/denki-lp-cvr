@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/thanks-page.css?v=42">
+<link rel="stylesheet" href="../assets/css/thanks-page.css?v=43">
 </head>
 <body class="wp-singular page-template-default page p-pageThanks wp-theme-original-thema thanks-flow">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KV525PZ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -56,10 +56,10 @@
   <aside class="t-social-strip" id="thanks-social-strip" aria-label="同じ資格の体験談">
     <div class="t-social-strip__score"><span class="t-social-strip__stars">★4.8</span><span class="t-social-strip__score-label">満足度（自社調査）</span></div>
     <div class="t-social-strip__body">
-      <img class="t-social-strip__avatar" src="../assets/img/testimonials/avatar-sm.svg" alt="" width="40" height="40" loading="lazy" decoding="async">
+      <img class="t-social-strip__avatar" id="thanks-social-avatar" src="../assets/img/testimonials/avatar-sm.svg" alt="" width="40" height="40" loading="lazy" decoding="async">
       <div class="t-social-strip__tx">
-        <p class="t-social-strip__meta"><strong>S.Mさん（28）</strong> · 電気工事士 · 関西</p>
-        <p class="t-social-strip__quote">「第二種をちゃんと評価してくれる求人だけに絞って紹介。履歴書・面接の想定問答まで無料で伴走してくれました。」</p>
+        <p class="t-social-strip__meta" id="thanks-social-meta"><strong>S.Mさん（28）</strong> · 電気工事士 · 関西</p>
+        <p class="t-social-strip__quote" id="thanks-social-quote">「第二種をちゃんと評価してくれる求人だけに絞って紹介。履歴書・面接の想定問答まで無料で伴走してくれました。」</p>
       </div>
     </div>
     <a class="t-social-strip__link" href="#t-testi">ほかの体験談を見る</a>
@@ -102,7 +102,7 @@
   <script src="../assets/js/thanks-job-preview.js?v=16" defer></script>
 
   <!-- 日時（概要のあと · 気になったら） -->
-  <div class="t-cal t-cal--primary" id="t-calendar">
+  <div class="t-cal t-cal--primary t-cal--collapsed" id="t-calendar">
     <div class="t-cal__head t-sec-head t-sec-head--cal">
       <div class="t-sec-head__illus t-sec-head__illus--cal" aria-hidden="true">
         <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#eef2fa"/><rect x="16" y="12" width="24" height="32" rx="4" fill="#fff" stroke="#314c85" stroke-width="1.5"/><circle cx="28" cy="36" r="8" fill="#eef2fa" stroke="#314c85" stroke-width="1.5"/><path d="M25 36c0-1.7 1.3-3 3-3s3 1.3 3 3-1.3 3-3 3-3-1.3-3-3z" fill="#314c85"/><path d="M22 18h12" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -112,8 +112,12 @@
       <h3>お電話の日時を選ぶ</h3>
       <p class="t-cal__head-lead">概要を見たうえで、合いそうな方だけ日時を選んでください。</p>
       </div>
+      <button type="button" class="t-cal__toggle" id="t-cal-toggle" aria-expanded="false" aria-controls="t-cal-panel">
+        <span class="t-cal__toggle-label">日時を選ぶ</span>
+        <svg class="t-cal__toggle-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
-    <div class="t-cal__body">
+    <div class="t-cal__body" id="t-cal-panel" hidden>
       <ul class="t-cal__micro" aria-label="予約前の確認">
         <li><span class="t-cal__micro-icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 8l3 3 7-7" fill="none" stroke="#314c85" stroke-width="2" stroke-linecap="round"/></svg></span>日時を選ぶだけ（入力不要）</li>
         <li><span class="t-cal__micro-icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 3h8v10H4z" fill="#eef2fa" stroke="#314c85" stroke-width="1"/></svg></span><span class="t-cal__micro-text"><strong>10分</strong>で条件をすり合わせ、合う<strong>非公開求人</strong>の全文へ</span></li>
@@ -136,7 +140,7 @@
       <p class="t-cal__note">※ 予約がない方に限り、平日9–18時に<strong>1回だけ</strong>日程のご連絡をすることがあります。しつこい勧誘はありません。不要な場合はその場でお断りください。</p>
     </div>
   </div>
-  <script src="../assets/js/thanks-booking-custom.js?v=28" defer></script>
+  <script src="../assets/js/thanks-booking-custom.js?v=29" defer></script>
 
   <!-- LINE（予約後に全文の受取口） -->
   <div class="t-line" id="line-section">
@@ -446,6 +450,6 @@
 
 <script src="../assets/js/thanks-license-profile.js?v=2" defer></script>
 <script src="../assets/js/thanks-section-visuals.js?v=2" defer></script>
-<script src="../assets/js/thanks-v2-deferred.js?v=5" defer></script>
+<script src="../assets/js/thanks-v2-deferred.js?v=6" defer></script>
 </body>
 </html>

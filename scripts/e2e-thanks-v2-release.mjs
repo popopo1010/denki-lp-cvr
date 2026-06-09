@@ -136,7 +136,8 @@ async function testThanksAssets(page) {
   const checks = [
     ["thanks-job-preview.js?v=15", html.includes("thanks-job-preview.js?v=15")],
     ["thanks-page-context.js?v=21", html.includes("thanks-page-context.js?v=21")],
-    ["thanks-v2-deferred.js?v=5", html.includes("thanks-v2-deferred.js?v=5")],
+    ["thanks-v2-deferred.js?v=6", html.includes("thanks-v2-deferred.js?v=6")],
+    ["t-cal__toggle", html.includes("t-cal__toggle")],
     ["t-future", html.includes('id="t-future"')],
     ["data-story-id x8", (html.match(/data-story-id="/g) || []).length === 8],
     ["非公開求人の全文", html.includes("非公開求人の全文")],

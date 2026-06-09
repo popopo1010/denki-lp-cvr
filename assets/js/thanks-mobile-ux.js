@@ -16,8 +16,74 @@
   function scrollToTarget(sel) {
     var el = typeof sel === "string" ? document.querySelector(sel) : sel;
     if (!el) return;
+    if (
+      el.id === "t-calendar" ||
+      (typeof sel === "string" && sel === "#t-calendar")
+    ) {
+      expandCalendar({ scroll: false });
+    }
     el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  function expandCalendar(opts) {
+    opts = opts || {};
+    var cal = document.getElementById("t-calendar");
+    var panel = document.getElementById("t-cal-panel");
+    var btn = document.getElementById("t-cal-toggle");
+    if (!cal || !panel || !btn) return;
+    panel.hidden = false;
+    cal.classList.remove("t-cal--collapsed");
+    btn.setAttribute("aria-expanded", "true");
+    if (opts.scroll !== false) {
+      cal.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: "thanks_calendar_expand",
+        page_type: "thanks-v2"
+      });
+    }
+  }
+
+  function collapseCalendar() {
+    var cal = document.getElementById("t-calendar");
+    var panel = document.getElementById("t-cal-panel");
+    var btn = document.getElementById("t-cal-toggle");
+    if (!cal || !panel || !btn) return;
+    if (body.classList.contains("is-booked") || cal.classList.contains("t-cal--booked")) {
+      return;
+    }
+    panel.hidden = true;
+    cal.classList.add("t-cal--collapsed");
+    btn.setAttribute("aria-expanded", "false");
+  }
+
+  function initCalendarCollapse() {
+    var cal = document.getElementById("t-calendar");
+    var btn = document.getElementById("t-cal-toggle");
+    var panel = document.getElementById("t-cal-panel");
+    if (!cal || !btn || !panel) return;
+
+    if (body.classList.contains("is-booked") || cal.classList.contains("t-cal--booked")) {
+      expandCalendar({ scroll: false });
+      btn.hidden = true;
+      return;
+    }
+
+    cal.classList.add("t-cal--collapsed");
+    panel.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+
+    btn.addEventListener("click", function () {
+      if (btn.getAttribute("aria-expanded") === "true") {
+        collapseCalendar();
+      } else {
+        expandCalendar({ scroll: false });
+      }
+    });
+  }
+
+  window.dkThanksExpandCalendar = expandCalendar;
 
   function bindScrollTriggers(root) {
     (root || document).querySelectorAll("[data-scroll-target]").forEach(function (btn) {
@@ -155,4 +221,5 @@
   onScroll();
 
   document.addEventListener("thanks_job_preview_refresh", onScroll);
+  initCalendarCollapse();
 })();

@@ -34,17 +34,20 @@ const requiredStrings = [
   ["thanks-license-profile.js?v=2", "license profile v2"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
   ["thanks-section-visuals.js?v=2", "section visuals v2"],
-  ["thanks-page.css?v=42", "css v42 gift-first hero"],
+  ["thanks-page.css?v=43", "css v43 calendar collapse"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP", "noto font"],
   ["thanks-booking-bootstrap.js?v=16", "booking bootstrap v16 fetch 7d"],
-  ["thanks-booking-custom.js?v=28", "booking custom v28 kinoshita CTA"],
+  ["thanks-booking-custom.js?v=29", "booking custom v29 calendar expand on book"],
   ["thanks-job-preview.js?v=16", "job preview v16 hero split"],
-  ["thanks-v2-deferred.js?v=5", "deferred bundle v5"],
+  ["thanks-v2-deferred.js?v=6", "deferred bundle v6 social strip + cal collapse"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
   ["t-social-strip", "social proof strip"],
+  ["thanks-social-meta", "social strip profile mount"],
+  ["t-cal__toggle", "calendar collapse toggle"],
+  ["id=\"t-cal-panel\"", "calendar collapse panel"],
   ["登録ありがとうございます", "thanks header copy"],
   ["3件、届きました", "benefit hero headline"],
   ["t-trust--footer", "trust bar in footer"],
@@ -150,13 +153,25 @@ pageCss.includes("visuals v26")
   ? pass("css", "visuals v26 section icons")
   : fail("css", "visuals v26 block missing");
 
+pageCss.includes("t-cal__toggle")
+  ? pass("css", "calendar collapse toggle styles")
+  : fail("css", "t-cal__toggle styles missing");
+
 const testimonials = read("assets/js/thanks-testimonials.js");
+testimonials.includes("applySocialStrip")
+  ? pass("testimonials", "license-matched social strip")
+  : fail("testimonials", "applySocialStrip missing");
 testimonials.includes("limitVisibleTestimonials")
   ? pass("testimonials", "collapse extra stories after 3")
   : fail("testimonials", "limitVisibleTestimonials missing");
 testimonials.includes("cvr-story__para")
   ? pass("testimonials", "story paragraph breaks")
   : fail("testimonials", "cvr-story__para missing");
+
+const deferred = read("assets/js/thanks-v2-deferred.js");
+deferred.includes("applySocialStrip") && deferred.includes("dkThanksExpandCalendar")
+  ? pass("deferred", "social strip + calendar expand")
+  : fail("deferred", "missing social strip or calendar expand");
 
 const jobPreview = read("assets/js/thanks-job-preview.js");
 jobPreview.includes("t-job-card__facts") &&

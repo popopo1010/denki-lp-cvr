@@ -118,6 +118,126 @@
     });
   });
 
+  function readUserLicense() {
+    if (window.dkThanks && window.dkThanks.readLeadProfile) {
+      return window.dkThanks.readLeadProfile().license || "";
+    }
+    if (window.dkThanksLicenseProfile && window.dkThanksLicenseProfile.label) {
+      return window.dkThanksLicenseProfile.label;
+    }
+    try {
+      return sessionStorage.getItem("_license") || "";
+    } catch (e0) {
+      return "";
+    }
+  }
+
+  function scoreLicenseMatch(cardLicenses, userLicense) {
+    if (!userLicense) return 0;
+    var user = String(userLicense).toLowerCase();
+    var parts = String(cardLicenses || "")
+      .split(",")
+      .map(function (s) {
+        return s.trim().toLowerCase();
+      })
+      .filter(Boolean);
+    var best = 0;
+    parts.forEach(function (part) {
+      if (!part) return;
+      if (user === part) best = Math.max(best, 14);
+      else if (user.indexOf(part) >= 0 || part.indexOf(user) >= 0) {
+        best = Math.max(best, 10);
+      } else if (part.indexOf("電気") >= 0 && user.indexOf("電気") >= 0) {
+        best = Math.max(best, 6);
+      } else if (part.indexOf("施工管理") >= 0 && user.indexOf("施工管理") >= 0) {
+        best = Math.max(best, 6);
+      }
+    });
+    return best;
+  }
+
+  function pickSocialTestimonialCard(profile) {
+    var cards = Array.from(
+      document.querySelectorAll(".cvr-testimonial[data-story-id]")
+    ).filter(function (card) {
+      return card.style.display !== "none";
+    });
+    if (!cards.length) return null;
+
+    if (profile && profile.featured_story) {
+      var featured = cards.find(function (card) {
+        return card.getAttribute("data-story-id") === profile.featured_story;
+      });
+      if (featured) return featured;
+    }
+
+    var userLic = (profile && profile.label) || readUserLicense();
+    var bestScore = 0;
+    var bestCard = null;
+    cards.forEach(function (card) {
+      var score = scoreLicenseMatch(card.getAttribute("data-license") || "", userLic);
+      if (score > bestScore) {
+        bestScore = score;
+        bestCard = card;
+      }
+    });
+    if (bestCard) return bestCard;
+
+    var family =
+      (window.dkThanksContext && window.dkThanksContext.family) ||
+      document.documentElement.getAttribute("data-thanks-family") ||
+      "denki";
+    var fallbackId = family === "sekoukanri" ? "kt" : "sm";
+    return (
+      cards.find(function (card) {
+        return card.getAttribute("data-story-id") === fallbackId;
+      }) || cards[0]
+    );
+  }
+
+  function applySocialStrip(profile) {
+    var strip = document.getElementById("thanks-social-strip");
+    if (!strip) return;
+
+    var card = pickSocialTestimonialCard(profile);
+    if (!card) return;
+
+    var avatarSrc = card.querySelector(".cvr-testimonial__avatar img");
+    var avatarEl = strip.querySelector(".t-social-strip__avatar");
+    if (avatarEl && avatarSrc && avatarSrc.getAttribute("src")) {
+      avatarEl.src = avatarSrc.getAttribute("src");
+    }
+
+    var nameEl = card.querySelector(".cvr-testimonial__name");
+    var roleEl = card.querySelector(".cvr-testimonial__role");
+    var metaEl = strip.querySelector(".t-social-strip__meta");
+    if (metaEl && nameEl) {
+      var roleText = roleEl ? roleEl.textContent.trim() : "";
+      metaEl.innerHTML =
+        "<strong>" +
+        esc(nameEl.textContent.trim()) +
+        "</strong>" +
+        (roleText ? " · " + esc(roleText) : "");
+    }
+
+    var teaserEl = card.querySelector(".cvr-testimonial__teaser");
+    var quoteEl = strip.querySelector(".t-social-strip__quote");
+    if (quoteEl && teaserEl) {
+      var quote = teaserEl.textContent.trim();
+      if (quote.charAt(0) !== "「") quote = "「" + quote;
+      if (quote.slice(-1) !== "」") quote = quote + "」";
+      quoteEl.textContent = quote;
+    }
+
+    var storyId = card.getAttribute("data-story-id") || "";
+    var linkEl = strip.querySelector(".t-social-strip__link");
+    if (linkEl && storyId) {
+      linkEl.href = "#t-testi";
+      linkEl.setAttribute("data-story-target", storyId);
+    }
+    strip.setAttribute("data-story-id", storyId);
+  }
+
   function applyLicenseProfile(profile) {
     var root = document.querySelector(".cvr-testimonials--rich");
     if (!root || !profile) return;
@@ -182,6 +302,7 @@
     filterNote.hidden = !profile.label;
 
     limitVisibleTestimonials(root);
+    applySocialStrip(profile);
   }
 
   function limitVisibleTestimonials(root) {
@@ -218,6 +339,8 @@
       window.dkThanksWhenProfileReady(applyLicenseProfile);
     } else if (window.dkThanksLicenseProfile) {
       applyLicenseProfile(window.dkThanksLicenseProfile);
+    } else {
+      applySocialStrip(null);
     }
   }
 
