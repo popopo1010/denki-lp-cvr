@@ -1,0 +1,61 @@
+name: Deploy GAS (gas-recorder)
+
+# gas-recorder/ の clasp push + 既存デプロイIDへの redeploy を CI で行う。
+#
+# 必要なシークレット（未設定だとスキップ）:
+#   CLASPRC_JSON … clasp login 済みマシンの ~/.clasprc.json の中身まるごと
+#   （GitHub → Settings → Secrets and variables → Actions → New repository secret）
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "gas-recorder/**"
+
+jobs:
+  clasp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: シークレット確認
+        id: check
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ]; then
+            echo "::warning::CLASPRC_JSON が未設定のためGASデプロイをスキップしました。clasp login 済みマシンの ~/.clasprc.json の中身を CLASPRC_JSON シークレットに登録してください。"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.skip == 'false'
+        with:
+          node-version: 22
+
+      - name: clasp インストール
+        if: steps.check.outputs.skip == 'false'
+        run: npm install -g @google/clasp
+
+      - name: clasp 認証情報を配置
+        if: steps.check.outputs.skip == 'false'
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+
+      - name: clasp push + redeploy
+        if: steps.check.outputs.skip == 'false'
+        working-directory: gas-recorder
+        env:
+          # 既存WebアプリのデプロイID（独自予約セットアップ.md と同一）
+          DEPLOYMENT_ID: AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw
+        run: |
+          clasp push -f
+          clasp redeploy "$DEPLOYMENT_ID" -d "CI deploy ${GITHUB_SHA::7}"
+
+      - name: Slack Bot ヘルスチェック（投稿なし）
+        if: steps.check.outputs.skip == 'false'
+        run: node scripts/check-slack-bot.mjs
