@@ -790,8 +790,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     height: 20px !important;
   }
   body.lp-input-step #step05 .p-step06__name {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 8px;
     padding-right: 0;
   }
   body.lp-input-step #step05 .p-step06__name .c-text-box,

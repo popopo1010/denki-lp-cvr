@@ -680,8 +680,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     height: 20px !important;
   }
   body.lp-input-step #step05 .p-step06__name {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 8px;
     padding-right: 0;
   }
   body.lp-input-step #step05 .p-step06__name .c-text-box,
@@ -924,12 +924,12 @@ body.lp-form-step #step05 .c-next-button {
   .c-title-top { padding: 6px 0; margin-bottom: 4px; }
   .c-title01 { padding: 4px 0 2px; font-size: 14px; }
 
-  /* CTAボタン */
-  .p-first__buttonArea { padding: 0 4px; gap: 6px; }
-  .p-firstButton { min-height: 56px; }
-  .p-firstButton__container { padding: 0 10px; }
+  /* CTAボタン（denkikouji FVと同一サイズ） */
+  .p-first__buttonArea { padding: 0 2px; gap: 12px; }
+  .p-firstButton { min-height: 76px; }
+  .p-firstButton__container { padding: 0 16px; }
   .p-firstButton__icon { display: none; }
-  .p-firstButton__text { font-size: 13px; margin-left: 2px; }
+  .p-firstButton__text { font-size: 16px; font-weight: 700; margin-left: 2px; line-height: 1.35; }
 
   /* マイクロコピー */
   .cvr-micro-copy { margin-top: 4px; font-size: 10px; }
@@ -1131,6 +1131,7 @@ body.lp-form-step #step05 .c-next-button {
   body.lp-form-step .c-next-button { min-height: 44px; }
   body.lp-form-step #step01 { min-height: calc(100dvh - 64px); }
   body.lp-form-step #step01 .c-next-button { min-height: 40px; }
+  .p-firstButton { min-height: 68px; }
 
   /* 9+選択肢のみ追加圧縮 */
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) {
