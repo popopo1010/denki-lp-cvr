@@ -118,10 +118,130 @@
     if (el) moveIcon(el, scroll);
   }
 
+  const STEP_PROGRESS = {
+    "step-first": { pct: 8, label: "" },
+    step01: { pct: 25, label: "あと4ステップ" },
+    step03: { pct: 42, label: "あと3ステップ" },
+    step03b: { pct: 50, label: "あと3ステップ" },
+    step04: { pct: 58, label: "あと2ステップ" },
+    step05: { pct: 75, label: "あと1ステップ" },
+    step06: { pct: 92, label: "最後のステップ" }
+  };
+
+  function updateProgress(pageId) {
+    const key = pageId.replace("#", "");
+    const meta = STEP_PROGRESS[key];
+    const wrap = document.getElementById("cvr-progress");
+    const bar = document.getElementById("cvr-progress-bar");
+    const label = document.getElementById("cvr-progress-label");
+    if (!wrap || !bar || !label || !meta) return;
+    wrap.classList.toggle("is-visible", key !== "step-first");
+    bar.style.width = meta.pct + "%";
+    label.textContent = meta.label;
+  }
+
+  function clearStepTimers() {
+    document.querySelectorAll(".js-form-group").forEach((g) => {
+      if (typeof g._clearAutoAdvance === "function") g._clearAutoAdvance();
+      if (typeof g._clearZipAutoAdvance === "function") g._clearZipAutoAdvance();
+      if (typeof g._clearTelAutoSubmit === "function") g._clearTelAutoSubmit();
+    });
+  }
+
+  function isValidTel(value) {
+    return /^[0-9]{11}$/.test(String(value || "").trim());
+  }
+
+  const LAZY_STEP_IDS = new Set(["step03", "step04", "step05", "step06"]);
+  let lazyStepsPromise = null;
+  let lazyStepsReady = false;
+
+  function getLazyStepsMount() {
+    return document.getElementById("lazy-steps-mount");
+  }
+
+  function resolveLazyStepsUrl() {
+    const mount = getLazyStepsMount();
+    if (!mount) return "";
+    const src = mount.dataset.lazySrc;
+    if (!src) return "";
+    try {
+      return new URL(src, location.href).href;
+    } catch (e) {
+      return src;
+    }
+  }
+
+  function prefetchLazySteps() {
+    const url = resolveLazyStepsUrl();
+    if (!url || lazyStepsReady || lazyStepsPromise) return;
+    lazyStepsPromise = fetch(url, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error("lazy steps fetch failed"))))
+      .catch(() => {
+        lazyStepsPromise = null;
+      });
+  }
+
+  function initFormGroup(group) {
+    if (!group || group.dataset.lpInited === "1") return;
+    group.dataset.lpInited = "1";
+    initRadioButtons(group);
+    initRadioButtons02(group);
+    initCheckboxButtons(group);
+    initZipCode(group);
+    initNameInputs(group);
+    initRequiredItems(group);
+  }
+
+  function ensureLazySteps() {
+    if (lazyStepsReady) return Promise.resolve(true);
+    const mount = getLazyStepsMount();
+    if (!mount) return Promise.resolve(true);
+
+    const finish = (html) => {
+      if (!html || lazyStepsReady) return true;
+      mount.insertAdjacentHTML("beforeend", html);
+      lazyStepsReady = true;
+      mount.removeAttribute("data-lazy-src");
+      initPrefSelect();
+      initBirthday();
+      mount.querySelectorAll(".js-form-group").forEach(initFormGroup);
+      preventEnter();
+      return true;
+    };
+
+    if (lazyStepsPromise) {
+      return lazyStepsPromise.then((html) => finish(html)).catch(() => false);
+    }
+
+    const url = resolveLazyStepsUrl();
+    if (!url) return Promise.resolve(false);
+
+    lazyStepsPromise = fetch(url, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error("lazy steps fetch failed"))));
+
+    return lazyStepsPromise.then((html) => finish(html)).catch(() => {
+      lazyStepsPromise = null;
+      return false;
+    });
+  }
+
   // ========== Page transitions ==========
   function showPage(pageId) {
     const page = document.querySelector(pageId);
     if (!page) return;
+
+    // ステップ重なり防止: アクティブな step にだけ is-step-active を付与し、
+    // 他は inline で確実に隠す（CSS側の :not(.is-step-active) 安全網とセット）
+    document.querySelectorAll(".js-form-group").forEach((g) => {
+      const active = g === page;
+      g.classList.toggle("is-step-active", active);
+      if (!active) {
+        g.style.display = "none";
+        g.style.opacity = "0";
+        g.style.transform = "translateX(50px)";
+      }
+    });
 
     // step-firstからスタートしたkumaを各ステップで使い回す。
     // 各stepにkuma要素は無いので、見つかった時だけ更新（無ければ前回のicon参照を保持）。
@@ -134,8 +254,18 @@
     }
 
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+    document.body.classList.toggle(
+      "lp-input-step",
+      pageId === "#step04" || pageId === "#step05" || pageId === "#step06"
+    );
+    updateProgress(pageId);
 
     window.scrollTo(0, 0);
+
+    if (pageId === "#step05") {
+      const errBox = document.getElementById("error-name");
+      if (errBox) errBox.style.display = "none";
+    }
 
     if (pageId === "#step-first") {
       page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
@@ -143,6 +273,7 @@
       if (mc) mc.style.marginTop = "auto";
     } else if (pageId === "#step01") {
       page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 72px);min-height:calc(100dvh - 72px);opacity:0;transform:translateX(50px);transition:none";
+      prefetchLazySteps();
     } else {
       page.style.display = "block";
       page.style.opacity = "0";
@@ -150,20 +281,39 @@
       page.style.transition = "none";
     }
 
-    // クマを最初の入力エリアに配置
+    const isInputStep = pageId === "#step04" || pageId === "#step05" || pageId === "#step06";
     const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
-    if (firstArea && icon) {
+    if (pageId === "#step-first" && icon) {
+      // FVのクマはマークアップ定位置（cvr-kuma-wrap）で表示する。
+      // firstArea のセレクタは FV の .p-first__buttonArea に一致しないため、
+      // ここで分岐しないと初期表示からクマが消える。
+      const kumaWrap = page.querySelector(".cvr-kuma-wrap");
+      if (kumaWrap && icon.parentNode !== kumaWrap) kumaWrap.appendChild(icon);
+      icon.style.cssText = "cursor:pointer";
+    } else if (firstArea && icon) {
+      // クマは入力ステップ含む全ステップで表示する
+      icon.style.display = "";
       firstArea.style.position = "relative";
       firstArea.appendChild(icon);
       icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
+    } else if (icon) {
+      icon.style.display = "";
     }
 
-    // iOS Safari でキーボードを自動で開くには、ユーザータップ直後の同期focusが必須。
-    // setTimeoutの中で focus() してもキーボードは開かないため、ここで先に同期で focus する。
-    // (transition前にfocusしてもinputは見えているのでUX的に問題ない)
-    const autoFocusEl = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
+    const autoFocusEl = page.querySelector(
+      'input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])'
+    );
     if (autoFocusEl && !autoFocusEl.value) {
-      try { autoFocusEl.focus({ preventScroll: true }); } catch (e) { autoFocusEl.focus(); }
+      try {
+        autoFocusEl.focus({ preventScroll: true });
+      } catch (e) {
+        autoFocusEl.focus();
+      }
+      if (isInputStep) {
+        requestAnimationFrame(() => {
+          autoFocusEl.scrollIntoView({ block: "center", behavior: "smooth" });
+        });
+      }
     }
 
     requestAnimationFrame(() => {
@@ -179,25 +329,37 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+    if (!pageTo || !cur) return;
 
-    // ステップ遷移時に通知・社会的証明・信頼バーを非表示
+    clearStepTimers();
+
     const hideOnStep = document.querySelectorAll(".cvr-live-notification, .cvr-social-proof, .cvr-trust-bar");
-    hideOnStep.forEach(el => el.classList.add("is-hidden"));
+    hideOnStep.forEach((el) => el.classList.add("is-hidden"));
 
-    // step05→step06遷移時に名前を挿入
-    if (pageTo === "step06") {
-      const last = document.getElementById("last-name");
-      const nameTxt = document.getElementById("nametxt");
-      if (last && nameTxt && nameTxt.innerHTML.includes("{name}")) {
-        nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
+    const go = () => {
+      if (pageTo === "step06") {
+        const last = document.getElementById("last-name");
+        const nameTxt = document.getElementById("nametxt");
+        if (last && nameTxt && nameTxt.innerHTML.includes("{name}")) {
+          nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
+        }
       }
+
+      cur.style.display = "none";
+      cur.style.opacity = "0";
+      cur.style.transform = "translateX(50px)";
+
+      showPage("#" + pageTo);
+    };
+
+    if (LAZY_STEP_IDS.has(pageTo)) {
+      ensureLazySteps().then((ok) => {
+        if (ok && document.getElementById(pageTo)) go();
+      });
+      return;
     }
 
-    cur.style.display = "none";
-    cur.style.opacity = "0";
-    cur.style.transform = "translateX(50px)";
-
-    showPage("#" + pageTo);
+    go();
   }
 
   // ========== Constants ==========
@@ -233,8 +395,10 @@
   // ========== Radio buttons 02 (experience, employment) ==========
   function initRadioButtons02(group) {
     const buttons = group.querySelectorAll(".js-radio-button02");
-    const hiddens = document.querySelectorAll(".hidden-element02");
     if (!buttons.length) return;
+    const groupNames = new Set(Array.from(buttons, (b) => b.dataset.group));
+    const hiddens = Array.from(document.querySelectorAll(".hidden-element02"))
+      .filter((h) => groupNames.has(h.name));
     const titles = group.querySelectorAll(".js-icon-target");
     const nextBtn = group.querySelector(".js-next-button");
     const states = [];
@@ -242,7 +406,7 @@
     function sync() {
       hiddens.forEach((input, i) => {
         if (input.value) {
-          const el = document.querySelector('.js-radio-button02[data-value="' + input.value + '"]');
+          const el = group.querySelector('.js-radio-button02[data-value="' + input.value + '"]');
           if (el) el.classList.add(ACTIVE);
           states[i] = true;
           if (titles[i]) titles[i].classList.add(SKIP);
@@ -259,10 +423,11 @@
       if (btn.classList.contains(ACTIVE)) return;
       document.querySelector('input[name="' + btn.dataset.group + '"]').value = btn.dataset.value;
       buttons.forEach(b => b.classList.remove(ACTIVE));
+      btn.classList.add(ACTIVE);
       sync();
 
       if (states.every(Boolean)) {
-        // 両方選択済み → 直接ページ遷移
+        clearStepTimers();
         nextBtn.classList.remove(DISABLE);
         const cur = nextBtn.closest(".js-form-group");
         cur.style.display = "none";
@@ -270,10 +435,8 @@
         cur.style.transform = "translateX(50px)";
         showPage("#" + nextBtn.dataset.pageTo);
       } else {
-        // 未選択のセクションへクマ移動+スクロール誘導
         for (let i = 0; i < states.length; i++) {
           if (!states[i] && titles[i]) {
-            // 次のボタングリッドにクマを移動
             const nextSection = titles[i].closest(".c-section");
             const nextGrid = nextSection ? nextSection.querySelector(".c-button-grid") : null;
             if (nextGrid && icon) { nextGrid.style.position = "relative"; nextGrid.appendChild(icon); }
@@ -321,6 +484,18 @@
       return Array.from(buttons).some(b => b.classList.contains(ACTIVE));
     }
 
+    const autoAdvanceMs = parseInt(group.dataset.autoAdvanceMs || "0", 10);
+    let autoAdvanceTimer = null;
+
+    function scheduleAutoAdvance() {
+      if (!autoAdvanceMs || !nextBtn) return;
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = setTimeout(() => {
+        if (hasAny() && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+      }, autoAdvanceMs);
+    }
+    group._clearAutoAdvance = () => clearTimeout(autoAdvanceTimer);
+
     buttons.forEach(b => b.addEventListener("click", () => {
       b.classList.toggle(ACTIVE);
       updateHiddens();
@@ -328,7 +503,9 @@
         nextBtn.classList.remove(DISABLE);
         moveIconById("#" + nextBtn.id, true);
         target.classList.add(SKIP);
+        scheduleAutoAdvance();
       } else {
+        clearTimeout(autoAdvanceTimer);
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
       }
@@ -403,8 +580,18 @@
         valid = true;
         updateBtn();
         moveIconById("#" + nextBtn.id, true);
+        scheduleZipAutoAdvance();
       } catch (e) {}
     }
+
+    let zipAutoTimer = null;
+    function scheduleZipAutoAdvance() {
+      clearTimeout(zipAutoTimer);
+      zipAutoTimer = setTimeout(() => {
+        if (valid && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+      }, 700);
+    }
+    group._clearZipAutoAdvance = () => clearTimeout(zipAutoTimer);
 
     async function loadCities(pref, sel) {
       try {
@@ -449,21 +636,37 @@
       cityH.value = citySel.options[citySel.selectedIndex].textContent;
       zipInput.value = ""; valid = true;
       updateIcons();
+      scheduleZipAutoAdvance();
     });
 
     updateBtn();
+  }
+
+  function isValidBirthYear(value) {
+    const year = parseInt(String(value || "").trim(), 10);
+    return year >= 1924 && year <= 2010;
   }
 
   // ========== Name inputs ==========
   function initNameInputs(group) {
     const inputs = group.querySelectorAll(".js-name-input");
     if (!inputs.length) return;
+    const birthYear = group.querySelector(".js-birth-year-input");
     const target = group.querySelector("#step05-icon-start-target");
     const nextBtn = group.querySelector(".js-next-button");
     const errBox = group.querySelector("#error-name");
     const errText = errBox ? errBox.querySelector("p") : null;
+    const touched = new Set();
 
-    function allFilled() { return Array.from(inputs).every(i => !!i.value); }
+    function allFilled() {
+      const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+      const yearOk = !birthYear || isValidBirthYear(birthYear.value);
+      return namesOk && yearOk;
+    }
+
+    function shouldShowErrors() {
+      return touched.size > 0;
+    }
 
     function validate(opts) {
       opts = opts || {};
@@ -471,52 +674,88 @@
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
         if (errBox) errBox.style.display = "none";
-        // 生年月日エリアにクマを移動してスクロール
-        const bday = group.querySelector(".p-step06__birthday");
-        if (bday && icon) {
-          moveIcon(bday, true);
-        } else {
-          moveIconById("#" + nextBtn.id, true);
-        }
-        // 姓+名 両方埋まったら生年月日に視覚的誘導（first-name の入力完了時のみ）
-        // iOS Safari の <select> は focus() ではピッカーが開かない仕様。
-        // スクロール + ハイライトでユーザーにタップを促す。
-        if (opts.autoAdvance) {
-          const bdayYear = document.getElementById("bday-year");
-          if (bdayYear) {
-            setTimeout(() => {
-              bdayYear.scrollIntoView({ behavior: "smooth", block: "center" });
-              bdayYear.focus();
-              bdayYear.classList.add("js-pulse-highlight");
-              setTimeout(() => bdayYear.classList.remove("js-pulse-highlight"), 2400);
-            }, 200);
-          }
-        }
+        moveIconById("#" + nextBtn.id, true);
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "必ず入力してください"; }
-        moveIconById("#" + target.id);
+        if (errBox) {
+          if (shouldShowErrors()) {
+            errBox.style.display = "block";
+            if (errText) {
+              const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+              errText.textContent = namesOk
+                ? "生まれ年（西暦）は1924〜2010で入力してください"
+                : "お名前を入力してください";
+            }
+          } else {
+            errBox.style.display = "none";
+          }
+        }
+        const bday = group.querySelector(".p-step06__birthday");
+        if (opts.autoAdvance && bday && icon) moveIcon(bday, true);
+        else moveIconById("#" + target.id);
       }
     }
 
-    inputs.forEach(input => input.addEventListener("blur", () => validate()));
-    // 名(first-name)を入力中に両方埋まったらすぐ生年月日にジャンプ
+    inputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        touched.add(input.id || input.name);
+        validate();
+      });
+      input.addEventListener("blur", () => validate());
+    });
+    if (birthYear) {
+      birthYear.addEventListener("input", () => {
+        touched.add("bday-year");
+        validate();
+      });
+      birthYear.addEventListener("blur", () => validate());
+    }
+
+    const lastNameInput = group.querySelector("#last-name");
     const firstNameInput = group.querySelector("#first-name");
+    if (lastNameInput && firstNameInput) {
+      let lastAdvTimer = null;
+      let composingLast = false;
+      lastNameInput.addEventListener("compositionstart", () => {
+        composingLast = true;
+      });
+      lastNameInput.addEventListener("compositionend", () => {
+        composingLast = false;
+      });
+      lastNameInput.addEventListener("input", () => {
+        if (lastAdvTimer) clearTimeout(lastAdvTimer);
+        lastAdvTimer = setTimeout(() => {
+          if (
+            !composingLast &&
+            (lastNameInput.value || "").trim() &&
+            !(firstNameInput.value || "").trim() &&
+            document.activeElement === lastNameInput
+          ) {
+            firstNameInput.focus();
+          }
+        }, 700);
+      });
+    }
     if (firstNameInput) {
       let advTimer = null;
       firstNameInput.addEventListener("input", () => {
         if (advTimer) clearTimeout(advTimer);
         advTimer = setTimeout(() => {
-          if (allFilled() && document.activeElement === firstNameInput) {
-            firstNameInput.blur();
-            validate({ autoAdvance: true });
+          const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+          if (namesOk && document.activeElement === firstNameInput) {
+            const bdayYear = document.getElementById("bday-year");
+            if (bdayYear) {
+              setTimeout(() => {
+                bdayYear.scrollIntoView({ behavior: "smooth", block: "center" });
+                bdayYear.focus();
+              }, 200);
+            }
           }
         }, 700);
       });
     }
 
-    // Initial: disable
     nextBtn.classList.add(DISABLE);
   }
 
@@ -536,17 +775,57 @@
       const errBox = group.querySelector("#error-" + item.name);
       const errText = errBox ? errBox.querySelector("p") : null;
 
-      // 電話番号の「あと○桁」表示
+      // 電話番号の「あと○桁」表示 + 11桁で自動送信
       if (item.name === "your-tel") {
         const telNotice = document.getElementById("tel-notice");
-        if (telNotice) {
-          item.addEventListener("input", () => {
-            const len = item.value.length;
+        let telAutoTimer = null;
+
+        function clearTelAutoSubmit() {
+          if (telAutoTimer) {
+            clearTimeout(telAutoTimer);
+            telAutoTimer = null;
+          }
+        }
+
+        function scheduleTelAutoSubmit() {
+          if (nextBtn.id !== "step-last-button") return;
+          clearTelAutoSubmit();
+          telAutoTimer = setTimeout(() => {
+            telAutoTimer = null;
+            if (!isValidTel(item.value)) return;
+            if (nextBtn.classList.contains(DISABLE)) return;
+            if (nextBtn.style.pointerEvents === "none") return;
+            nextBtn.click();
+          }, 700);
+        }
+
+        group._clearTelAutoSubmit = clearTelAutoSubmit;
+
+        item.addEventListener("input", () => {
+          const digits = item.value.replace(/\D/g, "");
+          if (digits !== item.value) item.value = digits;
+
+          const len = item.value.length;
+          if (telNotice) {
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
             else if (len === 11) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
-          });
-        }
+          }
+
+          if (isValidTel(item.value)) {
+            if (errBox) errBox.style.display = "none";
+            states[i] = true;
+            item.classList.add(SKIP);
+            moveIconById("#" + nextBtn.id);
+            updateBtn();
+            scheduleTelAutoSubmit();
+          } else {
+            states[i] = false;
+            item.classList.remove(SKIP);
+            updateBtn();
+            clearTelAutoSubmit();
+          }
+        });
       }
 
       item.addEventListener("blur", () => {
@@ -557,7 +836,7 @@
           if (errBox) errBox.style.display = "none";
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
-        if (item.name === "your-tel" && item.value && !/^[0-9]+$/.test(item.value)) {
+        if (item.name === "your-tel" && item.value && !isValidTel(item.value)) {
           if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
@@ -658,17 +937,33 @@
     sel.innerHTML = h;
   }
 
-  // ========== Birthday selects ==========
+  // ========== Birthday (legacy select / year input) ==========
   function initBirthday() {
     const y = document.getElementById("bday-year");
     const m = document.getElementById("bday-month");
     const d = document.getElementById("bday-day");
-    if (y) { let h = ""; for (let i = 1924; i <= 2023; i++) h += '<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>'; y.innerHTML = h; }
-    if (m) { let h = ""; for (let i = 1; i <= 12; i++) h += '<option value="'+i+'">'+i+'</option>'; m.innerHTML = h; }
-    if (d) { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
+    if (!y || y.tagName === "INPUT") return;
+    let h = "";
+    for (let i = 1924; i <= 2023; i++) h += '<option value="' + i + '"' + (i === 1990 ? " selected" : "") + ">" + i + "</option>";
+    y.innerHTML = h;
+    if (m) { h = ""; for (let i = 1; i <= 12; i++) h += '<option value="' + i + '">' + i + "</option>"; m.innerHTML = h; }
+    if (d) { h = ""; for (let i = 1; i <= 31; i++) h += '<option value="' + i + '">' + i + "</option>"; d.innerHTML = h; }
   }
 
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
+  function isTestLeadSubmission(tel, last, first) {
+    const t = String(tel || "").trim();
+    const ln = String(last || "").trim();
+    const fn = String(first || "").trim();
+    if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return true;
+    if (ln === "テスト" && (fn === "太郎" || fn === "テスト")) return true;
+    if (/テスト/.test(ln + fn)) return true;
+    try {
+      if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return true;
+    } catch (e) { /* noop */ }
+    return false;
+  }
+
   function initZapierMirror() {
     const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
     // GAS Web App URL（デプロイ後にここへ貼る。空のままなら GAS送信は無効）
@@ -707,6 +1002,7 @@
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
+      if (isTestLeadSubmission(tel, last, first)) return;
       sentOnce = true;
       try {
         const fd = new FormData(form);
@@ -731,29 +1027,30 @@
 
   // ========== Init ==========
   function initForm() {
-    const groups = document.querySelectorAll(".js-form-group");
-    if (!groups.length) return;
+    const form = document.querySelector(".wpcf7-form");
+    if (!form) return;
 
-    document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
+    if (!form.dataset.stepDelegated) {
+      form.dataset.stepDelegated = "1";
+      form.addEventListener("click", (e) => {
+        const btn = e.target.closest(".js-step-button");
+        if (btn) handleStepClick({ currentTarget: btn });
+      });
+    }
 
     queueMicrotask(() => {
-      groups.forEach(g => {
-        initRadioButtons(g);
-        initRadioButtons02(g);
-        initCheckboxButtons(g);
-        initZipCode(g);
-        initNameInputs(g);
-        initRequiredItems(g);
-      });
+      form.querySelectorAll(".js-form-group").forEach(initFormGroup);
       initCookieName();
       initZapierMirror();
       preventEnter();
+      if (document.getElementById("step01")) prefetchLazySteps();
     });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     initPrefSelect();
     initBirthday();
+    updateProgress("#step-first");
     if (document.body.classList.contains("p-pageThanks")) {
       const el = document.querySelector("#set-user-name");
       const h = document.querySelector("#hidden-your-name");
@@ -764,155 +1061,29 @@
     }
   });
 
+  function loadCvrBoostDeferred() {
+    function inject() {
+      if (loadCvrBoostDeferred.done) return;
+      loadCvrBoostDeferred.done = true;
+      const ref = document.currentScript || document.querySelector('script[src*="app.js"]');
+      if (!ref || !ref.src) return;
+      const s = document.createElement("script");
+      s.src = ref.src.replace(/app\.js(\?.*)?$/, "cvr-boost.js$1");
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(inject, { timeout: 3000 });
+    } else {
+      window.addEventListener("load", () => setTimeout(inject, 500), { once: true });
+    }
+  }
+
   window.addEventListener("load", () => {
     if (!document.body.classList.contains("p-pageThanks")) {
       if (document.getElementById("step-first")) showPage("#step-first");
       initForm();
-    }
-  });
-})();
-/**
- * CVR Boost Script - 電気工事バンク LP改善
- */
-(function () {
-  "use strict";
-
-  // ========== URL パラメータ取得 ==========
-  function getParam(name) {
-    var match = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)").exec(location.href);
-    return match && match[2] ? decodeURIComponent(match[2].replace(/\+/g, " ")) : null;
-  }
-
-  // ========== リアルタイム通知ローテーション ==========
-  var notifications = [
-    { area: "東京都", time: "3分前" },
-    { area: "大阪府", time: "5分前" },
-    { area: "神奈川県", time: "8分前" },
-    { area: "愛知県", time: "12分前" },
-    { area: "福岡県", time: "15分前" },
-    { area: "埼玉県", time: "18分前" },
-    { area: "千葉県", time: "22分前" },
-    { area: "北海道", time: "25分前" },
-    { area: "兵庫県", time: "28分前" },
-    { area: "広島県", time: "32分前" },
-  ];
-
-  function initNotifications() {
-    var el = document.getElementById("live-notification");
-    if (!el) return;
-    var textEl = el.querySelector(".cvr-live-notification__text");
-    if (!textEl) return;
-    var index = Math.floor(Math.random() * notifications.length);
-
-    function show() {
-      var n = notifications[index];
-      textEl.innerHTML = "<strong>" + n.area + "</strong>の方が<strong>" + n.time + "</strong>に登録しました";
-      el.classList.add("is-visible");
-    }
-
-    setTimeout(function () {
-      show();
-      setInterval(function () {
-        el.classList.remove("is-visible");
-        setTimeout(function () { index = (index + 1) % notifications.length; show(); }, 500);
-      }, 8000);
-    }, 2000);
-  }
-
-  // ========== 離脱防止 ==========
-  function initExitIntent() {
-    var shown = false;
-
-    function showExitMessage() {
-      if (shown) return;
-      var feeling = document.querySelector('input[name="your-willingness"]');
-      if (!feeling || !feeling.value) return;
-      shown = true;
-
-      var overlay = document.createElement("div");
-      overlay.className = "cvr-exit-overlay";
-      overlay.innerHTML =
-        '<div class="cvr-exit-modal">' +
-        '<p class="cvr-exit-modal__title">まだ登録が完了していません</p>' +
-        '<p class="cvr-exit-modal__text">あなたの条件に合った求人が<strong>多数</strong>見つかっています。<br>あと少しで完了です！</p>' +
-        '<button class="cvr-exit-modal__btn" id="cvr-exit-continue">登録を続ける</button>' +
-        '<button class="cvr-exit-modal__close" id="cvr-exit-close">閉じる</button>' +
-        "</div>";
-
-      document.body.appendChild(overlay);
-
-      function close() { overlay.remove(); }
-      document.getElementById("cvr-exit-continue").addEventListener("click", close);
-      document.getElementById("cvr-exit-close").addEventListener("click", close);
-      overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
-    }
-
-    document.addEventListener("mouseleave", function (e) { if (e.clientY < 10) showExitMessage(); });
-
-    if ("pushState" in history) {
-      history.pushState(null, "", location.href);
-      window.addEventListener("popstate", function () {
-        history.pushState(null, "", location.href);
-        showExitMessage();
-      });
-    }
-  }
-
-  // ========== フォームトラッキング ==========
-  function initFormTracking() {
-    document.querySelectorAll(".js-step-button").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (btn.dataset.pageTo && window.dataLayer) {
-          window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
-        }
-      });
-    });
-  }
-
-  // ========== 数値カウントアップ ==========
-  function initCountUp() {
-    var els = document.querySelectorAll(".cvr-social-proof__number");
-    if (!els.length) return;
-    var done = false;
-    var observer = new IntersectionObserver(function (entries) {
-      if (!entries[0].isIntersecting || done) return;
-      done = true;
-      els.forEach(function (el) {
-        var raw = el.textContent;
-        var suffix = raw.replace(/[\d,]/g, "");
-        var target = parseInt(raw.replace(/[^\d]/g, ""), 10);
-        var duration = 1500;
-        var startTime = null;
-        function step(ts) {
-          if (!startTime) startTime = ts;
-          var progress = Math.min((ts - startTime) / duration, 1);
-          var val = Math.floor(progress * target);
-          el.textContent = val.toLocaleString() + suffix;
-          if (progress < 1) requestAnimationFrame(step);
-          else el.textContent = target.toLocaleString() + suffix;
-        }
-        requestAnimationFrame(step);
-      });
-    }, { threshold: 0.5 });
-    observer.observe(els[0].closest(".cvr-social-proof"));
-  }
-
-  // ========== 初期化（離脱防止は即時、その他 CVR はアイドル時・最大 ~2s で実行） ==========
-  document.addEventListener("DOMContentLoaded", function () {
-    var h4 = document.getElementById("hidden4");
-    if (h4) h4.value = getParam("utm_term") || "";
-
-    initExitIntent();
-
-    function runCvrBoostRest() {
-      initNotifications();
-      initFormTracking();
-      initCountUp();
-    }
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(runCvrBoostRest, { timeout: 2000 });
-    } else {
-      setTimeout(runCvrBoostRest, 0);
+      loadCvrBoostDeferred();
     }
   });
 })();

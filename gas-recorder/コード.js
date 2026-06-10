@@ -430,8 +430,10 @@ function buildLeadSlackMessage(params) {
   var last = params["your-last-name"] || "";
   var first = params["your-first-name"] || "";
   var name = (last + " " + first).trim();
-  var tel = params["your-tel"] || "";
-  var lp = params["_lp"] || "";
+  // 予約のみ先行（リード行が無い）の救済投稿でも名前・電話・LPが空にならないようにする
+  if (!name) name = params.calendar_guest_name || params["guest_name"] || "";
+  var tel = params["your-tel"] || params["guest_phone"] || "";
+  var lp = params["_lp"] || params["lp_id"] || "";
   var lic = params["your-license01"] || "";
   var lines = [":inbox_tray: *新規リード（LP登録）*"];
   if (name) lines.push("*名前:* " + name);
@@ -448,7 +450,14 @@ function notifySlackNewLead(params) {
 }
 
 function getSlackCaMention() {
-  return String(getScriptProp("SLACK_MENTION_CA") || "").trim();
+  // SLACK_MENTION_CA は <!subteam^S...|@ca> 形式のほか、S.../U... の生IDも受け付ける
+  var raw = String(getScriptProp("SLACK_MENTION_CA") || "").trim();
+  if (!raw) return "";
+  if (raw.charAt(0) === "<") return raw;
+  var id = raw.replace(/^@/, "");
+  if (/^U[A-Z0-9]+$/.test(id)) return "<@" + id + ">";
+  if (/^S[A-Z0-9]+$/.test(id)) return "<!subteam^" + id + ">";
+  return raw;
 }
 
 function buildBookingThreadSlackMessage(params) {
@@ -538,6 +547,18 @@ function ensureSlackLeadThread(sheet, header, rowNum, params) {
   if (!slackBotEnabled()) return meta;
 
   var leadParams = mergeParamsForSlack(readRowAsParams(sheet, header, rowNum), params);
+  // 名前も電話も無い空リードは投稿しない（情報なしのリードFMT通知が届くのを防ぐ）。
+  // この場合は呼び出し元が日時入りの単独メッセージにフォールバックする。
+  var hasLeadInfo = !!(
+    leadParams["your-last-name"] ||
+    leadParams["your-first-name"] ||
+    leadParams.calendar_guest_name ||
+    leadParams["guest_name"] ||
+    leadParams["your-tel"] ||
+    leadParams["guest_phone"]
+  );
+  if (!hasLeadInfo) return meta;
+
   var slackLead = notifySlackNewLead(leadParams);
   if (!slackLead.ok || !slackLead.ts) return meta;
 
@@ -558,12 +579,14 @@ function notifySlackBooking(sheet, header, rowNum, params) {
   }
   var slackMeta = ensureSlackLeadThread(sheet, header, rowNum, params);
   if (slackMeta.thread_ts) {
-    return postSlackBookingInLeadThread(
+    var reply = postSlackBookingInLeadThread(
       params,
       slackMeta.channel,
       slackMeta.thread_ts
     );
+    if (reply.ok) return reply;
   }
+  // スレッドが無い/返信失敗でも、@ca＋日時入りの予約通知は必ず届ける
   return postToSlack(buildCalendarSlackMessage(params));
 }
 
@@ -584,7 +607,7 @@ function findLatestRowByTelOrEmail(sheet, header, tel, email) {
   }
   if (email && emailColIdx !== -1) {
     var emailKey = String(email).toLowerCase().trim();
-    var emailVals = sheet.getRange(2, emailColIdx + 1, lastRow - 1, 1).getValues();
+    var emailVals = sheet.getRange(2, emailColIdx + 1, lastRow - 1, 1).getDisplayValues();
     for (var j = emailVals.length - 1; j >= 0; j--) {
       if (String(emailVals[j][0]).toLowerCase().trim() === emailKey) return j + 2;
     }
@@ -691,6 +714,14 @@ function buildCalendarSlackMessage(params) {
   if (lp) lines.push("*LP:* " + lp);
   var staffName = params.calendar_staff_name || "";
   if (staffName) lines.push("*担当:* " + staffName);
+  // スレッド返信できない場合のフォールバックでも @ca・担当に届くようにする
+  var ca = getSlackCaMention();
+  var staffMention = "";
+  if (params.calendar_staff_id && typeof getStaffSlackMention === "function") {
+    staffMention = getStaffSlackMention(params.calendar_staff_id) || "";
+  }
+  var head = [ca, staffMention].filter(function (m) { return !!m; }).join(" ");
+  if (head) lines.unshift(head);
   return lines.join("\n");
 }
 

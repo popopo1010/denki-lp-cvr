@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap"></noscript>
-<link rel="stylesheet" href="../../assets/css/thanks-page.css?v=48">
+<link rel="stylesheet" href="../../assets/css/thanks-page.css?v=49">
 </head>
 <body class="wp-singular page-template-default page p-pageThanks wp-theme-original-thema thanks-flow">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KV525PZ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -37,6 +37,11 @@
   <div class="t-hero t-hero--compact t-hero--gift">
     <div class="t-hero__chk"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff" opacity="0.25"/><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#fff"/></svg></div>
     <p class="t-hero__eyebrow">あなた向けの返報</p>
+    <ol class="t-hero__flow" aria-label="このあとの流れ">
+      <li class="is-done"><span>①</span>登録完了</li>
+      <li class="is-cur"><span>②</span>10分相談枠</li>
+      <li><span>③</span>LINE全文</li>
+    </ol>
     <h2 id="thanks-hero-title">3件、届きました</h2>
     <div class="t-hero__body" id="thanks-hero-sub">
       <p class="t-hero__gift-line" id="thanks-hero-gift-line">電気工事士向け · 非公開3件</p>
@@ -49,7 +54,7 @@
       </div>
       <div class="t-hero__cta-wrap">
         <button type="button" class="t-hero__cta" data-scroll-target="#t-calendar" data-cta-location="hero">希望条件を伝えて、最適な求人を受け取る（無料）</button>
-        <p class="t-hero__cta-note">10分のお電話で条件をすり合わせ → <strong>非公開求人の全文</strong>・プレミアム案内</p>
+        <p class="t-hero__cta-note">10分相談枠（約1分）→ その後<strong>LINEで全文受取</strong>（30秒）</p>
       </div>
       <p class="t-hero__more"><a href="#t-jobs-preview">他2件も下に表示しています</a></p>
       <p class="t-hero__reassure">押し売り・長い面談は<strong>当社では当てはまりません</strong>（10分 · 合わなければその場で終了）</p>
@@ -112,6 +117,7 @@
       </div>
       <div class="t-sec-head__body">
       <p class="t-cal__step">あと1ステップ · 約1分 · 無料</p>
+      <p class="t-cal__urgency">面談枠は直近から埋まります。希望の時間はお早めに</p>
       <h3>希望条件を伝える日時を選ぶ</h3>
       <p class="t-cal__head-lead">登録内容をもとに、あなた向けの求人を再精査します。お電話で条件をすり合わせた方に、非公開求人の全文とプレミアム案内をお届けします。</p>
       </div>
@@ -143,7 +149,7 @@
       <p class="t-cal__note">※ 予約がない方に限り、平日9–18時に<strong>1回だけ</strong>日程のご連絡をすることがあります。しつこい勧誘はありません。不要な場合はその場でお断りください。</p>
     </div>
   </div>
-  <script src="../../assets/js/thanks-booking-custom.js?v=32" defer></script>
+  <script src="../../assets/js/thanks-booking-custom.js?v=33" defer></script>
 
   <!-- LINE（予約後に全文の受取口） -->
   <div class="t-line" id="line-section">
@@ -156,7 +162,7 @@
     <h3>全文の受け取り口は<strong>LINE</strong>（30秒）</h3>
       </div>
     </div>
-    <p class="t-line__gate" id="line-gate-msg">日時を選んだあと、ここからLINE登録。ヒアリング後の<strong>全文</strong>や新着案内の受取口です。<strong>見るだけOK</strong></p>
+    <p class="t-line__gate" id="line-gate-msg">LPと同じ流れです。日時を選ぶとLINE登録が開き、ヒアリング後の<strong>全文</strong>の受取口になります。<strong>見るだけOK</strong></p>
     <p class="t-line__sub">条件すり合わせ後に全文とプレミアム案内が届きます。LINEは受け取り口です。</p>
     <div class="t-bene" style="margin-bottom:16px;text-align:left">
       <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#06c755"/></svg><span>ヒアリング後、<strong>非公開求人の全文</strong>が届く</span></div>

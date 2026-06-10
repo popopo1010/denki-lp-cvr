@@ -30,9 +30,9 @@ const css = read("assets/css/cvr-boost-denkikouji.css");
 const app = read("assets/js/app.js");
 
 const EXPECT = {
-  css: "cvr-boost-denkikouji.css?v20260625",
-  app: "app.js?v20260617",
-  lazy: "steps-lazy.html?v20260616"
+  css: "cvr-boost-denkikouji.css?v20260629",
+  app: "app.js?v20260629",
+  lazy: "steps-lazy.html?v20260629"
 };
 
 [
@@ -45,7 +45,7 @@ const EXPECT = {
   ["step01 あと4", lp.includes("あと4ステップ")],
   ["bridge 10分相談枠", lazy.includes("10分相談枠") && lazy.includes("LINEで全文受取")],
   ["step06 営業電話なし", lazy.includes("営業電話はしません")],
-  ["step06 ★4.8", lazy.includes("★4.8")],
+  ["step06 満足度94%", lazy.includes("利用者の<strong>94%</strong>が満足と回答")],
   ["submit CTA 文言", lazy.includes("あなたに合う求人を見る")],
   ["thanks-v2 遷移", app.includes("thanks-v2")],
   ["dk_lp_lead_v1", app.includes("dk_lp_lead_v1")],
@@ -54,9 +54,8 @@ const EXPECT = {
   ["FV CTA 76px", css.includes("min-height: 76px") && lp.includes("min-height:76px")]
 ].forEach(([k, v]) => (v ? pass("denkikouji", k) : fail("denkikouji", k)));
 
+// 94%・34,513 は 2026-06 にオーナー判断で step06 に復活（根拠データは本番反映手順書の確認事項）
 const forbidden = [
-  ["94%", "旧社会的証明"],
-  ["34,513", "旧登録数"],
   ["本登録", "本登録表記"],
   ["プレビュー", "プレビュー表記"],
   ["/thanks/", "旧thanks直遷移（thanks-v2以外）"]

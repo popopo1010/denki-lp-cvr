@@ -144,6 +144,7 @@ body:not(.lp-form-step) .cvr-live-notification {
   background: #f0f4fa; border: 1px solid #dce4f0; border-radius: 8px;
 }
 .cvr-step-reward strong { color: #ff5966; font-weight: 700; }
+.cvr-cta-proof strong { color: #314c85; }
 #step05 .cvr-almost-done {
   margin: 8px 0 4px;
 }
@@ -162,9 +163,9 @@ body:not(.lp-form-step) .cvr-live-notification {
 }
 .p-step06__birthday--year-only .p-step06__birthdayYear,
 .p-step06__birthday--year-only .cvr-year-field {
-  flex: 0 0 auto;
-  width: 7.5rem;
-  max-width: none;
+  flex: 0 0 8.5rem;
+  width: 8.5rem;
+  max-width: 8.5rem;
 }
 .p-step06__birthday--year-only .c-select-box02::after,
 .p-step06__birthday--year-only .c-select-box02::before {
@@ -612,9 +613,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 }
 .p-step06__birthday--year-only .p-step06__birthdayYear,
 .p-step06__birthday--year-only .cvr-year-field {
-  flex: 0 0 5.25rem;
-  width: 5.25rem;
-  max-width: 5.25rem;
+  flex: 0 0 8.5rem;
+  width: 8.5rem;
+  max-width: 8.5rem;
 }
 .p-step06__birthday--year-only .wpcf7-form-control-wrap {
   display: block;
@@ -699,11 +700,18 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 
 /* 入力ステップ: さらにミニマル */
   body.lp-input-step .l-header__message { display: none; }
-  body.lp-input-step .cvr-kuma,
   body.lp-input-step .c-fixed-icon { display: none !important; }
-  body.lp-input-step .cvr-step-reward { display: none; }
+  /* クマ・返報コピー・不安除去は入力ステップでも表示する（メリット/機会損失の訴求を消さない） */
+  body.lp-input-step .cvr-step-reward {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #64748b;
+  }
+  body.lp-input-step .cvr-step-reward strong { color: #314c85; }
   body.lp-input-step #step05 .p-step06__info,
-  body.lp-input-step #step06 .p-step07__info { display: none; }
+  body.lp-input-step #step06 .p-step07__info { font-size: 11px; }
   body.lp-input-step .c-title02,
   body.lp-input-step .c-title01 {
     padding: 8px 0 12px;
@@ -755,8 +763,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-left: 52px !important;
   }
   body.lp-input-step .cvr-birth-hint { margin-top: 4px; font-size: 10px; }
-  body.lp-input-step #step06 .cvr-cta-proof,
-  body.lp-input-step #step06 .cvr-step-opp { display: none; }
+  body.lp-input-step #step06 .cvr-cta-proof {
+    margin: 6px 0 0;
+    font-size: 10px;
+    text-align: center;
+    color: #64748b;
+  }
+  body.lp-input-step #step06 .cvr-step-opp {
+    margin: 8px 0 4px;
+    font-size: 12px;
+    text-align: center;
+  }
   body.lp-input-step #step06 .cvr-step-urgency {
     margin: 0 0 8px;
     font-size: 10px;
@@ -841,44 +858,42 @@ body.lp-form-step #step06.is-step-active {
   pointer-events: auto !important;
 }
 
-/* step03 経験4択: リスト型（左アイコン＋ラベル） */
-  body.lp-form-step #step03 .p-step03__button.c-button {
-    min-height: 48px;
-    padding: 8px 12px;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    box-shadow: 1px 1px 0 #dadada;
-  }
-  body.lp-form-step #step03 .p-step03__button .c-button__img {
-    display: flex;
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    margin: 0;
-  }
-  body.lp-form-step #step03 .p-step03__button .c-button__img img {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-  }
-  body.lp-form-step #step03 .p-step03__button .c-button__text {
-    flex: 1;
-    min-width: 0;
-    font-size: 15px;
-    font-weight: 700;
-    text-align: left;
-  }
+/* step03 経験4択: 2×2 カード型（上アイコン＋ラベル） */
   body.lp-form-step #step03 .p-step03__buttonArea.c-button-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     margin-top: 6px;
   }
   body.lp-form-step #step03 .p-step03__button.c-button {
     width: 100%;
-    min-height: 48px;
+    min-height: 92px;
+    padding: 10px 6px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 1px 1px 0 #dadada;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__img {
+    display: flex;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__img img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__text {
+    flex: none;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
   }
 
 /* 進捗の二重表示を解消（バーに一本化） */
@@ -906,13 +921,6 @@ body.lp-form-step #step06.is-step-active {
 /* ===== sekoukanri: フォーム中はフッター非表示（入力FMT崩れ防止） ===== */
 body.lp-form-step .l-footer,
 body.lp-input-step .l-footer {
-  display: none !important;
-}
-
-/* step03: クマが最終ボタンに被らない */
-body.lp-form-step #step03 .cvr-kuma,
-body.lp-form-step #step03 .c-fixed-icon,
-body.lp-form-step #step03 .js-fixed-icon {
   display: none !important;
 }
 
@@ -1200,44 +1208,6 @@ body.lp-form-step #step05 .c-next-button {
   body.lp-form-step .js-page-body { padding-bottom: 32px; }
   body.lp-form-step .cvr-testimonials { margin-top: 48px; }
   body.lp-form-step #step01 .c-next-button { min-height: 48px; padding: 10px 12px; }
-
-  /* step03 経験4択: SPは縦1列リスト（.c-button-gridの2列を上書き） */
-  body.lp-form-step #step03 .p-step03__buttonArea.c-button-grid {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px;
-    margin-top: 6px;
-  }
-  body.lp-form-step #step03 .p-step03__button.c-button {
-    width: 100%;
-    min-height: 52px !important;
-    padding: 8px 12px;
-    flex-direction: row !important;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    box-shadow: 1px 1px 0 #dadada;
-  }
-  body.lp-form-step #step03 .p-step03__button .c-button__img {
-    display: flex;
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    margin: 0;
-  }
-  body.lp-form-step #step03 .p-step03__button .c-button__img img {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-  }
-  body.lp-form-step #step03 .p-step03__button .c-button__text {
-    flex: 1;
-    min-width: 0;
-    font-size: 15px;
-    font-weight: 700;
-    text-align: left;
-  }
-
   /* クマアイコンは step01 でも表示する（以前は圧縮のため非表示にしていたが、視認性のため復活） */
   body.lp-form-step .l-header__title .adtext { font-size: 10px; line-height: 1.25; }
 }
@@ -1257,11 +1227,11 @@ body.lp-form-step #step05 .c-next-button {
     gap: 3px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-    min-height: 48px;
-    padding: 8px 6px;
+    min-height: 30px;
+    padding: 4px 3px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
-    font-size: 13px;
+    font-size: 10px;
   }
 }
 
@@ -1295,11 +1265,7 @@ body {
     min-height: 48px;
   }
   #step-first .p-firstButton {
-    min-height: 76px !important;
-  }
-  #step-first .p-firstButton__text {
-    font-size: 16px !important;
-    font-weight: 700;
+    min-height: 76px;
   }
   .c-nextLink {
     padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
