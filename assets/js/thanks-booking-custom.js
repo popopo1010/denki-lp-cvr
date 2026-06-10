@@ -141,8 +141,12 @@
       document.querySelector(".t-hero__body");
     if (heroRoot) {
       heroRoot.innerHTML =
+        '<ol class="t-hero__flow" aria-label="このあとの流れ">' +
+        '<li class="is-done"><span>①</span>登録完了</li>' +
+        '<li class="is-done"><span>②</span>10分相談枠</li>' +
+        '<li class="is-cur"><span>③</span>LINE全文</li></ol>' +
         '<p class="t-hero__lead">日時を確保しました</p>' +
-        '<p class="t-hero__route">次は<strong>LINE</strong>で全文の受取口（30秒）。お電話でプロと条件をすり合わせ、合う求人をご紹介します。</p>';
+        '<p class="t-hero__route">次は<strong>LINE</strong>で全文の受取口（30秒）。10分のお電話で条件をすり合わせ、<strong>非公開求人の全文</strong>をお届けします。</p>';
     }
 
     pushDL("thanks_line_step_revealed", {

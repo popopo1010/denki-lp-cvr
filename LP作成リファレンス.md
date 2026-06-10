@@ -1,7 +1,7 @@
 # LP作成リファレンス
 
 施工管理キャリア系LP（電気工事士・施工管理・年収診断・Metaショート）を新規作成・改修するときの共通指針。  
-エージェント向けの運用ルールは `CLAUDE.md`、本番URL・反映手順は `本番反映手順書.md` を参照。
+エージェント向けの運用ルールは `CLAUDE.md`、本番URL・反映手順は `本番反映手順書.md`、**denkikoujiのCV+LINE一貫**は `docs/CV-LINE-playbook.md` を参照。
 
 ---
 
@@ -121,12 +121,21 @@
 |-----------|-----------------|
 | 木下理論の詳細 | `docs/reference-kinoshita-marketing.md` |
 | 工種・専門性 | `cvr-specialty-badge`, `cvr-fv-note`, 工種別ディレクトリ |
-| 返報明示 | `cvr-step-reward`（全ステップに統一） |
-| 理由・不安解消 | `cvr-step-reason` |
+| 返報明示 | `cvr-step-reward`（全ステップ・**残ステップ数と一致**） |
+| 企業視点の理由文 | **使わない**（`cvr-step-reason` は削除。返報1行に集約） |
+| LP→Thanks橋渡し | `cvr-thanks-bridge`（相談枠→LINE全文を事前宣言） |
 | 口コミの自分ごと化 | `cvr-testimonials` + 工種・1級/2級別の3件 |
 | MetaショートFV | `meta-lp/` + `meta-fv__*` + `meta-short-lp.css` |
 | 計測分離 | `window.__LP_ID`（例: `sekoukanri-kentiku-meta`） |
 | 工種ハブ | `cvr-lp-hub`（総合LPから専門LPへ） |
+
+### 2.10 denkikouji マイクロコピー規約（2026-06）
+
+- **FVは1行**: `全5ステップ・約30秒｜無料・ハローワーク非掲載の求人あり`（reward重複禁止）
+- **CTAは結果寄り**（step01以降）: 「資格別の求人を見る」「近くの求人を見る」など
+- **吹き出しイラスト**（step04〜06）: 削除。`cvr-step-reward` のみ
+- **社会的証明**: LP・thanksで **★4.8（自社調査）** に統一（未検証の94%等は使わない）
+- **thanks一貫**: step06 `cvr-thanks-bridge` と thanks-v2 ヒーロー①②③が同じストーリー
 
 ---
 

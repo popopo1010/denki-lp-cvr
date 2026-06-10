@@ -49,7 +49,7 @@ SOURCES = [
         "src": "denkikouji/index.html",
         "dest": "meta-lp/denkikouji/index.html",
         "lp_id": "denkikouji-meta",
-        "canonical": f"{BASE_URL}/denkikouji/",
+        "canonical": f"{BASE_URL}/meta-lp/denkikouji/",
         "eyebrow": "電気工事士専門",
         "title": "第一種・第二種に合う<br><strong>オススメ求人</strong>を無料紹介",
         "cta_primary": "無料で求人をチェック",
@@ -87,7 +87,7 @@ def meta_fv_block(cfg: dict) -> str:
     return f"""<div class="p-first js-page-body js-form-group meta-fv" id="step-first">
     <p class="meta-fv__eyebrow">{cfg["eyebrow"]}</p>
     <h2 class="meta-fv__title">{cfg["title"]}</h2>
-    <p class="meta-fv__sub">30秒・転職しなくても無料・営業電話なし</p>
+    <p class="meta-fv__sub">全5ステップ・約30秒｜無料・ハローワーク非掲載の求人あり</p>
     <div class="meta-fv__actions">
         <button type="button" class="meta-fv__cta js-radio-button" data-value="近いうちに転職したい" data-group="your-willingness">{cfg["cta_primary"]}</button>
         <button type="button" class="meta-fv__cta meta-fv__cta--ghost js-radio-button" data-value="今は情報収集したい" data-group="your-willingness">{cfg["cta_secondary"]}</button>
@@ -142,11 +142,16 @@ def apply_meta_transforms(html: str, cfg: dict) -> str:
 
     if "meta-short-lp.css" not in html:
         html = re.sub(
-            r'(<link rel="stylesheet" href="[^"]*cvr-boost\.css[^"]*">)',
-            r'\1\n    <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1">',
+            r'(<noscript><link rel="stylesheet" href="[^"]*cvr-boost[^"]*\.css[^"]*"></noscript>)',
+            r'\1\n    <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1" media="print" onload="this.media=\'all\'">\n    <noscript><link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1"></noscript>',
             html,
             count=1,
         )
+
+    html = html.replace(
+        'data-lazy-src="steps-lazy.html',
+        'data-lazy-src="../denkikouji/steps-lazy.html',
+    )
 
     html = re.sub(
         r"<meta name='robots' content='[^']*' */>",

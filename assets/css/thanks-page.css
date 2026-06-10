@@ -1227,6 +1227,42 @@ html {
   color: var(--t-warm-deep);
   text-align: center;
 }
+.t-hero__flow {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  flex-wrap: wrap;
+}
+.t-hero__flow li {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 999px;
+  line-height: 1.2;
+}
+.t-hero__flow li span {
+  font-size: 9px;
+  opacity: 0.85;
+}
+.t-hero__flow li.is-done {
+  color: #314c85;
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+.t-hero__flow li.is-cur {
+  color: #b45309;
+  border-color: #fdba74;
+  background: #fff7ed;
+}
 .t-hero__body {
   position: relative;
   z-index: 1;
@@ -2905,6 +2941,13 @@ html {
 }
 .t-sec-head--jobs .t-jobs__lead {
   margin: 0;
+}
+.t-cal__urgency {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fde68a;
+  line-height: 1.4;
 }
 .t-sec-head--cal .t-cal__step {
   margin: 0 0 4px;

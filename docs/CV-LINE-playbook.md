@@ -1,0 +1,94 @@
+# denkikouji CV + LINE プレイブック
+
+電気工事士LP（`denkikouji` / `meta-lp/denkikouji`）の **フォーム完了 → thanks-v2 → 予約 → LINE** までを一貫させる運用ドキュメント。
+
+## ゴール
+
+| 段階 | KPI | 成功の定義 |
+|------|-----|-----------|
+| LP | フォーム完了率 | step01離脱↓・step05入力摩擦↓ |
+| Thanks | 予約完了率 | カレンダー展開→枠選択 |
+| LINE | `thanks_line_click` | 予約後にLINE CTAクリック |
+
+## ファネル（コピー一貫）
+
+```
+LP step06
+  「登録後、10分相談枠を選ぶ → LINEで全文受取（約2分）」
+       ↓ app.js（sessionStorage + 600ms）
+thanks-v2 ヒーロー
+  ①登録完了 → ②10分相談枠 → ③LINE全文
+       ↓ 予約完了（thanks-booking-custom.js）
+LINEセクション解放 + スティッキー「LINEで全文を受け取る」
+```
+
+### 統一コピー（2026-06）
+
+| 箇所 | 文言 |
+|------|------|
+| FV | 全5ステップ・約30秒｜無料・ハローワーク非掲載の求人あり |
+| step06 bridge | 10分相談枠 → LINE全文（約2分） |
+| step06 電話方針 | 営業電話はしません。日程連絡は平日1回のみ |
+| step06 社会的証明 | ★4.8満足度（自社調査）｜ハローワーク非掲載の求人あり |
+| thanks カレンダー | 今月の新着は資格別に限られています |
+| thanks LINEゲート | LPと同じ流れ。日時後にLINE登録が開く |
+
+### ステップ数（5ステップ）
+
+| 画面 | 残り | progress label |
+|------|------|----------------|
+| step01 | あと4 | あと4ステップ |
+| step03 | あと3 | あと3ステップ |
+| step04 | あと2 | あと2ステップ |
+| step05 | あと1 | あと1ステップ |
+| step06 | 最後 | 最後のステップ |
+
+## 主要ファイル
+
+| 役割 | パス |
+|------|------|
+| 通常LP | `denkikouji/index.html` |
+| 遅延ステップ | `denkikouji/steps-lazy.html` |
+| Meta LP | `meta-lp/denkikouji/index.html` |
+| フォームJS | `assets/js/app.js` |
+| LP CSS | `assets/css/cvr-boost-denkikouji.css` |
+| Thanks | `thanks-v2/index.html` |
+| 予約→LINE解放 | `assets/js/thanks-booking-custom.js` |
+| LINEゲート | `assets/js/thanks-mobile-ux.js` |
+
+## 本番URL
+
+- LP: `https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/`
+- Meta: `https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/denkikouji/`
+- Thanks: `https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/?lp=denkikouji`
+
+旧 `thanks/` は `thanks-v2` へ301相当のJSリダイレクト。
+
+## デプロイ後チェック（5分）
+
+1. LP: step-first → step06 まで遷移・CTA文言・ステップ数
+2. 送信後: thanks-v2 ヒーローに3件プレビュー・フロー①②③表示
+3. カレンダー: 枠選択 → LINEセクション解放・ドックにLINEボタン
+4. LINEクリック: GTM `thanks_line_click` / beacon送信
+5. ハードリロードで `?v=` キャッシュ更新確認
+
+## Meta LP 再生成
+
+```bash
+python3 scripts/generate-meta-lp.py
+```
+
+`denkikouji` 更新後に実行。`cvr-boost-denkikouji.css`・lazy steps パス・FV subcopy を反映。
+
+## 残タスク（コード外）
+
+- GAS `BOOKING_STAFF_JSON` と sync workflow の稼働確認 → `docs/BOOKING_STAFF_JSON-設定手順.md`
+- GTM `lead_conversion` / `thanks_line_click` の発火確認 → `docs/GTM-thanks-v2-revival.md`
+- 口コミ実データ差し替え（許諾後）
+
+## 関連ドキュメント
+
+- 本番手順: `本番反映手順書.md`
+- LP設計: `LP作成リファレンス.md`
+- Thanks残論点: `docs/thanks-v2-残論点.md`
+- パフォーマンス: `docs/軽量化.md`

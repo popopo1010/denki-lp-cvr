@@ -1,4 +1,6 @@
-# thanks-v2 残論点・進捗（2026-06-02）
+# thanks-v2 残論点・進捗（2026-06-16 更新）
+
+> **運用の入口**: LP〜LINEまでの一貫コピー・チェックリストは **`docs/CV-LINE-playbook.md`** を参照。
 
 ## 完了済み
 
@@ -11,8 +13,13 @@
 | 5 | イラストプロフィールアイコン | `assets/img/testimonials/*.svg` `8ffd129` |
 | 6 | LP→`thanks-v2` 遷移 | `app-v2.js` / `app.js` |
 | 7 | 軽量化（WP CSS削除・GTM遅延・minify） | `docs/軽量化.md` |
+| 8 | denkikouji LP/thanks コピー一貫 | `CV-LINE-playbook.md` 参照 |
+| 9 | 旧 `thanks/` → `thanks-v2` リダイレクト | `thanks/index.html` 他 |
+| 10 | thanks フロー表示（①②③）+ LINEゲートコピー | `thanks-v2/index.html` |
+| 11 | LP マイクロコピー統一・step lazy・perf | `denkikouji/` `9161849` 以降 |
+| 12 | `generate-meta-lp.py` denkikouji 同期 | lazy path / denkikouji CSS / FV sub |
 
-## 今回対応（コード）
+## 今回対応（コード・2026-06-02）
 
 | # | 項目 | ファイル |
 |---|------|----------|
@@ -29,7 +36,7 @@
 | O2 | `sync-booking-slots` workflow | GitHub Actions が green か確認 |
 | O3 | 実体験談への差し替え | 許諾取得後、文言・写真を実データに |
 | O4 | 計測・A/B | GTMで口コミ展開率・予約完了率。順序・文言の検証 |
-| O5 | 旧 `thanks/` | シェアブロック削除・看護系誤字があれば修正（v2本番化後） |
+| O5 | 旧 `thanks/` | **リダイレクト済み**（`thanks/` `WPLP/thanks/` `自前LP/thanks/`）。WP側301は deploy 要確認 |
 | O6 | WP旧URL→静的LP | **自動**: deploy が `deploy/wp-legacy-redirects.htaccess.fragment` を WP ルート `.htaccess` に適用（301）。GTM `wp-redirect-snippet.html` はバックアップ |
 | O7 | E2Eテストデータ | `app.js` / `app-v2.js` が 09012345678・テスト太郎・`?dk_test=1` で Zapier/GAS 送信をスキップ |
 
