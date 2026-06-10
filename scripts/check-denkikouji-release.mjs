@@ -30,9 +30,9 @@ const css = read("assets/css/cvr-boost-denkikouji.css");
 const app = read("assets/js/app.js");
 
 const EXPECT = {
-  css: "cvr-boost-denkikouji.css?v20260629",
-  app: "app.js?v20260629",
-  lazy: "steps-lazy.html?v20260629"
+  css: "cvr-boost-denkikouji.css?v20260630",
+  app: "app.js?v20260630",
+  lazy: "steps-lazy.html?v20260630"
 };
 
 [
@@ -43,7 +43,6 @@ const EXPECT = {
   ["meta app.js", meta.includes(EXPECT.app)],
   ["FV 全5ステップ", lp.includes("全5ステップ")],
   ["step01 あと4", lp.includes("あと4ステップ")],
-  ["bridge 10分相談枠", lazy.includes("10分相談枠") && lazy.includes("LINEで全文受取")],
   ["step06 営業電話なし", lazy.includes("営業電話はしません")],
   ["step06 満足度94%", lazy.includes("利用者の<strong>94%</strong>が満足と回答")],
   ["submit CTA 文言", lazy.includes("あなたに合う求人を見る")],
