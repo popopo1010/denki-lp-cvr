@@ -642,7 +642,7 @@
           if (errText) {
             const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
             errText.textContent = namesOk
-              ? "生まれ年は1924〜2010で入力してください"
+              ? "生年月日（西暦）は1924〜2010で入力してください"
               : "必ず入力してください";
           }
         }
