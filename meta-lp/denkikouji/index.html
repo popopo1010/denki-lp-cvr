@@ -2,24 +2,27 @@
 <html lang="ja">
 
 <head>
-    <!-- Google Tag Manager -->
+    <!-- Google Tag Manager (lazy: 初回interaction or 8s後) -->
     <script>
-    (function(w, d, s, l, i){
-        w[l] = w[l] || [];
-        w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
-        var f = d.getElementsByTagName(s)[0],
-            j = d.createElement(s),
-            dl = l != 'dataLayer' ? '&l=' + l : '';
-        j.async = true;
-        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-        f.parentNode.insertBefore(j, f);
-    })(window, document, 'script', 'dataLayer', 'GTM-KV525PZ');
+    (function(){
+      function loadGTM(){
+        if(loadGTM.done)return; loadGTM.done=true;
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KV525PZ');
+      }
+      var evts=['scroll','click','touchstart','keydown','mousemove'];
+      function trigger(){ loadGTM(); evts.forEach(function(e){window.removeEventListener(e,trigger,true);}); }
+      evts.forEach(function(e){window.addEventListener(e,trigger,{passive:true,capture:true});});
+      if('requestIdleCallback' in window) requestIdleCallback(loadGTM,{timeout:8e3});
+      else window.addEventListener('load',function(){setTimeout(loadGTM,5e3);});
+    })();
     </script>
     <!-- End Google Tag Manager -->
 
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#4d4d4d" />
+    <meta name="format-detection" content="telephone=no" />
 
     <title>[Meta] 電気工事士の求人募集・転職サイト[国内最大級] | 電気工事バンク</title>
 
@@ -40,24 +43,27 @@
 
     <meta name='robots' content='noindex,nofollow' />
     <link rel="canonical" href="https://denkilp.builders-job.com/denki-lp-cvr/meta-lp/denkikouji/" />
-    <link rel="preload" as="image" type="image/webp" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/first_banner0103.webp">
-
-    <style>/* Critical CSS - FV描画に必要な最小限 */
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;color:#333;display:flex;flex-direction:column;min-height:100vh}
+    <style>/* Critical CSS — meta short LP スマホFV */
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;color:#333;display:flex;flex-direction:column;min-height:100vh;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .l-header__container{padding:6px 8px;background-color:#4d4d4d;color:#fff;font-size:11px}
 .l-header__title{display:inline-flex;align-items:center}.l-header__title span{margin-left:8px;font-weight:700;font-size:12px}
 .l-header__message{margin-top:4px}.l-header__message span{font-weight:700;font-size:12px}
 .l-header__message .emphasis-1{color:#90d7ff}.l-header__message .emphasis-2{color:#f17a85}
 .l-main{flex:1;margin:4px auto;width:90%}.c-container{position:relative;width:100%;max-width:407px;margin:0 auto;padding:0 16px 32px}
 .js-form-group{display:none}
-@media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding:0 8px 0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:auto;padding-bottom:8px}}
+.cvr-progress{display:none;margin-bottom:12px}.cvr-progress.is-visible{display:block}
+.c-text-box,.c-select-box02 select{min-height:52px;font-size:16px}
+.c-next-button,.c-submit-button,.meta-fv__cta{min-height:48px}
+@media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));padding-top:0;padding-bottom:0}.l-header__container{padding:4px 8px}#step-first,.meta-fv{min-height:calc(100svh - 120px)}body.lp-form-step .c-next-button{min-height:48px}}
     </style>
     <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014"></noscript>
-    <link rel="stylesheet" href="../../assets/css/cvr-boost.css?v20260611c">
-    <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1">
+    <link rel="stylesheet" href="../../assets/css/cvr-boost.css?v20260612" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="../../assets/css/cvr-boost.css?v20260612"></noscript>
+    <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1"></noscript>
     <script>window.__LP_ID="denkikouji-meta";</script>
-    <script src="../../assets/js/app.js?v20260611d" defer></script>
+    <script src="../../assets/js/app.js?v20260612" defer></script>
 </head>
 
 <body class="meta-short-lp wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
@@ -90,47 +96,6 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
         <article>
             <div class="l-main__content">
                 <div class="c-container">
-
-<div class="cvr-trust-bar">
-    <div class="cvr-trust-bar__item">
-        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z" fill="#4CAF50"/></svg>
-        <span>厚生労働大臣許可</span>
-    </div>
-    <div class="cvr-trust-bar__item">
-        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" fill="#1976D2"/></svg>
-        <span>SSL暗号化通信</span>
-    </div>
-    <div class="cvr-trust-bar__item">
-        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z" fill="#FF9800"/></svg>
-        <span>完全無料</span>
-    </div>
-</div>
-
-<div class="cvr-social-proof">
-    <div class="cvr-social-proof__stats">
-        <div class="cvr-social-proof__stat">
-            <span class="cvr-social-proof__number">13,829</span>
-            <span class="cvr-social-proof__label">件以上の求人</span>
-        </div>
-        <div class="cvr-social-proof__divider"></div>
-        <div class="cvr-social-proof__stat">
-            <span class="cvr-social-proof__number">34,513</span>
-            <span class="cvr-social-proof__label">人以上が利用</span>
-        </div>
-        <div class="cvr-social-proof__divider"></div>
-        <div class="cvr-social-proof__stat">
-            <span class="cvr-social-proof__number">94%</span>
-            <span class="cvr-social-proof__label">が満足と回答</span>
-        </div>
-    </div>
-</div>
-
-<div class="cvr-live-notification" id="live-notification">
-    <div class="cvr-live-notification__dot"></div>
-    <p class="cvr-live-notification__text">
-        <strong>東京都</strong>の方が<strong>3分前</strong>に登録しました
-    </p>
-</div>
 
 <div class="wp-block-contact-form-7-contact-form-selector">
 <div class="wpcf7 no-js" id="wpcf7-f2997-o1" lang="ja" dir="ltr" data-wpcf7-id="2997">
@@ -296,7 +261,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 
   <div class="p-step05__address c-zip-text js-icon-target" id="step04-icon-start-target">
     <p class="c-zip-text__notice" id="zip-notice">ハイフンなし</p>
-    <span class="wpcf7-form-control-wrap" data-name="your-zip"><input size="40" maxlength="7" class="wpcf7-form-control wpcf7-tel wpcf7-text wpcf7-validates-as-tel p-postal-code" id="zip" inputmode="numeric" pattern="[0-9]*" aria-invalid="false" placeholder="1234567" value="" type="tel" name="your-zip" style="padding-left:48px" /></span>
+    <span class="wpcf7-form-control-wrap" data-name="your-zip"><input size="40" maxlength="7" class="wpcf7-form-control wpcf7-tel wpcf7-text wpcf7-validates-as-tel p-postal-code" id="zip" inputmode="numeric" pattern="[0-9]*" autocomplete="postal-code" aria-invalid="false" placeholder="1234567" value="" type="tel" name="your-zip" style="padding-left:48px" /></span>
   </div>
 
   <details class="p-step05__accordion" id="select-box-accordion">
@@ -481,75 +446,6 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 <div class="wpcf7-response-output" aria-hidden="true"></div>
 </form>
 </div>
-</div>
-
-<div class="cvr-testimonials">
-    <h3 class="cvr-testimonials__title">電気工事士・電気施工管理の声</h3>
-    <p class="cvr-testimonials__lead">1級・2級ごとに、資格に合った求人をご案内しています</p>
-    <div class="cvr-testimonial">
-        <div class="cvr-testimonial__header">
-            <div class="cvr-testimonial__avatar">K.T</div>
-            <div class="cvr-testimonial__meta">
-                <span class="cvr-testimonial__name">K.Tさん（34歳）</span>
-                <span class="cvr-testimonial__role">1級電気施工管理技士</span>
-            </div>
-            <div class="cvr-testimonial__stars">
-                <span>&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-            </div>
-        </div>
-        <p class="cvr-testimonial__text">ハローワークにはなかった好条件の求人を紹介してもらい、<strong>年収が80万円アップ</strong>しました。登録から内定まで1ヶ月でした。</p>
-    </div>
-    <div class="cvr-testimonial">
-        <div class="cvr-testimonial__header">
-            <div class="cvr-testimonial__avatar">S.M</div>
-            <div class="cvr-testimonial__meta">
-                <span class="cvr-testimonial__name">S.Mさん（28歳）</span>
-                <span class="cvr-testimonial__role">第二種電気工事士</span>
-            </div>
-            <div class="cvr-testimonial__stars">
-                <span>&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-            </div>
-        </div>
-        <p class="cvr-testimonial__text">電気工事に特化しているので、<strong>自分の資格を最大限評価</strong>してくれる企業に出会えました。無料なので登録して損はないです。</p>
-    </div>
-    <div class="cvr-testimonial">
-        <div class="cvr-testimonial__header">
-            <div class="cvr-testimonial__avatar">Y.H</div>
-            <div class="cvr-testimonial__meta">
-                <span class="cvr-testimonial__name">Y.Hさん（31歳）</span>
-                <span class="cvr-testimonial__role">第一種電気工事士</span>
-            </div>
-            <div class="cvr-testimonial__stars"><span>★★★★★</span></div>
-        </div>
-        <p class="cvr-testimonial__text">第一種の資格を活かし、<strong>年収90万円アップ</strong>で転職。電気工事士に特化した求人だけを紹介してもらえました。</p>
-    </div>
-    <div class="cvr-testimonial">
-        <div class="cvr-testimonial__header">
-            <div class="cvr-testimonial__avatar">Y.M</div>
-            <div class="cvr-testimonial__meta">
-                <span class="cvr-testimonial__name">Y.Mさん（30歳）</span>
-                <span class="cvr-testimonial__role">2級電気工事施工管理技士</span>
-            </div>
-            <div class="cvr-testimonial__stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
-        </div>
-        <p class="cvr-testimonial__text">2級電気施工管理でも、<strong>監理補佐からのキャリアアップ</strong>求人を紹介してもらい、残業減と年収UPを両立できました。</p>
-    </div>
-</div>
-
-<div class="cvr-faq">
-    <h3 class="cvr-faq__title">よくある質問</h3>
-    <details class="cvr-faq__item">
-        <summary>本当に無料ですか？</summary>
-        <p>はい、求職者の方は完全無料でご利用いただけます。費用は一切かかりません。</p>
-    </details>
-    <details class="cvr-faq__item">
-        <summary>今の職場にバレませんか？</summary>
-        <p>ご登録情報は厳重に管理しており、現在の勤務先に公開されることは一切ありません。</p>
-    </details>
-    <details class="cvr-faq__item">
-        <summary>すぐに転職しなくても登録できますか？</summary>
-        <p>もちろんです。情報収集目的でのご登録も歓迎しています。良い求人が見つかったタイミングでご検討ください。</p>
-    </details>
 </div>
 
                 </div><!-- /.c-container -->

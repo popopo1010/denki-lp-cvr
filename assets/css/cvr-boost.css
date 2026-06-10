@@ -739,6 +739,45 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   }
 }
 
+/* ===== スマホ完全最適化（主トラフィック） ===== */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea,
+  .c-text-box,
+  .cvr-year-input {
+    font-size: 16px !important;
+  }
+  .c-next-button,
+  .c-submit-button,
+  .p-firstButton,
+  .p-step01__button.c-button,
+  .c-check-button,
+  .meta-fv__cta {
+    min-height: 48px;
+  }
+  .c-nextLink {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .c-container {
+    padding-left: max(8px, env(safe-area-inset-left, 0px));
+    padding-right: max(8px, env(safe-area-inset-right, 0px));
+  }
+  .cvr-testimonials,
+  .cvr-faq {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 480px;
+  }
+}
+
 /* ===== PC最適化 ===== */
 @media (min-width: 768px) {
   .cvr-trust-bar { gap: 24px; padding: 10px 16px; }
