@@ -143,6 +143,7 @@ python3 scripts/generate-meta-lp.py
 
 ## 関連ドキュメント
 
+- **過去の失敗・再発防止:** `docs/release-incidents.md`
 - 本番手順: `本番反映手順書.md`
 - LP設計: `LP作成リファレンス.md`
 - Thanks残論点: `docs/thanks-v2-残論点.md`
