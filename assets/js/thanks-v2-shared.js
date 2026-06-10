@@ -124,6 +124,45 @@
     dk.fetchJson("data/thanks-job-previews-" + family + ".json").catch(function () {});
   };
 
+  dk.bindThanksLineClicks = function () {
+    var lpSlug = dk.getLpSlug() || "unknown";
+    var qualified = false;
+    try {
+      var raw = sessionStorage.getItem(LEAD_SESSION_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        qualified = !!(data && data.lp && Date.now() - data.ts < 30 * 60 * 1000);
+      }
+    } catch (e0) {}
+
+    function onLineClick() {
+      var payload = {
+        lp_slug: lpSlug,
+        thanks_qualified: qualified,
+        registration_step: "line_friend_add",
+        page_type: "thanks-v2"
+      };
+      dk.pushDL("thanks_line_click", payload);
+      dk.pushDL("thanks_full_registration_click", payload);
+    }
+
+    document
+      .querySelectorAll('a[href*="lin.ee"], a[href*="line.me"], #line-cta')
+      .forEach(function (link) {
+        if (link._dkLineBound) return;
+        link._dkLineBound = true;
+        link.addEventListener("click", onLineClick);
+      });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      dk.bindThanksLineClicks();
+    });
+  } else {
+    dk.bindThanksLineClicks();
+  }
+
   dk.fireThanksPageEvents = function () {
     if (window.__dkThanksPageEventsFired) return;
     window.__dkThanksPageEventsFired = true;

@@ -30,16 +30,16 @@ function exists(rel) {
 const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
-  ["thanks-v2-shared.js?v=6", "shared v6 prefetch json cache"],
+  ["thanks-v2-shared.js?v=7", "shared v7 line click bind"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
   ["thanks-page.css?v=47", "css v47 dead-code trim"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
-  ["fonts.googleapis.com/css2?family=Noto+Sans+JP", "noto font"],
+  ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
   ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
   ["thanks-booking-custom.js?v=32", "booking custom v32 eager for CTA"],
   ["thanks-job-preview.js?v=18", "job preview v18 shared json cache"],
-  ["thanks-v2-deferred.js?v=10", "deferred bundle v10 eager booking"],
+  ["thanks-v2-deferred.js?v=11", "deferred bundle v11 no gtm dup"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -208,7 +208,14 @@ bookingCustom.includes("dkThanksMountBooking")
   ? pass("booking-custom", "lazy booking UI mount")
   : fail("booking-custom", "dkThanksMountBooking missing");
 
+sharedJs.includes("bindThanksLineClicks")
+  ? pass("shared.js", "line click bind in shared")
+  : fail("shared.js", "bindThanksLineClicks missing");
+
 const deferred = read("assets/js/thanks-v2-deferred.js");
+!deferred.includes("thanks_page_view")
+  ? pass("deferred", "no duplicate page view in bundle")
+  : fail("deferred", "gtm page view dup should be removed");
 deferred.includes("applySocialStrip") &&
   deferred.includes("dkThanksExpandCalendar") &&
   deferred.includes("thanks_profile_ready")

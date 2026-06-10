@@ -9,7 +9,6 @@ import { fileURLToPath } from "url";
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.join(ROOT, "assets/js/thanks-v2-deferred.js");
 const PARTS = [
-  "assets/js/thanks-gtm.js",
   "assets/js/thanks-line-beacon.js",
   "assets/js/thanks-license-profile.js",
   "assets/js/thanks-section-visuals.js",

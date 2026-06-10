@@ -196,13 +196,15 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-job-previews.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
-          echo "$html" | grep -q 'thanks-v2-deferred.js?v=10' || (echo "missing thanks-v2-deferred v=10" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-deferred.js?v=11' || (echo "missing thanks-v2-deferred v=11" && exit 1)
           echo "$html" | grep -q 't-cal__toggle' || (echo "missing calendar collapse toggle" && exit 1)
           echo "$html" | grep -q 'booking-slots.json" as="fetch"' && (echo "booking-slots preload should be removed" && exit 1) || true
           echo "$html" | grep -q 'GTM-KV525PZ' || (echo "missing GTM on thanks-v2" && exit 1)
           echo "$html" | grep -q 'requestIdleCallback(loadGTM' && (echo "thanks-v2 still lazy-loads GTM" && exit 1) || true
           deferred=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/thanks-v2-deferred.js")
-          echo "$deferred" | grep -q 'lead_conversion' || (echo "thanks-v2-deferred missing lead_conversion" && exit 1)
+          shared_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/thanks-v2-shared.js")
+          echo "$shared_js" | grep -q 'lead_conversion' || (echo "thanks-v2-shared missing lead_conversion" && exit 1)
+          echo "$deferred" | grep -q 'thanks_page_view' && (echo "deferred should not duplicate thanks_page_view" && exit 1) || true
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-license-profiles.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/" | head -3
           denki_thanks=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/thanks/?lp=denkikouji")
@@ -237,7 +239,8 @@ jobs:
           echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
           echo "$html" | grep -q 'thanks-job-preview.js?v=18' || (echo "missing job preview v=18" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)
-          echo "$html" | grep -q 'thanks-v2-shared.js?v=6' || (echo "missing thanks-v2-shared v=6" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-shared.js?v=7' || (echo "missing thanks-v2-shared v=7" && exit 1)
+          echo "$html" | grep -q 'family=Noto+Sans+JP:wght@400;700' || (echo "missing noto 400+700 fonts" && exit 1)
           echo "$html" | grep -q 'thanks-booking-bootstrap.js?v=18' || (echo "missing booking bootstrap v=18" && exit 1)
           echo "$html" | grep -q 'thanks-booking-custom.js?v=32' || (echo "missing booking custom v=32" && exit 1)
           echo "$html" | grep -q 'thanks-social-meta' || (echo "missing social strip profile mount" && exit 1)
