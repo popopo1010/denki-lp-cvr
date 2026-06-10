@@ -872,7 +872,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step #step01 { min-height: calc(100dvh - 64px); }
   body.lp-form-step #step01 .p-step01__button.c-button { min-height: 76px; }
   body.lp-form-step #step01 .p-step01__button .c-button__img img { width: 44px; height: 44px; }
-  .p-firstButton { min-height: 68px; }
+  #step-first .p-firstButton { min-height: 68px; }
 }
 
 /* ===== スマホ完全最適化（主トラフィック） ===== */
@@ -904,11 +904,13 @@ body {
   }
   .c-next-button,
   .c-submit-button,
-  .p-firstButton,
   .p-step01__button.c-button,
   .c-check-button,
   .meta-fv__cta {
     min-height: 48px;
+  }
+  #step-first .p-firstButton {
+    min-height: 76px;
   }
   .c-nextLink {
     padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));

@@ -30,7 +30,7 @@ const css = read("assets/css/cvr-boost-denkikouji.css");
 const app = read("assets/js/app.js");
 
 const EXPECT = {
-  css: "cvr-boost-denkikouji.css?v20260621",
+  css: "cvr-boost-denkikouji.css?v20260625",
   app: "app.js?v20260617",
   lazy: "steps-lazy.html?v20260616"
 };
