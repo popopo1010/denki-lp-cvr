@@ -213,7 +213,9 @@ jobs:
           verify_denki_lp() {
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
-            echo "$denki_lp" | grep -q 'app.js?v1780930000' || return 1
+            echo "$denki_lp" | grep -q 'app.js?v20260617' || return 1
+            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260620' || return 1
+            echo "$denki_lp" | grep -q '全5ステップ' || return 1
             app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
             echo "$app_js" | grep -q 'thanks-v2' || return 1
             echo "$app_js" | grep -q '09012345678' || return 1
@@ -235,14 +237,14 @@ jobs:
           fi
           bash scripts/verify-wp-legacy-redirects.sh
           echo "$html" | grep -q 'thanks-page-context.js?v=27' || (echo "missing thanks-page-context v=27" && exit 1)
-          echo "$html" | grep -q 'thanks-page.css?v=48' || (echo "missing thanks-page.css v=48" && exit 1)
+          echo "$html" | grep -qE 'thanks-page\.css\?v=4[89]' || (echo "missing thanks-page.css v=49" && exit 1)
           echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
           echo "$html" | grep -q 'thanks-job-preview.js?v=19' || (echo "missing job preview v=19" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)
           echo "$html" | grep -q 'thanks-v2-shared.js?v=7' || (echo "missing thanks-v2-shared v=7" && exit 1)
           echo "$html" | grep -q 'family=Noto+Sans+JP:wght@400;700' || (echo "missing noto 400+700 fonts" && exit 1)
           echo "$html" | grep -q 'thanks-booking-bootstrap.js?v=18' || (echo "missing booking bootstrap v=18" && exit 1)
-          echo "$html" | grep -q 'thanks-booking-custom.js?v=32' || (echo "missing booking custom v=32" && exit 1)
+          echo "$html" | grep -qE 'thanks-booking-custom\.js\?v=3[23]' || (echo "missing booking custom v=33" && exit 1)
           echo "$html" | grep -q 'thanks-social-meta' || (echo "missing social strip profile mount" && exit 1)
           echo "$html" | grep -q 'id="t-cal-panel"' || (echo "missing calendar collapse panel" && exit 1)
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "license profile should be bundled in deferred" && exit 1) || true

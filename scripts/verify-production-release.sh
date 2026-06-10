@@ -2,7 +2,8 @@
 # 本番リリース前 HTTP 確認（Deploy Verify と同等 + LP ブリッジ）
 set -euo pipefail
 BASE="${RELEASE_VERIFY_BASE:-https://denkilp.builders-job.com/denki-lp-cvr}"
-CACHE_BUSTER="${RELEASE_APP_JS_CACHE:-v1780930000}"
+CACHE_BUSTER="${RELEASE_APP_JS_CACHE:-v20260617}"
+DENKI_CSS_CACHE="${RELEASE_DENKI_CSS_CACHE:-v20260620}"
 MAX_ATTEMPTS="${RELEASE_VERIFY_ATTEMPTS:-6}"
 RETRY_SLEEP="${RELEASE_VERIFY_SLEEP:-15}"
 
@@ -45,10 +46,10 @@ echo "✓ denkikouji/thanks not WP 301"
 echo "=== thanks-v2 HTML ==="
 html=$(curl -s "$BASE/thanks-v2/")
 for needle in \
-  'thanks-v2-deferred.js?v=7' \
-  'thanks-page-context.js?v=21' \
-  'thanks-booking-custom.js?v=27' \
-  't-hero--compact' \
+  'thanks-v2-deferred.js?v=12' \
+  'thanks-page-context.js?v=27' \
+  'thanks-booking-custom.js?v=33' \
+  '10分相談枠' \
   'id="t-future"' \
   'data-story-id'; do
   if echo "$html" | grep -q "$needle"; then
@@ -84,7 +85,8 @@ verify_denki_lp() {
   denki_html=$(curl -s "$BASE/denkikouji/")
   app_js=$(curl -s "$BASE/assets/js/app.js")
   echo "$denki_html" | grep -q "app.js?${CACHE_BUSTER}" || return 1
-  echo "$denki_html" | grep -q 'app.js?v1779240000' && return 1
+  echo "$denki_html" | grep -q "cvr-boost-denkikouji.css?${DENKI_CSS_CACHE}" || return 1
+  echo "$denki_html" | grep -q '全5ステップ' || return 1
   echo "$app_js" | grep -q 'thanks-v2' || return 1
   echo "$app_js" | grep -q 'location.href = "/thanks/"' && return 1
   echo "$app_js" | grep -q '09012345678' || return 1

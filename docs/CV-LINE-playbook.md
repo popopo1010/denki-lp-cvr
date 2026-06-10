@@ -64,6 +64,27 @@ LINEセクション解放 + スティッキー「LINEで全文を受け取る」
 
 旧 `thanks/` は `thanks-v2` へ301相当のJSリダイレクト。
 
+## リリース前チェック（事業・マーケ責任者）
+
+```bash
+node scripts/check-denkikouji-release.mjs   # LP静的（コピー・資産・禁止表記）
+node scripts/check-thanks-v2-release.mjs    # thanks静的
+node scripts/e2e-thanks-v2-release.mjs      # thanks本番E2E
+node scripts/e2e-denkikouji-lp.mjs          # LP本番スモーク（FV・送信ボタン）
+bash scripts/verify-production-release.sh   # 本番HTTP（デプロイ後）
+```
+
+| 観点 | 合格基準 |
+|------|----------|
+| ファネルコピー | LP step06 bridge ↔ thanks ①②③ ↔ LINEゲート が一致 |
+| 計測 | `lead_conversion` は qualified のみ / 直アクセスCVなし |
+| 予約基盤 | GAS slots OK・booking-slots.json 48h以内 |
+| UX | FV CTA・資格・入力欄がタップ可能サイズ / 送信ボタン二重表示なし |
+| 禁止 | 94%・34,513・本登録・旧 `/thanks/` CVトリガー依存 |
+| デプロイ | Actions `Deploy to Xserver` success・本番 `?v=` 反映 |
+
+**Go条件:** 上記スクリプトすべて pass + GTMコンテナで `lead_conversion` タグ公開（計測の最終関門）
+
 ## デプロイ後チェック（5分）
 
 1. LP: step-first → step06 まで遷移・CTA文言・ステップ数
