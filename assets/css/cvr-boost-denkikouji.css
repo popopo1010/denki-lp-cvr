@@ -373,6 +373,53 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 .c-next-button span:first-child { font-size: 15px; font-weight: 700; }
 .c-nextLinkButton { font-size: 12px !important; color: #bbb !important; text-decoration: none !important; }
 
+/* 送信CTA: 透明inputでタップ領域確保・ラベルは__textのみ表示 */
+.c-submit-button {
+  display: flex !important;
+  position: relative !important;
+  flex: 1;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 52px;
+  max-width: none;
+  padding: 12px 44px 12px 16px !important;
+}
+.c-submit-button input,
+.c-submit-button input.wpcf7-submit,
+#step-last-button input,
+#submit-button {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  font-size: 0 !important;
+  color: transparent !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer;
+  z-index: 2;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.c-submit-button__text {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.4;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.c-submit-button__text span {
+  font-size: 15px;
+}
+
 /* クマアイコン */
 .cvr-kuma-wrap { position: relative; }
 .cvr-kuma-wrap > .cvr-kuma { position: absolute; right: -4px; top: 0; z-index: 3; }
@@ -500,11 +547,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .c-title01 { padding: 4px 0 2px; font-size: 14px; }
 
   /* CTAボタン */
-  .p-first__buttonArea { padding: 0 4px; gap: 10px; }
-  .p-firstButton { min-height: 68px; }
-  .p-firstButton__container { padding: 0 14px; }
+  .p-first__buttonArea { padding: 0 2px; gap: 12px; }
+  .p-firstButton { min-height: 76px; }
+  .p-firstButton__container { padding: 0 16px; }
   .p-firstButton__icon { display: none; }
-  .p-firstButton__text { font-size: 15px; font-weight: 700; margin-left: 2px; line-height: 1.35; }
+  .p-firstButton__text { font-size: 16px; font-weight: 700; margin-left: 2px; line-height: 1.35; }
 
   /* マイクロコピー */
   .cvr-micro-copy { margin-top: 4px; font-size: 10px; }
@@ -788,12 +835,31 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     font-size: 10px;
   }
   body.lp-input-step .c-nextLink {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-top: 12px;
     position: sticky;
     bottom: 0;
     z-index: 5;
     background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 28%);
     padding-top: 10px;
+  }
+  body.lp-input-step #step06 .c-nextLinkButton {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 56px;
+    height: auto;
+    padding: 8px 4px;
+  }
+  body.lp-input-step #step06 .c-submit-button {
+    flex: 1;
+    margin-left: 0;
+    min-height: 52px;
+  }
+  body.lp-input-step #step06 .c-submit-button__text span {
+    font-size: 14px;
+    line-height: 1.35;
   }
 
   body.lp-form-step #step01 .c-next-button { min-height: 48px; padding: 10px 12px; }
@@ -805,7 +871,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step #step01 { min-height: calc(100dvh - 64px); }
   body.lp-form-step #step01 .p-step01__button.c-button { min-height: 76px; }
   body.lp-form-step #step01 .p-step01__button .c-button__img img { width: 44px; height: 44px; }
-  .p-firstButton { min-height: 64px; }
+  .p-firstButton { min-height: 68px; }
 }
 
 /* ===== スマホ完全最適化（主トラフィック） ===== */
@@ -818,12 +884,17 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 @media (max-width: 767px) {
-  input,
+  input:not(.wpcf7-submit),
   select,
   textarea,
   .c-text-box,
   .cvr-year-input {
     font-size: 16px !important;
+  }
+  .c-submit-button input.wpcf7-submit,
+  #submit-button {
+    font-size: 0 !important;
+    opacity: 0 !important;
   }
   #step05 .p-step06__name .c-text-box,
   #step05 .p-step06__birthday--year-only .cvr-year-input {
