@@ -117,6 +117,13 @@
 
     var shown = false;
     window.addEventListener("scroll", function () {
+      if (document.body.classList.contains("lp-form-step")) {
+        if (shown) {
+          shown = false;
+          cta.classList.remove("is-visible");
+        }
+        return;
+      }
       var scrollPct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
       if (scrollPct > 0.15 && !shown) {
         shown = true;

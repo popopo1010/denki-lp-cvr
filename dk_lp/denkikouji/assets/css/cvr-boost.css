@@ -159,6 +159,10 @@ body:not(.lp-form-step) .cvr-live-notification {
   display: none !important;
 }
 
+body.lp-form-step .cvr-floating-cta {
+  display: none !important;
+}
+
 .cvr-objection-pills {
   display: flex;
   flex-wrap: wrap;
@@ -185,6 +189,16 @@ body:not(.lp-form-step) .cvr-live-notification {
   font-size: 10px;
 }
 
+.cvr-fv-trust-mini {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 6px;
+  padding: 0 12px;
+  line-height: 1.4;
+}
+
 .cvr-micro-copy {
   text-align: center;
   font-size: 12px;
@@ -192,6 +206,76 @@ body:not(.lp-form-step) .cvr-live-notification {
   margin-top: 12px;
   padding: 0 16px;
   line-height: 1.5;
+}
+
+.cvr-multi-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #64748b;
+  margin: 0 0 8px;
+  padding: 0 12px;
+  line-height: 1.5;
+}
+
+.cvr-progress {
+  display: none;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.cvr-progress.is-visible {
+  display: block;
+}
+
+.cvr-progress__track {
+  height: 6px;
+  background: #e8edf5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cvr-progress__bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #314c85, #5c6bc0);
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+.cvr-progress__label {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #314c85;
+  line-height: 1.4;
+}
+
+.cvr-thanks-bridge {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #314c85;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.p-step06__birthday--year-only {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.p-step06__birthday--year-only .p-step06__birthdayYear {
+  flex: 1;
+  max-width: 160px;
+}
+
+.p-step06__birthday--year-only .c-text-box {
+  width: 100%;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .cvr-step-reason {

@@ -242,6 +242,28 @@
     if (icon) icon.style.transform = "";
   }
 
+  const STEP_PROGRESS = {
+    "step-first": { pct: 8, label: "" },
+    step01: { pct: 22, label: "あと5ステップ" },
+    step03: { pct: 36, label: "あと4ステップ" },
+    step03b: { pct: 50, label: "あと3ステップ" },
+    step04: { pct: 64, label: "あと2ステップ" },
+    step05: { pct: 78, label: "あと1ステップ" },
+    step06: { pct: 92, label: "最後のステップ" }
+  };
+
+  function updateProgress(pageId) {
+    const key = pageId.replace("#", "");
+    const meta = STEP_PROGRESS[key];
+    const wrap = document.getElementById("cvr-progress");
+    const bar = document.getElementById("cvr-progress-bar");
+    const label = document.getElementById("cvr-progress-label");
+    if (!wrap || !bar || !label || !meta) return;
+    wrap.classList.toggle("is-visible", key !== "step-first");
+    bar.style.width = meta.pct + "%";
+    label.textContent = meta.label;
+  }
+
   // ========== Page transitions ==========
   function showPage(pageId) {
     const page = document.querySelector(pageId);
@@ -251,6 +273,7 @@
       document.querySelectorAll(".is-hidden").forEach((el) => el.classList.remove("is-hidden"));
     }
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+    updateProgress(pageId);
 
     stopBounce();
     icon = page.querySelector(".js-fixed-icon");
@@ -285,10 +308,19 @@
     });
   }
 
+  function clearStepTimers() {
+    document.querySelectorAll(".js-form-group").forEach((g) => {
+      if (typeof g._clearAutoAdvance === "function") g._clearAutoAdvance();
+      if (typeof g._clearZipAutoAdvance === "function") g._clearZipAutoAdvance();
+    });
+  }
+
   function handleStepClick(e) {
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+
+    clearStepTimers();
 
     document.querySelectorAll(".cvr-live-notification, .cvr-social-proof, .cvr-trust-bar").forEach((el) => {
       el.classList.add("is-hidden");
@@ -345,8 +377,10 @@
   // ========== Radio buttons 02 (experience, employment) ==========
   function initRadioButtons02(group) {
     const buttons = group.querySelectorAll(".js-radio-button02");
-    const hiddens = document.querySelectorAll(".hidden-element02");
     if (!buttons.length) return;
+    const groupNames = new Set(Array.from(buttons, (b) => b.dataset.group));
+    const hiddens = Array.from(document.querySelectorAll(".hidden-element02"))
+      .filter((h) => groupNames.has(h.name));
     const titles = group.querySelectorAll(".js-icon-target");
     const nextBtn = group.querySelector(".js-next-button");
     const states = [];
@@ -354,7 +388,7 @@
     function sync() {
       hiddens.forEach((input, i) => {
         if (input.value) {
-          const el = document.querySelector('.js-radio-button02[data-value="' + input.value + '"]');
+          const el = group.querySelector('.js-radio-button02[data-value="' + input.value + '"]');
           if (el) el.classList.add(ACTIVE);
           states[i] = true;
           if (titles[i]) titles[i].classList.add(SKIP);
@@ -371,28 +405,16 @@
       if (btn.classList.contains(ACTIVE)) return;
       document.querySelector('input[name="' + btn.dataset.group + '"]').value = btn.dataset.value;
       buttons.forEach(b => b.classList.remove(ACTIVE));
+      btn.classList.add(ACTIVE);
       sync();
 
       if (states.every(Boolean)) {
-        // 両方選択済み → disable解除後に自動遷移
         nextBtn.classList.remove(DISABLE);
         nextBtn.style.opacity = "1";
         nextBtn.style.pointerEvents = "auto";
         const linkArea = nextBtn.closest(".c-nextLink");
         if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
         setTimeout(() => nextBtn.click(), 100);
-      } else {
-        // 未選択のセクションへクマ移動+スクロール誘導
-        for (let i = 0; i < states.length; i++) {
-          if (!states[i] && titles[i]) {
-            // 次のボタングリッドにクマを移動
-            const nextSection = titles[i].closest(".c-section");
-            const nextGrid = nextSection ? nextSection.querySelector(".c-button-grid") : null;
-            if (nextGrid && icon) { nextGrid.style.position = "relative"; nextGrid.appendChild(icon); }
-            titles[i].scrollIntoView({ behavior: "smooth", block: "start" });
-            break;
-          }
-        }
       }
     }));
   }
@@ -427,16 +449,29 @@
       return Array.from(buttons).some(b => b.classList.contains(ACTIVE));
     }
 
+    const autoAdvanceMs = parseInt(group.dataset.autoAdvanceMs || "0", 10);
+    let autoAdvanceTimer = null;
+
+    function scheduleAutoAdvance() {
+      if (!autoAdvanceMs || !nextBtn) return;
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = setTimeout(() => {
+        if (hasAny() && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+      }, autoAdvanceMs);
+    }
+    group._clearAutoAdvance = () => clearTimeout(autoAdvanceTimer);
+
     buttons.forEach(b => b.addEventListener("click", () => {
       b.classList.toggle(ACTIVE);
       updateHiddens();
       if (hasAny()) {
         nextBtn.classList.remove(DISABLE);
-        // クマを次へボタンの親(c-nextLink)に移動
         const linkArea = nextBtn.closest(".c-nextLink");
         if (linkArea && icon) { linkArea.style.position = "relative"; linkArea.appendChild(icon); }
         target.classList.add(SKIP);
+        scheduleAutoAdvance();
       } else {
+        clearTimeout(autoAdvanceTimer);
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
       }
@@ -510,8 +545,18 @@
         citySel.classList.add(SKIP);
         valid = true;
         updateBtn();
+        scheduleZipAutoAdvance();
       } catch (e) { console.warn("Zip error:", e); }
     }
+
+    let zipAutoTimer = null;
+    function scheduleZipAutoAdvance() {
+      clearTimeout(zipAutoTimer);
+      zipAutoTimer = setTimeout(() => {
+        if (valid && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+      }, 700);
+    }
+    group._clearZipAutoAdvance = () => clearTimeout(zipAutoTimer);
 
     async function loadCities(pref, sel) {
       try {
@@ -556,21 +601,32 @@
       cityH.value = citySel.options[citySel.selectedIndex].textContent;
       zipInput.value = ""; valid = true;
       updateIcons();
+      scheduleZipAutoAdvance();
     });
 
     updateBtn();
+  }
+
+  function isValidBirthYear(value) {
+    const year = parseInt(String(value || "").trim(), 10);
+    return year >= 1924 && year <= 2010;
   }
 
   // ========== Name inputs ==========
   function initNameInputs(group) {
     const inputs = group.querySelectorAll(".js-name-input");
     if (!inputs.length) return;
+    const birthYear = group.querySelector(".js-birth-year-input");
     const target = group.querySelector("#step05-icon-start-target");
     const nextBtn = group.querySelector(".js-next-button");
     const errBox = group.querySelector("#error-name");
     const errText = errBox ? errBox.querySelector("p") : null;
 
-    function allFilled() { return Array.from(inputs).every(i => !!i.value); }
+    function allFilled() {
+      const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+      const yearOk = !birthYear || isValidBirthYear(birthYear.value);
+      return namesOk && yearOk;
+    }
 
     function validate() {
       if (allFilled()) {
@@ -581,14 +637,28 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "必ず入力してください"; }
+        if (errBox) {
+          errBox.style.display = "block";
+          if (errText) {
+            const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+            errText.textContent = namesOk
+              ? "生まれ年は1924〜2010で入力してください"
+              : "必ず入力してください";
+          }
+        }
         moveIconById("#" + target.id);
       }
     }
 
-    inputs.forEach(input => input.addEventListener("blur", validate));
+    inputs.forEach((input) => {
+      input.addEventListener("blur", validate);
+      input.addEventListener("input", validate);
+    });
+    if (birthYear) {
+      birthYear.addEventListener("blur", validate);
+      birthYear.addEventListener("input", validate);
+    }
 
-    // Initial: disable
     nextBtn.classList.add(DISABLE);
   }
 
@@ -696,15 +766,6 @@
     sel.innerHTML = h;
   }
 
-  // ========== Birthday selects ==========
-  function initBirthday() {
-    const y = document.getElementById("bday-year");
-    const m = document.getElementById("bday-month");
-    const d = document.getElementById("bday-day");
-    if (y) { let h = ""; for (let i = 1924; i <= 2023; i++) h += '<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>'; y.innerHTML = h; }
-    if (m) { let h = ""; for (let i = 1; i <= 12; i++) h += '<option value="'+i+'">'+i+'</option>'; m.innerHTML = h; }
-    if (d) { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
-  }
 
   // ========== Form mirror (Zapier + GAS / スプシ・Slack連携) ==========
   function initFormMirrors() {
@@ -784,7 +845,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initPrefSelect();
-    initBirthday();
+    updateProgress("#step-first");
     if (document.body.classList.contains("p-pageThanks")) {
       initThanksPageTracking();
     }
