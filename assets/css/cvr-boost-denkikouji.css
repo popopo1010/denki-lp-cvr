@@ -88,6 +88,7 @@
 }
 #step05 .p-step06__name {
   display: flex;
+  flex-direction: row;
   gap: 8px;
   padding-right: 44px;
 }
@@ -903,14 +904,11 @@ body {
   }
   .c-next-button,
   .c-submit-button,
+  .p-firstButton,
   .p-step01__button.c-button,
   .c-check-button,
   .meta-fv__cta {
     min-height: 48px;
-  }
-  #step-first .p-firstButton,
-  .p-first__buttonArea .p-firstButton {
-    min-height: 76px;
   }
   .c-nextLink {
     padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));

@@ -215,25 +215,36 @@ jobs:
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
             echo "$denki_lp" | grep -q 'app.js?v20260617' || return 1
-            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260621' || return 1
+            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260622' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
             app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
             echo "$app_js" | grep -q 'thanks-v2' || return 1
             echo "$app_js" | grep -q '09012345678' || return 1
             return 0
           }
+          verify_sekoukanri_lp() {
+            local sekou_lp
+            sekou_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/")
+            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260623' || return 1
+            echo "$sekou_lp" | grep -q 'app.js?v20260623' || return 1
+            echo "$sekou_lp" | grep -q 'auto-advance-ms="1300"' || return 1
+            echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260623' || return 1
+            echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1
+            echo "$sekou_lp" | grep -q 'cvr-lp-hub' && return 1 || true
+            return 0
+          }
           verified=false
           for attempt in 1 2 3 4 5 6; do
-            if verify_denki_lp; then
-              echo "denkikouji LP cache buster + app.js OK (attempt ${attempt})"
+            if verify_denki_lp && verify_sekoukanri_lp; then
+              echo "denkikouji + sekoukanri LP cache buster OK (attempt ${attempt})"
               verified=true
               break
             fi
-            echo "denkikouji LP not propagated yet (attempt ${attempt}/6), waiting 15s..."
+            echo "LP cache not propagated yet (attempt ${attempt}/6), waiting 15s..."
             sleep 15
           done
           if [ "$verified" != "true" ]; then
-            echo "denkikouji still on stale app.js after retries"
+            echo "denkikouji or sekoukanri still on stale assets after retries"
             exit 1
           fi
           bash scripts/verify-wp-legacy-redirects.sh

@@ -153,9 +153,6 @@ body:not(.lp-form-step) .cvr-live-notification {
 #step05 .p-step05__message {
   display: none;
 }
-#step05 .p-step06__name {
-  padding-right: 52px;
-}
 
 .p-step06__birthday--year-only {
   display: flex;
@@ -628,6 +625,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 }
 #step05 .p-step06__name {
   display: flex;
+  flex-direction: row;
   gap: 8px;
   padding-right: 44px;
 }
