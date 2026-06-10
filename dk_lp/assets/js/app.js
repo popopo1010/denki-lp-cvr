@@ -231,6 +231,18 @@
     const page = document.querySelector(pageId);
     if (!page) return;
 
+    // ステップ重なり防止: アクティブな step にだけ is-step-active を付与し、
+    // 他は inline で確実に隠す（CSS側の :not(.is-step-active) 安全網とセット）
+    document.querySelectorAll(".js-form-group").forEach((g) => {
+      const active = g === page;
+      g.classList.toggle("is-step-active", active);
+      if (!active) {
+        g.style.display = "none";
+        g.style.opacity = "0";
+        g.style.transform = "translateX(50px)";
+      }
+    });
+
     // step-firstからスタートしたkumaを各ステップで使い回す。
     // 各stepにkuma要素は無いので、見つかった時だけ更新（無ければ前回のicon参照を保持）。
     const foundIcon = page.querySelector(".cvr-kuma, .js-fixed-icon");
