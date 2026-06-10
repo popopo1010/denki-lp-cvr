@@ -65,3 +65,7 @@ TimeRex「予約確定」→ Webhooks POST → 同じ GAS URL、body に:
 | Slackに来ない | `SLACK_WEBHOOK_URL` と redeploy |
 | 日時が「要確認」 | TimeRex Webhook のテスト送信を GAS で受信確認。Zapierなら `calendar_start` を明示マッピング |
 | 名前・メールを消せない | TimeRex仕様。事前入力で「確認だけ」運用 |
+
+---
+
+CI デプロイ: `CLASPRC_JSON` シークレット設定済みなら、`gas-recorder/` 変更の main push で自動 push + redeploy（`.github/workflows/gas-deploy.yml`）。
