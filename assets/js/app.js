@@ -118,6 +118,35 @@
     if (el) moveIcon(el, scroll);
   }
 
+  const STEP_PROGRESS = {
+    "step-first": { pct: 8, label: "" },
+    step01: { pct: 25, label: "あと4ステップ" },
+    step03: { pct: 42, label: "あと3ステップ" },
+    step03b: { pct: 50, label: "あと3ステップ" },
+    step04: { pct: 58, label: "あと2ステップ" },
+    step05: { pct: 75, label: "あと1ステップ" },
+    step06: { pct: 92, label: "最後のステップ" }
+  };
+
+  function updateProgress(pageId) {
+    const key = pageId.replace("#", "");
+    const meta = STEP_PROGRESS[key];
+    const wrap = document.getElementById("cvr-progress");
+    const bar = document.getElementById("cvr-progress-bar");
+    const label = document.getElementById("cvr-progress-label");
+    if (!wrap || !bar || !label || !meta) return;
+    wrap.classList.toggle("is-visible", key !== "step-first");
+    bar.style.width = meta.pct + "%";
+    label.textContent = meta.label;
+  }
+
+  function clearStepTimers() {
+    document.querySelectorAll(".js-form-group").forEach((g) => {
+      if (typeof g._clearAutoAdvance === "function") g._clearAutoAdvance();
+      if (typeof g._clearZipAutoAdvance === "function") g._clearZipAutoAdvance();
+    });
+  }
+
   // ========== Page transitions ==========
   function showPage(pageId) {
     const page = document.querySelector(pageId);
@@ -134,6 +163,7 @@
     }
 
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+    updateProgress(pageId);
 
     window.scrollTo(0, 0);
 
@@ -179,6 +209,8 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+
+    clearStepTimers();
 
     // ステップ遷移時に通知・社会的証明・信頼バーを非表示
     const hideOnStep = document.querySelectorAll(".cvr-live-notification, .cvr-social-proof, .cvr-trust-bar");
@@ -233,8 +265,10 @@
   // ========== Radio buttons 02 (experience, employment) ==========
   function initRadioButtons02(group) {
     const buttons = group.querySelectorAll(".js-radio-button02");
-    const hiddens = document.querySelectorAll(".hidden-element02");
     if (!buttons.length) return;
+    const groupNames = new Set(Array.from(buttons, (b) => b.dataset.group));
+    const hiddens = Array.from(document.querySelectorAll(".hidden-element02"))
+      .filter((h) => groupNames.has(h.name));
     const titles = group.querySelectorAll(".js-icon-target");
     const nextBtn = group.querySelector(".js-next-button");
     const states = [];
@@ -242,7 +276,7 @@
     function sync() {
       hiddens.forEach((input, i) => {
         if (input.value) {
-          const el = document.querySelector('.js-radio-button02[data-value="' + input.value + '"]');
+          const el = group.querySelector('.js-radio-button02[data-value="' + input.value + '"]');
           if (el) el.classList.add(ACTIVE);
           states[i] = true;
           if (titles[i]) titles[i].classList.add(SKIP);
@@ -259,10 +293,11 @@
       if (btn.classList.contains(ACTIVE)) return;
       document.querySelector('input[name="' + btn.dataset.group + '"]').value = btn.dataset.value;
       buttons.forEach(b => b.classList.remove(ACTIVE));
+      btn.classList.add(ACTIVE);
       sync();
 
       if (states.every(Boolean)) {
-        // 両方選択済み → 直接ページ遷移
+        clearStepTimers();
         nextBtn.classList.remove(DISABLE);
         const cur = nextBtn.closest(".js-form-group");
         cur.style.display = "none";
@@ -270,10 +305,8 @@
         cur.style.transform = "translateX(50px)";
         showPage("#" + nextBtn.dataset.pageTo);
       } else {
-        // 未選択のセクションへクマ移動+スクロール誘導
         for (let i = 0; i < states.length; i++) {
           if (!states[i] && titles[i]) {
-            // 次のボタングリッドにクマを移動
             const nextSection = titles[i].closest(".c-section");
             const nextGrid = nextSection ? nextSection.querySelector(".c-button-grid") : null;
             if (nextGrid && icon) { nextGrid.style.position = "relative"; nextGrid.appendChild(icon); }
@@ -321,6 +354,18 @@
       return Array.from(buttons).some(b => b.classList.contains(ACTIVE));
     }
 
+    const autoAdvanceMs = parseInt(group.dataset.autoAdvanceMs || "0", 10);
+    let autoAdvanceTimer = null;
+
+    function scheduleAutoAdvance() {
+      if (!autoAdvanceMs || !nextBtn) return;
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = setTimeout(() => {
+        if (hasAny() && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+      }, autoAdvanceMs);
+    }
+    group._clearAutoAdvance = () => clearTimeout(autoAdvanceTimer);
+
     buttons.forEach(b => b.addEventListener("click", () => {
       b.classList.toggle(ACTIVE);
       updateHiddens();
@@ -328,7 +373,9 @@
         nextBtn.classList.remove(DISABLE);
         moveIconById("#" + nextBtn.id, true);
         target.classList.add(SKIP);
+        scheduleAutoAdvance();
       } else {
+        clearTimeout(autoAdvanceTimer);
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
       }
@@ -403,8 +450,18 @@
         valid = true;
         updateBtn();
         moveIconById("#" + nextBtn.id, true);
+        scheduleZipAutoAdvance();
       } catch (e) {}
     }
+
+    let zipAutoTimer = null;
+    function scheduleZipAutoAdvance() {
+      clearTimeout(zipAutoTimer);
+      zipAutoTimer = setTimeout(() => {
+        if (valid && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+      }, 700);
+    }
+    group._clearZipAutoAdvance = () => clearTimeout(zipAutoTimer);
 
     async function loadCities(pref, sel) {
       try {
@@ -449,6 +506,7 @@
       cityH.value = citySel.options[citySel.selectedIndex].textContent;
       zipInput.value = ""; valid = true;
       updateIcons();
+      scheduleZipAutoAdvance();
     });
 
     updateBtn();
@@ -783,6 +841,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     initPrefSelect();
     initBirthday();
+    updateProgress("#step-first");
     if (document.body.classList.contains("p-pageThanks")) {
       const el = document.querySelector("#set-user-name");
       const h = document.querySelector("#hidden-your-name");
