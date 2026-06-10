@@ -278,13 +278,14 @@
       const kumaWrap = page.querySelector(".cvr-kuma-wrap");
       if (kumaWrap && icon.parentNode !== kumaWrap) kumaWrap.appendChild(icon);
       icon.style.cssText = "cursor:pointer";
-    } else if (!isInputStep && firstArea && icon) {
+    } else if (firstArea && icon) {
+      // クマは入力ステップ含む全ステップで表示する
       icon.style.display = "";
       firstArea.style.position = "relative";
       firstArea.appendChild(icon);
       icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
     } else if (icon) {
-      icon.style.display = "none";
+      icon.style.display = "";
     }
 
     const autoFocusEl = page.querySelector(

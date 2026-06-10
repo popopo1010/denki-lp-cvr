@@ -765,11 +765,18 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 
   /* 入力ステップ: さらにミニマル */
   body.lp-input-step .l-header__message { display: none; }
-  body.lp-input-step .cvr-kuma,
   body.lp-input-step .c-fixed-icon { display: none !important; }
-  body.lp-input-step .cvr-step-reward { display: none; }
+  /* クマ・返報コピー・不安除去は入力ステップでも表示する（メリット/機会損失の訴求を消さない） */
+  body.lp-input-step .cvr-step-reward {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #64748b;
+  }
+  body.lp-input-step .cvr-step-reward strong { color: #314c85; }
   body.lp-input-step #step05 .p-step06__info,
-  body.lp-input-step #step06 .p-step07__info { display: none; }
+  body.lp-input-step #step06 .p-step07__info { font-size: 11px; }
   body.lp-input-step .c-title02,
   body.lp-input-step .c-title01 {
     padding: 8px 0 12px;
@@ -821,8 +828,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-left: 52px !important;
   }
   body.lp-input-step .cvr-birth-hint { margin-top: 4px; font-size: 10px; }
-  body.lp-input-step #step06 .cvr-cta-proof,
-  body.lp-input-step #step06 .cvr-step-opp { display: none; }
+  body.lp-input-step #step06 .cvr-cta-proof {
+    margin: 6px 0 0;
+    font-size: 10px;
+    text-align: center;
+    color: #64748b;
+  }
+  body.lp-input-step #step06 .cvr-step-opp {
+    margin: 8px 0 4px;
+    font-size: 12px;
+    text-align: center;
+  }
   body.lp-input-step #step06 .cvr-step-urgency {
     margin: 0 0 8px;
     font-size: 10px;
