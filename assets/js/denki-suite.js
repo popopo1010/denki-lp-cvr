@@ -87,6 +87,21 @@
     );
   }
 
+  function trackFaqOpens() {
+    document.querySelectorAll(".ds-faq details").forEach(function (detail) {
+      detail.addEventListener("toggle", function () {
+        if (!detail.open) return;
+        var summary = detail.querySelector("summary");
+        pushDataLayer({
+          event: "ds_faq_open",
+          ds_brand: document.documentElement.getAttribute("data-brand") || "",
+          ds_lp_id: window.__LP_ID || "",
+          faq_question: summary ? summary.textContent.trim() : "",
+        });
+      });
+    });
+  }
+
   function initStickyCta() {
     var sticky = document.querySelector(".ds-sticky-cta");
     if (!sticky) return;
@@ -110,5 +125,6 @@
   pageView();
   mergeAdParamsIntoCvrLinks();
   trackCtaClicks();
+  trackFaqOpens();
   initStickyCta();
 })();
