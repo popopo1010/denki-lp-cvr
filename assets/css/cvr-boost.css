@@ -144,6 +144,21 @@ body:not(.lp-form-step) .cvr-live-notification {
   background: #f0f4fa; border: 1px solid #dce4f0; border-radius: 8px;
 }
 .cvr-step-reward strong { color: #ff5966; font-weight: 700; }
+.p-step06__birthday--year-only {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.p-step06__birthday--year-only .p-step06__birthdayYear {
+  flex: 1;
+  max-width: 160px;
+}
+.p-step06__birthday--year-only .c-text-box {
+  width: 100%;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+}
 .cvr-testimonials__lead {
   font-size: 12px; color: #666; text-align: center;
   margin: -8px 0 16px; padding: 0 8px; line-height: 1.5;

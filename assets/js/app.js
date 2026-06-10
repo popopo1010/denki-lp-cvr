@@ -454,16 +454,26 @@
     updateBtn();
   }
 
+  function isValidBirthYear(value) {
+    const year = parseInt(String(value || "").trim(), 10);
+    return year >= 1924 && year <= 2010;
+  }
+
   // ========== Name inputs ==========
   function initNameInputs(group) {
     const inputs = group.querySelectorAll(".js-name-input");
     if (!inputs.length) return;
+    const birthYear = group.querySelector(".js-birth-year-input");
     const target = group.querySelector("#step05-icon-start-target");
     const nextBtn = group.querySelector(".js-next-button");
     const errBox = group.querySelector("#error-name");
     const errText = errBox ? errBox.querySelector("p") : null;
 
-    function allFilled() { return Array.from(inputs).every(i => !!i.value); }
+    function allFilled() {
+      const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+      const yearOk = !birthYear || isValidBirthYear(birthYear.value);
+      return namesOk && yearOk;
+    }
 
     function validate(opts) {
       opts = opts || {};
@@ -471,52 +481,54 @@
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
         if (errBox) errBox.style.display = "none";
-        // 生年月日エリアにクマを移動してスクロール
-        const bday = group.querySelector(".p-step06__birthday");
-        if (bday && icon) {
-          moveIcon(bday, true);
-        } else {
-          moveIconById("#" + nextBtn.id, true);
-        }
-        // 姓+名 両方埋まったら生年月日に視覚的誘導（first-name の入力完了時のみ）
-        // iOS Safari の <select> は focus() ではピッカーが開かない仕様。
-        // スクロール + ハイライトでユーザーにタップを促す。
-        if (opts.autoAdvance) {
-          const bdayYear = document.getElementById("bday-year");
-          if (bdayYear) {
-            setTimeout(() => {
-              bdayYear.scrollIntoView({ behavior: "smooth", block: "center" });
-              bdayYear.focus();
-              bdayYear.classList.add("js-pulse-highlight");
-              setTimeout(() => bdayYear.classList.remove("js-pulse-highlight"), 2400);
-            }, 200);
-          }
-        }
+        moveIconById("#" + nextBtn.id, true);
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "必ず入力してください"; }
-        moveIconById("#" + target.id);
+        if (errBox) {
+          errBox.style.display = "block";
+          if (errText) {
+            const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+            errText.textContent = namesOk
+              ? "生年月日（西暦）は1924〜2010で入力してください"
+              : "必ず入力してください";
+          }
+        }
+        const bday = group.querySelector(".p-step06__birthday");
+        if (opts.autoAdvance && bday && icon) moveIcon(bday, true);
+        else moveIconById("#" + target.id);
       }
     }
 
-    inputs.forEach(input => input.addEventListener("blur", () => validate()));
-    // 名(first-name)を入力中に両方埋まったらすぐ生年月日にジャンプ
+    inputs.forEach((input) => {
+      input.addEventListener("blur", () => validate());
+      input.addEventListener("input", () => validate());
+    });
+    if (birthYear) {
+      birthYear.addEventListener("blur", () => validate());
+      birthYear.addEventListener("input", () => validate());
+    }
+
     const firstNameInput = group.querySelector("#first-name");
     if (firstNameInput) {
       let advTimer = null;
       firstNameInput.addEventListener("input", () => {
         if (advTimer) clearTimeout(advTimer);
         advTimer = setTimeout(() => {
-          if (allFilled() && document.activeElement === firstNameInput) {
-            firstNameInput.blur();
-            validate({ autoAdvance: true });
+          const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+          if (namesOk && document.activeElement === firstNameInput) {
+            const bdayYear = document.getElementById("bday-year");
+            if (bdayYear) {
+              setTimeout(() => {
+                bdayYear.scrollIntoView({ behavior: "smooth", block: "center" });
+                bdayYear.focus();
+              }, 200);
+            }
           }
         }, 700);
       });
     }
 
-    // Initial: disable
     nextBtn.classList.add(DISABLE);
   }
 
@@ -658,14 +670,17 @@
     sel.innerHTML = h;
   }
 
-  // ========== Birthday selects ==========
+  // ========== Birthday (legacy select / year input) ==========
   function initBirthday() {
     const y = document.getElementById("bday-year");
     const m = document.getElementById("bday-month");
     const d = document.getElementById("bday-day");
-    if (y) { let h = ""; for (let i = 1924; i <= 2023; i++) h += '<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>'; y.innerHTML = h; }
-    if (m) { let h = ""; for (let i = 1; i <= 12; i++) h += '<option value="'+i+'">'+i+'</option>'; m.innerHTML = h; }
-    if (d) { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
+    if (!y || y.tagName === "INPUT") return;
+    let h = "";
+    for (let i = 1924; i <= 2023; i++) h += '<option value="' + i + '"' + (i === 1990 ? " selected" : "") + ">" + i + "</option>";
+    y.innerHTML = h;
+    if (m) { h = ""; for (let i = 1; i <= 12; i++) h += '<option value="' + i + '">' + i + "</option>"; m.innerHTML = h; }
+    if (d) { h = ""; for (let i = 1; i <= 31; i++) h += '<option value="' + i + '">' + i + "</option>"; d.innerHTML = h; }
   }
 
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
