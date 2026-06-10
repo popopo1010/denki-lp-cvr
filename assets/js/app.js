@@ -271,7 +271,14 @@
 
     const isInputStep = pageId === "#step04" || pageId === "#step05" || pageId === "#step06";
     const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
-    if (!isInputStep && firstArea && icon) {
+    if (pageId === "#step-first" && icon) {
+      // FVのクマはマークアップ定位置（cvr-kuma-wrap）で表示する。
+      // firstArea のセレクタは FV の .p-first__buttonArea に一致しないため、
+      // ここで分岐しないと初期表示からクマが消える。
+      const kumaWrap = page.querySelector(".cvr-kuma-wrap");
+      if (kumaWrap && icon.parentNode !== kumaWrap) kumaWrap.appendChild(icon);
+      icon.style.cssText = "cursor:pointer";
+    } else if (!isInputStep && firstArea && icon) {
       icon.style.display = "";
       firstArea.style.position = "relative";
       firstArea.appendChild(icon);
