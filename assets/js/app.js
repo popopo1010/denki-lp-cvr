@@ -152,6 +152,80 @@
     return /^[0-9]{11}$/.test(String(value || "").trim());
   }
 
+  const LAZY_STEP_IDS = new Set(["step03", "step04", "step05", "step06"]);
+  let lazyStepsPromise = null;
+  let lazyStepsReady = false;
+
+  function getLazyStepsMount() {
+    return document.getElementById("lazy-steps-mount");
+  }
+
+  function resolveLazyStepsUrl() {
+    const mount = getLazyStepsMount();
+    if (!mount) return "";
+    const src = mount.dataset.lazySrc;
+    if (!src) return "";
+    try {
+      return new URL(src, location.href).href;
+    } catch (e) {
+      return src;
+    }
+  }
+
+  function prefetchLazySteps() {
+    const url = resolveLazyStepsUrl();
+    if (!url || lazyStepsReady || lazyStepsPromise) return;
+    lazyStepsPromise = fetch(url, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error("lazy steps fetch failed"))))
+      .catch(() => {
+        lazyStepsPromise = null;
+      });
+  }
+
+  function initFormGroup(group) {
+    if (!group || group.dataset.lpInited === "1") return;
+    group.dataset.lpInited = "1";
+    initRadioButtons(group);
+    initRadioButtons02(group);
+    initCheckboxButtons(group);
+    initZipCode(group);
+    initNameInputs(group);
+    initRequiredItems(group);
+  }
+
+  function ensureLazySteps() {
+    if (lazyStepsReady) return Promise.resolve(true);
+    const mount = getLazyStepsMount();
+    if (!mount) return Promise.resolve(true);
+
+    const finish = (html) => {
+      if (!html || lazyStepsReady) return true;
+      mount.insertAdjacentHTML("beforeend", html);
+      lazyStepsReady = true;
+      mount.removeAttribute("data-lazy-src");
+      initPrefSelect();
+      initBirthday();
+      mount.querySelectorAll(".js-form-group").forEach(initFormGroup);
+      preventEnter();
+      return true;
+    };
+
+    if (lazyStepsPromise) {
+      return lazyStepsPromise.then((html) => finish(html)).catch(() => false);
+    }
+
+    const url = resolveLazyStepsUrl();
+    if (!url) return Promise.resolve(false);
+
+    lazyStepsPromise = fetch(url, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error("lazy steps fetch failed"))));
+
+    return lazyStepsPromise.then((html) => finish(html)).catch(() => {
+      lazyStepsPromise = null;
+      return false;
+    });
+  }
+
   // ========== Page transitions ==========
   function showPage(pageId) {
     const page = document.querySelector(pageId);
@@ -183,6 +257,7 @@
       if (mc) mc.style.marginTop = "auto";
     } else if (pageId === "#step01") {
       page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 72px);min-height:calc(100dvh - 72px);opacity:0;transform:translateX(50px);transition:none";
+      prefetchLazySteps();
     } else {
       page.style.display = "block";
       page.style.opacity = "0";
@@ -219,27 +294,37 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+    if (!pageTo || !cur) return;
 
     clearStepTimers();
 
-    // ステップ遷移時に通知・社会的証明・信頼バーを非表示
     const hideOnStep = document.querySelectorAll(".cvr-live-notification, .cvr-social-proof, .cvr-trust-bar");
-    hideOnStep.forEach(el => el.classList.add("is-hidden"));
+    hideOnStep.forEach((el) => el.classList.add("is-hidden"));
 
-    // step05→step06遷移時に名前を挿入
-    if (pageTo === "step06") {
-      const last = document.getElementById("last-name");
-      const nameTxt = document.getElementById("nametxt");
-      if (last && nameTxt && nameTxt.innerHTML.includes("{name}")) {
-        nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
+    const go = () => {
+      if (pageTo === "step06") {
+        const last = document.getElementById("last-name");
+        const nameTxt = document.getElementById("nametxt");
+        if (last && nameTxt && nameTxt.innerHTML.includes("{name}")) {
+          nameTxt.innerHTML = nameTxt.innerHTML.replace("{name}", last.value);
+        }
       }
+
+      cur.style.display = "none";
+      cur.style.opacity = "0";
+      cur.style.transform = "translateX(50px)";
+
+      showPage("#" + pageTo);
+    };
+
+    if (LAZY_STEP_IDS.has(pageTo)) {
+      ensureLazySteps().then((ok) => {
+        if (ok && document.getElementById(pageTo)) go();
+      });
+      return;
     }
 
-    cur.style.display = "none";
-    cur.style.opacity = "0";
-    cur.style.transform = "translateX(50px)";
-
-    showPage("#" + pageTo);
+    go();
   }
 
   // ========== Constants ==========
@@ -883,23 +968,23 @@
 
   // ========== Init ==========
   function initForm() {
-    const groups = document.querySelectorAll(".js-form-group");
-    if (!groups.length) return;
+    const form = document.querySelector(".wpcf7-form");
+    if (!form) return;
 
-    document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
+    if (!form.dataset.stepDelegated) {
+      form.dataset.stepDelegated = "1";
+      form.addEventListener("click", (e) => {
+        const btn = e.target.closest(".js-step-button");
+        if (btn) handleStepClick({ currentTarget: btn });
+      });
+    }
 
     queueMicrotask(() => {
-      groups.forEach(g => {
-        initRadioButtons(g);
-        initRadioButtons02(g);
-        initCheckboxButtons(g);
-        initZipCode(g);
-        initNameInputs(g);
-        initRequiredItems(g);
-      });
+      form.querySelectorAll(".js-form-group").forEach(initFormGroup);
       initCookieName();
       initZapierMirror();
       preventEnter();
+      if (document.getElementById("step01")) prefetchLazySteps();
     });
   }
 
