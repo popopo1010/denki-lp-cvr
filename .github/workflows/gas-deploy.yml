@@ -44,7 +44,12 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-        run: printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+        run: |
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          if ! python3 -m json.tool ~/.clasprc.json > /dev/null 2>&1; then
+            echo "::error::CLASPRC_JSON が正しいJSONではありません。clasp login 済みマシンで cat ~/.clasprc.json | pbcopy し、画面のドラッグ選択ではなくクリップボード経由でシークレットを更新してください。"
+            exit 1
+          fi
 
       - name: clasp push + redeploy
         if: steps.check.outputs.skip == 'false'
