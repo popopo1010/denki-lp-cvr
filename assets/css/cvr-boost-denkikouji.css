@@ -123,9 +123,9 @@
 }
 .p-step06__birthday--year-only .p-step06__birthdayYear,
 .p-step06__birthday--year-only .cvr-year-field {
-  flex: 0 0 5.25rem;
-  width: 5.25rem;
-  max-width: 5.25rem;
+  flex: 0 0 8.5rem;
+  width: 8.5rem;
+  max-width: 8.5rem;
 }
 .p-step06__birthday--year-only .wpcf7-form-control-wrap {
   display: block;

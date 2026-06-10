@@ -664,7 +664,7 @@
             if (errText) {
               const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
               errText.textContent = namesOk
-                ? "生年（西暦）は1924〜2010で入力してください"
+                ? "生まれ年（西暦）は1924〜2010で入力してください"
                 : "お名前を入力してください";
             }
           } else {
@@ -692,7 +692,31 @@
       birthYear.addEventListener("blur", () => validate());
     }
 
+    const lastNameInput = group.querySelector("#last-name");
     const firstNameInput = group.querySelector("#first-name");
+    if (lastNameInput && firstNameInput) {
+      let lastAdvTimer = null;
+      let composingLast = false;
+      lastNameInput.addEventListener("compositionstart", () => {
+        composingLast = true;
+      });
+      lastNameInput.addEventListener("compositionend", () => {
+        composingLast = false;
+      });
+      lastNameInput.addEventListener("input", () => {
+        if (lastAdvTimer) clearTimeout(lastAdvTimer);
+        lastAdvTimer = setTimeout(() => {
+          if (
+            !composingLast &&
+            (lastNameInput.value || "").trim() &&
+            !(firstNameInput.value || "").trim() &&
+            document.activeElement === lastNameInput
+          ) {
+            firstNameInput.focus();
+          }
+        }, 700);
+      });
+    }
     if (firstNameInput) {
       let advTimer = null;
       firstNameInput.addEventListener("input", () => {
