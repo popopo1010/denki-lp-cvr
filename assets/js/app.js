@@ -242,6 +242,10 @@
     }
 
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+    document.body.classList.toggle(
+      "lp-input-step",
+      pageId === "#step04" || pageId === "#step05" || pageId === "#step06"
+    );
     updateProgress(pageId);
 
     window.scrollTo(0, 0);
@@ -265,20 +269,31 @@
       page.style.transition = "none";
     }
 
-    // クマを最初の入力エリアに配置
+    const isInputStep = pageId === "#step04" || pageId === "#step05" || pageId === "#step06";
     const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
-    if (firstArea && icon) {
+    if (!isInputStep && firstArea && icon) {
+      icon.style.display = "";
       firstArea.style.position = "relative";
       firstArea.appendChild(icon);
       icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
+    } else if (icon) {
+      icon.style.display = "none";
     }
 
-    // iOS Safari でキーボードを自動で開くには、ユーザータップ直後の同期focusが必須。
-    // setTimeoutの中で focus() してもキーボードは開かないため、ここで先に同期で focus する。
-    // (transition前にfocusしてもinputは見えているのでUX的に問題ない)
-    const autoFocusEl = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
+    const autoFocusEl = page.querySelector(
+      'input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])'
+    );
     if (autoFocusEl && !autoFocusEl.value) {
-      try { autoFocusEl.focus({ preventScroll: true }); } catch (e) { autoFocusEl.focus(); }
+      try {
+        autoFocusEl.focus({ preventScroll: true });
+      } catch (e) {
+        autoFocusEl.focus();
+      }
+      if (isInputStep) {
+        requestAnimationFrame(() => {
+          autoFocusEl.scrollIntoView({ block: "center", behavior: "smooth" });
+        });
+      }
     }
 
     requestAnimationFrame(() => {
