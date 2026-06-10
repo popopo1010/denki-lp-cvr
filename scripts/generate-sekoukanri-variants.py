@@ -172,12 +172,22 @@ def qual_button(value: str) -> str:
     )
 
 
-def build_step01(v: dict) -> str:
+def build_step01(v: dict, *, nenshu: bool = False) -> str:
+    preview = ""
+    if nenshu:
+        preview = (
+            '<div class="ns-salary-preview" id="ns-salary-preview" hidden aria-live="polite">\n'
+            '    <p class="ns-salary-preview__label" id="ns-salary-preview-label">選択中の資格の年収相場</p>\n'
+            '    <p class="ns-salary-preview__range" id="ns-salary-preview-range"></p>\n'
+            '    <p class="ns-salary-preview__avg" id="ns-salary-preview-avg"></p>\n'
+            "</div>\n"
+        )
     buttons = "\n".join(qual_button(q) for q in v["quals"])
     return (
         f'    <p class="c-title01">\n        <span class="js-icon-target">{v["step01_title"]}</span>\n    </p>\n'
         f'<p class="cvr-step-reason">{v["step01_reason"]}</p>\n'
         f'<p class="cvr-step-reward">{v["step01_reward"]}</p>\n'
+        f"{preview}"
         f'    <div class="p-step01__buttonArea c-button-grid">\n{buttons}\n    </div>'
     ).replace("<div ", "<div ")
 
@@ -252,7 +262,7 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False) -> str:
             f"<h1 class=\"ns-header-bar__title\">{v['ns_header']} <span class=\"ns-badge\">業界初</span></h1>",
         )
         html = html.replace(
-            '<p class="ns-header-bar__sub">診断しないと「自分の相場」がわからないまま。1級・2級ごとの適正年収を30秒で無料チェック</p>',
+            '<p class="ns-header-bar__sub">診断しないと相場がわからないまま。1級・2級の適正年収を30秒で無料チェック</p>',
             f"<p class=\"ns-header-bar__sub\">{v['ns_sub']}</p>",
         )
         html = html.replace(
@@ -286,7 +296,7 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False) -> str:
     )
     if not m:
         raise RuntimeError("step01 block not found")
-    html = html[: m.start()] + build_step01(v) + "\n" + html[m.end() - len('<div class="c-nextLink">'):]
+    html = html[: m.start()] + build_step01(v, nenshu=nenshu) + "\n" + html[m.end() - len('<div class="c-nextLink">'):]
 
     m2 = re.search(r'<div class="cvr-testimonials">.*?</div>\n\n<div class="cvr-faq">', html, re.DOTALL)
     if not m2:

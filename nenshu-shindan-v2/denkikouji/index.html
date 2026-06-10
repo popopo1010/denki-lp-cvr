@@ -43,7 +43,7 @@
 
     <meta name='robots' content='max-image-preview:large' />
 
-    <link rel="preload" as="image" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/first_banner0103.jpg">
+    <link rel="preload" as="image" type="image/webp" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/first_banner0103.webp">
     <style>
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;color:#333;display:flex;flex-direction:column;min-height:100vh}
     .l-header{display:none!important}
@@ -54,25 +54,34 @@
     <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014"></noscript>
     <link rel="stylesheet" href="../../assets/css/cvr-boost-v2.css?v1779310000">
-    <link rel="stylesheet" href="../nenshu-shindan.css?v6">
+    <link rel="stylesheet" href="../nenshu-shindan.css?v8">
     <script>window.__LP_ID="nenshu-shindan-denki-v2";</script>
+    <script src="../salary-data.js?v=1" defer></script>
     <script src="../../assets/js/app-v2.js?v1779310000" defer></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
       var stepMap = {"step-first":1,"step01":2,"step03":3,"step04":4,"step05":5,"step06":6};
-      document.querySelectorAll(".js-step-button").forEach(function(btn) {
-        btn.addEventListener("click", function() {
-          var active = stepMap[btn.dataset.pageTo] || 1;
-          document.querySelectorAll(".ns-step-progress__num").forEach(function(n, i) {
-            n.classList.remove("is-active","is-done");
-            if (i + 1 < active) n.classList.add("is-done");
-            else if (i + 1 === active) n.classList.add("is-active");
-          });
-          document.querySelectorAll(".ns-step-progress__arrow").forEach(function(a, i) {
-            a.classList.toggle("is-done", i + 1 < active);
-          });
+      function setProgress(active) {
+        document.querySelectorAll(".ns-step-progress__num").forEach(function(n, i) {
+          n.classList.remove("is-active","is-done");
+          if (i + 1 < active) n.classList.add("is-done");
+          else if (i + 1 === active) n.classList.add("is-active");
         });
-      });
+        document.querySelectorAll(".ns-step-progress__arrow").forEach(function(a, i) {
+          a.classList.toggle("is-done", i + 1 < active);
+        });
+      }
+      // app.js showPage() のinline display切替を監視して進捗を更新。
+      // ボタンclick監視だと step03 のラジオ自動遷移（直接showPage）で進捗が追従しないため。
+      var groups = document.querySelectorAll(".js-form-group[id]");
+      function update() {
+        groups.forEach(function(g) {
+          if (stepMap[g.id] && g.style.display && g.style.display !== "none") setProgress(stepMap[g.id]);
+        });
+      }
+      var obs = new MutationObserver(update);
+      groups.forEach(function(g) { obs.observe(g, { attributes: true, attributeFilter: ["style"] }); });
+      update();
     });
     </script>
 </head>
@@ -134,7 +143,7 @@
 
     <div class="ns-fv">
         <div class="ns-fv__bg">
-            <img src="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/first_banner0103.jpg" alt="電気工事現場" fetchpriority="high">
+            <picture><source srcset="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/first_banner0103.webp" type="image/webp"><img src="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/first_banner0103.jpg" alt="電気工事現場" fetchpriority="high"></picture>
         </div>
         <div class="ns-fv__card">
             <p class="ns-fv__card-title">電気工事士・施工管理の方へ<br>知らないまま、年収損してませんか？</p>
@@ -177,6 +186,11 @@
     </p>
 <p class="cvr-step-reason">資格を間違えると相場を見誤り、損しやすくなります</p>
 <p class="cvr-step-reward">診断結果：<strong>1級・2級・工種ごとの年収相場</strong>を表示（あと3ステップ）</p>
+<div class="ns-salary-preview" id="ns-salary-preview" hidden aria-live="polite">
+    <p class="ns-salary-preview__label" id="ns-salary-preview-label">選択中の資格の年収相場</p>
+    <p class="ns-salary-preview__range" id="ns-salary-preview-range"></p>
+    <p class="ns-salary-preview__avg" id="ns-salary-preview-avg"></p>
+</div>
     <div class="p-step01__buttonArea c-button-grid">
         <button type="button" class="p-step01__button c-button c-check-button js-checkbox-button" data-value="第一種電気工事士" data-group="license01">
             <span class="c-button__img"><picture><source srcset="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/denkikouji.webp" type="image/webp"><img loading="lazy" decoding="async" src="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/denkikouji.png" alt=""></picture></span>
@@ -450,7 +464,7 @@
       <div class="arrow"></div>
     </div>
   </div>
-  <p class="cvr-pp-text" style="text-align:center;font-size:9px;color:#bbb;margin-top:6px;line-height:1.4">上記ボタンを押すことで、XCHANGE株式会社の<a href="/privacypolicy" target="_blank" style="color:#bbb;text-decoration:underline">プライバシーポリシー</a>・<a href="/terms" target="_blank" style="color:#bbb;text-decoration:underline">利用規約</a>に同意したものとみなします。</p>
+  <p class="cvr-pp-text">上記ボタンを押すことで、XCHANGE株式会社の<a href="/privacypolicy" target="_blank" style="color:#bbb;text-decoration:underline">プライバシーポリシー</a>・<a href="/terms" target="_blank" style="color:#bbb;text-decoration:underline">利用規約</a>に同意したものとみなします。</p>
 </div>
 
 <div class="wpcf7-response-output" aria-hidden="true"></div>
@@ -467,6 +481,13 @@
             <div class="ns-salary-data__card-salary">
                 <span class="ns-salary-data__card-range">420万〜650万円</span>
                 <span class="ns-salary-data__card-avg">平均 <strong>520万円</strong></span>
+            </div>
+        </div>
+        <div class="ns-salary-data__card">
+            <div class="ns-salary-data__card-header">第二種電気工事士</div>
+            <div class="ns-salary-data__card-salary">
+                <span class="ns-salary-data__card-range">350万〜550万円</span>
+                <span class="ns-salary-data__card-avg">平均 <strong>430万円</strong></span>
             </div>
         </div>
         <div class="ns-salary-data__card">
