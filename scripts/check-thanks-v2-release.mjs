@@ -32,14 +32,14 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=7", "shared v7 line click bind"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=47", "css v47 dead-code trim"],
+  ["thanks-page.css?v=48", "css v48 hero CTA"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
   ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
   ["thanks-booking-custom.js?v=32", "booking custom v32 eager for CTA"],
-  ["thanks-job-preview.js?v=18", "job preview v18 shared json cache"],
-  ["thanks-v2-deferred.js?v=11", "deferred bundle v11 no gtm dup"],
+  ["thanks-job-preview.js?v=19", "job preview v19 intent auto + hero CTA"],
+  ["thanks-v2-deferred.js?v=12", "deferred bundle v12"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -71,6 +71,9 @@ const requiredStrings = [
   ["非公開求人の全文", "非公開求人全文表記"],
   ["LINEで全文を受け取る", "LINE CTA"],
   ["希望条件を伝えて、最適な求人を受け取る", "benefit-first primary CTA"],
+  ["t-hero__cta-wrap", "hero inline CTA block"],
+  ["data-cta-location=\"hero\"", "hero CTA analytics location"],
+  ["N.Wさん（38歳）", "social strip NW default"],
   ["プレミアム案内", "premium offer subcopy"],
   ["見るだけOK", "低ハードル文言"],
 ];
@@ -233,6 +236,13 @@ jobPreview.includes("t-job-card__facts") &&
   jobPreview.includes("resolveSalaryBand")
   ? pass("job-preview", "job facts cards (area / salary band)")
   : fail("job-preview", "job facts cards missing");
+jobPreview.includes("applyDefaultIntent") &&
+  jobPreview.includes("thanks_job_intent_auto")
+  ? pass("job-preview", "willingness intent auto-select")
+  : fail("job-preview", "willingness intent auto-select missing");
+jobPreview.includes("cta_location")
+  ? pass("job-preview", "CTA location analytics")
+  : fail("job-preview", "CTA location analytics missing");
 jobPreview.includes("IntersectionObserver")
   ? pass("job-preview", "lazy load near viewport")
   : fail("job-preview", "IntersectionObserver lazy load missing");

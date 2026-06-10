@@ -41,6 +41,35 @@
     window.dataLayer.push(payload);
   }
 
+  function inferDefaultIntent(profile) {
+    if (profile.intent) return profile.intent;
+    var willingness = profile.willingness || "";
+    if (willingness.indexOf("近いうち") >= 0) return "salary";
+    if (willingness.indexOf("情報収集") >= 0) return "stable";
+    return "";
+  }
+
+  function applyDefaultIntent(profile) {
+    try {
+      var stored = sessionStorage.getItem(INTENT_KEY);
+      if (stored) {
+        profile.intent = stored;
+        return profile;
+      }
+    } catch (e0) {}
+    var inferred = inferDefaultIntent(profile);
+    if (!inferred) return profile;
+    profile.intent = inferred;
+    try {
+      sessionStorage.setItem(INTENT_KEY, inferred);
+    } catch (e1) {}
+    pushDL("thanks_job_intent_auto", {
+      job_intent: inferred,
+      willingness: profile.willingness || ""
+    });
+    return profile;
+  }
+
   function readProfile() {
     var profile = {
       license: "",
@@ -79,7 +108,7 @@
       profile.intent = sessionStorage.getItem(INTENT_KEY) || "";
     } catch (e3) {}
     profile.region = regionByPref[profile.pref] || "";
-    return profile;
+    return applyDefaultIntent(profile);
   }
 
   function getLpFamily() {
@@ -519,9 +548,15 @@
       btn._boundScroll = true;
       btn.addEventListener("click", function () {
         var target = btn.getAttribute("data-scroll-target");
+        if (target === "#t-calendar" && window.dkThanksExpandCalendar) {
+          window.dkThanksExpandCalendar({ scroll: false });
+        }
         var el = target ? document.querySelector(target) : null;
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        pushDL("thanks_job_preview_cta", { scroll_target: target || "" });
+        pushDL("thanks_job_preview_cta", {
+          scroll_target: target || "",
+          cta_location: btn.getAttribute("data-cta-location") || "jobs"
+        });
       });
     });
   }
@@ -703,5 +738,6 @@
     obs.observe(target);
   }
 
+  bindScroll();
   startPreviewLoad();
 })();

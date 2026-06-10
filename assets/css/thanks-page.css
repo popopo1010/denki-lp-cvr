@@ -3282,6 +3282,12 @@ html[data-thanks-family="sekoukanri"] .t-license-badge__label {
 .t-job-card--hero .t-job-card__title {
   font-size: 1rem;
 }
+.t-hero--gift .t-hero__cta-wrap {
+  margin: 14px 0 4px;
+}
+.t-hero--gift .t-hero__cta {
+  margin-top: 0;
+}
 .t-hero__more {
   margin: 0 0 10px;
   font-size: 0.75rem;
