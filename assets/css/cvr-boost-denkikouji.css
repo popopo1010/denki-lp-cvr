@@ -609,17 +609,33 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-top: 8px;
     padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   }
-  /* step03 経験4択: アイコン非表示・リスト型 */
-  body.lp-form-step #step03 .p-step03__button .c-button__img { display: none; }
+  /* step03 経験4択: コンパクトリスト型（左アイコン＋ラベル） */
   body.lp-form-step #step03 .p-step03__button.c-button {
     min-height: 44px;
-    padding: 10px 12px;
+    padding: 6px 12px;
     flex-direction: row;
-    justify-content: center;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
     box-shadow: 1px 1px 0 #dadada;
   }
+  body.lp-form-step #step03 .p-step03__button .c-button__img {
+    display: flex;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    margin: 0;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__img img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
   body.lp-form-step #step03 .p-step03__button .c-button__text {
+    flex: 1;
+    min-width: 0;
     font-size: 14px;
+    text-align: left;
   }
   body.lp-form-step #step03 .c-button-grid { gap: 8px; margin-top: 6px; }
 

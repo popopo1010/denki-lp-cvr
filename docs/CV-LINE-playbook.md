@@ -72,6 +72,41 @@ LINEセクション解放 + スティッキー「LINEで全文を受け取る」
 4. LINEクリック: GTM `thanks_line_click` / beacon送信
 5. ハードリロードで `?v=` キャッシュ更新確認
 
+## 本番検証（自動・2026-06-11）
+
+```bash
+npx playwright install chromium
+node scripts/e2e-thanks-v2-release.mjs
+```
+
+| 項目 | 結果 |
+|------|------|
+| GTM `GTM-KV525PZ` 読込 | OK |
+| GAS `action=slots` | OK（staff=4） |
+| `booking-slots.json` 本番 | OK（366枠・48h以内更新） |
+| `sync-booking-slots` Actions | 直近 success |
+| dataLayer `thanks_page_view` | OK |
+| dataLayer `lead_conversion`（qualified） | OK |
+| 直アクセス thanks → CV なし | OK |
+| 予約枠 UI | OK |
+| 予約前 LINE ロック | OK |
+| 予約後 LINE 解放 | OK |
+| dataLayer `thanks_booking_recommended_complete` | OK |
+| dataLayer `thanks_line_click` | OK |
+| denkikouji ブランド・案件プレビュー | OK |
+
+予約の GAS `action=book` は E2E 内でモック（本番スプシ汚染回避）。実予約は `?dk_test=1` で手動確認。
+
+### GTM コンテナ（人手・未確認）
+
+コード側 dataLayer は上記のとおり。**GTM タグの実発火**は Tag Assistant プレビューで確認:
+
+1. `denkikouji/?dk_test=1` → テスト送信 → thanks-v2
+2. `lead_conversion` で Google Ads / Meta / GA4 タグが fire するか
+3. 旧 `/thanks/` URL トリガーの awct・CompleteRegistration が **停止** されているか
+
+手順詳細: `docs/GTM-thanks-v2-revival.md`
+
 ## Meta LP 再生成
 
 ```bash
@@ -82,8 +117,7 @@ python3 scripts/generate-meta-lp.py
 
 ## 残タスク（コード外）
 
-- GAS `BOOKING_STAFF_JSON` と sync workflow の稼働確認 → `docs/BOOKING_STAFF_JSON-設定手順.md`
-- GTM `lead_conversion` / `thanks_line_click` の発火確認 → `docs/GTM-thanks-v2-revival.md`
+- GTM コンテナで `CE - lead_conversion` タグ公開・旧 `/thanks/` トリガー停止 → `docs/GTM-thanks-v2-revival.md`
 - 口コミ実データ差し替え（許諾後）
 
 ## 関連ドキュメント

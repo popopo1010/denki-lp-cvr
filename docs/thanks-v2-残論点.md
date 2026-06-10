@@ -54,8 +54,10 @@
 詳細は **`docs/RELEASE-thanks-v2-チェックリスト.md`**
 
 - [x] thanks-v2 / booking-slots.json / 主要JS・SVG が 200（2026-06-03 確認）
+- [x] GAS slots + booking-slots.json + dataLayer + 予約→LINEゲート（`node scripts/e2e-thanks-v2-release.mjs` 26/26、2026-06-11）
+- [ ] GTM コンテナで `lead_conversion` タグ実発火（Tag Assistant・人手）
 - [ ] Slack Bot 導入後 E2E（リード→予約スレッド）
-- [ ] 口コミ・資格マッチ・予約→LINE（手動）
+- [ ] 口コミ実データ差し替え（許諾後）
 
 ## 設計リファレンス
 
