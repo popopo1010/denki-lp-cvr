@@ -39,6 +39,7 @@
 | O5 | 旧 `thanks/` | **リダイレクト済み**（`thanks/` `WPLP/thanks/` `自前LP/thanks/`）。WP側301は deploy 要確認 |
 | O6 | WP旧URL→静的LP | **自動**: deploy が `deploy/wp-legacy-redirects.htaccess.fragment` を WP ルート `.htaccess` に適用（301）。GTM `wp-redirect-snippet.html` はバックアップ |
 | O7 | E2Eテストデータ | `app.js` / `app-v2.js` が 09012345678・テスト太郎・`?dk_test=1` で Zapier/GAS 送信をスキップ |
+| O8 | Slack予約スレッド修正の反映 | `gas-recorder/コード.js` 修正後に `clasp push -f` + `clasp redeploy`。`SLACK_MENTION_CA`（@ca の `S...` ID）を設定 → テスト予約でリードスレッドに @ca+日時の返信を目視 |
 
 ## 将来の改善（優先低〜中）
 
