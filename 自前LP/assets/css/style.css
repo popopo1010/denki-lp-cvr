@@ -271,6 +271,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .cvr-kuma img{width:48px;animation:kumaWave 2s ease-in-out infinite}
 @keyframes kumaWave{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
 
+/* 施工管理LP(11択): 資格選択はテキストのみ */
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .c-button__img{display:none!important;height:0!important;margin:0!important}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button{min-height:auto;padding:10px 8px;justify-content:center;flex-direction:row;gap:0}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text{min-height:0;font-size:13px;font-weight:700;line-height:1.35;text-align:center}
+
 /* SP FV圧縮 */
 @media(max-width:767px){
   .l-main{margin:0 auto;width:95%}

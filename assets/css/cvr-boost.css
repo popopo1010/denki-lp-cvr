@@ -339,6 +339,27 @@ html { scroll-behavior: smooth; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #314c85; outline-offset: 2px; }
 .c-button, .p-firstButton, .c-next-button { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 
+/* ===== 施工管理LP(11択): 資格選択はテキストのみ（全画面幅） ===== */
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .c-button__img {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
+  min-height: auto;
+  padding: 10px 8px;
+  justify-content: center;
+  flex-direction: row;
+  gap: 0;
+}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
+  min-height: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
 /* ===== SP最適化 ===== */
 @media (max-width: 767px) {
   .l-main { margin: 0 auto; width: 95%; }

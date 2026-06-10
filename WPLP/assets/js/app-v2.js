@@ -331,7 +331,9 @@
   }
 
   function initLicenseIcons() {
-    document.querySelectorAll("#step01 .p-step01__button[data-value]").forEach((btn) => {
+    const step01Buttons = document.querySelectorAll("#step01 .p-step01__button[data-value]");
+    if (step01Buttons.length >= 7) return;
+    step01Buttons.forEach((btn) => {
       const key = licenseIconKey(btn.getAttribute("data-value") || "");
       const src = LICENSE_ICON_SRC[key];
       if (!src) return;

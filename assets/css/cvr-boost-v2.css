@@ -370,6 +370,27 @@ html { scroll-behavior: smooth; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #314c85; outline-offset: 2px; }
 .c-button, .p-firstButton, .c-next-button { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 
+/* ===== 施工管理LP(11択): 資格選択はテキストのみ（全画面幅） ===== */
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .c-button__img {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
+  min-height: auto;
+  padding: 10px 8px;
+  justify-content: center;
+  flex-direction: row;
+  gap: 0;
+}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
+  min-height: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
 /* ===== SP最適化 ===== */
 @media (max-width: 767px) {
   .l-main { margin: 0 auto; width: 95%; }
@@ -668,16 +689,16 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .cvr-testimonial__text { font-size: 14px; }
 }
 
-/* 資格アイコン: step01 で必ず表示（他ルールより優先） */
+/* 資格アイコン: 8択以下のLPのみ表示（11択施工管理はテキストのみ） */
 @media (max-width: 767px) {
-  body.lp-form-step #step01 .p-step01__button .c-button__img {
+  body.lp-form-step #step01 .p-step01__buttonArea:not(:has(.p-step01__button:nth-of-type(7))) .p-step01__button .c-button__img {
     display: flex !important;
     visibility: visible !important;
     height: auto !important;
     width: auto !important;
     margin: 0 !important;
   }
-  body.lp-form-step #step01 .p-step01__button .c-button__img img {
+  body.lp-form-step #step01 .p-step01__buttonArea:not(:has(.p-step01__button:nth-of-type(7))) .p-step01__button .c-button__img img {
     display: block !important;
     object-fit: contain;
   }
