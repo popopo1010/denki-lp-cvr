@@ -170,19 +170,34 @@ jobs:
           else
             SSH_CHECK="-o StrictHostKeyChecking=accept-new"
           fi
-          rsync -avz --delete \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='.cursor' \
-            --exclude='実装依頼書.md' \
-            --exclude='package.json' \
-            --exclude='README.md' \
-            --exclude='/thanks/' \
-            --exclude='WPLP/thanks/' \
-            --exclude='自前LP/thanks/' \
-            --exclude='nenshu-shindan/thanks/' \
-            -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
-            ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/"
+          # XserverのSSHは一時的に接続不可になることがあるためリトライする
+          # （2026-06-10 #236/#237 が connect timeout で連続失敗した教訓）
+          deploy_ok=false
+          for attempt in 1 2 3 4 5; do
+            if rsync -avz --delete \
+              --exclude='.git' \
+              --exclude='.github' \
+              --exclude='.cursor' \
+              --exclude='実装依頼書.md' \
+              --exclude='package.json' \
+              --exclude='README.md' \
+              --exclude='/thanks/' \
+              --exclude='WPLP/thanks/' \
+              --exclude='自前LP/thanks/' \
+              --exclude='nenshu-shindan/thanks/' \
+              -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
+              ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/"; then
+              deploy_ok=true
+              echo "rsync succeeded on attempt ${attempt}"
+              break
+            fi
+            echo "rsync failed (attempt ${attempt}/5), waiting 45s..."
+            sleep 45
+          done
+          if [ "$deploy_ok" != "true" ]; then
+            echo "::error::rsync failed after 5 attempts (Xserver SSH unreachable?)"
+            exit 1
+          fi
 
       - name: Apply WP legacy redirects (.htaccess)
         run: bash scripts/apply-wp-root-redirects.sh
