@@ -148,9 +148,22 @@ function scriptSrcs(html) {
   return scripts;
 }
 
+// step03以降を data-lazy-src で遅延読込するLPは、必須トークンが steps-lazy.html 側にある
+function lazyStepsHtml(pageRel, html) {
+  const match = html.match(/data-lazy-src=["']([^"'?]+)(?:\?[^"']*)?["']/);
+  if (!match) return "";
+  const lazyAbs = path.resolve(path.dirname(path.join(root, pageRel)), match[1]);
+  if (!lazyAbs.startsWith(root + path.sep) || !fs.existsSync(lazyAbs)) {
+    fail(pageRel, `missing lazy steps file: ${match[1]}`);
+    return "";
+  }
+  return fs.readFileSync(lazyAbs, "utf8");
+}
+
 function checkFormPage(pageRel, html) {
+  const htmlWithLazy = html + lazyStepsHtml(pageRel, html);
   requiredFormTokens.forEach((token) => {
-    if (!html.includes(token)) fail(pageRel, `missing required form token: ${token}`);
+    if (!htmlWithLazy.includes(token)) fail(pageRel, `missing required form token: ${token}`);
   });
 
   const scripts = scriptSrcs(html).filter((src) => normalizeAsset(src).endsWith("assets/js/app.js"));
