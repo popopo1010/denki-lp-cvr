@@ -144,7 +144,12 @@
     document.querySelectorAll(".js-form-group").forEach((g) => {
       if (typeof g._clearAutoAdvance === "function") g._clearAutoAdvance();
       if (typeof g._clearZipAutoAdvance === "function") g._clearZipAutoAdvance();
+      if (typeof g._clearTelAutoSubmit === "function") g._clearTelAutoSubmit();
     });
+  }
+
+  function isValidTel(value) {
+    return /^[0-9]{11}$/.test(String(value || "").trim());
   }
 
   // ========== Page transitions ==========
@@ -626,17 +631,57 @@
       const errBox = group.querySelector("#error-" + item.name);
       const errText = errBox ? errBox.querySelector("p") : null;
 
-      // 電話番号の「あと○桁」表示
+      // 電話番号の「あと○桁」表示 + 11桁で自動送信
       if (item.name === "your-tel") {
         const telNotice = document.getElementById("tel-notice");
-        if (telNotice) {
-          item.addEventListener("input", () => {
-            const len = item.value.length;
+        let telAutoTimer = null;
+
+        function clearTelAutoSubmit() {
+          if (telAutoTimer) {
+            clearTimeout(telAutoTimer);
+            telAutoTimer = null;
+          }
+        }
+
+        function scheduleTelAutoSubmit() {
+          if (nextBtn.id !== "step-last-button") return;
+          clearTelAutoSubmit();
+          telAutoTimer = setTimeout(() => {
+            telAutoTimer = null;
+            if (!isValidTel(item.value)) return;
+            if (nextBtn.classList.contains(DISABLE)) return;
+            if (nextBtn.style.pointerEvents === "none") return;
+            nextBtn.click();
+          }, 700);
+        }
+
+        group._clearTelAutoSubmit = clearTelAutoSubmit;
+
+        item.addEventListener("input", () => {
+          const digits = item.value.replace(/\D/g, "");
+          if (digits !== item.value) item.value = digits;
+
+          const len = item.value.length;
+          if (telNotice) {
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
             else if (len === 11) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
-          });
-        }
+          }
+
+          if (isValidTel(item.value)) {
+            if (errBox) errBox.style.display = "none";
+            states[i] = true;
+            item.classList.add(SKIP);
+            moveIconById("#" + nextBtn.id);
+            updateBtn();
+            scheduleTelAutoSubmit();
+          } else {
+            states[i] = false;
+            item.classList.remove(SKIP);
+            updateBtn();
+            clearTelAutoSubmit();
+          }
+        });
       }
 
       item.addEventListener("blur", () => {
@@ -647,7 +692,7 @@
           if (errBox) errBox.style.display = "none";
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
-        if (item.name === "your-tel" && item.value && !/^[0-9]+$/.test(item.value)) {
+        if (item.name === "your-tel" && item.value && !isValidTel(item.value)) {
           if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
