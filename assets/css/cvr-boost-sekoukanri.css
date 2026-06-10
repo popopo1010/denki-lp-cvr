@@ -507,7 +507,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   margin: 0 !important;
 }
 #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-  min-height: auto;
+  min-height: 52px;
   padding: 10px 8px;
   justify-content: center;
   flex-direction: row;
@@ -515,7 +515,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 }
 #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
   min-height: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
   text-align: center;
@@ -806,6 +806,41 @@ body.lp-form-step .cvr-testimonials,
 
 body.lp-form-step .js-page-body { padding-bottom: 12px; }
 
+/* ステップ重なり防止（lazy load + 遷移の安全網） */
+body.lp-form-step .js-form-group:not(.is-step-active) {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+body.lp-form-step #step-first.is-step-active {
+  display: flex !important;
+  flex-direction: column;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+body.lp-form-step #step01.is-step-active {
+  display: flex !important;
+  flex-direction: column;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+body.lp-form-step #step03.is-step-active,
+body.lp-form-step #step04.is-step-active,
+body.lp-form-step #step05.is-step-active,
+body.lp-form-step #step06.is-step-active {
+  display: block !important;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
 /* step03 経験4択: リスト型（左アイコン＋ラベル） */
   body.lp-form-step #step03 .p-step03__button.c-button {
     min-height: 48px;
@@ -1053,13 +1088,14 @@ body.lp-form-step #step05 .c-next-button {
     display: none;
   }
   body.lp-form-step .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-    padding: 8px 6px;
-    min-height: 40px;
+    padding: 10px 8px;
+    min-height: 52px;
     justify-content: center;
   }
   body.lp-form-step .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
     min-height: 0;
-    font-size: 11px;
+    font-size: 14px;
+    line-height: 1.35;
   }
 
   body.lp-form-step .c-section + .c-section .c-title02 { padding-top: 4px; }
@@ -1103,7 +1139,7 @@ body.lp-form-step #step05 .c-next-button {
   body.lp-form-step #step01 .cvr-step-reason { display: none; }
   body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
   body.lp-form-step #step01 .cvr-step-reward { display: block; }
-  body.lp-form-step #step01 .c-title01 { padding: 2px 0; font-size: 13px; }
+  body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 15px; font-weight: 800; }
   body.lp-form-step #step01 .c-step { padding-top: 4px; }
   body.lp-form-step #step01 .p-step01__buttonArea {
     flex: 0 0 auto;
@@ -1121,13 +1157,13 @@ body.lp-form-step #step05 .c-next-button {
     margin: 0 !important;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-    min-height: 44px;
-    padding: 8px 6px;
+    min-height: 52px;
+    padding: 10px 8px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
     min-height: 0;
-    font-size: 11px;
-    line-height: 1.25;
+    font-size: 14px;
+    line-height: 1.35;
   }
   /* 選択肢が8個以下のLP(電気工事士6択など)は大きめサイズ + アイコン表示。
      箱を大きくしてCTAまでの空きを減らす + 視認性UP */
@@ -1164,6 +1200,44 @@ body.lp-form-step #step05 .c-next-button {
   body.lp-form-step .js-page-body { padding-bottom: 32px; }
   body.lp-form-step .cvr-testimonials { margin-top: 48px; }
   body.lp-form-step #step01 .c-next-button { min-height: 48px; padding: 10px 12px; }
+
+  /* step03 経験4択: SPは縦1列リスト（.c-button-gridの2列を上書き） */
+  body.lp-form-step #step03 .p-step03__buttonArea.c-button-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  body.lp-form-step #step03 .p-step03__button.c-button {
+    width: 100%;
+    min-height: 52px !important;
+    padding: 8px 12px;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    box-shadow: 1px 1px 0 #dadada;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__img {
+    display: flex;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__img img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__text {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+  }
+
   /* クマアイコンは step01 でも表示する（以前は圧縮のため非表示にしていたが、視認性のため復活） */
   body.lp-form-step .l-header__title .adtext { font-size: 10px; line-height: 1.25; }
 }
@@ -1183,11 +1257,11 @@ body.lp-form-step #step05 .c-next-button {
     gap: 3px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-    min-height: 30px;
-    padding: 4px 3px;
+    min-height: 48px;
+    padding: 8px 6px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
-    font-size: 10px;
+    font-size: 13px;
   }
 }
 
@@ -1221,7 +1295,11 @@ body {
     min-height: 48px;
   }
   #step-first .p-firstButton {
-    min-height: 76px;
+    min-height: 76px !important;
+  }
+  #step-first .p-firstButton__text {
+    font-size: 16px !important;
+    font-weight: 700;
   }
   .c-nextLink {
     padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));

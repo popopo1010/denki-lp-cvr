@@ -225,12 +225,17 @@ jobs:
           verify_sekoukanri_lp() {
             local sekou_lp
             sekou_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/")
-            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260625' || return 1
-            echo "$sekou_lp" | grep -q 'app.js?v20260623' || return 1
+            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260628' || return 1
+            echo "$sekou_lp" | grep -q 'app.js?v20260628' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="1300"' || return 1
-            echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260624' || return 1
+            echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260628' || return 1
             echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1
             echo "$sekou_lp" | grep -q 'cvr-lp-hub' && return 1 || true
+            local app_js css
+            app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
+            echo "$app_js" | grep -q 'is-step-active' || return 1
+            css=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/cvr-boost-sekoukanri.css")
+            echo "$css" | grep -q 'is-step-active' || return 1
             return 0
           }
           verified=false
