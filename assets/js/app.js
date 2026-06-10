@@ -167,6 +167,11 @@
 
     window.scrollTo(0, 0);
 
+    if (pageId === "#step05") {
+      const errBox = document.getElementById("error-name");
+      if (errBox) errBox.style.display = "none";
+    }
+
     if (pageId === "#step-first") {
       page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
       var mc = page.querySelector(".cvr-micro-copy");
@@ -526,11 +531,16 @@
     const nextBtn = group.querySelector(".js-next-button");
     const errBox = group.querySelector("#error-name");
     const errText = errBox ? errBox.querySelector("p") : null;
+    const touched = new Set();
 
     function allFilled() {
       const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
       const yearOk = !birthYear || isValidBirthYear(birthYear.value);
       return namesOk && yearOk;
+    }
+
+    function shouldShowErrors() {
+      return touched.size > 0;
     }
 
     function validate(opts) {
@@ -544,12 +554,16 @@
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
         if (errBox) {
-          errBox.style.display = "block";
-          if (errText) {
-            const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
-            errText.textContent = namesOk
-              ? "生年月日（西暦）は1924〜2010で入力してください"
-              : "必ず入力してください";
+          if (shouldShowErrors()) {
+            errBox.style.display = "block";
+            if (errText) {
+              const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
+              errText.textContent = namesOk
+                ? "生年（西暦）は1924〜2010で入力してください"
+                : "お名前を入力してください";
+            }
+          } else {
+            errBox.style.display = "none";
           }
         }
         const bday = group.querySelector(".p-step06__birthday");
@@ -559,12 +573,18 @@
     }
 
     inputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        touched.add(input.id || input.name);
+        validate();
+      });
       input.addEventListener("blur", () => validate());
-      input.addEventListener("input", () => validate());
     });
     if (birthYear) {
+      birthYear.addEventListener("input", () => {
+        touched.add("bday-year");
+        validate();
+      });
       birthYear.addEventListener("blur", () => validate());
-      birthYear.addEventListener("input", () => validate());
     }
 
     const firstNameInput = group.querySelector("#first-name");
