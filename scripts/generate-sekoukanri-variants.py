@@ -144,6 +144,13 @@ def enrich_nenshu(v: dict) -> dict:
 LOCAL_ICONS = {"kentiku", "doboku", "kankou"}
 
 
+def qual_display_label(value: str) -> str:
+    for prefix in ("第一種", "第二種", "1級", "2級"):
+        if value.startswith(prefix) and not value.startswith(prefix + " "):
+            return prefix + " " + value[len(prefix):]
+    return value
+
+
 def qual_button(value: str) -> str:
     img = QUAL_IMG[value]
     if img in LOCAL_ICONS:
@@ -160,7 +167,7 @@ def qual_button(value: str) -> str:
         f'        <button type="button" class="p-step01__button c-button c-check-button js-checkbox-button" '
         f'data-value="{value}" data-group="license01" data-license-icon="{img}">\n'
         f"            {icon_html}\n"
-        f'            <span class="c-button__text">{value}</span>\n'
+        f'            <span class="c-button__text">{qual_display_label(value)}</span>\n'
         f"        </button>"
     )
 
