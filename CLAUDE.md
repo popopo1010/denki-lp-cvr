@@ -41,6 +41,7 @@
 
 - フォーム完了後は `thanks-v2` へ。予約完了まで LINE はロック。
 - コピー・ステップ数・計測の一貫性は `docs/CV-LINE-playbook.md` を正とする。
+- リリース失敗の教訓（Deploy検証・CSS副作用）は `docs/release-incidents.md` を必ず参照する。
 
 ## LP作成・改善のリファレンス
 
