@@ -82,8 +82,9 @@
   margin-top: 10px;
 }
 #step05 .p-step06__formGroup dt {
-  font-size: 13px;
-  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 #step05 .p-step06__name {
   display: flex;
@@ -97,12 +98,14 @@
 }
 #step05 .p-step06__name .c-text-box {
   width: 100%;
-  height: 44px;
-  min-height: 44px;
-  padding: 0 12px;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 8px;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 14px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
   box-sizing: border-box;
 }
 #step05 .c-error-message {
@@ -135,15 +138,16 @@
 .p-step06__birthday--year-only .c-text-box,
 .p-step06__birthday--year-only .cvr-year-input {
   width: 100%;
-  height: 44px;
-  min-height: 44px;
-  padding: 0 8px;
-  border: 1px solid #dadada;
-  border-radius: 8px;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 10px;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
   background: #fff;
   text-align: center;
-  font-size: 16px;
-  font-weight: 600;
   letter-spacing: 0.04em;
   box-sizing: border-box;
   -moz-appearance: textfield;
@@ -262,12 +266,31 @@ body.lp-form-step .cvr-floating-cta {
 .cvr-final-step p { font-size: 14px; font-weight: 700; color: #2e7d32; }
 
 /* ===== 電話番号入力 ===== */
-.p-step07__tel { position: relative !important; }
+.p-step07__tel { position: relative !important; margin-top: 4px; }
+#step06 .p-step07__tel .c-text-box,
+#step06 .p-step07__tel input {
+  width: 100%;
+  height: 56px;
+  min-height: 56px;
+  padding: 0 16px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+#step06 .p-step07__formGroup dt {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
 .cvr-tel-notice {
-  position: absolute; top: -7px; right: 4px;
-  padding: 2px 8px; border-radius: 50px;
+  position: absolute; top: -9px; right: 4px;
+  padding: 3px 10px; border-radius: 50px;
   background: #f5f4f2; color: #314c85;
-  font-weight: 600; font-size: 10px; line-height: 15px;
+  font-weight: 600; font-size: 11px; line-height: 15px;
   z-index: 2; pointer-events: none;
 }
 .cvr-tel-reassurance { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #777; }
@@ -378,10 +401,27 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 .c-button { transition: transform .15s, box-shadow .15s, border-color .15s, background-color .15s; }
 
 /* 郵便番号入力 */
+#step04 .c-zip-text input,
 .c-zip-text input,
 .c-zip-text input[type="tel"],
-.p-step05__address.c-zip-text input { padding-left: 48px !important; }
-.c-zip-text::before { left: 16px; font-size: 16px; }
+.p-step05__address.c-zip-text input {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 16px 0 52px !important;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.c-zip-text::before { left: 14px; font-size: 18px; }
+.c-zip-text__notice {
+  font-size: 11px;
+  top: -9px;
+}
 .c-text-box:focus { border-color: #314c85; box-shadow: 0 0 0 3px rgba(49,76,133,.15); background: #fff; }
 
 /* 遅延描画 */
@@ -460,11 +500,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .c-title01 { padding: 4px 0 2px; font-size: 14px; }
 
   /* CTAボタン */
-  .p-first__buttonArea { padding: 0 4px; gap: 6px; }
-  .p-firstButton { min-height: 56px; }
-  .p-firstButton__container { padding: 0 10px; }
+  .p-first__buttonArea { padding: 0 4px; gap: 10px; }
+  .p-firstButton { min-height: 68px; }
+  .p-firstButton__container { padding: 0 14px; }
   .p-firstButton__icon { display: none; }
-  .p-firstButton__text { font-size: 13px; margin-left: 2px; }
+  .p-firstButton__text { font-size: 15px; font-weight: 700; margin-left: 2px; line-height: 1.35; }
 
   /* マイクロコピー */
   .cvr-micro-copy { margin-top: 4px; font-size: 10px; }
@@ -578,7 +618,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step #step01 .cvr-step-reason { display: none; }
   body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
   body.lp-form-step #step01 .cvr-step-reward { display: block; }
-  body.lp-form-step #step01 .c-title01 { padding: 2px 0; font-size: 13px; }
+  body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 15px; font-weight: 800; }
   body.lp-form-step #step01 .c-step { padding-top: 4px; }
   body.lp-form-step #step01 .p-step01__buttonArea {
     flex: 0 0 auto;
@@ -586,21 +626,21 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     gap: 8px;
     align-content: start;
   }
-  /* denkikouji 6択: 横並びコンパクト（アイコン小さめ） */
+  /* denkikouji 6択: 2列・タップしやすいサイズ */
   body.lp-form-step #step01 .p-step01__button.c-button {
-    min-height: 72px;
-    padding: 10px 8px;
-    gap: 6px;
+    min-height: 84px;
+    padding: 12px 8px;
+    gap: 8px;
     box-shadow: 1px 1px 0 #dadada;
   }
   body.lp-form-step #step01 .p-step01__button .c-button__img img {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
   }
   body.lp-form-step #step01 .p-step01__button .c-button__text {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.3;
   }
   body.lp-form-step #step01 .c-multi-hint { display: none; }
   body.lp-form-step #step01 .c-nextLink {
@@ -609,35 +649,45 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-top: 8px;
     padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   }
-  /* step03 経験4択: コンパクトリスト型（左アイコン＋ラベル） */
+  /* step03 経験4択: リスト型（左アイコン＋ラベル） */
   body.lp-form-step #step03 .p-step03__button.c-button {
-    min-height: 44px;
-    padding: 6px 12px;
+    min-height: 48px;
+    padding: 8px 12px;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    gap: 10px;
+    gap: 12px;
     box-shadow: 1px 1px 0 #dadada;
   }
   body.lp-form-step #step03 .p-step03__button .c-button__img {
     display: flex;
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     margin: 0;
   }
   body.lp-form-step #step03 .p-step03__button .c-button__img img {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     object-fit: contain;
   }
   body.lp-form-step #step03 .p-step03__button .c-button__text {
     flex: 1;
     min-width: 0;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 700;
     text-align: left;
   }
-  body.lp-form-step #step03 .c-button-grid { gap: 8px; margin-top: 6px; }
+  body.lp-form-step #step03 .p-step03__buttonArea.c-button-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  body.lp-form-step #step03 .p-step03__button.c-button {
+    width: 100%;
+    min-height: 48px;
+  }
 
   /* 進捗の二重表示を解消（バーに一本化） */
   body.lp-form-step .c-step { display: none; }
@@ -674,20 +724,54 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-input-step #step06 .p-step07__info { display: none; }
   body.lp-input-step .c-title02,
   body.lp-input-step .c-title01 {
-    padding: 8px 0 10px;
-    font-size: 16px;
+    padding: 8px 0 12px;
+    font-size: 17px;
+    font-weight: 800;
     line-height: 1.4;
   }
-  body.lp-input-step .p-step06__formGroup { margin-top: 8px; }
-  body.lp-input-step .p-step06__formGroup dt {
-    font-size: 13px;
-    margin-bottom: 6px;
+  body.lp-input-step .p-step06__formGroup,
+  body.lp-input-step .p-step07__formGroup { margin-top: 10px; }
+  body.lp-input-step .p-step06__formGroup dt,
+  body.lp-input-step .p-step07__formGroup dt {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
   }
-  body.lp-input-step .p-step06__formGroup dt svg {
-    width: 16px !important;
-    height: 16px !important;
+  body.lp-input-step .p-step06__formGroup dt svg,
+  body.lp-input-step .p-step07__formGroup dt svg {
+    width: 20px !important;
+    height: 20px !important;
   }
-  body.lp-input-step #step05 .p-step06__name { padding-right: 0; }
+  body.lp-input-step #step05 .p-step06__name {
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 0;
+  }
+  body.lp-input-step #step05 .p-step06__name .c-text-box,
+  body.lp-input-step #step05 .p-step06__birthday--year-only .c-text-box,
+  body.lp-input-step #step05 .p-step06__birthday--year-only .cvr-year-input,
+  body.lp-input-step #step04 .c-zip-text input,
+  body.lp-input-step #step06 .p-step07__tel .c-text-box,
+  body.lp-input-step #step06 .p-step07__tel input[type="tel"] {
+    height: 52px !important;
+    min-height: 52px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    border: 2px solid #c5c5c5 !important;
+    border-radius: 10px !important;
+  }
+  body.lp-input-step #step06 .p-step07__tel .c-text-box,
+  body.lp-input-step #step06 .p-step07__tel input[type="tel"] {
+    height: 56px !important;
+    min-height: 56px !important;
+    font-size: 20px !important;
+    letter-spacing: 0.04em;
+    padding: 0 16px !important;
+  }
+  body.lp-input-step #step04 .c-zip-text input {
+    padding-left: 52px !important;
+  }
   body.lp-input-step .cvr-birth-hint { margin-top: 4px; font-size: 10px; }
   body.lp-input-step #step06 .cvr-cta-proof,
   body.lp-input-step #step06 .cvr-step-opp { display: none; }
@@ -719,8 +803,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 @media (max-width: 767px) and (max-height: 740px) {
   body.lp-form-step .c-next-button { min-height: 44px; }
   body.lp-form-step #step01 { min-height: calc(100dvh - 64px); }
-  body.lp-form-step #step01 .p-step01__button.c-button { min-height: 64px; }
-  body.lp-form-step #step01 .p-step01__button .c-button__img img { width: 36px; height: 36px; }
+  body.lp-form-step #step01 .p-step01__button.c-button { min-height: 76px; }
+  body.lp-form-step #step01 .p-step01__button .c-button__img img { width: 44px; height: 44px; }
+  .p-firstButton { min-height: 64px; }
 }
 
 /* ===== スマホ完全最適化（主トラフィック） ===== */
@@ -742,8 +827,8 @@ body {
   }
   #step05 .p-step06__name .c-text-box,
   #step05 .p-step06__birthday--year-only .cvr-year-input {
-    height: 44px !important;
-    min-height: 44px !important;
+    height: 52px !important;
+    min-height: 52px !important;
   }
   .c-next-button,
   .c-submit-button,
