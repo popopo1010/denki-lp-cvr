@@ -297,6 +297,18 @@ body.lp-form-step .cvr-floating-cta {
 }
 .cvr-final-step p { font-size: 14px; font-weight: 700; color: #2e7d32; }
 
+/* 無効時の送信CTA: 薄ピンクだと壊れて見えるためグレーで非活性を明示 */
+#step06 .c-submit-button.is-disable {
+  background: #e8edf3 !important;
+  box-shadow: none !important;
+}
+#step06 .c-submit-button.is-disable .c-submit-button__text span {
+  color: #9aa7b8;
+}
+#step06 .c-submit-button.is-disable .arrow {
+  opacity: 0.35;
+}
+
 /* ===== 電話番号入力 ===== */
 .p-step07__tel { position: relative !important; }
 .cvr-tel-notice {
@@ -306,7 +318,7 @@ body.lp-form-step .cvr-floating-cta {
   font-weight: 600; font-size: 10px; line-height: 15px;
   z-index: 2; pointer-events: none;
 }
-.cvr-tel-reassurance { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #777; }
+.cvr-tel-reassurance { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 8px; font-size: 10px; color: #94a3b8; }
 .cvr-tel-reassurance svg { flex-shrink: 0; }
 
 /* ===== PP同意テキスト ===== */
@@ -764,26 +776,29 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   }
   body.lp-input-step .cvr-birth-hint { margin-top: 4px; font-size: 10px; }
   body.lp-input-step #step06 .cvr-cta-proof {
-    margin: 6px 0 0;
+    margin: 8px 0 0;
     font-size: 10px;
     text-align: center;
     color: #64748b;
+    font-weight: 600;
   }
   body.lp-input-step #step06 .cvr-step-opp {
-    margin: 8px 0 4px;
-    font-size: 12px;
+    margin: 12px 0 0;
+    font-size: 13px;
     text-align: center;
+    color: #314c85;
+    font-weight: 700;
   }
   body.lp-input-step #step06 .cvr-step-urgency {
-    margin: 0 0 8px;
-    font-size: 10px;
-  }
-  body.lp-input-step #step06 .cvr-thanks-bridge {
-    margin: 8px 0 4px;
+    margin: 6px 0 0;
     font-size: 11px;
+    text-align: center;
+    color: #b45309;
+    font-weight: 600;
+    line-height: 1.4;
   }
   body.lp-input-step #step06 .cvr-tel-reassurance {
-    margin: 4px 0 0;
+    margin: 6px 0 0;
     font-size: 10px;
   }
   body.lp-input-step .c-nextLink {
