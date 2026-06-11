@@ -41,7 +41,7 @@ async function main() {
   const err1 = await errText.textContent();
   const vis1 = await errBox.isVisible();
   const notice1 = await page.locator("#tel-notice").isVisible();
-  vis1 && err1.includes("080・090・070・060から始まる携帯番号")
+  vis1 && err1.includes("090・080・070・060から始まる携帯番号")
     ? pass("03番号で即時エラー", err1)
     : fail("03番号で即時エラー", `visible=${vis1} text=${err1}`);
   !notice1 ? pass("エラー中はあと○桁カウンター非表示") : fail("カウンターが重複表示");

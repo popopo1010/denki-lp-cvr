@@ -149,7 +149,7 @@
   }
 
   // 携帯番号のみ受け付ける（060/070/080/090 始まりの11桁）
-  const TEL_PREFIX_ERROR = "080・090・070・060から始まる携帯番号を入力してください";
+  const TEL_PREFIX_ERROR = "090・080・070・060から始まる携帯番号を入力してください";
 
   function isValidTel(value) {
     return /^0[6789]0[0-9]{8}$/.test(String(value || "").trim());
