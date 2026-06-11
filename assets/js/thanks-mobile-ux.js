@@ -42,6 +42,7 @@
     btn.setAttribute("aria-expanded", "true");
     setCalToggleLabel(btn, true);
     if (window.dkThanksMountBooking) window.dkThanksMountBooking();
+    updateDock();
     try {
       document.dispatchEvent(new CustomEvent("thanks_calendar_expand"));
     } catch (e0) {}
@@ -68,6 +69,7 @@
     cal.classList.add("t-cal--collapsed");
     btn.setAttribute("aria-expanded", "false");
     setCalToggleLabel(btn, false);
+    updateDock();
   }
 
   function initCalendarCollapse() {
@@ -82,10 +84,12 @@
       return;
     }
 
-    cal.classList.add("t-cal--collapsed");
-    panel.hidden = true;
-    btn.setAttribute("aria-expanded", "false");
-    setCalToggleLabel(btn, false);
+    // 日時選択が主アクションのため、デフォルトは展開（HTML側も展開状態）。トグルは「閉じる」操作のみ
+    panel.hidden = false;
+    cal.classList.remove("t-cal--collapsed");
+    btn.setAttribute("aria-expanded", "true");
+    setCalToggleLabel(btn, true);
+    if (window.dkThanksMountBooking) window.dkThanksMountBooking();
 
     btn.addEventListener("click", function () {
       if (btn.getAttribute("aria-expanded") === "true") {
@@ -94,18 +98,6 @@
         expandCalendar({ scroll: false });
       }
     });
-
-    if ("IntersectionObserver" in window) {
-      var calObs = new IntersectionObserver(
-        function (entries) {
-          if (!entries[0] || !entries[0].isIntersecting) return;
-          calObs.disconnect();
-          if (window.dkThanksMountBooking) window.dkThanksMountBooking();
-        },
-        { rootMargin: "160px 0px 0px 0px", threshold: 0.01 }
-      );
-      calObs.observe(cal);
-    }
   }
 
   window.dkThanksExpandCalendar = expandCalendar;
@@ -173,12 +165,17 @@
   window.dkThanksUnlockLine = unlockLineStep;
   window.dkThanksRelockLine = lockLineStep;
 
+  function isCalExpanded() {
+    var panel = document.getElementById("t-cal-panel");
+    return !!(panel && !panel.hidden);
+  }
+
   function updateDock() {
     if (!dock) return;
     dock.hidden = false;
     body.classList.add("is-dock-visible");
-    // カレンダーが画面内にある間は同じCTAが重複するため退避（予約後はLINE導線として表示継続）
-    var hide = calInView && !isLineUnlocked();
+    // 展開済みカレンダーが画面内にある間は同じCTAが重複するため退避（折りたたみ中・予約後は表示継続）
+    var hide = calInView && isCalExpanded() && !isLineUnlocked();
     dock.classList.toggle("is-visible", !hide);
   }
 

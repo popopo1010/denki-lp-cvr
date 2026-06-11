@@ -256,6 +256,7 @@
   }
 
   document.body.classList.add("is-awaiting-booking");
+  pushDL("thanks_booking_context", { has_tel: hasTel ? 1 : 0 });
 
   var wrap = document.querySelector(".t-cal__widget-wrap");
   if (wrap) wrap.style.display = "none";
@@ -405,6 +406,14 @@
         selected = allSlots.filter(function (s) {
           return s.start === start;
         })[0];
+        if (selected) {
+          pushDL("thanks_slot_select", {
+            booking_tool: "custom",
+            booking_day: selected.day_label || "",
+            booking_time: selected.time_label || "",
+            has_tel: hasTel ? 1 : 0
+          });
+        }
         render();
       });
     });
@@ -433,13 +442,14 @@
     if (confirm) {
       confirm.addEventListener("click", function () {
         if (!selected) return;
-        if (!hasTel) {
-          mount.insertAdjacentHTML(
-            "beforeend",
-            '<p class="t-booking-empty">電話番号が取得できません。LPの登録フォームから再度お進みください。</p>'
-          );
-          return;
-        }
+        pushDL("thanks_booking_confirm_click", {
+          booking_tool: "custom",
+          booking_day: selected.day_label || "",
+          booking_time: selected.time_label || "",
+          has_tel: hasTel ? 1 : 0
+        });
+        // tel はLPフォームで取得済み。引き継げなかった場合も再入力は求めず、
+        // tel空のまま予約を通す（GASは新規行append+Slack通知、リード行と突合）
         confirm.disabled = true;
         var slotForBook = selected;
         var preUi = capturePreBookingUi();
@@ -464,6 +474,11 @@
           },
           function (res) {
             if (!res || !res.ok) {
+              pushDL("thanks_booking_error", {
+                error_type: (res && res.error) || "unknown",
+                booking_day: slotForBook.day_label || "",
+                booking_time: slotForBook.time_label || ""
+              });
               revertOptimisticBooking(preUi);
               selected = slotForBook;
               render();
@@ -501,6 +516,7 @@
   }
 
   function showSlotsError() {
+    pushDL("thanks_booking_error", { error_type: "slots_load_failed" });
     mount.innerHTML =
       '<p class="t-booking-empty">空き枠の取得に失敗しました。時間をおいて再度お試しください。</p>' +
       '<button type="button" class="t-booking-retry" id="booking-retry">再読み込み</button>';
