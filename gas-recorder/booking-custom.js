@@ -337,11 +337,16 @@ function readBookingSlotsCache(days) {
 }
 
 function writeBookingSlotsCache(days, payload) {
-  CacheService.getScriptCache().put(
-    bookingSlotsCacheKey(days),
-    JSON.stringify(payload),
-    180
-  );
+  // CacheService は value 100KB 上限。枠が多い時期は超えるため、入らない場合はキャッシュなしで続行
+  try {
+    CacheService.getScriptCache().put(
+      bookingSlotsCacheKey(days),
+      JSON.stringify(payload),
+      180
+    );
+  } catch (e) {
+    Logger.log("slots cache skip: " + e);
+  }
 }
 
 function clearBookingSlotsCache() {
