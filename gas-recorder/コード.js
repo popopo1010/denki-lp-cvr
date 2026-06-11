@@ -212,6 +212,7 @@ function doPost(e) {
 
     return jsonOk({ slack_lead: slackLead });
   } catch (err) {
+    reportErrorToSlack("doPost", err);
     return jsonError(err);
   }
 }
@@ -315,6 +316,30 @@ function handleLineClick(params) {
     return jsonOk({ matched: false, note: "no row" });
   } catch (err) {
     return jsonError(err);
+  }
+}
+
+/** GAS 内で catch した例外を Slack に報告する */
+function reportErrorToSlack(context, err) {
+  try {
+    var channel = getScriptProp("SLACK_ERROR_CHANNEL_ID") || getScriptProp("SLACK_LEAD_CHANNEL_ID");
+    if (!channel) return;
+    var token = getScriptProp("SLACK_BOT_TOKEN");
+    if (!token) return;
+    var ts = Utilities.formatDate(new Date(), TZ, TS_FORMAT);
+    var msg = ":warning: *GAS エラー*\n"
+            + "*場所:* " + context + "\n"
+            + "*エラー:* " + String(err) + "\n"
+            + "*時刻:* " + ts;
+    UrlFetchApp.fetch("https://slack.com/api/chat.postMessage", {
+      method: "post",
+      contentType: "application/json",
+      headers: { Authorization: "Bearer " + token },
+      payload: JSON.stringify({ channel: channel, text: msg }),
+      muteHttpExceptions: true
+    });
+  } catch (e) {
+    Logger.log("reportErrorToSlack failed: " + e);
   }
 }
 
@@ -716,6 +741,7 @@ function handleCalendarBooked(params) {
       slack: slackResult
     });
   } catch (err) {
+    reportErrorToSlack("handleCalendarBooked/handleBookSlot", err);
     return jsonError(err);
   }
 }
