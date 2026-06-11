@@ -274,6 +274,20 @@ deploy.includes("sync-thanks-v2-mirrors.mjs")
   ? pass("deploy", "mirrors + license pages sync step")
   : fail("deploy", "add sync-thanks-v2-mirrors.mjs to deploy.yml");
 
+// deploy.yml の Verify deployment が HTML の ?v= と一致しているか（過去にズレてデプロイ検証だけ落ちた）
+const deployFlat = deploy.replace(/\\/g, "");
+[
+  ["thanks-v2-deferred.js", /thanks-v2-deferred\.js\?v=(\d+)/],
+  ["thanks-booking-custom.js", /thanks-booking-custom\.js\?v=(\d+)/],
+  ["thanks-page.css", /thanks-page\.css\?v=(\d+)/]
+].forEach(([label, re]) => {
+  const htmlV = (html.match(re) || [])[1];
+  const deployV = (deployFlat.match(re) || [])[1];
+  htmlV && htmlV === deployV
+    ? pass("deploy-verify", `${label} v=${htmlV} 一致`)
+    : fail("deploy-verify", `${label}: html v=${htmlV} / deploy.yml v=${deployV} 不一致`);
+});
+
 const failed = results.filter((r) => !r.ok);
 console.log(`\n--- ${results.length - failed.length}/${results.length} passed ---`);
 process.exit(failed.length ? 1 : 0);

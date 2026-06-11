@@ -2,6 +2,18 @@
 
 再発防止用。リリース前は `docs/CV-LINE-playbook.md` のチェックリストと併用。
 
+## 2026-06-11 thanks-v2 の ?v= bump で Deploy 検証だけ失敗
+
+**症状:** thanks-v2 改修（カレンダーデフォルト展開等）の main マージ後、`Deploy to Xserver` run 253 が「Verify deployment」で failure。rsync 自体は成功しており本番ファイルは更新済み（検証未通過のまま）。
+
+**原因:** `deploy.yml` の検証が `thanks-v2-deferred.js?v=13` / `thanks-page.css v=(50|51)` / `booking-custom v=3[23]` をハードコード。HTML 側は v=14 / v=53 / v=35 に bump 済みでズレた。2026-06-10 の denkikouji 版と同型。
+
+**対応:** `deploy.yml` の検証を v=14 / v=53 / v=35 に更新して再デプロイ。
+
+**再発防止:** `check-thanks-v2-release.mjs` に **HTML の ?v= と deploy.yml 検証バージョンの一致チェック**（deploy-verify）を追加。thanks 系の `?v=` を変えたら同一コミットで deploy.yml も更新し、このチェックで自動検出する。
+
+---
+
 ## 2026-06-10 Deploy 3連続失敗（本番が古いまま）
 
 **症状:** `Deploy to Xserver` が success にならず、本番 LP が `cvr-boost-denkikouji.css?v20260619` のまま。UX修正がユーザーに届かない。
