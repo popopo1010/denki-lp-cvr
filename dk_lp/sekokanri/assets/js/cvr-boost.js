@@ -164,7 +164,15 @@
   // ========== 初期化 ==========
   document.addEventListener("DOMContentLoaded", function () {
     var h4 = document.getElementById("hidden4");
-    if (h4) h4.value = getParam("utm_term") || "";
+    if (h4) {
+      // utm_term はURLから消えても入るよう sessionStorage に保持する
+      var term = getParam("utm_term") || "";
+      try {
+        if (term) sessionStorage.setItem("dk_utm_term", term);
+        else term = sessionStorage.getItem("dk_utm_term") || "";
+      } catch (e) {}
+      h4.value = term;
+    }
 
     initNotifications();
     initExitIntent();
