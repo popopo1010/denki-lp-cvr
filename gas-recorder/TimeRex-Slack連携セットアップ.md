@@ -69,3 +69,5 @@ TimeRex「予約確定」→ Webhooks POST → 同じ GAS URL、body に:
 ---
 
 CI デプロイ: `CLASPRC_JSON` シークレット設定済みなら、`gas-recorder/` 変更の main push で自動 push + redeploy（`.github/workflows/gas-deploy.yml`）。
+
+シークレット登録時の注意: ターミナルからコピーすると zsh の改行なし記号 `%` が末尾に混入することがあるが、ワークフロー側で自動除去される（2026-06-11対応）。
