@@ -821,7 +821,7 @@
           const len = item.value.length;
           if (telNotice) {
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
-            else if (len === 11) { telNotice.style.display = "none"; }
+            else if (len === 11 || hasInvalidTelPrefix(item.value)) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
           }
 
