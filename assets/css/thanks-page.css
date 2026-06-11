@@ -818,7 +818,7 @@ body {
 .t-cal__head-lead {
   margin: 6px 0 0;
   font-size: 13px;
-  color: #555;
+  color: rgba(255, 255, 255, 0.88);
   line-height: 1.5;
 }
 .t-cal__micro {
@@ -2987,6 +2987,14 @@ html {
 }
 .t-cal:not(.t-cal--collapsed) .t-cal__toggle-icon {
   transform: rotate(180deg);
+}
+/* 展開中は「閉じる」操作なので、CTAに見えない控えめな表示にする */
+.t-cal:not(.t-cal--collapsed) .t-cal__toggle {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  box-shadow: none;
 }
 .t-cal--booked .t-cal__toggle {
   display: none;

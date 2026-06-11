@@ -689,6 +689,13 @@
   var dockBook = document.getElementById("thanks-dock-book");
   var lineGateMsg = document.getElementById("line-gate-msg");
   var lineBadge = document.getElementById("line-section-badge");
+  var calInView = false;
+
+  function setCalToggleLabel(btn, expanded) {
+    var label = btn && btn.querySelector(".t-cal__toggle-label");
+    if (!label) return;
+    label.textContent = expanded ? "日時の選択を閉じる" : "希望条件を伝える日時を選ぶ";
+  }
 
   function scrollToTarget(sel) {
     var el = typeof sel === "string" ? document.querySelector(sel) : sel;
@@ -711,6 +718,7 @@
     panel.hidden = false;
     cal.classList.remove("t-cal--collapsed");
     btn.setAttribute("aria-expanded", "true");
+    setCalToggleLabel(btn, true);
     if (window.dkThanksMountBooking) window.dkThanksMountBooking();
     try {
       document.dispatchEvent(new CustomEvent("thanks_calendar_expand"));
@@ -737,6 +745,7 @@
     panel.hidden = true;
     cal.classList.add("t-cal--collapsed");
     btn.setAttribute("aria-expanded", "false");
+    setCalToggleLabel(btn, false);
   }
 
   function initCalendarCollapse() {
@@ -754,6 +763,7 @@
     cal.classList.add("t-cal--collapsed");
     panel.hidden = true;
     btn.setAttribute("aria-expanded", "false");
+    setCalToggleLabel(btn, false);
 
     btn.addEventListener("click", function () {
       if (btn.getAttribute("aria-expanded") === "true") {
@@ -835,6 +845,7 @@
       dockLine.removeAttribute("aria-disabled");
     }
     if (dockBook) dockBook.hidden = true;
+    updateDock();
   }
 
   window.dkThanksUnlockLine = unlockLineStep;
@@ -842,9 +853,23 @@
 
   function updateDock() {
     if (!dock) return;
-    dock.classList.add("is-visible");
     dock.hidden = false;
     body.classList.add("is-dock-visible");
+    // カレンダーが画面内にある間は同じCTAが重複するため退避（予約後はLINE導線として表示継続）
+    var hide = calInView && !isLineUnlocked();
+    dock.classList.toggle("is-visible", !hide);
+  }
+
+  function initDockCalendarWatch() {
+    var cal = document.getElementById("t-calendar");
+    if (!dock || !cal || !("IntersectionObserver" in window)) return;
+    new IntersectionObserver(
+      function (entries) {
+        calInView = !!(entries[0] && entries[0].isIntersecting);
+        updateDock();
+      },
+      { threshold: 0.01 }
+    ).observe(cal);
   }
 
   function onScroll() {
@@ -877,4 +902,5 @@
 
   document.addEventListener("thanks_job_preview_refresh", onScroll);
   initCalendarCollapse();
+  initDockCalendarWatch();
 })();
