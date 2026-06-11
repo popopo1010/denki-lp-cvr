@@ -46,17 +46,17 @@ jobs:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
           # zsh の「改行なし」プロンプト記号 % やスペースを末尾から除去してファイルに書く
-          python3 -c "
-import os, sys, json
-raw = os.environ['CLASPRC_JSON'].rstrip().rstrip('%').rstrip()
-try:
-    json.loads(raw)
-except json.JSONDecodeError as e:
-    print(f'::error::CLASPRC_JSON が正しいJSONではありません: {e}', file=sys.stderr)
-    sys.exit(1)
-open(os.path.expanduser('~/.clasprc.json'), 'w').write(raw)
-print('認証ファイルを書き込みました')
-"
+          python3 - <<'PYEOF'
+          import os, sys, json
+          raw = os.environ['CLASPRC_JSON'].rstrip().rstrip('%').rstrip()
+          try:
+              json.loads(raw)
+          except json.JSONDecodeError as e:
+              print(f'::error::CLASPRC_JSON が正しいJSONではありません: {e}', file=sys.stderr)
+              sys.exit(1)
+          open(os.path.expanduser('~/.clasprc.json'), 'w').write(raw)
+          print('認証ファイルを書き込みました')
+          PYEOF
 
       - name: clasp push + redeploy
         if: steps.check.outputs.skip == 'false'
