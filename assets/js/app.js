@@ -148,8 +148,21 @@
     });
   }
 
+  // 携帯番号のみ受け付ける（060/070/080/090 始まりの11桁）
+  const TEL_PREFIX_ERROR = "080・090・070・060から始まる携帯番号を入力してください";
+
   function isValidTel(value) {
-    return /^[0-9]{11}$/.test(String(value || "").trim());
+    return /^0[6789]0[0-9]{8}$/.test(String(value || "").trim());
+  }
+
+  // 入力途中でも携帯番号になり得ない先頭3桁を検知する
+  function hasInvalidTelPrefix(value) {
+    const v = String(value || "").trim();
+    if (!v) return false;
+    if (v.charAt(0) !== "0") return true;
+    if (v.length >= 2 && "6789".indexOf(v.charAt(1)) === -1) return true;
+    if (v.length >= 3 && v.charAt(2) !== "0") return true;
+    return false;
   }
 
   const LAZY_STEP_IDS = new Set(["step03", "step04", "step05", "step06"]);
@@ -820,6 +833,14 @@
             updateBtn();
             scheduleTelAutoSubmit();
           } else {
+            if (errBox) {
+              if (hasInvalidTelPrefix(item.value)) {
+                errBox.style.display = "block";
+                if (errText) errText.textContent = TEL_PREFIX_ERROR;
+              } else if (errText && errText.textContent === TEL_PREFIX_ERROR) {
+                errBox.style.display = "none";
+              }
+            }
             states[i] = false;
             item.classList.remove(SKIP);
             updateBtn();
@@ -837,7 +858,8 @@
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
         if (item.name === "your-tel" && item.value && !isValidTel(item.value)) {
-          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
+          const telMsg = hasInvalidTelPrefix(item.value) ? TEL_PREFIX_ERROR : "携帯番号11桁を半角数字で入力してください";
+          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = telMsg; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
         if (states.every(Boolean)) moveIconById("#" + nextBtn.id);

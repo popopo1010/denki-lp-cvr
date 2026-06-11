@@ -67,6 +67,35 @@
   margin: 8px 0 0;
   line-height: 1.4;
 }
+/* step06 満足度バッジ（数値を主役に・配色は cvr-step-reward と統一） */
+.cvr-cta-proof--badge {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 340px;
+  margin: 10px auto 0;
+  padding: 8px 12px;
+  background: #f0f4fa;
+  border: 1px solid #dce4f0;
+  border-radius: 8px;
+}
+.cvr-cta-proof--badge .cvr-cta-proof__main {
+  font-size: 13px;
+  color: #1f2937;
+  font-weight: 700;
+}
+.cvr-cta-proof--badge .cvr-cta-proof__main strong {
+  color: #ff5966;
+  font-size: 16px;
+}
+.cvr-cta-proof--badge .cvr-cta-proof__sub {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+.cvr-cta-proof--badge .cvr-cta-proof__sub strong {
+  color: #314c85;
+}
 #step05 .cvr-almost-done {
   margin: 8px 0 4px;
 }
@@ -837,7 +866,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   }
   body.lp-input-step .cvr-birth-hint { margin-top: 4px; font-size: 10px; }
   body.lp-input-step #step06 .cvr-cta-proof {
-    margin: 8px 0 0;
+    margin: 8px auto 0;
     font-size: 10px;
     text-align: center;
     color: #64748b;
