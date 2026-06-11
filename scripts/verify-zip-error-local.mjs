@@ -56,8 +56,13 @@ async function main() {
   await page.route("https://geoapi.heartrails.com/**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ response: { location: [{ city: "千代田区" }] } }) }));
 
-  // 1. 存在しない郵便番号 → 赤字エラー + ボタン無効 + アコーディオン自動オープン + 計測
+  // 0. ステップ遷移で form_step が送信される（v1の委譲ハンドラ経由）
   await openZipStep(page);
+  const steps = await page.evaluate(() =>
+    (window.dataLayer || []).filter((e) => e.event === "form_step").map((e) => e.step_name));
+  steps.includes("step04") ? pass("form_step(step04) 計測", JSON.stringify(steps)) : fail("form_step未送信", JSON.stringify(steps));
+
+  // 1. 存在しない郵便番号 → 赤字エラー + ボタン無効 + アコーディオン自動オープン + 計測
   await page.locator("#zip").fill("0000000");
   await page.waitForTimeout(300);
   let s = await zipState(page);

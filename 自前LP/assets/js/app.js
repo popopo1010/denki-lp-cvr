@@ -331,6 +331,12 @@
     const cur = btn.closest(".js-form-group");
     if (!pageTo || !cur) return;
 
+    // ステップ別離脱の計測用（v2と同一スキーマ）。遅延読込ボタンも拾うためここで送る
+    try {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: "form_step", step_name: pageTo });
+    } catch (err) {}
+
     clearStepTimers();
 
     const hideOnStep = document.querySelectorAll(".cvr-live-notification, .cvr-social-proof, .cvr-trust-bar");
