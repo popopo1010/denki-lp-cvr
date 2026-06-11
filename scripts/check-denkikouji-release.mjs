@@ -43,7 +43,7 @@ const EXPECT = {
   ["meta app.js", meta.includes(EXPECT.app)],
   ["FV 全5ステップ", lp.includes("全5ステップ")],
   ["step01 あと4", lp.includes("あと4ステップ")],
-  ["step06 営業電話なし", lazy.includes("営業電話はしません")],
+  ["step06 損失回避コピー", lazy.includes("いま見ないと損")],
   ["step06 満足度94%", lazy.includes("利用者の<strong>94%</strong>が満足と回答")],
   ["submit CTA 文言", lazy.includes("あなたに合う求人を見る")],
   ["thanks-v2 遷移", app.includes("thanks-v2")],
