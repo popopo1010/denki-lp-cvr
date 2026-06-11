@@ -16,7 +16,8 @@
 |----------|-----------|----------|
 | `thanks_booking_context` | 予約UI初期化時 | `has_tel`（tel引き継ぎ可否） |
 | `thanks_slot_select` | 枠タップ | `booking_day` / `booking_time` / `has_tel` |
-| `thanks_booking_confirm_click` | 確定タップ | 同上 |
+| `thanks_booking_asap_click` | 「いますぐ電話を希望」タップ（最短枠ワンタップ確保） | 同上 |
+| `thanks_booking_confirm_click` | 確定タップ | 同上 + `asap`（0/1） |
 | `thanks_booking_error` | 失敗時 | `error_type`: `slots_load_failed` / `slot_taken` / `network` / `unknown` |
 | `calendar_booked` | GAS予約成功 | `booking_tool` |
 

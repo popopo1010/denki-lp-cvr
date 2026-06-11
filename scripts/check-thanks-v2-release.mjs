@@ -32,12 +32,12 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=7", "shared v7 line click bind"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=53", "css v53 no tel input on thanks"],
+  ["thanks-page.css?v=54", "css v54 asap booking button"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
   ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
-  ["thanks-booking-custom.js?v=35", "booking custom v35 funnel events + telなし予約許可"],
+  ["thanks-booking-custom.js?v=36", "booking custom v36 asap one-tap booking"],
   ["thanks-job-preview.js?v=19", "job preview v19 intent auto + hero CTA"],
   ["thanks-v2-deferred.js?v=14", "deferred bundle v14 calendar default-expanded"],
   ["job-preview-hero", "hero gift card mount"],
@@ -220,6 +220,13 @@ bookingCustom.includes("thanks_slot_select") &&
   !bookingCustom.includes("電話番号が取得できません")
   ? pass("booking-custom", "thanksで電話番号を再要求しない（telなしでも予約可）")
   : fail("booking-custom", "tel入力UI / tel必須デッドエンドが残っている");
+bookingCustom.includes("booking-asap") &&
+  bookingCustom.includes("thanks_booking_asap_click")
+  ? pass("booking-custom", "いますぐ希望ワンタップ確保 + 計測")
+  : fail("booking-custom", "asapボタン/計測が見当たらない");
+read("gas-recorder/booking-custom.js").includes('getScriptProp("BOOKING_LEAD_HOURS") || "0"')
+  ? pass("gas", "BOOKING_LEAD_HOURS 既定0（いますぐ枠）")
+  : fail("gas", "BOOKING_LEAD_HOURS 既定が0でない");
 
 sharedJs.includes("bindThanksLineClicks")
   ? pass("shared.js", "line click bind in shared")

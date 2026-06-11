@@ -8,7 +8,7 @@
  *   BOOKING_START_HOUR … 開始時刻 既定 9
  *   BOOKING_END_HOUR … 終了の上限（24=23:45枠まで）既定 24
  *   BOOKING_ALLOW_OVERLAP … true=既存予定と重複OK（既定 false＝空いてる担当優先）
- *   BOOKING_LEAD_HOURS … 何時間後から予約可 既定 2
+ *   BOOKING_LEAD_HOURS … 何時間後から予約可 既定 0（=次の枠区切りから・いますぐ対応）
  *   BOOKING_DAYS_AHEAD … 何日先まで表示 既定 14
  *   BOOKING_INCLUDE_WEEKENDS … true=土日も枠生成（既定 true）
  */
@@ -20,7 +20,7 @@ function bookingConfig() {
     startHour: parseInt(getScriptProp("BOOKING_START_HOUR") || "9", 10),
     endHour: parseInt(getScriptProp("BOOKING_END_HOUR") || "24", 10),
     allowOverlap: getScriptProp("BOOKING_ALLOW_OVERLAP").toLowerCase() === "true",
-    leadHours: parseInt(getScriptProp("BOOKING_LEAD_HOURS") || "2", 10),
+    leadHours: parseInt(getScriptProp("BOOKING_LEAD_HOURS") || "0", 10),
     daysAhead: parseInt(getScriptProp("BOOKING_DAYS_AHEAD") || "14", 10),
     includeWeekends: getScriptProp("BOOKING_INCLUDE_WEEKENDS").toLowerCase() !== "false"
   };

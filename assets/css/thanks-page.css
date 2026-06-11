@@ -2390,6 +2390,51 @@ html {
   box-shadow: 0 4px 0 #1a2d52;
 }
 
+/* いますぐ希望: 最短枠ワンタップ確保 */
+.t-booking-asap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #b45309, #ea8c1f);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #8a3e06;
+  text-align: center;
+}
+.t-booking-asap:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.t-booking-asap__main {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.t-booking-asap__sub {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.95;
+  line-height: 1.4;
+}
+.t-booking-asap__sub strong {
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.t-booking-or {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+}
+
 .t-booking-confirm:disabled {
   opacity: 0.6;
 }

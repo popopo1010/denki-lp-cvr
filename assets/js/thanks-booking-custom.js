@@ -319,6 +319,64 @@
     document.head.appendChild(script);
   }
 
+  /** 予約確定の共通処理（楽観UI → GAS → 失敗時revert） */
+  function executeBooking(slotForBook, opts) {
+    opts = opts || {};
+    var preUi = capturePreBookingUi();
+    var optimisticInfo = {
+      day_label: slotForBook.day_label,
+      time_label: slotForBook.time_label,
+      start: slotForBook.start,
+      end: slotForBook.end,
+      staff_name: ""
+    };
+    applyBookedState(optimisticInfo, true);
+
+    bookSlotViaJsonp(
+      {
+        start: slotForBook.start,
+        end: slotForBook.end,
+        name: name,
+        tel: tel,
+        lp: lp,
+        page: location.href,
+        staff_id: slotForBook.staff_id || ""
+      },
+      function (res) {
+        if (!res || !res.ok) {
+          pushDL("thanks_booking_error", {
+            error_type: (res && res.error) || "unknown",
+            booking_day: slotForBook.day_label || "",
+            booking_time: slotForBook.time_label || "",
+            asap: opts.asap ? 1 : 0
+          });
+          revertOptimisticBooking(preUi);
+          selected = slotForBook;
+          render();
+          var errMsg =
+            res && res.error === "slot_taken"
+              ? "この枠は直前で埋まりました。別の時間をお選びください。"
+              : "予約に失敗しました。時間をおいて再度お試しください。";
+          mount.insertAdjacentHTML(
+            "beforeend",
+            '<p class="t-booking-empty">' + errMsg + "</p>"
+          );
+          return;
+        }
+
+        var bookingInfo = {
+          day_label: slotForBook.day_label,
+          time_label: slotForBook.time_label,
+          start: slotForBook.start,
+          end: slotForBook.end,
+          staff_name: (res && res.calendar_staff_name) || ""
+        };
+        applyBookedState(bookingInfo, false);
+        pushDL("calendar_booked", { booking_tool: "custom", asap: opts.asap ? 1 : 0 });
+      }
+    );
+  }
+
   function groupByDay(slots) {
     var map = {};
     slots.forEach(function (s) {
@@ -345,7 +403,23 @@
     }
     var slice = days.slice(dayOffset, dayOffset + visibleDays);
 
-    var html = '<div class="t-booking-nav">';
+    // いますぐ希望の人向け: 最短の空き枠をワンタップ確保
+    var earliest = allSlots[0];
+    var html = "";
+    if (earliest) {
+      html +=
+        '<button type="button" class="t-booking-asap" id="booking-asap">' +
+        '<span class="t-booking-asap__main">いますぐ電話を希望する</span>' +
+        '<span class="t-booking-asap__sub">最短の枠 <strong>' +
+        earliest.day_label +
+        " " +
+        earliest.time_label +
+        "〜</strong> をワンタップで確保</span>" +
+        "</button>" +
+        '<p class="t-booking-or">または、希望の日時を選ぶ</p>';
+    }
+
+    html += '<div class="t-booking-nav">';
     html +=
       '<button type="button" class="t-booking-nav__btn" id="booking-prev"' +
       (dayOffset <= 0 ? " disabled" : "") +
@@ -438,6 +512,29 @@
       });
     }
 
+    var asap = document.getElementById("booking-asap");
+    if (asap) {
+      asap.addEventListener("click", function () {
+        var slot = allSlots[0];
+        if (!slot) return;
+        pushDL("thanks_booking_asap_click", {
+          booking_tool: "custom",
+          booking_day: slot.day_label || "",
+          booking_time: slot.time_label || "",
+          has_tel: hasTel ? 1 : 0
+        });
+        pushDL("thanks_booking_confirm_click", {
+          booking_tool: "custom",
+          booking_day: slot.day_label || "",
+          booking_time: slot.time_label || "",
+          has_tel: hasTel ? 1 : 0,
+          asap: 1
+        });
+        asap.disabled = true;
+        executeBooking(slot, { asap: true });
+      });
+    }
+
     var confirm = document.getElementById("booking-confirm");
     if (confirm) {
       confirm.addEventListener("click", function () {
@@ -446,64 +543,13 @@
           booking_tool: "custom",
           booking_day: selected.day_label || "",
           booking_time: selected.time_label || "",
-          has_tel: hasTel ? 1 : 0
+          has_tel: hasTel ? 1 : 0,
+          asap: 0
         });
         // tel はLPフォームで取得済み。引き継げなかった場合も再入力は求めず、
         // tel空のまま予約を通す（GASは新規行append+Slack通知、リード行と突合）
         confirm.disabled = true;
-        var slotForBook = selected;
-        var preUi = capturePreBookingUi();
-        var optimisticInfo = {
-          day_label: slotForBook.day_label,
-          time_label: slotForBook.time_label,
-          start: slotForBook.start,
-          end: slotForBook.end,
-          staff_name: ""
-        };
-        applyBookedState(optimisticInfo, true);
-
-        bookSlotViaJsonp(
-          {
-            start: slotForBook.start,
-            end: slotForBook.end,
-            name: name,
-            tel: tel,
-            lp: lp,
-            page: location.href,
-            staff_id: slotForBook.staff_id || ""
-          },
-          function (res) {
-            if (!res || !res.ok) {
-              pushDL("thanks_booking_error", {
-                error_type: (res && res.error) || "unknown",
-                booking_day: slotForBook.day_label || "",
-                booking_time: slotForBook.time_label || ""
-              });
-              revertOptimisticBooking(preUi);
-              selected = slotForBook;
-              render();
-              var errMsg =
-                res && res.error === "slot_taken"
-                  ? "この枠は直前で埋まりました。別の時間をお選びください。"
-                  : "予約に失敗しました。時間をおいて再度お試しください。";
-              mount.insertAdjacentHTML(
-                "beforeend",
-                '<p class="t-booking-empty">' + errMsg + "</p>"
-              );
-              return;
-            }
-
-            var bookingInfo = {
-              day_label: slotForBook.day_label,
-              time_label: slotForBook.time_label,
-              start: slotForBook.start,
-              end: slotForBook.end,
-              staff_name: (res && res.calendar_staff_name) || ""
-            };
-            applyBookedState(bookingInfo, false);
-            pushDL("calendar_booked", { booking_tool: "custom" });
-          }
-        );
+        executeBooking(selected, { asap: false });
       });
     }
   }
