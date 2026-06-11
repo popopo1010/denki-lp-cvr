@@ -34,7 +34,7 @@
 |---|------|----------|
 | E | カレンダーをデフォルト展開（折りたたみ廃止・トグルは閉じる操作のみ） | `thanks-v2/index.html` + `thanks-mobile-ux.js` |
 | F | ドック退避は「展開済みカレンダーが画面内」のときのみ | `thanks-mobile-ux.js` |
-| G | tel未引き継ぎ時のインライン電話番号入力（デッドエンド解消） | `thanks-booking-custom.js` + CSS |
+| G | tel未引き継ぎでも予約を通す（thanksで電話番号は再入力させない。デッドエンド解消） | `thanks-booking-custom.js` |
 | H | 予約ファネル計測（slot_select / confirm_click / booking_error / has_tel） | `thanks-booking-custom.js`（詳細は `CV-LINE-playbook.md`） |
 
 ## 運用・要人手（コード外）

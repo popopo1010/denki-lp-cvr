@@ -32,12 +32,12 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=7", "shared v7 line click bind"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=52", "css v52 tel fallback input"],
+  ["thanks-page.css?v=53", "css v53 no tel input on thanks"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
   ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
-  ["thanks-booking-custom.js?v=34", "booking custom v34 funnel events + tel fallback"],
+  ["thanks-booking-custom.js?v=35", "booking custom v35 funnel events + telなし予約許可"],
   ["thanks-job-preview.js?v=19", "job preview v19 intent auto + hero CTA"],
   ["thanks-v2-deferred.js?v=14", "deferred bundle v14 calendar default-expanded"],
   ["job-preview-hero", "hero gift card mount"],
@@ -216,9 +216,10 @@ bookingCustom.includes("thanks_slot_select") &&
   bookingCustom.includes("thanks_booking_error")
   ? pass("booking-custom", "funnel events (slot select / confirm / error)")
   : fail("booking-custom", "funnel events missing");
-bookingCustom.includes("booking-tel")
-  ? pass("booking-custom", "tel fallback input")
-  : fail("booking-custom", "tel fallback input missing");
+!bookingCustom.includes("booking-tel") &&
+  !bookingCustom.includes("電話番号が取得できません")
+  ? pass("booking-custom", "thanksで電話番号を再要求しない（telなしでも予約可）")
+  : fail("booking-custom", "tel入力UI / tel必須デッドエンドが残っている");
 
 sharedJs.includes("bindThanksLineClicks")
   ? pass("shared.js", "line click bind in shared")

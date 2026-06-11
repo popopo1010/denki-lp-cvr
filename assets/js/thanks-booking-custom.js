@@ -266,7 +266,6 @@
   var dayOffset = 0;
   var allSlots = [];
   var selected = null;
-  var pendingTel = "";
 
   function bookSlotViaJsonp(payload, onDone) {
     var cb = "lpBookingBook_" + Date.now();
@@ -388,16 +387,6 @@
         " " +
         selected.time_label +
         "</strong></p>";
-      if (!hasTel) {
-        html +=
-          '<div class="t-booking-tel">' +
-          '<label class="t-booking-tel__label" for="booking-tel">お電話番号（この時間にお電話するため）</label>' +
-          '<input type="tel" id="booking-tel" class="t-booking-tel__input" inputmode="tel" autocomplete="tel" placeholder="09012345678" maxlength="11" value="' +
-          pendingTel +
-          '">' +
-          '<p class="t-booking-tel__err" id="booking-tel-err" hidden>電話番号を半角数字で入力してください（例: 09012345678）</p>' +
-          "</div>";
-      }
       html +=
         '<button type="button" class="t-booking-confirm" id="booking-confirm">この日時で希望条件を伝える（無料）</button>';
     } else {
@@ -429,16 +418,6 @@
       });
     });
 
-    var telInput = document.getElementById("booking-tel");
-    if (telInput) {
-      telInput.addEventListener("input", function () {
-        pendingTel = telInput.value.replace(/[^0-9]/g, "");
-        if (telInput.value !== pendingTel) telInput.value = pendingTel;
-        var err = document.getElementById("booking-tel-err");
-        if (err) err.hidden = true;
-      });
-    }
-
     var prev = document.getElementById("booking-prev");
     var next = document.getElementById("booking-next");
     if (prev) {
@@ -469,23 +448,8 @@
           booking_time: selected.time_label || "",
           has_tel: hasTel ? 1 : 0
         });
-        if (!hasTel) {
-          // sessionStorageから電話番号を引き継げなかった場合はその場で入力してもらう
-          var telField = document.getElementById("booking-tel");
-          var digits = ((telField && telField.value) || "").replace(/[^0-9]/g, "");
-          if (!/^0\d{9,10}$/.test(digits)) {
-            var telErr = document.getElementById("booking-tel-err");
-            if (telErr) telErr.hidden = false;
-            if (telField) telField.focus();
-            pushDL("thanks_booking_error", { error_type: "tel_invalid" });
-            return;
-          }
-          tel = digits;
-          hasTel = true;
-          try {
-            sessionStorage.setItem("_tel", tel);
-          } catch (eTel) {}
-        }
+        // tel はLPフォームで取得済み。引き継げなかった場合も再入力は求めず、
+        // tel空のまま予約を通す（GASは新規行append+Slack通知、リード行と突合）
         confirm.disabled = true;
         var slotForBook = selected;
         var preUi = capturePreBookingUi();

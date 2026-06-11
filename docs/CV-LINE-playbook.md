@@ -17,10 +17,10 @@
 | `thanks_booking_context` | 予約UI初期化時 | `has_tel`（tel引き継ぎ可否） |
 | `thanks_slot_select` | 枠タップ | `booking_day` / `booking_time` / `has_tel` |
 | `thanks_booking_confirm_click` | 確定タップ | 同上 |
-| `thanks_booking_error` | 失敗時 | `error_type`: `slots_load_failed` / `tel_invalid` / `slot_taken` / `network` / `unknown` |
+| `thanks_booking_error` | 失敗時 | `error_type`: `slots_load_failed` / `slot_taken` / `network` / `unknown` |
 | `calendar_booked` | GAS予約成功 | `booking_tool` |
 
-tel が sessionStorage から引き継げない場合は、確定前に電話番号のインライン入力欄を表示する（デッドエンドにしない）。
+**telの扱い:** 電話番号はLPフォームで取得済みのため、thanksでは再入力させない。sessionStorage から引き継げなかった場合も tel 空のまま予約を通す（GASは新規行append+Slack通知。リード行とは名前・日時で突合）。`has_tel` で引き継ぎ失敗率を監視する。
 
 ## ファネル（コピー一貫）
 
