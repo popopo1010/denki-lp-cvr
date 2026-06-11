@@ -7,8 +7,20 @@
 | 段階 | KPI | 成功の定義 |
 |------|-----|-----------|
 | LP | フォーム完了率 | step01離脱↓・step05入力摩擦↓ |
-| Thanks | 予約完了率 | カレンダー展開→枠選択 |
+| Thanks | 予約完了率 | 枠選択→確定（カレンダーは2026-06からデフォルト展開） |
 | LINE | `thanks_line_click` | 予約後にLINE CTAクリック |
+
+### 予約ファネルの dataLayer イベント（2026-06）
+
+| イベント | タイミング | 主な属性 |
+|----------|-----------|----------|
+| `thanks_booking_context` | 予約UI初期化時 | `has_tel`（tel引き継ぎ可否） |
+| `thanks_slot_select` | 枠タップ | `booking_day` / `booking_time` / `has_tel` |
+| `thanks_booking_confirm_click` | 確定タップ | 同上 |
+| `thanks_booking_error` | 失敗時 | `error_type`: `slots_load_failed` / `tel_invalid` / `slot_taken` / `network` / `unknown` |
+| `calendar_booked` | GAS予約成功 | `booking_tool` |
+
+tel が sessionStorage から引き継げない場合は、確定前に電話番号のインライン入力欄を表示する（デッドエンドにしない）。
 
 ## ファネル（コピー一貫）
 
@@ -90,7 +102,7 @@ bash scripts/verify-production-release.sh   # 本番HTTP（デプロイ後）
 
 1. LP: step-first → step06 まで遷移・CTA文言・ステップ数
 2. 送信後: thanks-v2 ヒーローに3件プレビュー・フロー①②③表示
-3. カレンダー: 枠選択 → LINEセクション解放・ドックにLINEボタン
+3. カレンダー: **トグル操作なしで枠が見える（デフォルト展開）** → 枠選択 → LINEセクション解放・ドックにLINEボタン
 4. LINEクリック: GTM `thanks_line_click` / beacon送信
 5. ハードリロードで `?v=` キャッシュ更新確認
 

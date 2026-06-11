@@ -32,14 +32,14 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=7", "shared v7 line click bind"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=51", "css v51 head-lead contrast + toggle secondary"],
+  ["thanks-page.css?v=52", "css v52 tel fallback input"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
   ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
-  ["thanks-booking-custom.js?v=33", "booking custom v33 eager for CTA"],
+  ["thanks-booking-custom.js?v=34", "booking custom v34 funnel events + tel fallback"],
   ["thanks-job-preview.js?v=19", "job preview v19 intent auto + hero CTA"],
-  ["thanks-v2-deferred.js?v=13", "deferred bundle v13 dock/toggle dedup"],
+  ["thanks-v2-deferred.js?v=14", "deferred bundle v14 calendar default-expanded"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -47,6 +47,7 @@ const requiredStrings = [
   ["thanks-social-meta", "social strip profile mount"],
   ["t-cal__toggle", "calendar collapse toggle"],
   ["id=\"t-cal-panel\"", "calendar collapse panel"],
+  ["aria-expanded=\"true\"", "calendar expanded by default"],
   ["登録ありがとうございます", "thanks header copy"],
   ["3件、届きました", "benefit hero headline"],
   ["t-trust--footer", "trust bar in footer"],
@@ -210,6 +211,14 @@ const bookingCustom = read("assets/js/thanks-booking-custom.js");
 bookingCustom.includes("dkThanksMountBooking")
   ? pass("booking-custom", "lazy booking UI mount")
   : fail("booking-custom", "dkThanksMountBooking missing");
+bookingCustom.includes("thanks_slot_select") &&
+  bookingCustom.includes("thanks_booking_confirm_click") &&
+  bookingCustom.includes("thanks_booking_error")
+  ? pass("booking-custom", "funnel events (slot select / confirm / error)")
+  : fail("booking-custom", "funnel events missing");
+bookingCustom.includes("booking-tel")
+  ? pass("booking-custom", "tel fallback input")
+  : fail("booking-custom", "tel fallback input missing");
 
 sharedJs.includes("bindThanksLineClicks")
   ? pass("shared.js", "line click bind in shared")

@@ -28,6 +28,15 @@
 | C | 予約前の心理的ハードル低減コピー | `t-cal__sub` |
 | D | 本番デプロイ検証にアバターURL追加 | `deploy.yml` |
 
+## 今回対応（コード・2026-06-11: 予約ファネル改善）
+
+| # | 項目 | ファイル |
+|---|------|----------|
+| E | カレンダーをデフォルト展開（折りたたみ廃止・トグルは閉じる操作のみ） | `thanks-v2/index.html` + `thanks-mobile-ux.js` |
+| F | ドック退避は「展開済みカレンダーが画面内」のときのみ | `thanks-mobile-ux.js` |
+| G | tel未引き継ぎ時のインライン電話番号入力（デッドエンド解消） | `thanks-booking-custom.js` + CSS |
+| H | 予約ファネル計測（slot_select / confirm_click / booking_error / has_tel） | `thanks-booking-custom.js`（詳細は `CV-LINE-playbook.md`） |
+
 ## 運用・要人手（コード外）
 
 | # | 項目 | やること |

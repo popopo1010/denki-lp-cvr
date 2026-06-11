@@ -256,6 +256,7 @@
   }
 
   document.body.classList.add("is-awaiting-booking");
+  pushDL("thanks_booking_context", { has_tel: hasTel ? 1 : 0 });
 
   var wrap = document.querySelector(".t-cal__widget-wrap");
   if (wrap) wrap.style.display = "none";
@@ -265,6 +266,7 @@
   var dayOffset = 0;
   var allSlots = [];
   var selected = null;
+  var pendingTel = "";
 
   function bookSlotViaJsonp(payload, onDone) {
     var cb = "lpBookingBook_" + Date.now();
@@ -386,6 +388,16 @@
         " " +
         selected.time_label +
         "</strong></p>";
+      if (!hasTel) {
+        html +=
+          '<div class="t-booking-tel">' +
+          '<label class="t-booking-tel__label" for="booking-tel">お電話番号（この時間にお電話するため）</label>' +
+          '<input type="tel" id="booking-tel" class="t-booking-tel__input" inputmode="tel" autocomplete="tel" placeholder="09012345678" maxlength="11" value="' +
+          pendingTel +
+          '">' +
+          '<p class="t-booking-tel__err" id="booking-tel-err" hidden>電話番号を半角数字で入力してください（例: 09012345678）</p>' +
+          "</div>";
+      }
       html +=
         '<button type="button" class="t-booking-confirm" id="booking-confirm">この日時で希望条件を伝える（無料）</button>';
     } else {
@@ -405,9 +417,27 @@
         selected = allSlots.filter(function (s) {
           return s.start === start;
         })[0];
+        if (selected) {
+          pushDL("thanks_slot_select", {
+            booking_tool: "custom",
+            booking_day: selected.day_label || "",
+            booking_time: selected.time_label || "",
+            has_tel: hasTel ? 1 : 0
+          });
+        }
         render();
       });
     });
+
+    var telInput = document.getElementById("booking-tel");
+    if (telInput) {
+      telInput.addEventListener("input", function () {
+        pendingTel = telInput.value.replace(/[^0-9]/g, "");
+        if (telInput.value !== pendingTel) telInput.value = pendingTel;
+        var err = document.getElementById("booking-tel-err");
+        if (err) err.hidden = true;
+      });
+    }
 
     var prev = document.getElementById("booking-prev");
     var next = document.getElementById("booking-next");
@@ -433,12 +463,28 @@
     if (confirm) {
       confirm.addEventListener("click", function () {
         if (!selected) return;
+        pushDL("thanks_booking_confirm_click", {
+          booking_tool: "custom",
+          booking_day: selected.day_label || "",
+          booking_time: selected.time_label || "",
+          has_tel: hasTel ? 1 : 0
+        });
         if (!hasTel) {
-          mount.insertAdjacentHTML(
-            "beforeend",
-            '<p class="t-booking-empty">電話番号が取得できません。LPの登録フォームから再度お進みください。</p>'
-          );
-          return;
+          // sessionStorageから電話番号を引き継げなかった場合はその場で入力してもらう
+          var telField = document.getElementById("booking-tel");
+          var digits = ((telField && telField.value) || "").replace(/[^0-9]/g, "");
+          if (!/^0\d{9,10}$/.test(digits)) {
+            var telErr = document.getElementById("booking-tel-err");
+            if (telErr) telErr.hidden = false;
+            if (telField) telField.focus();
+            pushDL("thanks_booking_error", { error_type: "tel_invalid" });
+            return;
+          }
+          tel = digits;
+          hasTel = true;
+          try {
+            sessionStorage.setItem("_tel", tel);
+          } catch (eTel) {}
         }
         confirm.disabled = true;
         var slotForBook = selected;
@@ -464,6 +510,11 @@
           },
           function (res) {
             if (!res || !res.ok) {
+              pushDL("thanks_booking_error", {
+                error_type: (res && res.error) || "unknown",
+                booking_day: slotForBook.day_label || "",
+                booking_time: slotForBook.time_label || ""
+              });
               revertOptimisticBooking(preUi);
               selected = slotForBook;
               render();
@@ -501,6 +552,7 @@
   }
 
   function showSlotsError() {
+    pushDL("thanks_booking_error", { error_type: "slots_load_failed" });
     mount.innerHTML =
       '<p class="t-booking-empty">空き枠の取得に失敗しました。時間をおいて再度お試しください。</p>' +
       '<button type="button" class="t-booking-retry" id="booking-retry">再読み込み</button>';

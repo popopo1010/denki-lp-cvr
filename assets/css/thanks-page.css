@@ -2390,6 +2390,39 @@ html {
   box-shadow: 0 4px 0 #1a2d52;
 }
 
+/* 電話番号フォールバック入力（sessionStorage引き継ぎ失敗時） */
+.t-booking-tel {
+  margin: 0 0 12px;
+  text-align: left;
+}
+.t-booking-tel__label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+}
+.t-booking-tel__input {
+  width: 100%;
+  padding: 14px 12px;
+  font-size: 17px;
+  color: #1f2937;
+  background: #fff;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.t-booking-tel__input:focus {
+  outline: none;
+  border-color: #314c85;
+}
+.t-booking-tel__err {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
 .t-booking-confirm:disabled {
   opacity: 0.6;
 }
