@@ -562,11 +562,29 @@
       updateBtn();
     }
 
+    // zip-noticeは絶対配置の1行ラベルのため文言は短く保つ（長文はレイアウト崩れ）
+    function zipLookupFailed(message, reason) {
+      notice.style.display = "block";
+      notice.style.color = "#d83237";
+      notice.textContent = message;
+      accordion.open = true;
+      updateIcons();
+      try {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "zip_lookup_error", zip_error_reason: reason });
+      } catch (e) {}
+    }
+
     async function lookupZip(zip) {
       try {
         const r = await fetch("https://zipcloud.ibsnet.co.jp/api/search?zipcode=" + zip);
         const j = await r.json();
-        if (!j.results || !j.results[0]) return;
+        if (zipInput.value !== zip) return;
+        if (!j.results || !j.results[0]) {
+          valid = false;
+          zipLookupFailed("該当する住所が見つかりません", "not_found");
+          return;
+        }
         const a = j.results[0];
         for (let i = 0; i < prefSel.options.length; i++) {
           if (prefSel.options[i].textContent === a.address1) { prefSel.selectedIndex = i; break; }
@@ -581,7 +599,11 @@
         updateBtn();
         moveIconById("#" + nextBtn.id, true);
         scheduleZipAutoAdvance();
-      } catch (e) {}
+      } catch (e) {
+        // API障害はユーザー起因ではないため進行は止めず、手動選択を案内する
+        if (zipInput.value !== zip) return;
+        zipLookupFailed("住所を取得できませんでした", "api_error");
+      }
     }
 
     let zipAutoTimer = null;
@@ -612,6 +634,7 @@
     zipInput.addEventListener("input", () => {
       const v = zipInput.value;
       valid = false;
+      notice.style.color = "";
       if (!v.length) { notice.style.display = "block"; notice.textContent = "ハイフンなし"; }
       else if (!/^[0-9]+$/.test(v)) { notice.textContent = "数字で入力してください"; }
       else if (v.length === 7) { notice.style.display = "none"; valid = true; lookupZip(v); }
