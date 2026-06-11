@@ -17,6 +17,16 @@
  *  clasp redeploy AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw
  */
 
+/**
+ * ★ UrlFetchApp (Slack通知) の権限承認用 ★
+ * GASエディタでこの関数を選んで実行 → 「許可」をクリックするだけでOK。
+ * 承認後はこの関数は削除して構いません。
+ */
+function authorizeScript() {
+  UrlFetchApp.fetch("https://www.google.com", { muteHttpExceptions: true });
+  Logger.log("UrlFetchApp 承認完了 ✓");
+}
+
 const SHEET_ID = "1JwwkLThWTMMmi9p1CMGK8gAz-I5f9cmueGFFpplZwGc";
 const SHEET_NAME = "form_submissions";
 const TZ = "Asia/Tokyo";
