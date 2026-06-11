@@ -32,7 +32,7 @@ const html = read("thanks-v2/index.html");
 const requiredStrings = [
   ["thanks-v2-shared.js?v=7", "shared v7 line click bind"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=49", "css v49 hero CTA"],
+  ["thanks-page.css?v=50", "css v49 hero CTA"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
