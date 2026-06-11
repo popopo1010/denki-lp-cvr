@@ -45,11 +45,18 @@ jobs:
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
-          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
-          if ! python3 -m json.tool ~/.clasprc.json > /dev/null 2>&1; then
-            echo "::error::CLASPRC_JSON が正しいJSONではありません。clasp login 済みマシンで cat ~/.clasprc.json | pbcopy し、画面のドラッグ選択ではなくクリップボード経由でシークレットを更新してください。"
-            exit 1
-          fi
+          # zsh の「改行なし」プロンプト記号 % やスペースを末尾から除去してファイルに書く
+          python3 -c "
+import os, sys, json
+raw = os.environ['CLASPRC_JSON'].rstrip().rstrip('%').rstrip()
+try:
+    json.loads(raw)
+except json.JSONDecodeError as e:
+    print(f'::error::CLASPRC_JSON が正しいJSONではありません: {e}', file=sys.stderr)
+    sys.exit(1)
+open(os.path.expanduser('~/.clasprc.json'), 'w').write(raw)
+print('認証ファイルを書き込みました')
+"
 
       - name: clasp push + redeploy
         if: steps.check.outputs.skip == 'false'

@@ -818,7 +818,8 @@ body {
 .t-cal__head-lead {
   margin: 6px 0 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.88);
+  /* 紺グラデの .t-cal__head 内で使うため明色（#555だと沈んで読めない） */
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.5;
 }
 .t-cal__micro {
