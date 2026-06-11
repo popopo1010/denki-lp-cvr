@@ -14,20 +14,15 @@
  */
 
 function bookingConfig() {
-  var p = PropertiesService.getScriptProperties();
   return {
-    calendarId: p.getProperty("BOOKING_CALENDAR_ID") || "",
-    slotMinutes: parseInt(p.getProperty("BOOKING_SLOT_MINUTES") || "15", 10),
-    startHour: parseInt(p.getProperty("BOOKING_START_HOUR") || "9", 10),
-    endHour: parseInt(p.getProperty("BOOKING_END_HOUR") || "24", 10),
-    allowOverlap:
-      String(p.getProperty("BOOKING_ALLOW_OVERLAP") || "false").toLowerCase() ===
-      "true",
-    leadHours: parseInt(p.getProperty("BOOKING_LEAD_HOURS") || "2", 10),
-    daysAhead: parseInt(p.getProperty("BOOKING_DAYS_AHEAD") || "14", 10),
-    includeWeekends:
-      String(p.getProperty("BOOKING_INCLUDE_WEEKENDS") || "true").toLowerCase() !==
-      "false"
+    calendarId: getScriptProp("BOOKING_CALENDAR_ID"),
+    slotMinutes: parseInt(getScriptProp("BOOKING_SLOT_MINUTES") || "15", 10),
+    startHour: parseInt(getScriptProp("BOOKING_START_HOUR") || "9", 10),
+    endHour: parseInt(getScriptProp("BOOKING_END_HOUR") || "24", 10),
+    allowOverlap: getScriptProp("BOOKING_ALLOW_OVERLAP").toLowerCase() === "true",
+    leadHours: parseInt(getScriptProp("BOOKING_LEAD_HOURS") || "2", 10),
+    daysAhead: parseInt(getScriptProp("BOOKING_DAYS_AHEAD") || "14", 10),
+    includeWeekends: getScriptProp("BOOKING_INCLUDE_WEEKENDS").toLowerCase() !== "false"
   };
 }
 
@@ -50,8 +45,7 @@ function getBookingCalendar() {
 
 /** @returns {{id:string,name:string,calendar_id:string}[]} */
 function getBookingStaffList() {
-  var p = PropertiesService.getScriptProperties();
-  var raw = String(p.getProperty("BOOKING_STAFF_JSON") || "").trim();
+  var raw = getScriptProp("BOOKING_STAFF_JSON").trim();
   if (raw) {
     try {
       var parsed = JSON.parse(raw);
@@ -140,12 +134,11 @@ function pickStaffRoundRobin(staffIds) {
   }
   if (staffIds.length === 1) return staffIds[0];
   var sorted = staffIds.slice().sort();
-  var p = PropertiesService.getScriptProperties();
   var key = "BOOKING_RR_CURSOR";
-  var cursor = parseInt(p.getProperty(key) || "0", 10);
+  var cursor = parseInt(getScriptProp(key) || "0", 10);
   if (isNaN(cursor) || cursor < 0) cursor = 0;
   var pick = sorted[cursor % sorted.length];
-  p.setProperty(key, String((cursor + 1) % 1000000));
+  PropertiesService.getScriptProperties().setProperty(key, String((cursor + 1) % 1000000));
   return pick;
 }
 
