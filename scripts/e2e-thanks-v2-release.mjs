@@ -243,6 +243,13 @@ async function testBookingAndLineGate(page) {
     return;
   }
 
+  const asapText = await page.locator("#booking-asap").textContent().catch(() => "");
+  if (asapText.includes("いますぐ電話を希望する") && asapText.includes("最短の枠")) {
+    pass("いますぐ枠ボタン", asapText.replace(/\s+/g, " ").slice(0, 60));
+  } else {
+    fail("いますぐ枠ボタン", `text=${(asapText || "なし").slice(0, 80)}`);
+  }
+
   await page.locator("#booking-slot-root .t-booking-slot").first().click();
   await page.locator("#booking-confirm").click({ timeout: 10000 });
 

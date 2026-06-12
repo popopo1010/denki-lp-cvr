@@ -219,6 +219,9 @@ jobs:
           echo "$html" | grep -q 'requestIdleCallback(loadGTM' && (echo "thanks-v2 still lazy-loads GTM" && exit 1) || true
           deferred=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/thanks-v2-deferred.js")
           shared_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/thanks-v2-shared.js")
+          booking_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/thanks-booking-custom.js")
+          echo "$booking_js" | grep -q 'booking-asap' || (echo "missing asap one-tap booking in booking-custom" && exit 1)
+          echo "$html" | grep -q 'data-line-position="hero"' || (echo "missing hero LINE CTA position attr" && exit 1)
           echo "$shared_js" | grep -q 'lead_conversion' || (echo "thanks-v2-shared missing lead_conversion" && exit 1)
           echo "$deferred" | grep -q 'thanks_page_view' && (echo "deferred should not duplicate thanks_page_view" && exit 1) || true
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-license-profiles.json" | head -3
@@ -289,7 +292,7 @@ jobs:
           echo "$html" | grep -q 't-hero__stats' && (echo "hero stats grid should be removed" && exit 1) || true
           echo "$html" | grep -q '1回だけ' || (echo "missing outbound call reassurance" && exit 1)
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "standalone license profile should be removed" && exit 1) || true
-          echo "$html" | grep -q '希望条件を伝えて、最適な求人を受け取る' || (echo "missing benefit-first booking CTA" && exit 1)
+          echo "$html" | grep -q '日時を選んで、最適な求人を受け取る' || (echo "missing action-aligned booking CTA" && exit 1)
           echo "$html" | grep -q '10分だけ話を聞く' && (echo "talk-first CTA should be removed" && exit 1) || true
           echo "$html" | grep -q 'id="t-future"' || (echo "missing t-future section" && exit 1)
           echo "$html" | grep -q 'data-story-id' || (echo "missing testimonial stories" && exit 1)

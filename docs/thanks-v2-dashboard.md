@@ -31,7 +31,7 @@ lead_form_submit → lead_conversion   → thanks_line_click → calendar_booked
 | イベント | GA4名案 | 用途 |
 |----------|---------|------|
 | `thanks_job_preview_view` | `thanks_jobs_view` | 求人カード表示 |
-| `thanks_job_preview_cta` | `thanks_jobs_cta` | 「希望条件を伝えて、最適な求人を受け取る」タップ |
+| `thanks_job_preview_cta` | `thanks_jobs_cta` | 「日時を選んで、最適な求人を受け取る」タップ |
 | `thanks_job_intent_select` | `thanks_jobs_intent` | 比べたい軸切替 |
 | `thanks_job_card_click` | `thanks_jobs_card` | 求人カードタップ |
 | `thanks_booking_recommended_complete` | `booking_complete` | 予約完了（重複計測注意） |

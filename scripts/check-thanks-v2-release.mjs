@@ -71,7 +71,7 @@ const requiredStrings = [
   ["cvr-story-mount", "ストーリーマウント"],
   ["非公開求人の全文", "非公開求人全文表記"],
   ["LINEで求人全文を受け取る", "LINE先行CTA（求人全文ベネフィット）"],
-  ["希望条件を伝えて、最適な求人を受け取る", "booking benefit CTA"],
+  ["日時を選んで、最適な求人を受け取る", "booking CTA（文言=行動の一致）"],
   ["t-hero__cta-wrap", "hero inline CTA block"],
   ["id=\"line-cta-hero\"", "hero LINE CTA"],
   ["data-line-position=\"dock\"", "dock LINE CTA position attr"],
