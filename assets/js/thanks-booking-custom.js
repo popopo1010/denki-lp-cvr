@@ -258,9 +258,6 @@
   document.body.classList.add("is-awaiting-booking");
   pushDL("thanks_booking_context", { has_tel: hasTel ? 1 : 0 });
 
-  var wrap = document.querySelector(".t-cal__widget-wrap");
-  if (wrap) wrap.style.display = "none";
-
   var visibleDays = Number(window.BOOKING_VISIBLE_DAYS) || 3;
   var fetchDays = Number(window.BOOKING_FETCH_DAYS) || 14;
   var dayOffset = 0;

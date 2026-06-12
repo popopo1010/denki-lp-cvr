@@ -268,14 +268,14 @@ jobs:
           fi
           bash scripts/verify-wp-legacy-redirects.sh
           echo "$html" | grep -q 'thanks-page-context.js?v=27' || (echo "missing thanks-page-context v=27" && exit 1)
-          echo "$html" | grep -qE 'thanks-page\.css\?v=54' || (echo "missing thanks-page.css v=54" && exit 1)
+          echo "$html" | grep -qE 'thanks-page\.css\?v=55' || (echo "missing thanks-page.css v=55" && exit 1)
           echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
           echo "$html" | grep -q 'thanks-job-preview.js?v=19' || (echo "missing job preview v=19" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)
           echo "$html" | grep -q 'thanks-v2-shared.js?v=7' || (echo "missing thanks-v2-shared v=7" && exit 1)
           echo "$html" | grep -q 'family=Noto+Sans+JP:wght@400;700' || (echo "missing noto 400+700 fonts" && exit 1)
           echo "$html" | grep -q 'thanks-booking-bootstrap.js?v=18' || (echo "missing booking bootstrap v=18" && exit 1)
-          echo "$html" | grep -qE 'thanks-booking-custom\.js\?v=36' || (echo "missing booking custom v=36" && exit 1)
+          echo "$html" | grep -qE 'thanks-booking-custom\.js\?v=37' || (echo "missing booking custom v=37" && exit 1)
           echo "$html" | grep -q 'thanks-social-meta' || (echo "missing social strip profile mount" && exit 1)
           echo "$html" | grep -q 'id="t-cal-panel"' || (echo "missing calendar collapse panel" && exit 1)
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "license profile should be bundled in deferred" && exit 1) || true

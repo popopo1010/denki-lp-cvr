@@ -2129,55 +2129,10 @@ html {
   color: #c04a06;
 }
 
-.t-cal__widget-wrap {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 10px 6px 12px;
-  overflow: hidden;
-}
-
-.t-cal__scroll-hint {
-  display: none;
-  font-size: 12px;
-  font-weight: 700;
-  color: #64748b;
-  text-align: center;
-  margin: 0 0 8px;
-}
-
-.t-cal__widget-scaler {
-  width: 100%;
-  overflow: hidden;
-  min-height: 480px;
-}
-
-.t-cal__widget {
-  min-height: 520px;
-  transform-origin: top left;
-}
-
-#timerex_calendar {
-  width: 640px;
-  max-width: none;
-}
-
-#timerex_calendar iframe {
-  width: 640px !important;
-  min-width: 640px !important;
-  min-height: 520px !important;
-  border: 0 !important;
-  display: block;
-}
-
-/* 広い画面はスケール1でそのまま3日表示 */
+/* 広い画面はそのまま3日表示 */
 @media (min-width: 720px) {
   .t-s {
     max-width: 720px !important;
-  }
-
-  .t-cal__widget-scaler {
-    min-height: 540px;
   }
 }
 
