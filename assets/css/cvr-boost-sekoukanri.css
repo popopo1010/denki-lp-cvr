@@ -506,6 +506,11 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 .cvr-exit-modal__close { display: block; width: 100%; padding: 8px; border: none; background: transparent; color: #999; font-size: 12px; cursor: pointer; }
 
 /* ===== グローバル ===== */
+/* ダークモード端末（Samsung Internet等の強制ダーク）でページ地色が暗転し、
+   sticky CTAバーの透過部分から暗色が透けてボタンが見えなくなった事故あり
+   (docs/release-incidents.md 2026-06-12)。地色は常に白で固定する。 */
+:root { color-scheme: only light; }
+html, body { background-color: #fff; }
 .c-button:active, .p-firstButton:active { transform: scale(.97); }
 .c-next-button:active { transform: translateY(3px) scale(.98); }
 html { scroll-behavior: smooth; }
@@ -809,7 +814,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     position: sticky;
     bottom: 0;
     z-index: 5;
-    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 28%);
+    /* フェードは padding-top の10px以内で完結させ、ボタン本体は必ず不透明な
+       白の上に乗せる（28%だと背面が白以外のときボタンが透けて視認性が落ちる） */
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 10px);
     padding-top: 10px;
   }
   body.lp-input-step #step06 .c-nextLinkButton {

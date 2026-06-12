@@ -14,6 +14,7 @@
 - LP/meta-LP の critical CSS に `:root{color-scheme:only light}html,body{background-color:#fff}` を追加 + `<meta name="color-scheme" content="only light">`（強制ダーク自動反転のオプトアウト）
 - `cvr-boost-denkikouji.css` にも同バックストップを追加し、sticky バーのフェードを padding 内の10pxに短縮（ボタン本体は常に不透明な白の上）
 - CSS `?v=` v20260701 → v20260713（HTML×2 / deploy.yml / check / e2e / verify-production-release.sh を同一コミットで同期）
+- **水平展開:** 同一パターンだった `sekoukanri/index.html` + `cvr-boost-sekoukanri.css` にも同じ修正を適用（?v= v20260713、deploy.yml の verify_sekoukanri_lp に color-scheme チェックを追加）
 
 **再発防止:**
 - `check-denkikouji-release.mjs` に **ダークモード回帰チェック6項目**（color-scheme meta / 地色白 critical CSS / CSS バックストップ / sticky バー不透明背景）を追加。リリース前に必ず実行
