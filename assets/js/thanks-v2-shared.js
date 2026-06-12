@@ -124,7 +124,19 @@
     dk.fetchJson("data/thanks-job-previews-" + family + ".json").catch(function () {});
   };
 
+  dk.LINE_CLICKED_KEY = "dk_line_clicked";
+  dk.hasLineClicked = function () {
+    try {
+      return sessionStorage.getItem(dk.LINE_CLICKED_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // 後から注入されるLINEリンク（予約完了カード等）も拾えるよう document 委譲で計測
   dk.bindThanksLineClicks = function () {
+    if (document._dkLineDelegated) return;
+    document._dkLineDelegated = true;
     var lpSlug = dk.getLpSlug() || "unknown";
     var qualified = false;
     try {
@@ -135,24 +147,35 @@
       }
     } catch (e0) {}
 
-    function onLineClick() {
-      var payload = {
-        lp_slug: lpSlug,
-        thanks_qualified: qualified,
-        registration_step: "line_friend_add",
-        page_type: "thanks-v2"
-      };
-      dk.pushDL("thanks_line_click", payload);
-      dk.pushDL("thanks_full_registration_click", payload);
-    }
-
-    document
-      .querySelectorAll('a[href*="lin.ee"], a[href*="line.me"], #line-cta')
-      .forEach(function (link) {
-        if (link._dkLineBound) return;
-        link._dkLineBound = true;
-        link.addEventListener("click", onLineClick);
-      });
+    document.addEventListener(
+      "click",
+      function (ev) {
+        var t = ev.target;
+        var link =
+          t && t.closest
+            ? t.closest('a[href*="lin.ee"], a[href*="line.me"]')
+            : null;
+        if (!link) return;
+        var payload = {
+          lp_slug: lpSlug,
+          thanks_qualified: qualified,
+          registration_step: "line_friend_add",
+          page_type: "thanks-v2",
+          line_cta_position:
+            link.getAttribute("data-line-position") || link.id || "unknown",
+          booked: document.body.classList.contains("is-booked") ? 1 : 0
+        };
+        dk.pushDL("thanks_line_click", payload);
+        dk.pushDL("thanks_full_registration_click", payload);
+        try {
+          sessionStorage.setItem(dk.LINE_CLICKED_KEY, "1");
+        } catch (e1) {}
+        try {
+          document.dispatchEvent(new CustomEvent("thanks_line_cta_click"));
+        } catch (e2) {}
+      },
+      true
+    );
   };
 
   if (document.readyState === "loading") {

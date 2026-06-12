@@ -9,7 +9,7 @@
 <script>window.dataLayer=window.dataLayer||[];</script>
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KV525PZ');</script>
 <!-- End Google Tag Manager -->
-<script src="../../../../assets/js/thanks-v2-shared.js?v=7"></script>
+<script src="../../../../assets/js/thanks-v2-shared.js?v=8"></script>
 <script>window.dkThanks&&window.dkThanks.captureTelNameFromQs();</script>
 <script src="../../../../assets/js/thanks-page-context.js?v=27" defer></script>
 <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap"></noscript>
-<link rel="stylesheet" href="../../../../assets/css/thanks-page.css?v=55">
+<link rel="stylesheet" href="../../../../assets/css/thanks-page.css?v=56">
 </head>
 <body class="wp-singular page-template-default page p-pageThanks wp-theme-original-thema thanks-flow">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KV525PZ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -39,8 +39,8 @@
     <p class="t-hero__eyebrow">あなた向けのご案内</p>
     <ol class="t-hero__flow" aria-label="このあとの流れ">
       <li class="is-done"><span>①</span>登録完了</li>
-      <li class="is-cur"><span>②</span>10分相談枠</li>
-      <li><span>③</span>LINE全文</li>
+      <li class="is-cur" data-step="line"><span>②</span>LINE受取口</li>
+      <li data-step="booking"><span>③</span>10分相談枠</li>
     </ol>
     <h2 id="thanks-hero-title">3件、届きました</h2>
     <div class="t-hero__body" id="thanks-hero-sub">
@@ -53,12 +53,42 @@
         </div>
       </div>
       <div class="t-hero__cta-wrap">
-        <button type="button" class="t-hero__cta" data-scroll-target="#t-calendar" data-cta-location="hero">希望条件を伝えて、最適な求人を受け取る（無料）</button>
-        <p class="t-hero__cta-note">10分相談枠（約1分）→ その後<strong>LINEで全文受取</strong>（30秒）</p>
+        <a href="https://lin.ee/PzFJp7H" class="t-hero__cta t-hero__cta--line" id="line-cta-hero" target="_blank" rel="noopener" data-line-position="hero">LINEで受け取り口をつくる（30秒・無料）</a>
+        <p class="t-hero__cta-note">そのあと<strong>10分相談枠</strong>の日時を選択（約1分）。お電話後に<strong>非公開求人の全文</strong>がLINEへ届きます</p>
+        <p class="t-hero__skip"><button type="button" class="t-hero__skip-link" data-scroll-target="#t-calendar" data-cta-location="hero">お急ぎの方は、先に電話の日時を選ぶ</button></p>
       </div>
       <p class="t-hero__more"><a href="#t-jobs-preview">他2件も下に表示しています</a></p>
       <p class="t-hero__reassure">押し売り・長い面談は<strong>当社では当てはまりません</strong>（10分 · 合わなければその場で終了）</p>
     </div>
+  </div>
+
+  <!-- LINE（②受け取り口を先に開設 · ロックなし） -->
+  <div class="t-line" id="line-section">
+    <div class="t-line__head t-sec-head t-sec-head--line">
+      <div class="t-sec-head__illus t-sec-head__illus--line" aria-hidden="true">
+        <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#f0fdf4"/><rect x="12" y="14" width="32" height="26" rx="6" fill="#fff" stroke="#06c755" stroke-width="1.5"/><path d="M18 22h20M18 28h14M18 34h10" stroke="#86efac" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="18" r="8" fill="#06c755"/><path d="M37 18h6M40 15v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="t-sec-head__body">
+    <span class="t-line__badge" id="line-section-badge">② いま開設できます（30秒）</span>
+    <h3>まず、全文の受け取り口を<strong>LINE</strong>でつくる</h3>
+      </div>
+    </div>
+    <p class="t-line__gate" id="line-gate-msg">社名・条件の<strong>全文</strong>は、お電話で条件をすり合わせた後に<strong>このLINEへ</strong>届きます。先に受け取り口だけ開設しておくとスムーズです。<strong>見るだけOK</strong></p>
+    <p class="t-line__sub">開設したら、次は「③ 10分相談枠」の日時選択へ（約1分）。</p>
+    <div class="t-bene" style="margin-bottom:16px;text-align:left">
+      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#06c755"/></svg><span>ヒアリング後、<strong>非公開求人の全文</strong>が届く</span></div>
+      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#06c755"/></svg><span>現職と<strong>並べて比較</strong>できる形式でお届け</span></div>
+      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#06c755"/></svg><span><strong>見るだけOK</strong> · 転職しなくても大丈夫</span></div>
+    </div>
+    <a href="https://lin.ee/PzFJp7H" class="t-line__btn" id="line-cta" target="_blank" rel="noopener" data-line-position="section">
+      <svg class="t-line__btn-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="#fff"/></svg>
+      <span class="t-line__btn-text">
+        <span class="t-line__btn-main">LINEで受け取り口をつくる</span>
+        <span class="t-line__btn-sub">30秒 · 無料 · 見るだけOK</span>
+      </span>
+    </a>
+    <p class="t-line__note">友だち追加のみ · しつこい配信はしません</p>
+    <p class="t-line__next" id="line-next-step" hidden>受け取り口の開設ありがとうございます。次は<button type="button" class="t-line__next-link" data-scroll-target="#t-calendar" data-cta-location="line-next">③ 電話の日時を選ぶ（約1分）</button></p>
   </div>
 
   <aside class="t-social-strip" id="thanks-social-strip" aria-label="同じ資格の体験談">
@@ -116,10 +146,10 @@
         <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#eef2fa"/><rect x="16" y="12" width="24" height="32" rx="4" fill="#fff" stroke="#314c85" stroke-width="1.5"/><circle cx="28" cy="36" r="8" fill="#eef2fa" stroke="#314c85" stroke-width="1.5"/><path d="M25 36c0-1.7 1.3-3 3-3s3 1.3 3 3-1.3 3-3 3-3-1.3-3-3z" fill="#314c85"/><path d="M22 18h12" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/></svg>
       </div>
       <div class="t-sec-head__body">
-      <p class="t-cal__step">あと1ステップ · 約1分 · 無料</p>
+      <p class="t-cal__step">③ 最後のステップ · 約1分 · 無料</p>
       <p class="t-cal__urgency">面談枠は直近から埋まります。希望の時間はお早めに</p>
       <h3>希望条件を伝える日時を選ぶ</h3>
-      <p class="t-cal__head-lead">登録内容をもとに、あなた向けの求人を再精査します。お電話で条件をすり合わせた方に、非公開求人の全文とプレミアム案内をお届けします。</p>
+      <p class="t-cal__head-lead">登録内容をもとに、あなた向けの求人を再精査します。お電話で条件をすり合わせた方に、非公開求人の全文とプレミアム案内を<strong>LINEの受け取り口</strong>へお届けします。</p>
       </div>
       <button type="button" class="t-cal__toggle" id="t-cal-toggle" aria-expanded="true" aria-controls="t-cal-panel">
         <span class="t-cal__toggle-label">日時の選択を閉じる</span>
@@ -144,35 +174,7 @@
       <p class="t-cal__note">※ 予約がない方に限り、平日9–18時に<strong>1回だけ</strong>日程のご連絡をすることがあります。しつこい勧誘はありません。不要な場合はその場でお断りください。</p>
     </div>
   </div>
-  <script src="../../../../assets/js/thanks-booking-custom.js?v=37" defer></script>
-
-  <!-- LINE（予約後に全文の受取口） -->
-  <div class="t-line" id="line-section">
-    <div class="t-line__head t-sec-head t-sec-head--line">
-      <div class="t-sec-head__illus t-sec-head__illus--line" aria-hidden="true">
-        <svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="26" fill="#f0fdf4"/><rect x="12" y="14" width="32" height="26" rx="6" fill="#fff" stroke="#06c755" stroke-width="1.5"/><path d="M18 22h20M18 28h14M18 34h10" stroke="#86efac" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="18" r="8" fill="#06c755"/><path d="M37 18h6M40 15v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </div>
-      <div class="t-sec-head__body">
-    <span class="t-line__badge" id="line-section-badge">③ 予約後に開きます</span>
-    <h3>全文の受け取り口は<strong>LINE</strong>（30秒）</h3>
-      </div>
-    </div>
-    <p class="t-line__gate" id="line-gate-msg">LPと同じ流れです。日時を選ぶとLINE登録が開き、ヒアリング後の<strong>全文</strong>の受取口になります。<strong>見るだけOK</strong></p>
-    <p class="t-line__sub">条件すり合わせ後に全文とプレミアム案内が届きます。LINEは受け取り口です。</p>
-    <div class="t-bene" style="margin-bottom:16px;text-align:left">
-      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#06c755"/></svg><span>ヒアリング後、<strong>非公開求人の全文</strong>が届く</span></div>
-      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#06c755"/></svg><span>現職と<strong>並べて比較</strong>できる形式でお届け</span></div>
-      <div class="t-bene__i"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#06c755"/></svg><span><strong>見るだけOK</strong> · 転職しなくても大丈夫</span></div>
-    </div>
-    <a href="https://lin.ee/PzFJp7H" class="t-line__btn" id="line-cta" target="_blank" rel="noopener">
-      <svg class="t-line__btn-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="#fff"/></svg>
-      <span class="t-line__btn-text">
-        <span class="t-line__btn-main">LINEで全文を受け取る</span>
-        <span class="t-line__btn-sub">30秒 · 無料</span>
-      </span>
-    </a>
-    <p class="t-line__note">友だち追加のみ · しつこい勧誘はしません</p>
-  </div>
+  <script src="../../../../assets/js/thanks-booking-custom.js?v=38" defer></script>
 
   <details class="t-future-collapse" id="t-future">
     <summary>比較の材料について — 詳しく読む（任意）</summary>
@@ -449,10 +451,10 @@
 </footer>
 
 <nav class="t-dock is-visible" id="thanks-dock" aria-label="クイック操作">
-  <button type="button" class="t-dock__btn t-dock__btn--book" id="thanks-dock-book" data-scroll-target="#t-calendar">希望条件を伝えて、最適な求人を受け取る（無料）</button>
-  <a href="https://lin.ee/PzFJp7H" class="t-dock__btn t-dock__btn--line" id="thanks-dock-line" target="_blank" rel="noopener" hidden>LINEで全文を受け取る</a>
+  <a href="https://lin.ee/PzFJp7H" class="t-dock__btn t-dock__btn--line" id="thanks-dock-line" target="_blank" rel="noopener" data-line-position="dock">LINEで受け取り口をつくる（30秒）</a>
+  <button type="button" class="t-dock__btn t-dock__btn--book" id="thanks-dock-book" data-scroll-target="#t-calendar" hidden>希望条件を伝えて、最適な求人を受け取る（無料）</button>
 </nav>
 
-<script src="../../../../assets/js/thanks-v2-deferred.js?v=14" defer></script>
+<script src="../../../../assets/js/thanks-v2-deferred.js?v=15" defer></script>
 </body>
 </html>

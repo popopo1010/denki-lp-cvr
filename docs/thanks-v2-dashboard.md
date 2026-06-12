@@ -8,10 +8,14 @@ GA4 プロパティ: `G-3J55ZMS7K1` · GTM: `GTM-KV525PZ`
 ## 1. ファネル定義（ダッシュボードの芯）
 
 ```
-LP送信          サンクス(qualified)    予約完了           LINE解放           LINEクリック
-lead_form_submit → lead_conversion   → calendar_booked → thanks_line_step_revealed → thanks_line_click
-     ①                  ②                  ③                    ④                      ⑤
+LP送信          サンクス(qualified)    LINEクリック        予約完了
+lead_form_submit → lead_conversion   → thanks_line_click → calendar_booked
+     ①                  ②                  ⑤                  ③
 ```
+
+> **2026-06-12〜 LINE先行フロー:** LINEロック廃止により ⑤（LINEクリック）は ③（予約）の**前後どちらでも**発生する。
+> `thanks_line_click` の `line_cta_position`（hero / section / dock / booking_done）と `booked`（0/1）で分解する。
+> `thanks_line_step_revealed`（④）は予約完了時に発火するイベントとして継続（互換維持）。
 
 | 段階 | イベント（dataLayer） | GA4推奨名 | 意味 | 広告CV |
 |------|----------------------|-----------|------|--------|
@@ -40,10 +44,10 @@ lead_form_submit → lead_conversion   → calendar_booked → thanks_line_step_
 |-----|--------|-------------|
 | **登録CVR** | ② / ① | 広告→フォーム（LP側） |
 | **サンクス到達率** | ② / ① | リダイレクト・計測漏れチェック（≒100%想定） |
-| **予約率** | ③ / ② | **サンクス最重要**（主アクション） |
-| **LINE解放率** | ④ / ③ | 予約後UI（≒100%想定） |
-| **予約→LINE率** | ⑤ / ③ | **LINE KPI**（ゲート後） |
-| **サンクス→LINE率** | ⑤ / ② | 全体通し（電話を飛ばす人は含まない） |
+| **予約率** | ③ / ② | **サンクス最重要**（主アクション・LINE先行で沈まないか監視） |
+| **サンクス→LINE率** | ⑤ / ② | **LINE KPI**（LINE先行後の主指標・上限が予約数でなくなった） |
+| **LINE→予約率** | ③ / ⑤(booked=0) | LINE開設者がそのまま予約に進むか（ドック切替の効果） |
+| **予約後LINE率** | ⑤(booked=1) / ③ | 予約完了カード・LINEセクションの回収力 |
 | **qualified率** | `thanks_qualified=true` / 全thanks_view | 直アクセスノイズ |
 
 **セグメント必須**: `lp_slug`（denkikouji / sekoukanri 等）、`deviceCategory`、`sessionSource`
