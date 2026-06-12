@@ -63,13 +63,13 @@ async function testThanksAssets(page) {
     ],
     [
       "thanks-booking-custom.js",
-      htmlHasAny(html, ["thanks-booking-custom.js?v=38", "thanks-booking-custom.js?v=39"])
+      htmlHasAny(html, ["thanks-booking-custom.js?v=39", "thanks-booking-custom.js?v=40"])
     ],
     ["thanks-job-preview.js?v=19", html.includes("thanks-job-preview.js?v=19")],
     ["thanks-v2-deferred.js?v=15", html.includes("thanks-v2-deferred.js?v=15")],
     ["t-cal__toggle", html.includes("t-cal__toggle")],
     ["10分相談枠", html.includes("10分相談枠")],
-    ["LINEで受け取り口をつくる", html.includes("LINEで受け取り口をつくる")],
+    ["LINEで求人全文を受け取る", html.includes("LINEで求人全文を受け取る")],
     ["非公開求人の全文", html.includes("非公開求人の全文")],
     ["line-gate-msg", html.includes('id="line-gate-msg"')],
     [

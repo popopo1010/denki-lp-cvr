@@ -275,7 +275,7 @@ jobs:
           echo "$html" | grep -q 'thanks-v2-shared.js?v=8' || (echo "missing thanks-v2-shared v=8" && exit 1)
           echo "$html" | grep -q 'family=Noto+Sans+JP:wght@400;700' || (echo "missing noto 400+700 fonts" && exit 1)
           echo "$html" | grep -q 'thanks-booking-bootstrap.js?v=18' || (echo "missing booking bootstrap v=18" && exit 1)
-          echo "$html" | grep -qE 'thanks-booking-custom\.js\?v=38' || (echo "missing booking custom v=38" && exit 1)
+          echo "$html" | grep -qE 'thanks-booking-custom\.js\?v=39' || (echo "missing booking custom v=39" && exit 1)
           echo "$html" | grep -q 'thanks-social-meta' || (echo "missing social strip profile mount" && exit 1)
           echo "$html" | grep -q 'id="t-cal-panel"' || (echo "missing calendar collapse panel" && exit 1)
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "license profile should be bundled in deferred" && exit 1) || true

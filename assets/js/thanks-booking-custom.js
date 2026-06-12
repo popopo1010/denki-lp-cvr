@@ -88,7 +88,7 @@
       (hasLineClicked()
         ? '<p class="t-booking-done__line-done">LINEの受け取り口は開設済みです。お電話後に全文が届きます</p>'
         : '<a href="https://lin.ee/PzFJp7H" class="t-booking-done__line" target="_blank" rel="noopener" data-line-position="booking_done">' +
-          '<span class="t-booking-done__line-main">LINEで受け取り口をつくる</span>' +
+          '<span class="t-booking-done__line-main">LINEで求人全文を受け取る</span>' +
           '<span class="t-booking-done__line-sub">30秒 · 無料</span></a>') +
       "</div>"
     );
