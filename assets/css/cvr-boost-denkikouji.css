@@ -902,6 +902,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 28%);
     padding-top: 10px;
   }
+  /* キーボード表示中はstickyを解除（iOSでバーが入力欄・フッターに被さる）
+     検知は app.js の lp-kb-open。経緯: docs/release-incidents.md 2026-06-12 */
+  body.lp-input-step.lp-kb-open .c-nextLink {
+    position: static;
+    background: none;
+  }
   body.lp-input-step #step06 .c-nextLinkButton {
     flex: 0 0 auto;
     width: auto;

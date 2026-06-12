@@ -1144,4 +1144,21 @@
       loadCvrBoostDeferred();
     }
   });
+
+  // キーボード表示中（入力欄フォーカス中）は body.lp-kb-open を立てる。
+  // iOSでviewportが縮むと sticky CTA（.c-nextLink）が入力欄・フッターに被さるため、
+  // CSS側でstickyを解除する（docs/release-incidents.md 2026-06-12）
+  document.addEventListener("focusin", (e) => {
+    if (e.target && e.target.matches && e.target.matches("input, select, textarea")) {
+      document.body.classList.add("lp-kb-open");
+    }
+  });
+  document.addEventListener("focusout", () => {
+    setTimeout(() => {
+      const ae = document.activeElement;
+      if (!ae || !ae.matches || !ae.matches("input, select, textarea")) {
+        document.body.classList.remove("lp-kb-open");
+      }
+    }, 60);
+  });
 })();

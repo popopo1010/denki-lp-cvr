@@ -21,7 +21,7 @@ async function main() {
   const page = await browser.newPage({ ...devices["iPhone 13"], locale: "ja-JP" });
 
   const lpHtml = await (await page.request.get(`${BASE}/denkikouji/`)).text();
-  if (lpHtml.includes("cvr-boost-denkikouji.css?v20260701")) {
+  if (lpHtml.includes("cvr-boost-denkikouji.css?v20260702")) {
     pass("本番 CSS", "v20260701");
   } else if (lpHtml.match(/cvr-boost-denkikouji\.css\?v202606/)) {
     fail("本番 CSS", "v20260701 未反映（デプロイ待ち）");

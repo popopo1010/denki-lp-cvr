@@ -2,6 +2,19 @@
 
 再発防止用。リリース前は `docs/CV-LINE-playbook.md` のチェックリストと併用。
 
+## 2026-06-12 iOSキーボード表示中に固定CTAが入力欄・フッターに被さる
+
+**症状:** 実機iOS（Safari / 検索アプリ内ブラウザ）でLPの入力ステップ（郵便番号・氏名・携帯番号）にフォーカスしてキーボードが開くと、ボトムの「戻る＋次へ/送信」CTAバーが画面中央に浮き上がり、生まれ年入力やフッターリンク（プライバシーポリシー等）に重なって表示崩れ。**オーナー実機で再発報告（2回目）**。
+
+**原因:** `39ca1dc`（スマホUI密度調整）で入力ステップのCTAを `body.lp-input-step .c-nextLink { position: sticky; bottom: 0 }` 化。iOSはキーボード表示でvisual viewportが縮むため、stickyバーがキーボード上端に張り付き、ページ内容（入力欄・フッター）の上に被さる。`cvr-boost-denkikouji.css` / `cvr-boost-sekoukanri.css` の両方に同じ実装。デスクトップ・Androidでは再現しにくく、リリース前チェックをすり抜けた。
+
+**対応:** `app.js` に focusin/focusout で `body.lp-kb-open` を付け外しするキーボード検知を追加し、CSS側で `body.lp-input-step.lp-kb-open .c-nextLink { position: static }` としてキーボード表示中だけstickyを解除（CTAは入力欄の下の通常フローに戻る）。`app.js?v20260713`・両CSS `?v20260702` に bump、deploy.yml / verify-production-release.sh / check-denkikouji-release.mjs / e2e-denkikouji-lp.mjs の検証も同時更新。
+
+**再発防止:**
+- **`bottom: 0` の sticky / fixed 要素を入力UIと同じ画面に置くときは、キーボード表示中の挙動（`lp-kb-open` での解除）を必ずセットで実装する**。thanks-v2のドック（`thanks-dock`）はLINE/予約ボタンのみで入力欄がないため対象外だが、入力UIを足す場合は同じ対処が必要
+- スマホUI調整のコミット（密度・sticky化）は、**実機 or Playwright の `--device` + input focus 状態**でスクリーンショットを確認してからリリースする（39ca1dc はクマ消失に続き2件目のインシデント源）
+- 検知ロジックは `app.js` 末尾の `lp-kb-open`、解除CSSは各 `cvr-boost-*.css` の sticky ブロック直後にある
+
 ## 2026-06-11 thanks-v2 の ?v= bump で Deploy 検証だけ失敗
 
 **症状:** thanks-v2 改修（カレンダーデフォルト展開等）の main マージ後、`Deploy to Xserver` run 253 が「Verify deployment」で failure。rsync 自体は成功しており本番ファイルは更新済み（検証未通過のまま）。
