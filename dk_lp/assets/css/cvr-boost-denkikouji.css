@@ -1,0 +1,938 @@
+/* ===== ヒーローバッジ ===== */
+.cvr-hero-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 16px;
+  margin: 8px 0;
+  background: linear-gradient(135deg, #ff5966, #ff8a65);
+  border-radius: 8px;
+  color: #fff;
+}
+.cvr-hero-badge__tag {
+  font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,.25);
+  padding: 2px 8px; border-radius: 4px;
+}
+.cvr-hero-badge__count { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.cvr-hero-badge__unit { font-size: 14px; font-weight: 700; }
+
+/* ===== step-first: 3秒FV（木下流・信頼帯はフォーム以降） ===== */
+
+/* ===== 大分類不安の3ピル（4段階コピー） ===== */
+.cvr-objection-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0 8px;
+  list-style: none;
+}
+.cvr-objection-pills li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+}
+.cvr-objection-pills li::before {
+  content: "✓";
+  font-size: 10px;
+}
+
+/* ===== マイクロコピー・ステップ理由 ===== */
+.cvr-micro-copy { text-align: center; font-size: 12px; color: #888; margin-top: 12px; line-height: 1.5; }
+.cvr-step-reason { text-align: center; font-size: 11px; color: #888; margin: 4px 0; padding: 0 8px; line-height: 1.5; }
+.cvr-step-reward {
+  text-align: center; font-size: 11px; color: #314c85;
+  margin: 4px 0 10px; padding: 6px 10px; line-height: 1.45;
+  background: #f0f4fa; border: 1px solid #dce4f0; border-radius: 8px;
+}
+.cvr-step-reward strong { color: #ff5966; font-weight: 700; }
+.cvr-step-urgency { text-align: center; font-size: 11px; color: #b45309; margin: 6px 0 8px; font-weight: 600; line-height: 1.4; }
+.cvr-step-opp { text-align: center; font-size: 12px; color: #314c85; margin: 10px 0 4px; font-weight: 600; line-height: 1.45; }
+.cvr-cta-proof {
+  text-align: center;
+  font-size: 11px;
+  color: #555;
+  font-weight: 600;
+  margin: 10px 0 4px;
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  line-height: 1.4;
+}
+#step05 .cvr-almost-done {
+  margin: 8px 0 4px;
+}
+#step05 .cvr-step-reward {
+  margin-bottom: 12px;
+}
+#step05 .p-step05__message {
+  display: none;
+}
+#step05 .p-step06__formGroup {
+  margin-top: 10px;
+}
+#step05 .p-step06__formGroup dt {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+#step05 .p-step06__name {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding-right: 44px;
+}
+#step05 .p-step06__name .wpcf7-form-control-wrap {
+  flex: 1;
+  min-width: 0;
+  display: block;
+}
+#step05 .p-step06__name .c-text-box {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 14px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+#step05 .c-error-message {
+  margin-bottom: 4px;
+}
+
+.p-step06__birthday--year-only {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  width: fit-content;
+  max-width: 100%;
+}
+.p-step06__birthday--year-only .p-step06__birthdayYear,
+.p-step06__birthday--year-only .cvr-year-field {
+  flex: 0 0 5.25rem;
+  width: 5.25rem;
+  max-width: 5.25rem;
+}
+.p-step06__birthday--year-only .wpcf7-form-control-wrap {
+  display: block;
+  width: 100%;
+}
+.p-step06__birthday--year-only .c-select-box02::after,
+.p-step06__birthday--year-only .c-select-box02::before {
+  content: none !important;
+  display: none !important;
+}
+.p-step06__birthday--year-only .c-text-box,
+.p-step06__birthday--year-only .cvr-year-input {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 10px;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #fff;
+  text-align: center;
+  letter-spacing: 0.04em;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+  appearance: none;
+}
+.p-step06__birthday--year-only input[type="number"]::-webkit-inner-spin-button,
+.p-step06__birthday--year-only input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.p-step06__birthday--year-only .suffix {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  flex-shrink: 0;
+}
+.cvr-birth-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.cvr-multi-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #64748b;
+  margin: 0 0 8px;
+  padding: 0 12px;
+  line-height: 1.5;
+}
+
+.cvr-progress {
+  display: none;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.cvr-progress.is-visible {
+  display: block;
+}
+
+.cvr-progress__track {
+  height: 6px;
+  background: #e8edf5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cvr-progress__bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #314c85, #5c6bc0);
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+.cvr-progress__label {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #314c85;
+  line-height: 1.4;
+}
+
+.cvr-thanks-bridge {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #314c85;
+  line-height: 1.5;
+  text-align: center;
+}
+
+body.lp-form-step .cvr-floating-cta {
+  display: none !important;
+}
+
+.cvr-testimonials__lead {
+  font-size: 12px; color: #666; text-align: center;
+  margin: -8px 0 16px; padding: 0 8px; line-height: 1.5;
+}
+.cvr-specialty-badge {
+  display: block; text-align: center; margin: 8px 0 4px;
+  font-size: 12px; font-weight: 800; color: #314c85;
+  background: #e8eef7; border-radius: 20px; padding: 4px 12px;
+  width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto;
+}
+.cvr-fv-note {
+  text-align: center; font-size: 11px; color: #666;
+  margin: 0 0 8px; line-height: 1.45; padding: 0 8px;
+}
+.cvr-lp-hub {
+  text-align: center; font-size: 11px; color: #666;
+  margin: 0 0 10px; line-height: 1.5; padding: 0 8px;
+}
+.cvr-lp-hub a { color: #314c85; font-weight: 700; text-decoration: underline; }
+
+/* ===== 進捗演出 ===== */
+.cvr-almost-done { text-align: center; margin: 16px 0 8px; }
+.cvr-almost-done p {
+  display: inline-block; padding: 6px 20px;
+  background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+  border-radius: 20px; font-size: 13px; font-weight: 700; color: #314c85;
+}
+.cvr-final-step {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin: 16px 0 8px; padding: 10px 16px;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 10px;
+}
+.cvr-final-step__icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; background: #fff; border-radius: 50%;
+}
+.cvr-final-step p { font-size: 14px; font-weight: 700; color: #2e7d32; }
+
+/* ===== 電話番号入力 ===== */
+.p-step07__tel { position: relative !important; margin-top: 4px; }
+#step06 .p-step07__tel .c-text-box,
+#step06 .p-step07__tel input {
+  width: 100%;
+  height: 56px;
+  min-height: 56px;
+  padding: 0 16px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+#step06 .p-step07__formGroup dt {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.cvr-tel-notice {
+  position: absolute; top: -9px; right: 4px;
+  padding: 3px 10px; border-radius: 50px;
+  background: #f5f4f2; color: #314c85;
+  font-weight: 600; font-size: 11px; line-height: 15px;
+  z-index: 2; pointer-events: none;
+}
+.cvr-tel-reassurance { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #777; }
+.cvr-tel-reassurance svg { flex-shrink: 0; }
+
+/* ===== PP同意テキスト ===== */
+p.cvr-pp-text { text-align: center; font-size: 9px !important; color: #bbb !important; margin-top: 6px; line-height: 1.4; }
+p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
+
+/* ===== 利用者の声 ===== */
+/* content-visibility: ファーストビュー外なので初期描画スキップ → LCP改善
+   contain-intrinsic-size: スクロール前のレイアウト確保用 */
+.cvr-testimonials {
+  margin-top: 32px;
+  padding: 0 4px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 800px;
+}
+.cvr-testimonials__title {
+  font-size: 16px; font-weight: 700; text-align: center;
+  margin-bottom: 16px; color: #333; padding-bottom: 8px;
+}
+.cvr-testimonials__title::after {
+  content: ""; display: block; width: 40px; height: 3px;
+  background: #ff5966; margin: 8px auto 0; border-radius: 2px;
+}
+.cvr-testimonial {
+  background: #fff; border: 1px solid #e8e8e8; border-radius: 12px;
+  padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.cvr-testimonial__header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.cvr-testimonial__avatar {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #314c85, #5c6bc0);
+  color: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.cvr-testimonial__meta { display: flex; flex-direction: column; flex: 1; }
+.cvr-testimonial__name { font-size: 13px; font-weight: 700; color: #333; }
+.cvr-testimonial__role { font-size: 11px; color: #888; }
+.cvr-testimonial__stars { color: #FFC107; font-size: 14px; letter-spacing: 1px; }
+.cvr-testimonial__text { font-size: 13px; line-height: 1.7; color: #555; }
+.cvr-testimonial__text strong { color: #ff5966; }
+
+/* ===== FAQ ===== */
+.cvr-faq {
+  margin-top: 32px;
+  margin-bottom: 24px;
+  padding: 0 4px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+.cvr-faq__title { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 16px; color: #333; }
+.cvr-faq__title::after {
+  content: ""; display: block; width: 40px; height: 3px;
+  background: #314c85; margin: 8px auto 0; border-radius: 2px;
+}
+.cvr-faq__item { border: 1px solid #e8e8e8; border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: #fff; }
+.cvr-faq__item summary {
+  padding: 14px 40px 14px 16px; font-size: 13px; font-weight: 700;
+  color: #333; cursor: pointer; position: relative; line-height: 1.5; list-style: none;
+}
+.cvr-faq__item summary::-webkit-details-marker { display: none; }
+.cvr-faq__item summary::after {
+  content: "+"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 18px; color: #999;
+}
+.cvr-faq__item[open] summary::after { content: "-"; }
+.cvr-faq__item p { padding: 0 16px 14px; font-size: 12px; line-height: 1.7; color: #666; }
+
+/* ===== フッター ===== */
+.footer-dark { padding: 16px; }
+.footer-dark .div-block-96 { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-bottom: 12px; }
+.footer-dark .link { font-size: 11px; color: rgba(255,255,255,.7); text-decoration: underline; }
+.footer-dark .link:hover { color: #fff; }
+.footer-dark .copyright { font-size: 10px; color: rgba(255,255,255,.5); margin-top: 8px; }
+
+/* ===== フォーム共通 ===== */
+.c-next-button span:first-child { font-size: 15px; font-weight: 700; }
+.c-nextLinkButton { font-size: 12px !important; color: #bbb !important; text-decoration: none !important; }
+
+/* 送信CTA: 透明inputでタップ領域確保・ラベルは__textのみ表示 */
+.c-submit-button {
+  display: flex !important;
+  position: relative !important;
+  flex: 1;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 52px;
+  max-width: none;
+  padding: 12px 44px 12px 16px !important;
+}
+.c-submit-button input,
+.c-submit-button input.wpcf7-submit,
+#step-last-button input,
+#submit-button {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  font-size: 0 !important;
+  color: transparent !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer;
+  z-index: 2;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.c-submit-button__text {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.4;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.c-submit-button__text span {
+  font-size: 15px;
+}
+
+/* クマアイコン */
+.cvr-kuma-wrap { position: relative; }
+.cvr-kuma-wrap > .cvr-kuma { position: absolute; right: -4px; top: 0; z-index: 3; }
+.cvr-kuma { text-align: right; margin-top: -10px; margin-bottom: -10px; pointer-events: none; }
+.cvr-kuma img { width: 48px; height: auto; animation: cvr-kumaWave 2s ease-in-out infinite; }
+@keyframes cvr-kumaWave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-6px); }
+}
+
+/* FVボタン */
+.p-firstButton { overflow: hidden; transition: transform .15s, box-shadow .15s; }
+.p-firstButton__container { justify-content: center; padding: 0 24px 0 20px !important; gap: 8px; }
+.p-firstButton__icon { width: 32px !important; height: 32px !important; object-fit: contain; flex-shrink: 0; margin: 0 !important; }
+.p-firstButton__text { text-align: center; font-size: 14px !important; margin-left: 0 !important; }
+
+/* フォームグループ共通 */
+.js-form-group { position: relative; overflow: visible; }
+.c-fixed-icon { z-index: 2; pointer-events: none; position: absolute; right: -8px; bottom: -10px; }
+.c-container { overflow: visible !important; }
+
+/* ステップ進捗 */
+.c-step__no li.is-on { background: linear-gradient(135deg, #314c85, #5c6bc0); box-shadow: 0 2px 4px rgba(49,76,133,.3); }
+
+/* ボタンインタラクション */
+.c-button { transition: transform .15s, box-shadow .15s, border-color .15s, background-color .15s; }
+
+/* 郵便番号入力 */
+#step04 .c-zip-text input,
+.c-zip-text input,
+.c-zip-text input[type="tel"],
+.p-step05__address.c-zip-text input {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 16px 0 52px !important;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+  border: 2px solid #c5c5c5;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.c-zip-text::before { left: 14px; font-size: 18px; }
+.c-zip-text__notice {
+  font-size: 11px;
+  top: -9px;
+}
+.c-text-box:focus { border-color: #314c85; box-shadow: 0 0 0 3px rgba(49,76,133,.15); background: #fff; }
+
+/* 遅延描画 */
+.cvr-testimonials, .cvr-faq { position: relative; z-index: 0; content-visibility: auto; contain-intrinsic-size: auto 480px; }
+
+/* ===== 離脱防止モーダル ===== */
+@keyframes cvr-exitFadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes cvr-exitScaleIn { from { transform: scale(.9); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+.cvr-exit-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 9999;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  animation: cvr-exitFadeIn .3s;
+}
+.cvr-exit-modal {
+  background: #fff; border-radius: 16px; padding: 32px 24px;
+  text-align: center; max-width: 340px; width: 100%; animation: cvr-exitScaleIn .3s;
+}
+.cvr-exit-modal__title { font-size: 18px; font-weight: 800; color: #333; margin-bottom: 12px; }
+.cvr-exit-modal__text { font-size: 13px; line-height: 1.7; color: #666; margin-bottom: 20px; }
+.cvr-exit-modal__text strong { color: #ff5966; }
+.cvr-exit-modal__btn {
+  display: block; width: 100%; padding: 14px; border: none; border-radius: 10px;
+  background: #ff5966; color: #fff; font-size: 15px; font-weight: 700;
+  cursor: pointer; margin-bottom: 8px; box-shadow: 0 3px 0 #be5156;
+}
+.cvr-exit-modal__btn:hover { transform: translateY(2px); box-shadow: none; }
+.cvr-exit-modal__close { display: block; width: 100%; padding: 8px; border: none; background: transparent; color: #999; font-size: 12px; cursor: pointer; }
+
+/* ===== グローバル ===== */
+.c-button:active, .p-firstButton:active { transform: scale(.97); }
+.c-next-button:active { transform: translateY(3px) scale(.98); }
+html { scroll-behavior: smooth; }
+.c-text-box, .c-select-box02 select { min-height: 52px; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #314c85; outline-offset: 2px; }
+.c-button, .p-firstButton, .c-next-button { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+/* ===== SP最適化 ===== */
+@media (max-width: 767px) {
+  .l-main { margin: 0 auto; width: 95%; }
+  .c-container { padding: 0 8px 0; }
+  .l-header__container { padding: 4px 8px; }
+
+  /* FV: マイクロコピーをビューポート最下部へ (displayはJSのshowPageで制御) */
+  #step-first { flex-direction: column; min-height: calc(100vh - 200px); min-height: calc(100svh - 200px); }
+  #step-first .cvr-micro-copy { margin-top: auto; padding-bottom: 8px; }
+  #step-first .c-nextLink { visibility: hidden; height: 0; overflow: hidden; }
+
+  /* 信頼性バー */
+  .cvr-trust-bar { padding: 4px; margin-bottom: 4px; gap: 8px; }
+  .cvr-trust-bar__item { font-size: 9px; gap: 2px; }
+  .cvr-trust-bar__item svg { width: 12px; height: 12px; }
+
+  /* 社会的証明 */
+  .cvr-social-proof { margin-bottom: 4px; }
+  .cvr-social-proof__stats { padding: 6px 4px; gap: 6px; }
+  .cvr-social-proof__number { font-size: 18px; }
+  .cvr-social-proof__label { font-size: 9px; }
+  .cvr-social-proof__divider { height: 20px; }
+
+  /* リアルタイム通知 */
+  .cvr-live-notification { padding: 4px 8px; margin-bottom: 4px; }
+  .cvr-live-notification__text { font-size: 10px; }
+
+  /* バナー画像 */
+  #step-first > picture, .p-first > picture { display: block; }
+  #step-first > picture img, .p-first > picture img { max-height: 100px !important; object-fit: cover; width: 100%; border-radius: 6px; }
+
+  /* ヒーローバッジ */
+  .cvr-hero-badge { padding: 4px 10px; margin: 2px 0; }
+  .cvr-hero-badge__count { font-size: 20px; }
+  .cvr-hero-badge__tag { font-size: 9px; padding: 1px 5px; }
+  .cvr-hero-badge__unit { font-size: 11px; }
+
+  /* タイトル */
+  .c-title-top { padding: 6px 0; margin-bottom: 4px; }
+  .c-title01 { padding: 4px 0 2px; font-size: 14px; }
+
+  /* CTAボタン */
+  .p-first__buttonArea { padding: 0 2px; gap: 12px; }
+  .p-firstButton { min-height: 76px; }
+  .p-firstButton__container { padding: 0 16px; }
+  .p-firstButton__icon { display: none; }
+  .p-firstButton__text { font-size: 16px; font-weight: 700; margin-left: 2px; line-height: 1.35; }
+
+  /* マイクロコピー */
+  .cvr-micro-copy { margin-top: 4px; font-size: 10px; }
+
+  /* FV要素間の余白調整 */
+  #step-first > picture { margin-bottom: 6px; }
+  .cvr-hero-badge { margin: 6px 0; }
+  .c-title-top { margin-bottom: 8px; }
+  .p-first__buttonArea { gap: 10px; }
+
+  /* フォームステップ（step-first以外）を1画面に収める */
+  body.lp-form-step .l-header__sub { display: none; }
+  body.lp-form-step .l-header__container { padding: 3px 8px; }
+  body.lp-form-step .l-header__message { margin-top: 2px; }
+  body.lp-form-step .l-header__message span { font-size: 11px; }
+  body.lp-form-step .c-container { padding-bottom: 8px; }
+
+  body.lp-form-step .c-step { padding-top: 6px; }
+  body.lp-form-step .c-step__no { gap: 3px; }
+  body.lp-form-step .c-step__no li { width: 22px; height: 22px; font-size: 14px; }
+  body.lp-form-step .c-step__title { font-size: 12px; }
+  body.lp-form-step .c-step__text { font-size: 9px; }
+  body.lp-form-step .c-step__text span { font-size: 12px; }
+
+  body.lp-form-step .c-title01,
+  body.lp-form-step .c-title02 { padding: 4px 0 2px; font-size: 14px; line-height: 1.35; }
+  body.lp-form-step .c-title02 { padding-top: 8px; }
+  body.lp-form-step .cvr-step-reason { margin: 2px 0; font-size: 10px; line-height: 1.4; }
+  body.lp-form-step .p-step05__info.c-info-text,
+  body.lp-form-step .p-step06__info.c-info-text { margin: 4px 0; font-size: 10px; }
+
+  body.lp-form-step .c-button-grid { margin-top: 8px; gap: 8px; }
+  body.lp-form-step .c-button {
+    padding: 14px 8px;
+    min-height: 116px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+  body.lp-form-step .c-button__img {
+    height: auto !important;
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+  body.lp-form-step .c-button__img picture {
+    display: inline-flex;
+    line-height: 0;
+  }
+  body.lp-form-step .c-button__img img {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    display: block;
+  }
+  body.lp-form-step .c-button__text {
+    min-height: 0;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    display: block;
+    word-break: keep-all;
+  }
+
+  body.lp-form-step .c-section + .c-section .c-title02 { padding-top: 4px; }
+  body.lp-form-step .c-section + .c-section .cvr-step-reason { display: none; }
+  /* 1ステップに複数設問がある場合（経験＋雇用形態など） */
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__img { display: none; }
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button {
+    padding: 8px 6px;
+    min-height: 38px;
+    justify-content: center;
+  }
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__text { min-height: 0; font-size: 11px; }
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button-grid { margin-top: 4px; }
+
+  body.lp-form-step .c-nextLink { margin-top: 6px; gap: 4px; }
+  body.lp-form-step .c-next-button { min-height: 48px; padding: 10px 12px; }
+  body.lp-form-step .c-next-button span:first-child { font-size: 14px; }
+  body.lp-form-step .cvr-kuma img,
+  body.lp-form-step .c-fixed-icon { width: 36px; }
+
+  body.lp-form-step .js-form-group > p[style*="font-size:10px"] {
+    margin-top: 4px !important;
+    font-size: 9px !important;
+  }
+
+  /* 資格選択 step01: 選択肢が多くてもCTAを画面内に。
+     重要: display: flex には !important を付けない。app.js の遷移で
+     `cur.style.display = "none"` が上書きされてしまい、step01が消えず
+     step03以降が画面外に押し出されるバグになるため。inline指定が勝つように。 */
+  body.lp-form-step #step01 {
+    display: flex;
+    flex-direction: column;
+    /* app.js は inline で min-height: calc(100svh - 72px) を設定するため、
+       !important が必要。display には付けない(step03遷移時に消えなくなる)。
+       viewportより少し低い高さに抑え、下に次セクション(testimonials等)の
+       チラ見せを出す。 */
+    min-height: calc(100svh - 130px) !important;
+    min-height: calc(100dvh - 130px) !important;
+    padding-bottom: 8px;
+  }
+  body.lp-form-step #step01 .cvr-step-reason { display: none; }
+  body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
+  body.lp-form-step #step01 .cvr-step-reward { display: block; }
+  body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 15px; font-weight: 800; }
+  body.lp-form-step #step01 .c-step { padding-top: 4px; }
+  body.lp-form-step #step01 .p-step01__buttonArea {
+    flex: 0 0 auto;
+    margin-top: 8px;
+    gap: 8px;
+    align-content: start;
+  }
+  /* denkikouji 6択: 2列・タップしやすいサイズ */
+  body.lp-form-step #step01 .p-step01__button.c-button {
+    min-height: 84px;
+    padding: 12px 8px;
+    gap: 8px;
+    box-shadow: 1px 1px 0 #dadada;
+  }
+  body.lp-form-step #step01 .p-step01__button .c-button__img img {
+    width: 48px;
+    height: 48px;
+  }
+  body.lp-form-step #step01 .p-step01__button .c-button__text {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  body.lp-form-step #step01 .c-multi-hint { display: none; }
+  body.lp-form-step #step01 .c-nextLink {
+    margin-top: auto;
+    flex-shrink: 0;
+    padding-top: 8px;
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  }
+  /* step03 経験4択: リスト型（左アイコン＋ラベル） */
+  body.lp-form-step #step03 .p-step03__button.c-button {
+    min-height: 48px;
+    padding: 8px 12px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    box-shadow: 1px 1px 0 #dadada;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__img {
+    display: flex;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__img img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+  body.lp-form-step #step03 .p-step03__button .c-button__text {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+  }
+  body.lp-form-step #step03 .p-step03__buttonArea.c-button-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  body.lp-form-step #step03 .p-step03__button.c-button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  /* 進捗の二重表示を解消（バーに一本化） */
+  body.lp-form-step .c-step { display: none; }
+  body.lp-form-step .cvr-progress { margin-bottom: 8px; }
+  body.lp-form-step .cvr-progress__label {
+    margin: 4px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #314c85;
+    text-align: center;
+  }
+  body.lp-form-step .cvr-step-reward {
+    margin: 0 0 10px;
+    padding: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    background: transparent;
+    border: none;
+    color: #64748b;
+  }
+  body.lp-form-step .cvr-step-reward strong { color: #314c85; }
+
+  /* フォーム中は下部コンテンツを隠す */
+  body.lp-form-step .cvr-testimonials,
+  body.lp-form-step .cvr-faq { display: none; }
+  body.lp-form-step .js-page-body { padding-bottom: 12px; }
+
+  /* 入力ステップ: さらにミニマル */
+  body.lp-input-step .l-header__message { display: none; }
+  body.lp-input-step .cvr-kuma,
+  body.lp-input-step .c-fixed-icon { display: none !important; }
+  body.lp-input-step .cvr-step-reward { display: none; }
+  body.lp-input-step #step05 .p-step06__info,
+  body.lp-input-step #step06 .p-step07__info { display: none; }
+  body.lp-input-step .c-title02,
+  body.lp-input-step .c-title01 {
+    padding: 8px 0 12px;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.4;
+  }
+  body.lp-input-step .p-step06__formGroup,
+  body.lp-input-step .p-step07__formGroup { margin-top: 10px; }
+  body.lp-input-step .p-step06__formGroup dt,
+  body.lp-input-step .p-step07__formGroup dt {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  body.lp-input-step .p-step06__formGroup dt svg,
+  body.lp-input-step .p-step07__formGroup dt svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  body.lp-input-step #step05 .p-step06__name {
+    flex-direction: row;
+    gap: 8px;
+    padding-right: 0;
+  }
+  body.lp-input-step #step05 .p-step06__name .c-text-box,
+  body.lp-input-step #step05 .p-step06__birthday--year-only .c-text-box,
+  body.lp-input-step #step05 .p-step06__birthday--year-only .cvr-year-input,
+  body.lp-input-step #step04 .c-zip-text input,
+  body.lp-input-step #step06 .p-step07__tel .c-text-box,
+  body.lp-input-step #step06 .p-step07__tel input[type="tel"] {
+    height: 52px !important;
+    min-height: 52px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    border: 2px solid #c5c5c5 !important;
+    border-radius: 10px !important;
+  }
+  body.lp-input-step #step06 .p-step07__tel .c-text-box,
+  body.lp-input-step #step06 .p-step07__tel input[type="tel"] {
+    height: 56px !important;
+    min-height: 56px !important;
+    font-size: 20px !important;
+    letter-spacing: 0.04em;
+    padding: 0 16px !important;
+  }
+  body.lp-input-step #step04 .c-zip-text input {
+    padding-left: 52px !important;
+  }
+  body.lp-input-step .cvr-birth-hint { margin-top: 4px; font-size: 10px; }
+  body.lp-input-step #step06 .cvr-cta-proof,
+  body.lp-input-step #step06 .cvr-step-opp { display: none; }
+  body.lp-input-step #step06 .cvr-step-urgency {
+    margin: 0 0 8px;
+    font-size: 10px;
+  }
+  body.lp-input-step #step06 .cvr-thanks-bridge {
+    margin: 8px 0 4px;
+    font-size: 11px;
+  }
+  body.lp-input-step #step06 .cvr-tel-reassurance {
+    margin: 4px 0 0;
+    font-size: 10px;
+  }
+  body.lp-input-step .c-nextLink {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 28%);
+    padding-top: 10px;
+  }
+  body.lp-input-step #step06 .c-nextLinkButton {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 56px;
+    height: auto;
+    padding: 8px 4px;
+  }
+  body.lp-input-step #step06 .c-submit-button {
+    flex: 1;
+    margin-left: 0;
+    min-height: 52px;
+  }
+  body.lp-input-step #step06 .c-submit-button__text span {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  body.lp-form-step #step01 .c-next-button { min-height: 48px; padding: 10px 12px; }
+  body.lp-form-step .l-header__title .adtext { font-size: 10px; line-height: 1.25; }
+}
+
+@media (max-width: 767px) and (max-height: 740px) {
+  body.lp-form-step .c-next-button { min-height: 44px; }
+  body.lp-form-step #step01 { min-height: calc(100dvh - 64px); }
+  body.lp-form-step #step01 .p-step01__button.c-button { min-height: 76px; }
+  body.lp-form-step #step01 .p-step01__button .c-button__img img { width: 44px; height: 44px; }
+  #step-first .p-firstButton { min-height: 68px; }
+}
+
+/* ===== スマホ完全最適化（主トラフィック） ===== */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 767px) {
+  input:not(.wpcf7-submit),
+  select,
+  textarea,
+  .c-text-box,
+  .cvr-year-input {
+    font-size: 16px !important;
+  }
+  .c-submit-button input.wpcf7-submit,
+  #submit-button {
+    font-size: 0 !important;
+    opacity: 0 !important;
+  }
+  #step05 .p-step06__name .c-text-box,
+  #step05 .p-step06__birthday--year-only .cvr-year-input {
+    height: 52px !important;
+    min-height: 52px !important;
+  }
+  .c-next-button,
+  .c-submit-button,
+  .p-step01__button.c-button,
+  .c-check-button,
+  .meta-fv__cta {
+    min-height: 48px;
+  }
+  #step-first .p-firstButton {
+    min-height: 76px;
+  }
+  .c-nextLink {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .c-container {
+    padding-left: max(8px, env(safe-area-inset-left, 0px));
+    padding-right: max(8px, env(safe-area-inset-right, 0px));
+  }
+  .cvr-testimonials,
+  .cvr-faq {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 480px;
+  }
+}
+
+/* ===== PC最適化 ===== */
+@media (min-width: 768px) {
+  .cvr-trust-bar { gap: 24px; padding: 10px 16px; }
+  .cvr-trust-bar__item { font-size: 12px; }
+  .cvr-social-proof__number { font-size: 28px; }
+  .cvr-social-proof__label { font-size: 12px; }
+  .cvr-hero-badge__count { font-size: 36px; }
+  .cvr-testimonial { padding: 20px; }
+  .cvr-testimonial__text { font-size: 14px; }
+}
