@@ -1,19 +1,25 @@
 # denkikouji CV + LINE プレイブック
 
-電気工事士LP（`denkikouji` / `meta-lp/denkikouji`）の **フォーム完了 → thanks-v2 → 予約 → LINE** までを一貫させる運用ドキュメント。
+電気工事士LP（`denkikouji` / `meta-lp/denkikouji`）の **フォーム完了 → thanks-v2 → LINE受取口 → 予約** までを一貫させる運用ドキュメント。
+
+> **2026-06-12 フロー変更（LINE先行）:** LINEロック（予約完了までLINE CTA無効）を廃止。
+> 摩擦の小さいLINE開設（30秒）を②に前出しし、予約（10分電話）を③に。
+> **全文・社名のゲートは「LINE」ではなく「電話」のまま**（条件すり合わせ後にLINEへ全文）。
+> 前提: LINE公式アカウントのあいさつメッセージで「ティーザー＋予約導線」を即時返信する設定（運用・コード外）。
 
 ## ゴール
 
 | 段階 | KPI | 成功の定義 |
 |------|-----|-----------|
 | LP | フォーム完了率 | step01離脱↓・step05入力摩擦↓ |
-| Thanks | 予約完了率 | 枠選択→確定（カレンダーは2026-06からデフォルト展開） |
-| LINE | `thanks_line_click` | 予約後にLINE CTAクリック |
+| LINE | `thanks_line_click` | thanks到達直後の受取口開設（予約とは独立・`line_cta_position` で位置別に監視） |
+| Thanks | 予約完了率 | 枠選択→確定（LINEクリック後はドックが予約CTAへ切替） |
 
 ### 予約ファネルの dataLayer イベント（2026-06）
 
 | イベント | タイミング | 主な属性 |
 |----------|-----------|----------|
+| `thanks_line_click` | LINE CTAクリック（hero / section / dock / booking_done） | `line_cta_position` / `booked`（0=予約前・1=予約後） |
 | `thanks_booking_context` | 予約UI初期化時 | `has_tel`（tel引き継ぎ可否） |
 | `thanks_slot_select` | 枠タップ | `booking_day` / `booking_time` / `has_tel` |
 | `thanks_booking_asap_click` | 「いますぐ電話を希望」タップ（最短枠ワンタップ確保） | 同上 |
@@ -29,10 +35,13 @@
 LP step06（送信） ※bridgeコピーは2026-06に廃止（入力時は情報を絞る）
        ↓ app.js（sessionStorage + 600ms）
 thanks-v2 ヒーロー
-  ①登録完了 → ②10分相談枠 → ③LINE全文
-       ↓ 予約完了（thanks-booking-custom.js）
-LINEセクション解放 + スティッキー「LINEで全文を受け取る」
+  ①登録完了 → ②LINE受取口（30秒・ロックなし） → ③10分相談枠（日時選択）
+       ↓ LINEクリック（dk_line_clicked）でドックが予約CTAへ切替
+予約完了（thanks-booking-custom.js）
+       ↓ お電話で条件すり合わせ後、LINEへ非公開求人の全文
 ```
+
+**設計意図:** LINE登録数が予約数の従属変数になる構造（旧ロック）を解消し、予約しない層もLINE配信で再アプローチ可能にする。予約の動機（全文・プレミアム案内）は電話ゲートで維持。
 
 ### 統一コピー（2026-06）
 
@@ -43,7 +52,8 @@ LINEセクション解放 + スティッキー「LINEで全文を受け取る」
 | step06 社会的証明 | 利用者の94%が満足と回答 – 34,513人が利用中（数値の根拠は `本番反映手順書.md` 確認事項） |
 | step06 機会損失 | 求人は埋まり次第締切。いま送信するほど選べる求人が残っています |
 | thanks カレンダー | 面談枠は直近から埋まります。希望の時間はお早めに |
-| thanks LINEゲート | LPと同じ流れ。日時後にLINE登録が開く |
+| thanks LINE受取口 | 社名・条件の全文は、お電話で条件をすり合わせた後にこのLINEへ届きます。見るだけOK |
+| thanks LINE CTA | LINEで受け取り口をつくる（30秒 · 無料 · 見るだけOK） |
 
 **入力ステップ（step04〜06）の原則:** クマ・`cvr-step-reward`（返報）・`cvr-step-opp`・`cvr-cta-proof`・職場非公開の不安除去は**全ステップで表示**する。「ミニマル化」目的でも、迷う直前のメリット/機会損失コピーを `display:none` にしない。
 
@@ -90,7 +100,7 @@ bash scripts/verify-production-release.sh   # 本番HTTP（デプロイ後）
 
 | 観点 | 合格基準 |
 |------|----------|
-| ファネルコピー | LP step06 bridge ↔ thanks ①②③ ↔ LINEゲート が一致 |
+| ファネルコピー | LP step06 ↔ thanks ①②③（②LINE受取口）↔ LINE受取口コピー が一致 |
 | 計測 | `lead_conversion` は qualified のみ / 直アクセスCVなし |
 | 予約基盤 | GAS slots OK・booking-slots.json 48h以内 |
 | UX | FV CTA・資格・入力欄がタップ可能サイズ / 送信ボタン二重表示なし |
@@ -102,12 +112,12 @@ bash scripts/verify-production-release.sh   # 本番HTTP（デプロイ後）
 ## デプロイ後チェック（5分）
 
 1. LP: step-first → step06 まで遷移・CTA文言・ステップ数
-2. 送信後: thanks-v2 ヒーローに3件プレビュー・フロー①②③表示
-3. カレンダー: **トグル操作なしで枠が見える（デフォルト展開）** → 枠選択 → LINEセクション解放・ドックにLINEボタン
-4. LINEクリック: GTM `thanks_line_click` / beacon送信
+2. 送信後: thanks-v2 ヒーローに3件表示・フロー①②③（②LINE受取口）・hero CTAがLINE（緑）
+3. LINEクリック: GTM `thanks_line_click`（`line_cta_position`）/ beacon送信 → ドックが予約CTAへ切替
+4. カレンダー: **トグル操作なしで枠が見える（デフォルト展開）** → 枠選択 → 確定 → 完了カードにLINE状態（開設済み案内 or LINE CTA）
 5. ハードリロードで `?v=` キャッシュ更新確認
 
-## 本番検証（自動・2026-06-11）
+## 本番検証（自動・2026-06-11 実施 → **LINE先行フロー反映後に要再実行**）
 
 ```bash
 npx playwright install chromium
@@ -124,8 +134,9 @@ node scripts/e2e-thanks-v2-release.mjs
 | dataLayer `lead_conversion`（qualified） | OK |
 | 直アクセス thanks → CV なし | OK |
 | 予約枠 UI | OK |
-| 予約前 LINE ロック | OK |
-| 予約後 LINE 解放 | OK |
+| 予約前から LINE 有効（LINE先行・旧ロック廃止） | 要再実行 |
+| LINEクリック → ドック予約CTA切替 | 要再実行 |
+| 予約完了カードの LINE 状態分岐 | 要再実行 |
 | dataLayer `thanks_booking_recommended_complete` | OK |
 | dataLayer `thanks_line_click` | OK |
 | denkikouji ブランド・案件プレビュー | OK |
@@ -152,6 +163,8 @@ python3 scripts/generate-meta-lp.py
 
 ## 残タスク（コード外）
 
+- **LINE公式アカウント: あいさつメッセージに「ティーザー（3件の概要）＋予約ページ導線」を設定**（LINE先行フローの前提。空だと逆効果）
+- LINE先行の効果検証: 前後比較で「予約率（`calendar_booked`/`lead_conversion`）」と「サンクス→LINE率」。LINE↑でも予約率が大きく沈むなら巻き戻し判断
 - GTM コンテナで `CE - lead_conversion` タグ公開・旧 `/thanks/` トリガー停止 → `docs/GTM-thanks-v2-revival.md`
 - 口コミ実データ差し替え（許諾後）
 

@@ -43,6 +43,17 @@
 
   var BOOKING_DONE_KEY = "dk_booking_done";
 
+  function hasLineClicked() {
+    if (window.dkThanks && window.dkThanks.hasLineClicked) {
+      return window.dkThanks.hasLineClicked();
+    }
+    try {
+      return sessionStorage.getItem("dk_line_clicked") === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
   function pushDL(event, extra) {
     var dk = window.dkThanks;
     if (dk && dk.pushDL) {
@@ -73,10 +84,12 @@
         ? "この時間に<strong>" + info.staff_name + "</strong>より<strong>お電話</strong>します（10分）"
         : "この時間に担当より<strong>お電話</strong>します（10分）") +
       "</p>" +
-      '<p class="t-booking-done__next">お電話後、合う<strong>非公開求人の全文</strong>をお送りします</p>' +
-      '<a href="https://lin.ee/PzFJp7H" class="t-booking-done__line" target="_blank" rel="noopener">' +
-      '<span class="t-booking-done__line-main">LINEで全文を受け取る</span>' +
-      '<span class="t-booking-done__line-sub">30秒 · 無料</span></a>' +
+      '<p class="t-booking-done__next">お電話後、合う<strong>非公開求人の全文</strong>を<strong>LINEの受け取り口</strong>へお送りします</p>' +
+      (hasLineClicked()
+        ? '<p class="t-booking-done__line-done">LINEの受け取り口は開設済みです。お電話後に全文が届きます</p>'
+        : '<a href="https://lin.ee/PzFJp7H" class="t-booking-done__line" target="_blank" rel="noopener" data-line-position="booking_done">' +
+          '<span class="t-booking-done__line-main">LINEで受け取り口をつくる</span>' +
+          '<span class="t-booking-done__line-sub">30秒 · 無料</span></a>') +
       "</div>"
     );
   }
@@ -105,20 +118,29 @@
     var contact = document.querySelector(".t-contact");
     if (contact) contact.style.display = "none";
 
+    var lineDone = hasLineClicked();
     var line = document.getElementById("line-section");
     if (line) {
-      line.classList.add("t-line--revealed");
       var badge = line.querySelector(".t-line__badge") || document.getElementById("line-section-badge");
       var h3 = line.querySelector("h3");
       var sub = line.querySelector(".t-line__sub");
-      if (badge) badge.textContent = "【今すぐ】案内を受け取る";
-      if (h3) h3.innerHTML = "全文の受け取り・追加案内は<strong>LINE</strong>でも";
-      if (sub)
-        sub.innerHTML =
-          "お電話のあと、<strong>非公開求人の全文</strong>や追加案内をLINEでも受け取れます。<strong>見るだけOK</strong> · 30秒";
-      setTimeout(function () {
-        line.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 450);
+      if (lineDone) {
+        if (badge) badge.textContent = "受け取り口は開設済み";
+        if (h3) h3.innerHTML = "全文は<strong>LINE</strong>の受け取り口に届きます";
+        if (sub)
+          sub.innerHTML =
+            "お電話で条件をすり合わせたあと、<strong>非公開求人の全文</strong>や追加案内をお送りします。";
+      } else {
+        line.classList.add("t-line--revealed");
+        if (badge) badge.textContent = "予約完了 — 受け取り口の開設はお済みですか？（30秒）";
+        if (h3) h3.innerHTML = "全文の受け取り口を<strong>LINE</strong>でつくる（30秒）";
+        if (sub)
+          sub.innerHTML =
+            "お電話のあと、<strong>非公開求人の全文</strong>や追加案内をLINEへお送りします。<strong>見るだけOK</strong> · 30秒";
+        setTimeout(function () {
+          line.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 450);
+      }
     }
 
     if (typeof window.dkThanksUnlockLine === "function") {
@@ -134,7 +156,7 @@
       stepBooking.classList.remove("is-cur");
       stepBooking.classList.add("is-done");
     }
-    if (stepLine) stepLine.classList.add("is-cur");
+    if (stepLine && !lineDone) stepLine.classList.add("is-cur");
 
     var heroRoot =
       document.getElementById("thanks-hero-sub") ||
@@ -143,10 +165,12 @@
       heroRoot.innerHTML =
         '<ol class="t-hero__flow" aria-label="このあとの流れ">' +
         '<li class="is-done"><span>①</span>登録完了</li>' +
-        '<li class="is-done"><span>②</span>10分相談枠</li>' +
-        '<li class="is-cur"><span>③</span>LINE全文</li></ol>' +
+        '<li class="' + (lineDone ? "is-done" : "is-cur") + '" data-step="line"><span>②</span>LINE受取口</li>' +
+        '<li class="is-done" data-step="booking"><span>③</span>10分相談枠</li></ol>' +
         '<p class="t-hero__lead">日時を確保しました</p>' +
-        '<p class="t-hero__route">次は<strong>LINE</strong>で全文の受取口（30秒）。10分のお電話で条件をすり合わせ、<strong>非公開求人の全文</strong>をお届けします。</p>';
+        (lineDone
+          ? '<p class="t-hero__route">10分のお電話で条件をすり合わせ、<strong>非公開求人の全文</strong>を<strong>LINE</strong>へお届けします。</p>'
+          : '<p class="t-hero__route">残りは<strong>LINE</strong>の受け取り口（30秒）。お電話で条件をすり合わせ、<strong>非公開求人の全文</strong>をLINEへお届けします。</p>');
     }
 
     pushDL("thanks_line_step_revealed", {
@@ -189,8 +213,8 @@
       sessionStorage.removeItem(BOOKING_DONE_KEY);
     } catch (eRm) {}
 
-    document.body.classList.remove("is-booked", "is-line-unlocked");
-    document.body.classList.add("is-awaiting-booking", "is-line-locked");
+    document.body.classList.remove("is-booked");
+    document.body.classList.add("is-awaiting-booking");
     section.classList.remove("t-cal--booked");
 
     var headTitle = section.querySelector(".t-cal__head h3");

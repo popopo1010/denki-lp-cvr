@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * thanks-v2 本番検証（GTM dataLayer / 予約枠 / LINEゲート）
+ * thanks-v2 本番検証（GTM dataLayer / 予約枠 / LINE先行フロー）
  * Usage: npx playwright install chromium && node scripts/e2e-thanks-v2-release.mjs
  */
 import { chromium, devices } from "playwright";
@@ -56,22 +56,27 @@ async function testThanksAssets(page) {
   const html = await (await page.request.get(`${BASE}/thanks-v2/?lp=denkikouji`)).text();
   const checks = [
     ["GTM-KV525PZ", html.includes("GTM-KV525PZ")],
-    ["thanks-v2-shared.js?v=7", html.includes("thanks-v2-shared.js?v=7")],
+    ["thanks-v2-shared.js?v=8", html.includes("thanks-v2-shared.js?v=8")],
     [
       "thanks-page-context.js",
       htmlHasAny(html, ["thanks-page-context.js?v=27", "thanks-page-context.js?v=28"])
     ],
     [
       "thanks-booking-custom.js",
-      htmlHasAny(html, ["thanks-booking-custom.js?v=32", "thanks-booking-custom.js?v=33"])
+      htmlHasAny(html, ["thanks-booking-custom.js?v=37", "thanks-booking-custom.js?v=38"])
     ],
     ["thanks-job-preview.js?v=19", html.includes("thanks-job-preview.js?v=19")],
-    ["thanks-v2-deferred.js?v=12", html.includes("thanks-v2-deferred.js?v=12")],
+    ["thanks-v2-deferred.js?v=15", html.includes("thanks-v2-deferred.js?v=15")],
     ["t-cal__toggle", html.includes("t-cal__toggle")],
     ["10分相談枠", html.includes("10分相談枠")],
-    ["LINEで全文を受け取る", html.includes("LINEで全文を受け取る")],
+    ["LINEで受け取り口をつくる", html.includes("LINEで受け取り口をつくる")],
     ["非公開求人の全文", html.includes("非公開求人の全文")],
     ["line-gate-msg", html.includes('id="line-gate-msg"')],
+    [
+      "LINEセクションがカレンダーより上",
+      html.indexOf('id="line-section"') > 0 &&
+        html.indexOf('id="line-section"') < html.indexOf('id="t-calendar"')
+    ],
     ["本登録なし", !html.includes("本登録")]
   ];
   checks.forEach(([k, v]) => (v ? pass("HTML", k) : fail("HTML", k)));
@@ -165,9 +170,54 @@ async function testBookingAndLineGate(page) {
     sessionStorage.setItem("dk_lp_lead_v1", JSON.stringify({ lp: "denkikouji", ts: Date.now() }));
     sessionStorage.setItem("_lp", "denkikouji");
     sessionStorage.removeItem("dk_booking_done");
+    sessionStorage.removeItem("dk_line_clicked");
   });
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForLoadState("load").catch(() => {});
+
+  // LINE先行フロー: 予約前からLINEは開いている
+  const lineOpen = await page.evaluate(() => ({
+    locked: document.body.classList.contains("is-line-locked"),
+    ariaDisabled: document.getElementById("line-cta")?.getAttribute("aria-disabled"),
+    heroLine: !!document.getElementById("line-cta-hero"),
+    dockLineHidden: document.getElementById("thanks-dock-line")?.hidden,
+    dockBookHidden: document.getElementById("thanks-dock-book")?.hidden
+  }));
+  if (!lineOpen.locked && !lineOpen.ariaDisabled && lineOpen.heroLine) {
+    pass("LINE先行", "予約前からLINE CTAが有効");
+  } else {
+    fail("LINE先行", JSON.stringify(lineOpen));
+  }
+  if (lineOpen.dockLineHidden === false && lineOpen.dockBookHidden === true) {
+    pass("ドック初期状態", "LINE CTAのみ表示");
+  } else {
+    fail("ドック初期状態", JSON.stringify(lineOpen));
+  }
+
+  // LINEクリック → 計測 + ドックが予約CTAへ切替
+  const lineClick = await page.evaluate(() => {
+    const link = document.getElementById("line-cta");
+    if (!link) return { ok: false, reason: "no link" };
+    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    const ev = (window.dataLayer || []).filter((e) => e && e.event === "thanks_line_click").pop();
+    return {
+      ok: !!ev,
+      position: ev && ev.line_cta_position,
+      clickedFlag: sessionStorage.getItem("dk_line_clicked"),
+      dockLineHidden: document.getElementById("thanks-dock-line")?.hidden,
+      dockBookHidden: document.getElementById("thanks-dock-book")?.hidden
+    };
+  });
+  if (lineClick.ok && lineClick.position === "section" && lineClick.clickedFlag === "1") {
+    pass("dataLayer", `thanks_line_click (position=${lineClick.position})`);
+  } else {
+    fail("dataLayer", `thanks_line_click missing/incomplete (${JSON.stringify(lineClick)})`);
+  }
+  if (lineClick.dockLineHidden === true && lineClick.dockBookHidden === false) {
+    pass("ドック切替", "LINEクリック後は予約CTA");
+  } else {
+    fail("ドック切替", JSON.stringify(lineClick));
+  }
 
   const expanded = await page.evaluate(() => {
     if (typeof window.dkThanksExpandCalendar === "function") {
@@ -193,13 +243,6 @@ async function testBookingAndLineGate(page) {
     return;
   }
 
-  const lockedBefore = await page.evaluate(() => document.body.classList.contains("is-line-locked"));
-  if (lockedBefore) {
-    pass("LINEゲート", "予約前はロック");
-  } else {
-    fail("LINEゲート", "予約前にロックされていない");
-  }
-
   await page.locator("#booking-slot-root .t-booking-slot").first().click();
   await page.locator("#booking-confirm").click({ timeout: 10000 });
 
@@ -207,16 +250,26 @@ async function testBookingAndLineGate(page) {
     .waitForFunction(() => document.body.classList.contains("is-booked"), { timeout: 15000 })
     .catch(() => {});
 
-  const unlocked = await page.evaluate(() => ({
+  const booked = await page.evaluate(() => ({
     booked: document.body.classList.contains("is-booked"),
-    lineUnlocked: document.body.classList.contains("is-line-unlocked"),
-    dockLineHidden: document.getElementById("thanks-dock-line")?.hidden
+    lineDoneNote: !!document.querySelector(".t-booking-done__line-done"),
+    dockVisible: document.getElementById("thanks-dock")?.classList.contains("is-visible")
   }));
 
-  if (unlocked.booked && unlocked.lineUnlocked) {
-    pass("予約→LINE解放", "is-booked + is-line-unlocked");
+  if (booked.booked) {
+    pass("予約完了", "is-booked");
   } else {
-    fail("予約→LINE解放", JSON.stringify(unlocked));
+    fail("予約完了", JSON.stringify(booked));
+  }
+  if (booked.lineDoneNote) {
+    pass("予約完了カード", "LINE開設済みの案内（再CTAなし）");
+  } else {
+    fail("予約完了カード", "LINE開設済み案内が出ていない");
+  }
+  if (booked.dockVisible === false) {
+    pass("ドック", "LINE+予約 完了でドック退避");
+  } else {
+    fail("ドック", `両完了後もドック表示 (${JSON.stringify(booked)})`);
   }
 
   const dlBooking = await page.evaluate(() =>
@@ -228,25 +281,6 @@ async function testBookingAndLineGate(page) {
     pass("dataLayer", "thanks_booking_recommended_complete");
   } else {
     fail("dataLayer", "thanks_booking_recommended_complete missing");
-  }
-
-  const lineClick = await page.evaluate(() => {
-    var link =
-      document.getElementById("line-cta") ||
-      document.getElementById("thanks-dock-line") ||
-      document.querySelector('a[href*="lin.ee"]');
-    if (!link) return { ok: false, reason: "no link" };
-    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-    return {
-      ok: (window.dataLayer || []).some((e) => e && e.event === "thanks_line_click"),
-      ariaDisabled: link.getAttribute("aria-disabled"),
-      hidden: link.hidden
-    };
-  });
-  if (lineClick.ok) {
-    pass("dataLayer", "thanks_line_click");
-  } else {
-    fail("dataLayer", `thanks_line_click missing (${JSON.stringify(lineClick)})`);
   }
 
   await page.unroute(gasBookPattern);

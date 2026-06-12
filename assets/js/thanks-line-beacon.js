@@ -39,6 +39,8 @@
     }
   }
 
+  // shared.js の委譲計測が hero / section / dock / 予約完了カードの全LINEリンクで発火する
+  document.addEventListener("thanks_line_cta_click", notifyLineClick);
   var lineBtn = document.getElementById("line-cta");
   if (lineBtn) lineBtn.addEventListener("click", notifyLineClick);
 })();

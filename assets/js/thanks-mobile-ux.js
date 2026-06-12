@@ -1,5 +1,5 @@
 /**
- * thanks-v2: スマホUX（フロー表示・スティッキーCTA・予約→LINEゲート）
+ * thanks-v2: スマホUX（フロー表示・スティッキーCTA・LINE先行→予約の段階表示）
  */
 (function () {
   "use strict";
@@ -9,9 +9,23 @@
   var lineCta = document.getElementById("line-cta");
   var dockLine = document.getElementById("thanks-dock-line");
   var dockBook = document.getElementById("thanks-dock-book");
-  var lineGateMsg = document.getElementById("line-gate-msg");
   var lineBadge = document.getElementById("line-section-badge");
   var calInView = false;
+
+  function hasLineClicked() {
+    if (window.dkThanks && window.dkThanks.hasLineClicked) {
+      return window.dkThanks.hasLineClicked();
+    }
+    try {
+      return sessionStorage.getItem("dk_line_clicked") === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function isBooked() {
+    return body.classList.contains("is-booked");
+  }
 
   function setCalToggleLabel(btn, expanded) {
     var label = btn && btn.querySelector(".t-cal__toggle-label");
@@ -112,58 +126,35 @@
     });
   }
 
-  function isLineUnlocked() {
-    return (
-      body.classList.contains("is-booked") ||
-      body.classList.contains("is-line-unlocked")
-    );
-  }
-
-  function onLockedLineClick(e) {
-    if (isLineUnlocked()) return;
-    e.preventDefault();
-    e.stopPropagation();
-    scrollToTarget("#t-calendar");
-    if (lineGateMsg) {
-      lineGateMsg.classList.add("is-nudge");
-      setTimeout(function () {
-        lineGateMsg.classList.remove("is-nudge");
-      }, 1200);
+  // LINE先行フロー: LINE未クリック→LINE CTA、クリック済み→予約CTA、両方完了→ドック退避
+  function applyLineClickedUi() {
+    if (!hasLineClicked()) return;
+    body.classList.add("is-line-clicked");
+    if (lineBadge && !isBooked()) {
+      lineBadge.textContent = "② 開設済み — 全文はお電話後に届きます";
     }
-  }
-
-  function lockLineStep() {
-    if (isLineUnlocked()) return;
-    body.classList.add("is-line-locked");
-    if (lineCta) {
-      lineCta.setAttribute("aria-disabled", "true");
-      lineCta.addEventListener("click", onLockedLineClick, true);
+    var next = document.getElementById("line-next-step");
+    if (next) next.hidden = isBooked();
+    var stepLine = document.querySelector('[data-step="line"]');
+    var stepBooking = document.querySelector('[data-step="booking"]');
+    if (stepLine) {
+      stepLine.classList.remove("is-cur");
+      stepLine.classList.add("is-done");
     }
-    if (dockLine) {
-      dockLine.setAttribute("aria-disabled", "true");
-      dockLine.hidden = true;
+    if (stepBooking && !stepBooking.classList.contains("is-done") && !isBooked()) {
+      stepBooking.classList.add("is-cur");
     }
-    if (dockBook) dockBook.hidden = false;
-  }
-
-  function unlockLineStep() {
-    body.classList.remove("is-line-locked");
-    body.classList.add("is-line-unlocked");
-    if (lineCta) {
-      lineCta.removeAttribute("aria-disabled");
-      lineCta.removeEventListener("click", onLockedLineClick, true);
-    }
-    if (lineBadge) lineBadge.textContent = "③ 今すぐ — 全文の受取口";
-    if (dockLine) {
-      dockLine.hidden = false;
-      dockLine.removeAttribute("aria-disabled");
-    }
-    if (dockBook) dockBook.hidden = true;
     updateDock();
   }
 
-  window.dkThanksUnlockLine = unlockLineStep;
-  window.dkThanksRelockLine = lockLineStep;
+  window.dkThanksUnlockLine = function () {
+    var next = document.getElementById("line-next-step");
+    if (next) next.hidden = true;
+    updateDock();
+  };
+  window.dkThanksRelockLine = function () {
+    updateDock();
+  };
 
   function isCalExpanded() {
     var panel = document.getElementById("t-cal-panel");
@@ -174,9 +165,14 @@
     if (!dock) return;
     dock.hidden = false;
     body.classList.add("is-dock-visible");
-    // 展開済みカレンダーが画面内にある間は同じCTAが重複するため退避（折りたたみ中・予約後は表示継続）
-    var hide = calInView && isCalExpanded() && !isLineUnlocked();
-    dock.classList.toggle("is-visible", !hide);
+    var lineDone = hasLineClicked();
+    var booked = isBooked();
+    if (dockLine) dockLine.hidden = lineDone;
+    if (dockBook) dockBook.hidden = !lineDone || booked;
+    // 両ステップ完了でドック退避。展開済みカレンダーが画面内の間も同じCTAが重複するため退避
+    var allDone = lineDone && booked;
+    var hideForCal = calInView && isCalExpanded() && !booked;
+    dock.classList.toggle("is-visible", !(allDone || hideForCal));
   }
 
   function initDockCalendarWatch() {
@@ -198,25 +194,15 @@
   bindScrollTriggers(document);
   if (dock) {
     bindScrollTriggers(dock);
-    if (lineCta && dockLine) {
-      dockLine.href = lineCta.href;
-      dockLine.addEventListener("click", function (e) {
-        if (!isLineUnlocked()) {
-          onLockedLineClick(e);
-          return;
-        }
-        lineCta.click();
-      });
-    }
+    if (lineCta && dockLine) dockLine.href = lineCta.href;
   }
 
   window.addEventListener("scroll", onScroll, { passive: true });
-  document.addEventListener("thanks_line_unlocked", unlockLineStep);
-  if (body.classList.contains("is-booked")) {
-    unlockLineStep();
-  } else {
-    lockLineStep();
-  }
+  document.addEventListener("thanks_line_cta_click", applyLineClickedUi);
+  document.addEventListener("thanks_line_unlocked", function () {
+    window.dkThanksUnlockLine();
+  });
+  applyLineClickedUi();
   onScroll();
 
   document.addEventListener("thanks_job_preview_refresh", onScroll);

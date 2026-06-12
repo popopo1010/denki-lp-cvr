@@ -39,7 +39,7 @@
 
 ## denkikouji の CV + LINE
 
-- フォーム完了後は `thanks-v2` へ。予約完了まで LINE はロック。
+- フォーム完了後は `thanks-v2` へ。LINE先行フロー（②LINE受取口→③予約・2026-06-12〜）。LINEロックは廃止、全文・社名のゲートは「電話」のまま。
 - コピー・ステップ数・計測の一貫性は `docs/CV-LINE-playbook.md` を正とする。
 - リリース失敗の教訓（Deploy検証・CSS副作用）は `docs/release-incidents.md` を必ず参照する。
 

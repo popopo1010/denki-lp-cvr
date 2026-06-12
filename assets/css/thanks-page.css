@@ -711,23 +711,6 @@ body {
 .t-jobs__cta-hint strong {
   color: var(--t-accent);
 }
-.t-line__gate.is-nudge {
-  animation: t-gate-nudge 0.45s ease;
-  border-color: #06c755;
-  background: #ecfdf5;
-}
-@keyframes t-gate-nudge {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-4px);
-  }
-  75% {
-    transform: translateX(4px);
-  }
-}
 .t-jobs__cta-secondary {
   color: #314c85;
   background: #fff;
@@ -809,6 +792,28 @@ body {
 .t-hero__cta-note strong {
   color: #64748b;
   font-weight: 600;
+}
+.t-hero__cta--line {
+  background: linear-gradient(135deg, var(--t-line, #06c755), #05a847);
+  box-shadow: 0 4px 16px rgba(6, 199, 85, 0.32);
+  color: #fff;
+  text-decoration: none;
+}
+.t-hero__skip {
+  margin: 8px 0 0;
+  text-align: center;
+}
+.t-hero__skip-link {
+  padding: 4px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-decoration: underline;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .t-cal--primary {
   margin-top: 0;
@@ -1110,7 +1115,7 @@ body {
   --t-warm-soft: #fff8e6;
   --t-warm-glow: rgba(232, 164, 0, 0.18);
   --t-font: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", Meiryo, sans-serif;
-  /* メイン導線（ヒーロー〜予約）は青に統一。緑は LINE セクションのみ */
+  /* 予約導線は青、LINE導線（ヒーローCTA・LINEセクション・ドック）は緑 */
   --t-success: var(--t-accent);
   --t-success-bg: var(--t-accent-soft);
   --t-line: #06c755;
@@ -1895,16 +1900,7 @@ html {
   border: none;
   box-shadow: 0 4px 14px rgba(49, 76, 133, 0.32);
 }
-.thanks-flow.is-booked .t-dock__btn--book,
-.thanks-flow.is-line-unlocked .t-dock__btn--book {
-  display: none;
-}
-.thanks-flow.is-booked #thanks-dock-line,
-.thanks-flow.is-line-unlocked #thanks-dock-line {
-  display: flex;
-  flex: 1;
-}
-.thanks-flow.is-line-locked #thanks-dock-line {
+.t-dock__btn[hidden] {
   display: none !important;
 }
 .t-dock__btn--secondary {
@@ -2483,39 +2479,38 @@ html {
   border-top: 1px dashed var(--t-accent-border);
 }
 
-/* 予約 → LINE（予約後に求人詳細を見る） */
-.thanks-flow.is-line-locked #line-section {
-  border-style: dashed;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  opacity: 0.96;
-}
-.thanks-flow.is-line-locked #line-section .t-line__badge {
-  background: #888;
-}
-.thanks-flow.is-line-locked #line-cta {
-  pointer-events: none;
-  opacity: 0.42;
-  filter: grayscale(0.35);
-  animation: none;
-  box-shadow: none;
-}
-.thanks-flow.is-line-locked .t-line__gate {
-  display: block;
-}
-.thanks-flow.is-line-locked .t-line__sub {
+/* LINE先行フロー: 予約後はゲート説明を畳む */
+.thanks-flow.is-booked .t-line__gate {
   display: none;
 }
-.thanks-flow.is-booked .t-line__gate,
-.thanks-flow.is-line-unlocked .t-line__gate {
-  display: none;
+.t-line__next {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a3568;
+  text-align: center;
 }
-.thanks-flow.is-awaiting-booking #line-section {
-  border-style: dashed;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  opacity: 0.92;
+.t-line__next-link {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--t-accent);
+  text-decoration: underline;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.thanks-flow.is-awaiting-booking #line-section .t-line__badge {
-  background: #888;
+.t-booking-done__line-done {
+  margin: 12px 0 0 !important;
+  padding-top: 12px;
+  border-top: 1px dashed #86efac;
+  font-size: 14px !important;
+  font-weight: 700;
+  color: #047a37 !important;
 }
 
 .thanks-flow.is-booked .t-contact {

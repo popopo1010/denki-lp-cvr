@@ -37,6 +37,16 @@
 | G | tel未引き継ぎでも予約を通す（thanksで電話番号は再入力させない。デッドエンド解消） | `thanks-booking-custom.js` |
 | H | 予約ファネル計測（slot_select / confirm_click / booking_error / has_tel） | `thanks-booking-custom.js`（詳細は `CV-LINE-playbook.md`） |
 
+## 今回対応（コード・2026-06-12: LINE先行フロー）
+
+| # | 項目 | ファイル |
+|---|------|----------|
+| I | LINEロック廃止・②LINE受取口→③予約に順序変更（全文ゲートは電話のまま） | `thanks-v2/index.html` + `thanks-mobile-ux.js` |
+| J | LINEクリック計測を document 委譲化 + `line_cta_position` / `booked` 属性 + `dk_line_clicked` フラグ | `thanks-v2-shared.js`（v8） |
+| K | ドック状態機械（LINE→クリック後は予約CTA→両完了で退避） | `thanks-mobile-ux.js` |
+| L | 予約完了カード・LINEセクションをLINEクリック状況で分岐 | `thanks-booking-custom.js`（v37） |
+| M | LINE beacon を委譲イベント追従（hero/dock/完了カードでも発火） | `thanks-line-beacon.js` |
+
 ## 運用・要人手（コード外）
 
 | # | 項目 | やること |
@@ -49,6 +59,8 @@
 | O6 | WP旧URL→静的LP | **自動**: deploy が `deploy/wp-legacy-redirects.htaccess.fragment` を WP ルート `.htaccess` に適用（301）。GTM `wp-redirect-snippet.html` はバックアップ |
 | O7 | E2Eテストデータ | `app.js` / `app-v2.js` が 09012345678・テスト太郎・`?dk_test=1` で Zapier/GAS 送信をスキップ |
 | O8 | Slack予約スレッド修正の反映 | `gas-recorder/コード.js` 修正後に `clasp push -f` + `clasp redeploy`。`SLACK_MENTION_CA`（@ca の `S...` ID）を設定 → テスト予約でリードスレッドに @ca+日時の返信を目視 |
+| O10 | **LINEあいさつメッセージ（2026-06-12・LINE先行の前提）** | LINE公式アカウントのあいさつメッセージに「ティーザー（3件の概要）＋予約ページ導線」を設定。未設定だと「追加したのに何も来ない」で逆効果 |
+| O11 | LINE先行の効果検証 | 前後比較: 予約率（`calendar_booked`/`lead_conversion`）とサンクス→LINE率。`line_cta_position` で位置別クリックも確認。予約率が大きく沈むなら巻き戻し |
 | O9 | **いますぐ枠の解放（2026-06-11）** | Apps Script の**スクリプトプロパティ `BOOKING_LEAD_HOURS=0`** を設定（コンソールから即時反映・デプロイ不要）。これで枠が「次の15分区切り」から生成され、thanksの「いますぐ電話を希望する」ボタンが直近時刻を確保できる。コード既定も0に変更済み（次回 `clasp push` 以降はプロパティ未設定でも0）。GASキャッシュ180秒+静的JSON5分同期なので反映は最大8分 |
 
 ## 将来の改善（優先低〜中）

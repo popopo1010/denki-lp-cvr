@@ -30,16 +30,16 @@ function exists(rel) {
 const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
-  ["thanks-v2-shared.js?v=7", "shared v7 line click bind"],
+  ["thanks-v2-shared.js?v=8", "shared v8 line click delegation + position"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
-  ["thanks-page.css?v=54", "css v54 asap booking button"],
+  ["thanks-page.css?v=55", "css v55 line-first hero CTA"],
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
   ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
-  ["thanks-booking-custom.js?v=36", "booking custom v36 asap one-tap booking"],
+  ["thanks-booking-custom.js?v=37", "booking custom v37 line-first booked copy"],
   ["thanks-job-preview.js?v=19", "job preview v19 intent auto + hero CTA"],
-  ["thanks-v2-deferred.js?v=14", "deferred bundle v14 calendar default-expanded"],
+  ["thanks-v2-deferred.js?v=15", "deferred bundle v15 line-first dock"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
@@ -59,7 +59,7 @@ const requiredStrings = [
   ["t-hero--compact", "compact hero layout"],
   ["thanks-hero-title", "hero title id for name personalization"],
   ["残り2件も", "jobs section rest title"],
-  ["あと1ステップ", "calendar benefit step label"],
+  ["③ 最後のステップ", "calendar step label (line-first flow)"],
   ["希望条件を伝える日時を選ぶ", "calendar benefit headline"],
   ["t-jobs--first", "jobs section after social strip"],
   ["1回だけ", "outbound call reassurance"],
@@ -70,10 +70,15 @@ const requiredStrings = [
   ["data-story-id=\"nw\"", "career inventory preview story"],
   ["cvr-story-mount", "ストーリーマウント"],
   ["非公開求人の全文", "非公開求人全文表記"],
-  ["LINEで全文を受け取る", "LINE CTA"],
-  ["希望条件を伝えて、最適な求人を受け取る", "benefit-first primary CTA"],
+  ["LINEで受け取り口をつくる", "LINE先行CTA"],
+  ["希望条件を伝えて、最適な求人を受け取る", "booking benefit CTA"],
   ["t-hero__cta-wrap", "hero inline CTA block"],
-  ["data-cta-location=\"hero\"", "hero CTA analytics location"],
+  ["id=\"line-cta-hero\"", "hero LINE CTA"],
+  ["data-line-position=\"dock\"", "dock LINE CTA position attr"],
+  ["data-line-position=\"section\"", "section LINE CTA position attr"],
+  ["id=\"line-next-step\"", "LINE後の予約ナッジ"],
+  ["② いま開設できます", "LINE section open badge"],
+  ["data-cta-location=\"hero\"", "hero booking skip link analytics location"],
   ["N.Wさん（38歳）", "social strip NW default"],
   ["プレミアム案内", "premium offer subcopy"],
   ["見るだけOK", "低ハードル文言"],
@@ -101,12 +106,20 @@ const forbidden = [
   ["本登録", "本登録表記"],
   ["仮登録完了", "仮登録表記（登録完了に統一）"],
   ["t-proof-strip", "removed redundant proof strip"],
+  ["予約後に開きます", "LINEロック表記（LINE先行フローで廃止）"],
+  ["LINEで全文を受け取る", "旧LINE CTA（受け取り口コピーに統一）"],
   [/プレビュー/, "プレビュー表記"],
 ];
 forbidden.forEach(([needle, label]) => {
   const hit = typeof needle === "string" ? html.includes(needle) : needle.test(html);
   hit ? fail("HTML禁止", label) : pass("HTML禁止", `${label} なし`);
 });
+
+// LINE先行フロー: LINEセクションがカレンダーより上
+html.indexOf('id="line-section"') > 0 &&
+html.indexOf('id="line-section"') < html.indexOf('id="t-calendar"')
+  ? pass("HTML順序", "LINEセクションがカレンダーより上（LINE先行）")
+  : fail("HTML順序", "LINEセクションがカレンダーより下にある");
 
 const storyIds = (html.match(/data-story-id="/g) || []).length;
 storyIds === 8 ? pass("ストーリー", "8 cards") : fail("ストーリー", `count=${storyIds}`);
@@ -193,6 +206,12 @@ const mobileUx = read("assets/js/thanks-mobile-ux.js");
 mobileUx.includes("dkThanksMountBooking") && !mobileUx.includes("ensureBookingScripts")
   ? pass("mobile-ux", "calendar expand mounts booking ui")
   : fail("mobile-ux", "booking mount on expand missing");
+!mobileUx.includes("is-line-locked") && !mobileUx.includes("onLockedLineClick")
+  ? pass("mobile-ux", "LINEロック撤廃（LINE先行フロー）")
+  : fail("mobile-ux", "LINEロックのコードが残っている");
+mobileUx.includes("applyLineClickedUi") && mobileUx.includes("thanks_line_cta_click")
+  ? pass("mobile-ux", "LINEクリック後のドック切替（LINE→予約CTA）")
+  : fail("mobile-ux", "LINEクリック後のドック切替が見当たらない");
 
 const licenseJs = read("assets/js/thanks-license-profile.js");
 licenseJs.includes("thanks_profile_ready")
@@ -231,6 +250,9 @@ read("gas-recorder/booking-custom.js").includes('getScriptProp("BOOKING_LEAD_HOU
 sharedJs.includes("bindThanksLineClicks")
   ? pass("shared.js", "line click bind in shared")
   : fail("shared.js", "bindThanksLineClicks missing");
+sharedJs.includes("line_cta_position") && sharedJs.includes("dk_line_clicked")
+  ? pass("shared.js", "line click position + clicked flag")
+  : fail("shared.js", "line_cta_position / dk_line_clicked missing");
 
 const deferred = read("assets/js/thanks-v2-deferred.js");
 !deferred.includes("thanks_page_view")
