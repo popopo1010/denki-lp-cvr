@@ -94,6 +94,7 @@ bash scripts/verify-production-release.sh   # 本番HTTP（デプロイ後）
 | 計測 | `lead_conversion` は qualified のみ / 直アクセスCVなし |
 | 予約基盤 | GAS slots OK・booking-slots.json 48h以内 |
 | UX | FV CTA・資格・入力欄がタップ可能サイズ / 送信ボタン二重表示なし |
+| ダークモード | `color-scheme: only light`・`html/body` 白背景・sticky CTAバー不透明（check-denkikouji-release.mjs に回帰チェックあり / 2026-06-12 事故） |
 | 禁止 | 本登録・旧 `/thanks/` CVトリガー依存（94%・34,513は2026-06に復活、根拠は確認事項） |
 | デプロイ | Actions `Deploy to Xserver` success・本番 `?v=` 反映 |
 

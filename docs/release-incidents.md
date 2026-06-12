@@ -2,6 +2,26 @@
 
 再発防止用。リリース前は `docs/CV-LINE-playbook.md` のチェックリストと併用。
 
+## 2026-06-12 ダークモード端末で入力ステップのCTAバーが暗転（視認性事故・2回目）
+
+**症状:** denkikouji LP の step04（郵便番号）・step06（携帯番号）で、キーボード表示中に「戻る＋CTA」バーが暗い帯に食い込み、ボタンが見えない/読めない。ダークモード端末（Samsung Internet 等の強制ダーク・アプリ内ブラウザ）で発生。視認性劣化はスマホUI調整時（daf7591）に続き2回目。
+
+**原因:**
+1. `denkikouji/index.html`（meta-lp も同様）に `color-scheme` 宣言と `html/body` の背景色指定がなく、ダークモード端末でページ地色が暗色化（computed: `background: transparent` / `color-scheme: normal`）
+2. 入力ステップの sticky CTAバー `.c-nextLink` の背景が「上28%透明→白」のグラデーションで、**背面が白である前提**。地色が暗転すると透過部分にボタン上部が重なり視認不能に
+
+**対応:**
+- LP/meta-LP の critical CSS に `:root{color-scheme:only light}html,body{background-color:#fff}` を追加 + `<meta name="color-scheme" content="only light">`（強制ダーク自動反転のオプトアウト）
+- `cvr-boost-denkikouji.css` にも同バックストップを追加し、sticky バーのフェードを padding 内の10pxに短縮（ボタン本体は常に不透明な白の上）
+- CSS `?v=` v20260701 → v20260713（HTML×2 / deploy.yml / check / e2e / verify-production-release.sh を同一コミットで同期）
+
+**再発防止:**
+- `check-denkikouji-release.mjs` に **ダークモード回帰チェック6項目**（color-scheme meta / 地色白 critical CSS / CSS バックストップ / sticky バー不透明背景）を追加。リリース前に必ず実行
+- **半透明・グラデ背景の固定/sticky 要素を追加するときは、背面が白以外（ダークモード強制反転含む）でも成立するか確認する**
+- スマホ実機確認は**ライト/ダーク両モード**で行う（特にフォーム入力ステップ＋キーボード表示状態）
+
+---
+
 ## 2026-06-11 thanks-v2 の ?v= bump で Deploy 検証だけ失敗
 
 **症状:** thanks-v2 改修（カレンダーデフォルト展開等）の main マージ後、`Deploy to Xserver` run 253 が「Verify deployment」で failure。rsync 自体は成功しており本番ファイルは更新済み（検証未通過のまま）。

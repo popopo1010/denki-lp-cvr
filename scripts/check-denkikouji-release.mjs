@@ -30,7 +30,7 @@ const css = read("assets/css/cvr-boost-denkikouji.css");
 const app = read("assets/js/app.js");
 
 const EXPECT = {
-  css: "cvr-boost-denkikouji.css?v20260701",
+  css: "cvr-boost-denkikouji.css?v20260713",
   app: "app.js?v20260712",
   lazy: "steps-lazy.html?v20260712"
 };
@@ -50,7 +50,14 @@ const EXPECT = {
   ["dk_lp_lead_v1", app.includes("dk_lp_lead_v1")],
   ["dk_test ガード", app.includes("dk_test")],
   ["submit input 非表示CSS", css.includes(".c-submit-button input") && css.includes("font-size: 0 !important")],
-  ["FV CTA 76px", css.includes("min-height: 76px") && lp.includes("min-height:76px")]
+  ["FV CTA 76px", css.includes("min-height: 76px") && lp.includes("min-height:76px")],
+  // ダークモード視認性（2026-06-12 入力ステップCTAバー暗転事故の再発防止）
+  ["LP color-scheme meta", lp.includes('<meta name="color-scheme" content="only light"')],
+  ["LP 地色白(critical CSS)", lp.includes("color-scheme:only light") && lp.includes("html,body{background-color:#fff}")],
+  ["meta-LP color-scheme meta", meta.includes('<meta name="color-scheme" content="only light"')],
+  ["meta-LP 地色白(critical CSS)", meta.includes("color-scheme:only light") && meta.includes("html,body{background-color:#fff}")],
+  ["CSS 地色白バックストップ", css.includes("color-scheme: only light") && css.includes("html, body { background-color: #fff; }")],
+  ["sticky CTAバー不透明背景", css.includes("background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 10px)")]
 ].forEach(([k, v]) => (v ? pass("denkikouji", k) : fail("denkikouji", k)));
 
 // 94%・34,513 は 2026-06 にオーナー判断で step06 に復活（根拠データは本番反映手順書の確認事項）
