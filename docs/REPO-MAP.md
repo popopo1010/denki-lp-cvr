@@ -6,7 +6,7 @@
 |---|---|---|
 | `/Users/ikeobook15/施工管理LP`（KB: `raw/sekokan-lp`） | **現役・唯一の git リポ** | ここ |
 | `/Users/ikeobook15/dk_lp`（KB: `raw/dk-lp`） | **統合済み・アーカイブ** | 上記 + 配下 `dk_lp/` サブフォルダ |
-| `/Users/ikeobook15/施工管理LP_sekokan`（KB: `raw/sekokan-lp2`） | **アーカイブ** | `/denki-lp-cvr/sekoukanri/` へ 301 済み |
+| `/Users/ikeobook15/施工管理LP_sekokan`（KB: `raw/sekokan-lp2`） | **削除済み** | ローカル・KB symlink なし。GitHub `-LP_sekokan` は archive 残存→削除可 |
 
 GitHub: https://github.com/popopo1010/denki-lp-cvr
 
@@ -46,7 +46,7 @@ GitHub: https://github.com/popopo1010/denki-lp-cvr
 | `/sekokan/` | `/denki-lp-cvr/sekoukanri/` |
 | `/thanks/` | `/denki-lp-cvr/thanks-v2/` |
 
-→ `sekokan-lp2` リポの `/sekokan/` 直デプロイは不要。GitHub Actions は停止済み。
+→ `sekokan-lp2` リポは廃止。旧 `/sekokan/` は 301 のみで足りる。
 
 ---
 
