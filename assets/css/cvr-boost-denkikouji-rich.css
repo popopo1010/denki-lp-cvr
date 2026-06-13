@@ -1,0 +1,94 @@
+/* ============================================================
+   cvr-boost-denkikouji-rich.css
+   v3 / v4（リッチ版・縦長コンテンツLP）専用の追加スタイル。
+   ※ 本番 denkikouji/ は読み込まないため影響なし。
+   ※ 数値・実績・口コミは「要確認(仮置き)」。確定後に差し替え。
+   ============================================================ */
+
+.rich-section { max-width: 407px; margin: 28px auto 0; padding: 0 4px; }
+.rich-section__title {
+  text-align: center; font-size: 18px; font-weight: 800; line-height: 1.4;
+  margin: 0 0 4px; color: #1f2937;
+}
+.rich-section__title strong { color: #ff5966; }
+.rich-section__lead { text-align: center; font-size: 12px; color: #666; line-height: 1.6; margin: 0 0 14px; }
+
+/* ---- CTA（フォーム先頭へスクロール） ---- */
+.rich-cta {
+  display: block; width: 100%; max-width: 360px; margin: 18px auto 0;
+  padding: 16px; border: 0; border-radius: 10px; cursor: pointer;
+  background: linear-gradient(135deg, #ff5966, #ff8a65); color: #fff;
+  font-size: 16px; font-weight: 800; line-height: 1.3;
+  box-shadow: 0 6px 16px rgba(255,89,102,.3);
+}
+.rich-cta small { display: block; font-size: 11px; font-weight: 600; opacity: .9; margin-top: 2px; }
+
+/* ---- 年収UP実績グラフ ---- */
+.rich-result { background: #f0f4fa; border: 1px solid #dce4f0; border-radius: 12px; padding: 16px 12px; }
+.rich-result__grid { display: flex; justify-content: space-around; align-items: flex-end; gap: 8px; margin-top: 8px; }
+.rich-result__col { flex: 1; text-align: center; }
+.rich-result__bars { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 120px; }
+.rich-result__bar { width: 22px; border-radius: 4px 4px 0 0; position: relative; }
+.rich-result__bar--before { background: #b8c4d8; }
+.rich-result__bar--after { background: linear-gradient(180deg, #ff5966, #ff8a65); }
+.rich-result__val { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #334; white-space: nowrap; }
+.rich-result__up { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; background: #ff5966; color: #fff; font-size: 11px; font-weight: 800; }
+.rich-result__label { font-size: 11px; font-weight: 700; color: #334; margin-top: 6px; line-height: 1.3; }
+.rich-result__note { text-align: center; font-size: 10px; color: #99a; margin-top: 10px; }
+
+/* ---- 給与例カード ---- */
+.rich-jobs__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rich-job {
+  background: #fff; border: 1px solid #e5e9f0; border-radius: 10px; padding: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+.rich-job__tag { display: inline-block; font-size: 9px; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 4px; padding: 1px 6px; margin-bottom: 4px; }
+.rich-job__role { font-size: 12px; font-weight: 700; color: #1f2937; line-height: 1.3; min-height: 32px; }
+.rich-job__salary { font-size: 11px; color: #64748b; margin-top: 4px; }
+.rich-job__salary strong { font-size: 16px; color: #ff5966; font-weight: 800; }
+
+/* ---- 口コミ・満足度バンド ---- */
+.rich-rating { text-align: center; background: #fff7f7; border: 1px solid #ffd9dd; border-radius: 12px; padding: 16px; }
+.rich-rating__stars { color: #ffb400; font-size: 22px; letter-spacing: 2px; }
+.rich-rating__score { font-size: 28px; font-weight: 800; color: #ff5966; line-height: 1; margin: 4px 0; }
+.rich-rating__meta { font-size: 12px; color: #555; }
+.rich-rating__meta strong { color: #1f2937; }
+
+/* ---- 緊急性バンド ---- */
+.rich-urgency { text-align: center; background: #fff8e1; border: 1px solid #ffe08a; border-radius: 12px; padding: 14px; }
+.rich-urgency__main { font-size: 14px; font-weight: 800; color: #b45309; line-height: 1.4; }
+.rich-urgency__sub { font-size: 11px; color: #8a6d3b; margin-top: 4px; }
+
+/* ---- お悩みグリッド ---- */
+.rich-worry { background: #4d4d4d; border-radius: 12px; padding: 18px 14px; }
+.rich-worry .rich-section__title { color: #fff; }
+.rich-worry__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+.rich-worry__item { background: #fff; border-radius: 8px; padding: 8px; font-size: 11px; font-weight: 700; color: #333; text-align: center; line-height: 1.3; }
+.rich-worry__solve { text-align: center; color: #fff; font-size: 14px; font-weight: 800; margin-top: 6px; }
+.rich-worry__solve strong { color: #f1d04b; }
+
+/* ---- 選ばれる理由 ---- */
+.rich-reasons__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rich-reason { background: #fff; border: 1px solid #e5e9f0; border-radius: 10px; padding: 12px 10px; text-align: center; }
+.rich-reason__no { display: inline-block; width: 26px; height: 26px; line-height: 26px; border-radius: 999px; background: #314c85; color: #fff; font-size: 13px; font-weight: 800; }
+.rich-reason__head { font-size: 13px; font-weight: 800; color: #1f2937; margin: 6px 0 4px; line-height: 1.3; }
+.rich-reason__text { font-size: 11px; color: #666; line-height: 1.5; }
+
+/* ---- 比較表 ---- */
+.rich-compare { width: 100%; border-collapse: collapse; font-size: 11px; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.rich-compare th, .rich-compare td { border: 1px solid #e5e9f0; padding: 8px 4px; text-align: center; }
+.rich-compare thead th { background: #314c85; color: #fff; font-size: 11px; }
+.rich-compare thead th.is-us { background: #ff5966; }
+.rich-compare tbody th { background: #f7f9fc; text-align: left; font-weight: 700; color: #334; font-size: 11px; }
+.rich-compare .o { color: #ff5966; font-weight: 800; font-size: 15px; }
+.rich-compare .t { color: #94a3b8; font-size: 14px; }
+
+/* ---- フッターCTA ---- */
+.rich-footer-cta { max-width: 407px; margin: 28px auto 0; padding: 22px 16px; text-align: center; background: linear-gradient(135deg, #314c85, #5c6bc0); border-radius: 12px; }
+.rich-footer-cta__title { color: #fff; font-size: 17px; font-weight: 800; line-height: 1.4; margin: 0 0 10px; }
+.rich-footer-cta__title strong { color: #f1d04b; }
+.rich-footer-cta .rich-cta { margin-top: 0; }
+
+@media (max-width: 374px) {
+  .rich-job__role { min-height: 40px; }
+}
