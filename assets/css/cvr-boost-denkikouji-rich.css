@@ -92,3 +92,22 @@
 @media (max-width: 374px) {
   .rich-job__role { min-height: 40px; }
 }
+
+/* ---- FV選択ボタンの「押せる」サイン（一瞬キラッ・3秒に1回） ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .p-firstButton { position: relative; overflow: hidden; }
+  .p-firstButton::after {
+    content: ""; position: absolute; top: 0; left: -75%;
+    width: 50%; height: 100%; pointer-events: none;
+    background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,.15) 35%, rgba(255,255,255,.75) 50%, rgba(255,255,255,.15) 65%, transparent 100%);
+    transform: skewX(-20deg);
+    animation: richBtnShine 3.4s ease-in-out infinite;
+  }
+  .p-firstButton:last-child::after { animation-delay: .45s; }
+  @keyframes richBtnShine {
+    0%   { left: -75%; }
+    16%  { left: 130%; }
+    100% { left: 130%; }
+  }
+}
+
