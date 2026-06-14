@@ -69,8 +69,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     <noscript><link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014"></noscript>
     <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260702" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260702"></noscript>
-    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji-rich.css?v20260614" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji-rich.css?v20260614"></noscript>
+    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji-rich.css?v20260615" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji-rich.css?v20260615"></noscript>
     <script>window.__LP_ID="denkikouji-v4";</script>
     <script src="../assets/js/app.js?v20260713" defer></script>
 </head>
@@ -442,9 +442,10 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     </div>
 </footer>
 
-<!-- v3/v4 限定: 名入力の確定/離脱/Enterで自動的に生まれ年へフォーカス（共有app.jsの補強・本番denkikoujiには無影響） -->
+<!-- v3/v4 限定: 名入力後に生まれ年へ誘導（自動focus + 次へキー + スクロール&グロー）。共有app.js補強・本番denkikoujiには無影響 -->
 <script>
 (function(){
+  function hl(el){ if(!el) return; el.classList.add('rich-year-hl'); setTimeout(function(){el.classList.remove('rich-year-hl');},3400); }
   function wire(){
     var first=document.getElementById('first-name');
     var year=document.getElementById('bday-year');
@@ -455,17 +456,20 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     var composing=false;
     first.addEventListener('compositionstart',function(){composing=true;});
     first.addEventListener('compositionend',function(){composing=false;});
-    function toYear(){
-      if(composing) return;
+    function ready(){
       var lastOk=last?(last.value||'').trim():true;
-      if(lastOk&&(first.value||'').trim()&&!(year.value||'').trim()){
-        try{year.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
-        year.focus();
-      }
+      return lastOk && (first.value||'').trim() && !(year.value||'').trim();
     }
-    first.addEventListener('change',toYear);
+    function toYear(){
+      if(composing||!ready()) return;
+      try{year.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
+      try{year.focus({preventScroll:true});}catch(e){ try{year.focus();}catch(_){} }
+      hl(year); /* iOSでキーボードが出ない場合の視認性確保 */
+    }
+    first.addEventListener('change',function(){toYear();});
     first.addEventListener('blur',function(){setTimeout(toYear,50);});
-    first.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();toYear();}});
+    first.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); toYear(); } });
+    if(last){ last.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); try{first.focus();}catch(_){} } }); }
     return true;
   }
   if(!wire()){
