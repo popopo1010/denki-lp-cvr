@@ -442,6 +442,39 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     </div>
 </footer>
 
+<!-- v3/v4 限定: 名入力の確定/離脱/Enterで自動的に生まれ年へフォーカス（共有app.jsの補強・本番denkikoujiには無影響） -->
+<script>
+(function(){
+  function wire(){
+    var first=document.getElementById('first-name');
+    var year=document.getElementById('bday-year');
+    if(!first||!year) return false;
+    if(first.dataset.autoYearWired) return true;
+    first.dataset.autoYearWired='1';
+    var last=document.getElementById('last-name');
+    var composing=false;
+    first.addEventListener('compositionstart',function(){composing=true;});
+    first.addEventListener('compositionend',function(){composing=false;});
+    function toYear(){
+      if(composing) return;
+      var lastOk=last?(last.value||'').trim():true;
+      if(lastOk&&(first.value||'').trim()&&!(year.value||'').trim()){
+        try{year.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
+        year.focus();
+      }
+    }
+    first.addEventListener('change',toYear);
+    first.addEventListener('blur',function(){setTimeout(toYear,50);});
+    first.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();toYear();}});
+    return true;
+  }
+  if(!wire()){
+    var mo=new MutationObserver(function(){if(wire()){mo.disconnect();}});
+    mo.observe(document.documentElement,{childList:true,subtree:true});
+    setTimeout(function(){try{mo.disconnect();}catch(e){}},30000);
+  }
+})();
+</script>
 
 </body>
 </html>
