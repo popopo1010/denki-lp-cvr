@@ -199,7 +199,10 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-function buildPage({ title, lead, baseHref, backHref, sections, showBack }) {
+function buildPage({ title, lead, baseHref, backHref, sections, showBack, rootHref }) {
+  // ad-cr はリポジトリ直下にのみ存在する。ルート版は ./ad-cr/、
+  // WPLP/自前LP のミラー版は親(=ルート)の ../ad-cr/ を指す。
+  const adcrHref = (rootHref || baseHref) + "ad-cr/";
   const total = sections.reduce((n, s) => n + s.items.length, 0);
   const nav = sections
     .map((s) => `<a href="#${s.id}">${escapeHtml(s.title)} <span class="count">${s.items.length}</span></a>`)
@@ -387,7 +390,7 @@ ${cards}
 ${body}
 
     <footer>
-      広告CRの入稿用一覧は <a href="${escapeHtml(baseHref)}ad-cr/">ad-cr/</a> も参照。
+      広告CRの入稿用一覧は <a href="${escapeHtml(adcrHref)}">ad-cr/</a> も参照。
     </footer>
   </div>
   <script>
@@ -492,6 +495,7 @@ if (wplpSections[0]?.items.length) {
       title: "LP 一覧 (WPLP) | 施工管理LP",
       lead: "WordPress版（WPLP）フォルダ内のLPのみ。",
       baseHref: "./",
+      rootHref: "../",
       sections: wplpSections,
       showBack: true,
       backHref: "../"
@@ -513,6 +517,7 @@ if (jizenSections[0]?.items.length) {
       title: "LP 一覧 (自前LP) | 施工管理LP",
       lead: "自前LPフォルダ内の静的ページのみ。",
       baseHref: "./",
+      rootHref: "../",
       sections: jizenSections,
       showBack: true,
       backHref: "../"
