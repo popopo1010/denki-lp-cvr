@@ -148,8 +148,21 @@
     });
   }
 
+  // 携帯番号のみ受け付ける（060/070/080/090 始まりの11桁）
+  const TEL_PREFIX_ERROR = "090・080・070・060から始まる携帯番号を入力してください";
+
   function isValidTel(value) {
-    return /^[0-9]{11}$/.test(String(value || "").trim());
+    return /^0[6789]0[0-9]{8}$/.test(String(value || "").trim());
+  }
+
+  // 入力途中でも携帯番号になり得ない先頭3桁を検知する
+  function hasInvalidTelPrefix(value) {
+    const v = String(value || "").trim();
+    if (!v) return false;
+    if (v.charAt(0) !== "0") return true;
+    if (v.length >= 2 && "6789".indexOf(v.charAt(1)) === -1) return true;
+    if (v.length >= 3 && v.charAt(2) !== "0") return true;
+    return false;
   }
 
   const LAZY_STEP_IDS = new Set(["step03", "step04", "step05", "step06"]);
@@ -452,7 +465,9 @@
   function initCheckboxButtons(group) {
     const buttons = group.querySelectorAll(".js-checkbox-button");
     if (!buttons.length) return;
-    const hiddens = document.querySelectorAll(".hidden-checkbox");
+    // your-term（検索キーワード格納用）は資格チェックボックスではないため除外。
+    // 検索KW文字列がボタン値として誤って復元されるのを防ぐ。
+    const hiddens = document.querySelectorAll('.hidden-checkbox:not([name="your-term"])');
     const target = group.querySelector(".js-icon-target");
     const nextBtn = group.querySelector(".js-next-button");
     const vals = {};
@@ -808,7 +823,7 @@
           const len = item.value.length;
           if (telNotice) {
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
-            else if (len === 11) { telNotice.style.display = "none"; }
+            else if (len === 11 || hasInvalidTelPrefix(item.value)) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
           }
 
@@ -820,6 +835,14 @@
             updateBtn();
             scheduleTelAutoSubmit();
           } else {
+            if (errBox) {
+              if (hasInvalidTelPrefix(item.value)) {
+                errBox.style.display = "block";
+                if (errText) errText.textContent = TEL_PREFIX_ERROR;
+              } else if (errText && errText.textContent === TEL_PREFIX_ERROR) {
+                errBox.style.display = "none";
+              }
+            }
             states[i] = false;
             item.classList.remove(SKIP);
             updateBtn();
@@ -837,7 +860,8 @@
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
         if (item.name === "your-tel" && item.value && !isValidTel(item.value)) {
-          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
+          const telMsg = hasInvalidTelPrefix(item.value) ? TEL_PREFIX_ERROR : "携帯番号11桁を半角数字で入力してください";
+          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = telMsg; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
         if (states.every(Boolean)) moveIconById("#" + nextBtn.id);
@@ -1025,6 +1049,39 @@
     form.addEventListener("submit", sendToMirrors, { capture: true });
   }
 
+  // ========== 検索キーワード（広告流入の utm_term など）==========
+  // 流入URLの検索KWを拾って隠しフィールド your-term(#hidden4) に入れ、
+  // リード通知(Slack)/シートの「キーワード」として記録する。拾えなければ空のまま。
+  //
+  // 注意: cvr-boost.js / app-v2.js にも同等のロジックがあるが、app.js 系LP（denkikouji 等）
+  // では cvr-boost.js を window load 後に遅延注入するため、cvr-boost.js 側の
+  // DOMContentLoaded ハンドラが発火せず your-term が空のままになっていた。
+  // ここ（initForm: window load で確実に実行）でセットして取りこぼしを防ぐ。
+  // sessionStorage キーは cvr-boost.js / app-v2.js と共通（dk_utm_term）。
+  const SEARCH_KW_KEYS = ["utm_term", "keyword", "kw"];
+  const SEARCH_KW_SESSION_KEY = "dk_utm_term";
+
+  function resolveSearchKeyword() {
+    try {
+      const q = new URLSearchParams(location.search);
+      for (const key of SEARCH_KW_KEYS) {
+        const v = (q.get(key) || "").trim();
+        if (v) {
+          try { sessionStorage.setItem(SEARCH_KW_SESSION_KEY, v); } catch (e) { /* private mode */ }
+          return v;
+        }
+      }
+      try { return sessionStorage.getItem(SEARCH_KW_SESSION_KEY) || ""; } catch (e) { return ""; }
+    } catch (e) { return ""; }
+  }
+
+  function initSearchKeyword() {
+    const kw = resolveSearchKeyword();
+    if (!kw) return;
+    const field = document.querySelector('input[name="your-term"]');
+    if (field && !field.value) field.value = kw.slice(0, 200);
+  }
+
   // ========== Init ==========
   function initForm() {
     const form = document.querySelector(".wpcf7-form");
@@ -1040,6 +1097,7 @@
 
     queueMicrotask(() => {
       form.querySelectorAll(".js-form-group").forEach(initFormGroup);
+      initSearchKeyword();
       initCookieName();
       initZapierMirror();
       preventEnter();
@@ -1085,5 +1143,22 @@
       initForm();
       loadCvrBoostDeferred();
     }
+  });
+
+  // キーボード表示中（入力欄フォーカス中）は body.lp-kb-open を立てる。
+  // iOSでviewportが縮むと sticky CTA（.c-nextLink）が入力欄・フッターに被さるため、
+  // CSS側でstickyを解除する（docs/release-incidents.md 2026-06-12）
+  document.addEventListener("focusin", (e) => {
+    if (e.target && e.target.matches && e.target.matches("input, select, textarea")) {
+      document.body.classList.add("lp-kb-open");
+    }
+  });
+  document.addEventListener("focusout", () => {
+    setTimeout(() => {
+      const ae = document.activeElement;
+      if (!ae || !ae.matches || !ae.matches("input, select, textarea")) {
+        document.body.classList.remove("lp-kb-open");
+      }
+    }, 60);
   });
 })();

@@ -104,6 +104,7 @@ bash scripts/verify-production-release.sh   # 本番HTTP（デプロイ後）
 | 計測 | `lead_conversion` は qualified のみ / 直アクセスCVなし |
 | 予約基盤 | GAS slots OK・booking-slots.json 48h以内 |
 | UX | FV CTA・資格・入力欄がタップ可能サイズ / 送信ボタン二重表示なし |
+| 入力ステップの崩れ | step04〜06に**フォーカス（キーボード表示）した状態**で、フッターや固定CTAが入力欄に被っていない（実機 or Playwright `--device` + input focus）。経緯: `docs/release-incidents.md` 2026-06-15 |
 | 禁止 | 本登録・旧 `/thanks/` CVトリガー依存（94%・34,513は2026-06に復活、根拠は確認事項） |
 | デプロイ | Actions `Deploy to Xserver` success・本番 `?v=` 反映 |
 

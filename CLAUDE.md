@@ -42,6 +42,7 @@
 - フォーム完了後は `thanks-v2` へ。LINE先行フロー（②LINE受取口→③予約・2026-06-12〜）。LINEロックは廃止、全文・社名のゲートは「電話」のまま。
 - コピー・ステップ数・計測の一貫性は `docs/CV-LINE-playbook.md` を正とする。
 - リリース失敗の教訓（Deploy検証・CSS副作用）は `docs/release-incidents.md` を必ず参照する。
+- 入力ステップ（step04〜06）では、フッター（`.l-footer`）や `bottom:0` の sticky/fixed 要素を入力欄と同じ画面に出さない。被さると表示崩れの再発になる（同症状3回。経緯: `docs/release-incidents.md` 2026-06-15）。両CSSに `body.lp-input-step .l-footer{display:none}` で対処済み。プライバシー/利用規約の導線は step06 の `.cvr-pp-text` で担保。focus/viewport の JS検知はアプリ内ブラウザで空振りする前提で、被さり得る要素は構造的に隠す。
 
 ## LP作成・改善のリファレンス
 
