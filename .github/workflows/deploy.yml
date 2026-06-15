@@ -70,7 +70,10 @@ jobs:
           for f in \
             assets/css/cvr-boost.css \
             assets/css/cvr-boost-sekoukanri.css \
+            assets/css/cvr-boost-denkikouji.css \
+            assets/css/cvr-boost-denkikouji-rich.css \
             assets/css/cvr-boost-v2.css \
+            assets/css/meta-short-lp.css \
             assets/css/denki-suite.css \
             assets/css/thanks-calendar.css \
             assets/css/thanks-page.css; do
