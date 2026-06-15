@@ -409,6 +409,18 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 .footer-dark .link:hover { color: #fff; }
 .footer-dark .copyright { font-size: 10px; color: rgba(255,255,255,.5); margin-top: 8px; }
 
+/* フォーム中（FV以外の全ステップ）はWPテーマのフッター(.l-footer)を隠す。
+   入力ステップはコンテンツが短く、.l-main{flex:1} でフッターが画面下に
+   張り付き、sticky CTA や入力欄に被さって表示崩れする（iOS実機・SNSアプリ内
+   ブラウザで再発／同症状3回）。focus/viewport の JS検知はアプリ内ブラウザで
+   空振りするため、JS非依存で構造的に隠す。プライバシーポリシー/利用規約の
+   導線は step06 の .cvr-pp-text で担保済み。sekoukanri も同方式。
+   経緯: docs/release-incidents.md 2026-06-15 */
+body.lp-form-step .l-footer,
+body.lp-input-step .l-footer {
+  display: none !important;
+}
+
 /* ===== フォーム共通 ===== */
 .c-next-button span:first-child { font-size: 15px; font-weight: 700; }
 .c-nextLinkButton { font-size: 12px !important; color: #bbb !important; text-decoration: none !important; }
