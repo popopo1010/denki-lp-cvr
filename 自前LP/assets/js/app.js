@@ -975,16 +975,30 @@
   }
 
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
+  // テスト端末フラグ: 一度 ?dk_test=1 / ?_test=1 付きで開くと localStorage に保存し、
+  // 以後その端末からの送信は氏名・IPに関係なく常にテスト扱い（スプシ/Slack/Zapier へ送らない）。
+  // スマホはIP（_ip）が毎回変わるためIP除外では取りこぼす。端末フラグで確実に除外する。
+  // 解除は ?dk_test=0 / ?_test=0 を付けて開く。
+  function resolveTestDeviceFlag() {
+    try {
+      const m = /[?&](?:_test|dk_test)=([01])(?:&|$)/.exec(location.search);
+      if (m) {
+        if (m[1] === "1") { try { localStorage.setItem("dk_test_device", "1"); } catch (e) { /* noop */ } return true; }
+        try { localStorage.removeItem("dk_test_device"); } catch (e) { /* noop */ }
+        return false;
+      }
+      try { return localStorage.getItem("dk_test_device") === "1"; } catch (e) { return false; }
+    } catch (e) { return false; }
+  }
+
   function isTestLeadSubmission(tel, last, first) {
     const t = String(tel || "").trim();
     const ln = String(last || "").trim();
     const fn = String(first || "").trim();
+    if (resolveTestDeviceFlag()) return true;
     if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return true;
     if (ln === "テスト" && (fn === "太郎" || fn === "テスト")) return true;
     if (/テスト/.test(ln + fn)) return true;
-    try {
-      if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return true;
-    } catch (e) { /* noop */ }
     return false;
   }
 
@@ -994,6 +1008,7 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
     const form = document.querySelector(".wpcf7-form");
     if (!form) return;
+    resolveTestDeviceFlag(); // ?dk_test=1 等で開いた端末を、送信前でも以後テスト扱いにする
     let sentOnce = false;
     let clientIp = "";
 
