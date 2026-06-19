@@ -922,7 +922,7 @@ body.lp-form-step #step06.is-step-active {
   body.lp-form-step .cvr-progress { margin-bottom: 8px; }
   body.lp-form-step .cvr-progress__label {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #314c85;
     text-align: center;
@@ -1168,9 +1168,10 @@ body.lp-form-step #step05 .c-next-button {
     padding-bottom: 8px;
   }
   body.lp-form-step #step01 .cvr-step-reason { display: none; }
-  body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
+  body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 13px; padding: 4px 8px; line-height: 1.4; color: #475569; }
   body.lp-form-step #step01 .cvr-step-reward { display: block; }
-  body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 15px; font-weight: 800; }
+  body.lp-form-step #step01 .cvr-multi-hint { font-size: 13px; color: #475569; margin-bottom: 6px; }
+  body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 18px; font-weight: 800; }
   body.lp-form-step #step01 .c-step { padding-top: 4px; }
   body.lp-form-step #step01 .p-step01__buttonArea {
     flex: 0 0 auto;
