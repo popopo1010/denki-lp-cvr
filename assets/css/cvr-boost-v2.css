@@ -561,9 +561,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-bottom: 8px;
   }
   body.lp-form-step #step01 .cvr-step-reason { display: none; }
-  body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
+  body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 13px; padding: 4px 8px; line-height: 1.4; color: #475569; }
   body.lp-form-step #step01 .cvr-step-reward { display: block; }
-  body.lp-form-step #step01 .c-title01 { padding: 2px 0; font-size: 13px; }
+  body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 18px; font-weight: 800; }
   body.lp-form-step #step01 .c-step { padding-top: 4px; }
   body.lp-form-step #step01 .p-step01__buttonArea {
     flex: 0 0 auto;

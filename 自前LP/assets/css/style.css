@@ -67,7 +67,7 @@ html{scroll-behavior:smooth}
 .c-step__text span{font-size:13px}
 
 /* Titles */
-.c-title01{padding:6px 0 4px;font-weight:700;font-size:15px;text-align:center}
+.c-title01{padding:6px 0 4px;font-weight:700;font-size:17px;text-align:center}
 .c-title-top{padding:8px 0;background:rgba(24,88,1,.25);margin-bottom:8px}
 .c-title02{display:flex;align-items:center;padding-top:16px;font-weight:700;font-size:16px}
 .c-title02::before{display:block;width:16px;height:16px;margin:0 8px;background:#f17a85;content:""}
@@ -273,8 +273,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 /* 施工管理LP(11択): 資格選択はテキストのみ */
 #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .c-button__img{display:none!important;height:0!important;margin:0!important}
-#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button{min-height:auto;padding:10px 8px;justify-content:center;flex-direction:row;gap:0}
-#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text{min-height:0;font-size:13px;font-weight:700;line-height:1.35;text-align:center}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button{min-height:56px;padding:12px 8px;justify-content:center;flex-direction:row;gap:0}
+#step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text{min-height:0;font-size:16px;font-weight:700;line-height:1.35;text-align:center}
 
 /* SP FV圧縮 */
 @media(max-width:767px){
