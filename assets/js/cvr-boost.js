@@ -144,7 +144,9 @@
         if (term) sessionStorage.setItem("dk_utm_term", term);
         else term = sessionStorage.getItem("dk_utm_term") || "";
       } catch (e) {}
-      h4.value = term;
+      // 既に値が入っている場合（app.js initSearchKeyword 等が先にセット）は
+      // 空文字で上書きしない。utm_term を拾えたときだけ反映する。
+      if (term && !h4.value) h4.value = term;
     }
 
     if (typeof requestIdleCallback === "function") {

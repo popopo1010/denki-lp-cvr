@@ -1106,6 +1106,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    // 流入URLの検索KWは早い段階で sessionStorage 退避＆your-termへ反映しておく
+    // （window load 経路が何らかの理由で遅れても取りこぼさないための保険。
+    //  field未存在やthanksページではno-op、二重実行も !field.value で安全）。
+    initSearchKeyword();
     initPrefSelect();
     initBirthday();
     updateProgress("#step-first");
