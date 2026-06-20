@@ -1029,6 +1029,14 @@
       if (isTestLeadSubmission(tel, last, first)) return;
       sentOnce = true;
       try {
+        // 送信時点でも検索KWを再捕捉する最終保険。load/DOMContentLoaded 経路で
+        // 取りこぼしても（utm_termが後付けされた・他スクリプトに上書きされた等）、
+        // _page と同じ location を見て your-term に確実に反映してから送る。
+        const termField = form.querySelector('input[name="your-term"]');
+        if (termField && !termField.value) {
+          const kw = resolveSearchKeyword();
+          if (kw) termField.value = kw.slice(0, 200);
+        }
         const fd = new FormData(form);
         const params = new URLSearchParams();
         fd.forEach((v, k) => { if (!k.startsWith("_wpcf7")) params.append(k, v == null ? "" : String(v)); });
