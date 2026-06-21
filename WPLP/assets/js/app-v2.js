@@ -1087,14 +1087,16 @@
   // ========== 初期化（離脱防止は即時、その他 CVR はアイドル時・最大 ~2s で実行） ==========
   document.addEventListener("DOMContentLoaded", function () {
     var h4 = document.getElementById("hidden4");
-    if (h4) {
-      // utm_term はURLから消えても入るよう sessionStorage に保持する
-      var term = getParam("utm_term") || "";
+    if (h4 && !h4.value) {
+      // 流入URLの検索KW（utm_term > keyword > kw）を拾い、URLから消えても
+      // sessionStorage に保持する（app.js / cvr-boost.js と挙動を統一）。
+      // 空で上書きしないよう、値を拾えたときだけ反映する。
+      var term = getParam("utm_term") || getParam("keyword") || getParam("kw") || "";
       try {
         if (term) sessionStorage.setItem("dk_utm_term", term);
         else term = sessionStorage.getItem("dk_utm_term") || "";
       } catch (e) {}
-      h4.value = term;
+      if (term) h4.value = term.slice(0, 200);
     }
 
     initExitIntent();

@@ -138,13 +138,16 @@
   document.addEventListener("DOMContentLoaded", function () {
     var h4 = document.getElementById("hidden4");
     if (h4) {
-      // utm_term はURLから消えても入るよう sessionStorage に保持する
-      var term = getParam("utm_term") || "";
+      // 流入URLの検索KW（utm_term > keyword > kw）を拾い、URLから消えても
+      // sessionStorage に保持する（app.js / app-v2.js と挙動を統一）
+      var term = getParam("utm_term") || getParam("keyword") || getParam("kw") || "";
       try {
         if (term) sessionStorage.setItem("dk_utm_term", term);
         else term = sessionStorage.getItem("dk_utm_term") || "";
       } catch (e) {}
-      h4.value = term;
+      // 既に値が入っている場合（app.js initSearchKeyword 等が先にセット）は
+      // 空文字で上書きしない。検索KWを拾えたときだけ反映する。
+      if (term && !h4.value) h4.value = term.slice(0, 200);
     }
 
     if (typeof requestIdleCallback === "function") {
