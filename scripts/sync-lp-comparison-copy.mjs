@@ -69,7 +69,7 @@ const REPLACEMENTS = [
   ],
   [
     "の条件にあった<span class=\"text-span-2\"><strong>新着求人が多数</strong></span>見つかりました。",
-    "の条件に合いそうな<span class=\"text-span-2\"><strong>比較材料</strong></span>が見つかりました。"
+    "の経験を活かせる、<span class=\"text-span-2\"><strong>今より好条件</strong></span>の求人が見つかりそうです"
   ],
   [
     "<span>あなたに合う求人を見る</span>",
