@@ -669,21 +669,22 @@
 
     inputs.forEach(input => input.addEventListener("blur", () => validate()));
 
-    // 姓+名 両方埋まったら生年月日input へ同期フォーカス。
-    // 同期focusでないとiOS Safariはキーボードを自動で開かない。
-    // 一度だけ実行（didAutoAdvanceYear）して、ユーザーが姓名を再編集しても再focus しない。
+    // 姓・名を「入力し終えてフィールドを離れた(blur)」ときだけ生年月日(西暦)へ誘導する。
+    // 旧実装は input 中（姓・名が各1文字入った瞬間）に focus を奪い、名前が中途半端に
+    // 確定する事故が多発したため、blur（名フィールドを離れた）かつ両方入力済み・一度だけに変更。
     function namesAllFilled() {
-      return Array.from(inputs).every(i => !!i.value);
+      return Array.from(inputs).every(i => !!(i.value || "").trim());
     }
+    const firstNameInput = group.querySelector("#first-name") || inputs[inputs.length - 1];
     let didAutoAdvanceYear = false;
-    inputs.forEach(input => {
-      input.addEventListener("input", () => {
-        if (!didAutoAdvanceYear && namesAllFilled() && bdayYearInput && isYearInput && !bdayYearInput.value) {
-          didAutoAdvanceYear = true;
-          try { bdayYearInput.focus({ preventScroll: false }); } catch (e) { bdayYearInput.focus(); }
-        }
-      });
-    });
+    function maybeAdvanceToYear() {
+      if (didAutoAdvanceYear) return;
+      if (!namesAllFilled()) return;
+      if (!(bdayYearInput && isYearInput) || bdayYearInput.value) return;
+      didAutoAdvanceYear = true;
+      try { bdayYearInput.focus({ preventScroll: false }); } catch (e) { bdayYearInput.focus(); }
+    }
+    if (firstNameInput) firstNameInput.addEventListener("blur", maybeAdvanceToYear);
 
     // Initial: disable
     nextBtn.classList.add(DISABLE);
