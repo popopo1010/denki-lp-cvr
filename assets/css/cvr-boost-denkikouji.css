@@ -490,7 +490,9 @@ body.lp-input-step .l-footer {
 
 /* フォームグループ共通 */
 .js-form-group { position: relative; overflow: visible; }
-.c-fixed-icon { z-index: 2; pointer-events: none; position: absolute; right: -8px; bottom: -10px; }
+/* 固定クマ。アプリ内ブラウザ（LINE等）の下部ツールバー／ホームインジケータ（safe-area）に
+   被って見切れる対策として、safe-area分だけ持ち上げる。env非対応ブラウザは前段の -10px にフォールバック */
+.c-fixed-icon { z-index: 2; pointer-events: none; position: absolute; right: -8px; bottom: -10px; bottom: calc(env(safe-area-inset-bottom, 0px) - 10px); }
 .c-container { overflow: visible !important; }
 
 /* ステップ進捗 */

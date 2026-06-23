@@ -213,8 +213,8 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-job-previews.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
-          echo "$html" | grep -q 'thanks-v2-deferred.js?v=15' || (echo "missing thanks-v2-deferred v=15" && exit 1)
-          echo "$html" | grep -q 't-cal__toggle' || (echo "missing calendar collapse toggle" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-deferred.js?v=16' || (echo "missing thanks-v2-deferred v=16" && exit 1)
+          echo "$html" | grep -q 'id="t-calendar"' && (echo "calendar should be removed (LINE一本化)" && exit 1) || true
           echo "$html" | grep -q 'booking-slots.json" as="fetch"' && (echo "booking-slots preload should be removed" && exit 1) || true
           echo "$html" | grep -q 'GTM-KV525PZ' || (echo "missing GTM on thanks-v2" && exit 1)
           echo "$html" | grep -q 'requestIdleCallback(loadGTM' && (echo "thanks-v2 still lazy-loads GTM" && exit 1) || true
@@ -234,7 +234,7 @@ jobs:
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
             echo "$denki_lp" | grep -q 'app.js?v20260714' || return 1
-            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260715' || return 1
+            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260623' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
             app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
             echo "$app_js" | grep -q 'thanks-v2' || return 1
@@ -274,14 +274,14 @@ jobs:
           echo "$html" | grep -q 'thanks-page-context.js?v=27' || (echo "missing thanks-page-context v=27" && exit 1)
           echo "$html" | grep -qE 'thanks-page\.css\?v=56' || (echo "missing thanks-page.css v=56" && exit 1)
           echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
-          echo "$html" | grep -q 'thanks-job-preview.js?v=19' || (echo "missing job preview v=19" && exit 1)
+          echo "$html" | grep -q 'thanks-job-preview.js?v=20' || (echo "missing job preview v=20" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)
           echo "$html" | grep -q 'thanks-v2-shared.js?v=8' || (echo "missing thanks-v2-shared v=8" && exit 1)
           echo "$html" | grep -q 'family=Noto+Sans+JP:wght@400;700' || (echo "missing noto 400+700 fonts" && exit 1)
-          echo "$html" | grep -q 'thanks-booking-bootstrap.js?v=18' || (echo "missing booking bootstrap v=18" && exit 1)
-          echo "$html" | grep -qE 'thanks-booking-custom\.js\?v=39' || (echo "missing booking custom v=39" && exit 1)
+          echo "$html" | grep -q 'thanks-booking-bootstrap.js' && (echo "booking bootstrap should be removed (LINE一本化)" && exit 1) || true
+          echo "$html" | grep -q 'thanks-booking-custom.js' && (echo "booking custom should be removed (LINE一本化)" && exit 1) || true
           echo "$html" | grep -q 'thanks-social-meta' || (echo "missing social strip profile mount" && exit 1)
-          echo "$html" | grep -q 'id="t-cal-panel"' || (echo "missing calendar collapse panel" && exit 1)
+          echo "$html" | grep -q 'id="thanks-dock-book"' && (echo "dock booking CTA should be removed (LINE一本化)" && exit 1) || true
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "license profile should be bundled in deferred" && exit 1) || true
           echo "$html" | grep -q 't-hero--gift' || (echo "missing gift-first hero" && exit 1)
           echo "$html" | grep -q 't-hero__reassure' || (echo "missing hero reassure line" && exit 1)
@@ -291,9 +291,8 @@ jobs:
           echo "$html" | grep -q 't-jobs--first' || (echo "missing jobs-first section" && exit 1)
           echo "$html" | grep -q 'class="t-flow"' && (echo "flow nav should be removed" && exit 1) || true
           echo "$html" | grep -q 't-hero__stats' && (echo "hero stats grid should be removed" && exit 1) || true
-          echo "$html" | grep -q '1回だけ' || (echo "missing outbound call reassurance" && exit 1)
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "standalone license profile should be removed" && exit 1) || true
-          echo "$html" | grep -q '日時を選んで、最適な求人を受け取る' || (echo "missing action-aligned booking CTA" && exit 1)
+          echo "$html" | grep -q 'data-line-position="jobs"' || (echo "missing jobs LINE CTA (LINE一本化)" && exit 1)
           echo "$html" | grep -q '10分だけ話を聞く' && (echo "talk-first CTA should be removed" && exit 1) || true
           echo "$html" | grep -q 'id="t-future"' || (echo "missing t-future section" && exit 1)
           echo "$html" | grep -q 'data-story-id' || (echo "missing testimonial stories" && exit 1)

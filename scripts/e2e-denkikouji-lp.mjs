@@ -21,10 +21,10 @@ async function main() {
   const page = await browser.newPage({ ...devices["iPhone 13"], locale: "ja-JP" });
 
   const lpHtml = await (await page.request.get(`${BASE}/denkikouji/`)).text();
-  if (lpHtml.includes("cvr-boost-denkikouji.css?v20260715")) {
-    pass("本番 CSS", "v20260715");
+  if (lpHtml.includes("cvr-boost-denkikouji.css?v20260623")) {
+    pass("本番 CSS", "v20260623");
   } else if (lpHtml.match(/cvr-boost-denkikouji\.css\?v202[0-9]+/)) {
-    fail("本番 CSS", "v20260715 未反映（デプロイ待ち）");
+    fail("本番 CSS", "v20260623 未反映（デプロイ待ち）");
   } else {
     fail("本番 CSS", "cache buster 不明");
   }

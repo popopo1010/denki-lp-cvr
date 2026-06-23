@@ -36,10 +36,13 @@
 - 本番反映手順に影響する変更は、必要に応じて `本番反映手順書.md` も更新する。
 - GTM注入で反映するのか、テーマファイルに反映するのかを明確にしてから作業する。
 - 実装後は、表示崩れ・フォーム動作・外部リンク・プライバシーポリシー導線を確認する。
+- **ブランチへの push ≠ 本番反映**：本番デプロイ（GitHub Actions `Deploy to Xserver`）は **`main` への push でのみ起動**する（`workflow_dispatch` 手動を除く）。作業ブランチ（例 `claude/*`）に push しただけ・PRを作っただけでは、本番（`denkilp.builders-job.com`）は更新されない。
+  - 完了報告では必ず**現在地を明示**する：「①ブランチに push 済み → ②PR作成済み → ③main マージ済み → ④本番デプロイ済み（`?v=` 反映）」のどの段階か。未デプロイなら「本番はまだ旧版のまま」と一言添える。
+  - main へのマージ＝本番デプロイ起動は本番影響のある操作。**明示の許可なく `main` へ push/マージしない**。
 
 ## denkikouji の CV + LINE
 
-- フォーム完了後は `thanks-v2` へ。LINE先行フロー（②LINE受取口→③予約・2026-06-12〜）。LINEロックは廃止、全文・社名のゲートは「電話」のまま。
+- フォーム完了後は `thanks-v2` へ。**2026-06-23〜 LINE一本化**：日程調整カレンダー（③予約）は撤去し、thanks の主アクションは LINE登録のみ（①登録完了→②LINEで受け取る）。日程調整は登録後のLINE上で実施。LINEロックは廃止、全文・社名のゲートは「電話」のまま（LINEで日程調整→お電話→LINEへ全文）。予約バックエンド（GAS・`booking-slots.json`・`thanks-booking-*.js`）はLINE経由向けに残置（ページ未読込）。
 - コピー・ステップ数・計測の一貫性は `docs/CV-LINE-playbook.md` を正とする。
 - リリース失敗の教訓（Deploy検証・CSS副作用）は `docs/release-incidents.md` を必ず参照する。
 - 入力ステップ（step04〜06）では、フッター（`.l-footer`）や `bottom:0` の sticky/fixed 要素を入力欄と同じ画面に出さない。被さると表示崩れの再発になる（同症状3回。経緯: `docs/release-incidents.md` 2026-06-15）。両CSSに `body.lp-input-step .l-footer{display:none}` で対処済み。プライバシー/利用規約の導線は step06 の `.cvr-pp-text` で担保。focus/viewport の JS検知はアプリ内ブラウザで空振りする前提で、被さり得る要素は構造的に隠す。

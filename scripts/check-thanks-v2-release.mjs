@@ -36,18 +36,13 @@ const requiredStrings = [
   ["t-hero__eyebrow", "hero gift eyebrow"],
   ["fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700", "noto font 400+700"],
   ["rel=\"preload\" as=\"style\"", "non-blocking font preload"],
-  ["thanks-booking-bootstrap.js?v=18", "booking bootstrap v18 eager for CTA"],
-  ["thanks-booking-custom.js?v=39", "booking custom v39 求人全文CTA"],
-  ["thanks-job-preview.js?v=19", "job preview v19 intent auto + hero CTA"],
-  ["thanks-v2-deferred.js?v=15", "deferred bundle v15 line-first dock"],
+  ["thanks-job-preview.js?v=20", "job preview v20 intent auto + LINE CTA"],
+  ["thanks-v2-deferred.js?v=16", "deferred bundle v16 LINE一本化 dock"],
   ["job-preview-hero", "hero gift card mount"],
   ["thanks-hero-gift-line", "hero gift line id"],
   ["t-hero--gift", "gift-first hero layout"],
   ["t-social-strip", "social proof strip"],
   ["thanks-social-meta", "social strip profile mount"],
-  ["t-cal__toggle", "calendar collapse toggle"],
-  ["id=\"t-cal-panel\"", "calendar collapse panel"],
-  ["aria-expanded=\"true\"", "calendar expanded by default"],
   ["登録ありがとうございます", "thanks header copy"],
   ["3件、届きました", "benefit hero headline"],
   ["t-trust--footer", "trust bar in footer"],
@@ -55,30 +50,24 @@ const requiredStrings = [
   ["t-sec-head", "section illustration head"],
   ["t-hero__reassure", "major-category objection one-liner"],
   ["当社では当てはまりません", "hero reassure copy"],
-  ["t-cal__micro", "calendar reassurance microcopy"],
   ["t-hero--compact", "compact hero layout"],
   ["thanks-hero-title", "hero title id for name personalization"],
   ["残り2件も", "jobs section rest title"],
-  ["③ 最後のステップ", "calendar step label (line-first flow)"],
-  ["希望条件を伝える日時を選ぶ", "calendar benefit headline"],
   ["t-jobs--first", "jobs section after social strip"],
-  ["1回だけ", "outbound call reassurance"],
-  ["しつこい勧誘はありません", "no hard-sell outbound copy"],
-  ["t-cal--primary", "calendar primary emphasis"],
   ["id=\"t-future\"", "未来セクション（折りたたみ）"],
   ["これから相談する方へ", "preview-experience testimonials title"],
   ["data-story-id=\"nw\"", "career inventory preview story"],
   ["cvr-story-mount", "ストーリーマウント"],
   ["非公開求人の全文", "非公開求人全文表記"],
-  ["LINEで求人全文を受け取る", "LINE先行CTA（求人全文ベネフィット）"],
-  ["日時を選んで、最適な求人を受け取る", "booking CTA（文言=行動の一致）"],
+  ["LINEで求人全文を受け取る", "LINE一本化CTA（求人全文ベネフィット）"],
+  ["data-line-position=\"jobs\"", "jobs LINE CTA（カレンダー撤去→LINE一本化）"],
   ["t-hero__cta-wrap", "hero inline CTA block"],
   ["id=\"line-cta-hero\"", "hero LINE CTA"],
   ["data-line-position=\"dock\"", "dock LINE CTA position attr"],
   ["data-line-position=\"section\"", "section LINE CTA position attr"],
-  ["id=\"line-next-step\"", "LINE後の予約ナッジ"],
+  ["id=\"line-next-step\"", "LINE開設後の確認コピー"],
   ["② いま開設できます", "LINE section open badge"],
-  ["data-cta-location=\"hero\"", "hero booking skip link analytics location"],
+  ["LINEで日程を調整", "LINE日程調整コピー（カレンダー撤去後の導線）"],
   ["N.Wさん（38歳）", "social strip NW default"],
   ["プレミアム案内", "premium offer subcopy"],
   ["見るだけOK", "低ハードル文言"],
@@ -102,6 +91,13 @@ const forbidden = [
   ["thanks-license-profile.js", "license profile 単体（deferred bundle化）"],
   ["thanks-section-visuals.js", "section visuals 単体（deferred bundle化）"],
   ["booking-slots.json\" as=\"fetch\"", "booking slots preload（カレンダー展開時取得）"],
+  ["id=\"t-calendar\"", "日程調整カレンダー（LINE一本化で撤去）"],
+  ["thanks-booking-bootstrap.js", "予約bootstrap読込（カレンダー撤去）"],
+  ["thanks-booking-custom.js", "予約UI読込（カレンダー撤去）"],
+  ["id=\"booking-slot-root\"", "予約枠マウント（カレンダー撤去）"],
+  ["t-cal__toggle", "カレンダー開閉トグル（撤去）"],
+  ["id=\"thanks-dock-book\"", "ドック予約CTA（LINE一本化で撤去）"],
+  ["日時を選んで、最適な求人を受け取る", "旧予約CTA（LINE一本化）"],
   ["10分だけ話を聞く", "removed talk-first CTA"],
   ["本登録", "本登録表記"],
   ["仮登録完了", "仮登録表記（登録完了に統一）"],
@@ -115,11 +111,11 @@ forbidden.forEach(([needle, label]) => {
   hit ? fail("HTML禁止", label) : pass("HTML禁止", `${label} なし`);
 });
 
-// LINE先行フロー: LINEセクションがカレンダーより上
+// LINE一本化: LINEセクションが求人概要より上（フロー②=LINE）
 html.indexOf('id="line-section"') > 0 &&
-html.indexOf('id="line-section"') < html.indexOf('id="t-calendar"')
-  ? pass("HTML順序", "LINEセクションがカレンダーより上（LINE先行）")
-  : fail("HTML順序", "LINEセクションがカレンダーより下にある");
+html.indexOf('id="line-section"') < html.indexOf('id="t-jobs-preview"')
+  ? pass("HTML順序", "LINEセクションが求人概要より上（LINE一本化）")
+  : fail("HTML順序", "LINEセクションが求人概要より下にある");
 
 const storyIds = (html.match(/data-story-id="/g) || []).length;
 storyIds === 8 ? pass("ストーリー", "8 cards") : fail("ストーリー", `count=${storyIds}`);
@@ -134,14 +130,16 @@ if (exists("assets/data/thanks-testimonial-stories.json")) {
   fail("stories.json", "missing file");
 }
 
+// 予約枠はthanksページから撤去（LINE一本化）。backendは残るがthanks-v2のリリース可否はslot鮮度に依存しない。
+// staff_count はバックエンド整合のため確認、future slots はデプロイ時 sync-booking-slots.js が更新するため情報表示に留める。
 if (exists("assets/data/booking-slots.json")) {
   const slots = JSON.parse(read("assets/data/booking-slots.json"));
   const now = Date.now();
   const future = (slots.slots || []).filter((s) => new Date(s.start).getTime() > now);
   slots.staff_count === 4 ? pass("booking-slots", "staff_count=4") : fail("booking-slots", `staff=${slots.staff_count}`);
-  future.length > 0 ? pass("booking-slots", `future slots=${future.length}`) : fail("booking-slots", "no future slots");
+  console.log(`ℹ booking-slots: future slots=${future.length}（thanksページからは撤去済み・デプロイ時に更新）`);
 } else {
-  fail("booking-slots.json", "missing");
+  console.log("ℹ booking-slots.json なし（thanksページからは撤去済み）");
 }
 
 [
@@ -203,15 +201,15 @@ sharedJs.includes("fetchJson") && sharedJs.includes("prefetchThanksData")
   : fail("shared.js", "lazy booking loader should be removed");
 
 const mobileUx = read("assets/js/thanks-mobile-ux.js");
-mobileUx.includes("dkThanksMountBooking") && !mobileUx.includes("ensureBookingScripts")
-  ? pass("mobile-ux", "calendar expand mounts booking ui")
-  : fail("mobile-ux", "booking mount on expand missing");
+!mobileUx.includes("t-calendar") && !mobileUx.includes("dkThanksMountBooking")
+  ? pass("mobile-ux", "カレンダー制御を撤去（LINE一本化）")
+  : fail("mobile-ux", "カレンダー/予約マウントのコードが残っている");
 !mobileUx.includes("is-line-locked") && !mobileUx.includes("onLockedLineClick")
-  ? pass("mobile-ux", "LINEロック撤廃（LINE先行フロー）")
+  ? pass("mobile-ux", "LINEロック撤廃（LINE一本化）")
   : fail("mobile-ux", "LINEロックのコードが残っている");
 mobileUx.includes("applyLineClickedUi") && mobileUx.includes("thanks_line_cta_click")
-  ? pass("mobile-ux", "LINEクリック後のドック切替（LINE→予約CTA）")
-  : fail("mobile-ux", "LINEクリック後のドック切替が見当たらない");
+  ? pass("mobile-ux", "LINEクリック後のドックUI更新（LINE常時表示）")
+  : fail("mobile-ux", "LINEクリック後のドック更新が見当たらない");
 
 const licenseJs = read("assets/js/thanks-license-profile.js");
 licenseJs.includes("thanks_profile_ready")
@@ -259,10 +257,12 @@ const deferred = read("assets/js/thanks-v2-deferred.js");
   ? pass("deferred", "no duplicate page view in bundle")
   : fail("deferred", "gtm page view dup should be removed");
 deferred.includes("applySocialStrip") &&
-  deferred.includes("dkThanksExpandCalendar") &&
   deferred.includes("thanks_profile_ready")
-  ? pass("deferred", "social strip + calendar + license profile")
+  ? pass("deferred", "social strip + license profile (bundled)")
   : fail("deferred", "missing bundled thanks modules");
+!deferred.includes("t-calendar") && !deferred.includes("dkThanksMountBooking")
+  ? pass("deferred", "カレンダー制御なし（LINE一本化）")
+  : fail("deferred", "deferred にカレンダー制御が残っている");
 
 const jobPreview = read("assets/js/thanks-job-preview.js");
 jobPreview.includes("thanks-job-previews-") && jobPreview.includes("resolveDataUrl")
@@ -307,7 +307,7 @@ deploy.includes("sync-thanks-v2-mirrors.mjs")
 const deployFlat = deploy.replace(/\\/g, "");
 [
   ["thanks-v2-deferred.js", /thanks-v2-deferred\.js\?v=(\d+)/],
-  ["thanks-booking-custom.js", /thanks-booking-custom\.js\?v=(\d+)/],
+  ["thanks-job-preview.js", /thanks-job-preview\.js\?v=(\d+)/],
   ["thanks-page.css", /thanks-page\.css\?v=(\d+)/]
 ].forEach(([label, re]) => {
   const htmlV = (html.match(re) || [])[1];
