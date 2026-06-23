@@ -2,7 +2,13 @@
 
 電気工事士LP（`denkikouji` / `meta-lp/denkikouji`）の **フォーム完了 → thanks-v2 → LINE受取口 → 予約** までを一貫させる運用ドキュメント。
 
-> **2026-06-12 フロー変更（LINE先行）:** LINEロック（予約完了までLINE CTA無効）を廃止。
+> **2026-06-23 フロー変更（LINE一本化）:** thanks ページから**日程調整カレンダー（③予約）を撤去**。
+> thanks の主アクションは **LINE登録のみ**。日程調整は登録後の **LINE 上で実施**する（あいさつメッセージの予約導線）。
+> フロー表示は ①登録完了 → ②LINEで受け取る の2ステップ。hero/section/jobs/dock の全CTAをLINEへ統一。
+> **全文・社名のゲートは引き続き「電話」**（LINEで日程調整 → お電話で条件すり合わせ → LINEへ全文）。
+> 予約バックエンド（GAS・`booking-slots.json`・`thanks-booking-*.js`）はLINE経由の予約導線向けに**ファイルは残置**（thanksページからは未読込）。
+>
+> **2026-06-12 フロー変更（LINE先行・※2026-06-23で③予約は撤去）:** LINEロック（予約完了までLINE CTA無効）を廃止。
 > 摩擦の小さいLINE開設（30秒）を②に前出しし、予約（10分電話）を③に。
 > **全文・社名のゲートは「LINE」ではなく「電話」のまま**（条件すり合わせ後にLINEへ全文）。
 > 前提: LINE公式アカウントのあいさつメッセージで「ティーザー＋予約導線」を即時返信する設定（運用・コード外）。
@@ -35,13 +41,13 @@
 LP step06（送信） ※bridgeコピーは2026-06に廃止（入力時は情報を絞る）
        ↓ app.js（sessionStorage + 600ms）
 thanks-v2 ヒーロー
-  ①登録完了 → ②LINE受取口（30秒・ロックなし） → ③10分相談枠（日時選択）
-       ↓ LINEクリック（dk_line_clicked）でドックが予約CTAへ切替
-予約完了（thanks-booking-custom.js）
+  ①登録完了 → ②LINEで受け取る（30秒・ロックなし／ページ唯一のCV）
+       ↓ LINEクリック（dk_line_clicked）でドックは常時LINE CTAを表示
+LINE上で日程調整（あいさつメッセージの予約導線）
        ↓ お電話で条件すり合わせ後、LINEへ非公開求人の全文
 ```
 
-**設計意図:** LINE登録数が予約数の従属変数になる構造（旧ロック）を解消し、予約しない層もLINE配信で再アプローチ可能にする。予約の動機（全文・プレミアム案内）は電話ゲートで維持。
+**設計意図（2026-06-23）:** ページ内予約（③）を撤去し、thanks の摩擦を「LINE登録1アクション」へ集約。日程調整・予約はLINE側に寄せることで、予約UIの離脱・枠取得失敗・電話ゲートの心理障壁を thanks ページから取り除く。予約しない層もLINE配信で再アプローチ可能。全文・プレミアム案内の動機（電話ゲート）は維持。
 
 ### 統一コピー（2026-06-12 更新）
 
@@ -51,9 +57,10 @@ thanks-v2 ヒーロー
 | step06 電話方針 | **CTA前の営業電話への言及は廃止（#15 オーナー判断）**。電話欄直下は「現在の職場に知られることはありません。安心してご入力ください。」のみ |
 | step06 社会的証明 | 利用者の94%が満足と回答 – 34,513人が利用中（**送信ボタンの上**にバッジ表示。数値の根拠は `本番反映手順書.md` 確認事項） |
 | step06 機会損失 | 転職成功者は平均年収120万円UP（改行）求人は埋まり次第締切、いま見ないと損です（2行固定・120万の根拠は確認事項） |
-| thanks カレンダー | 面談枠は直近から埋まります。希望の時間はお早めに ＋「いますぐ電話を希望する」最短枠ワンタップ確保 |
+| thanks カレンダー | **撤去済み（2026-06-23・LINE一本化）。** 日程調整はLINE上で実施 |
+| thanks フロー | ①登録完了 → ②LINEで受け取る（2ステップ）。「登録後、LINEで日程を調整 → お電話後に全文」 |
 | thanks LINE受取口 | 社名・条件の全文は、お電話で条件をすり合わせた後にこのLINEへ届きます。見るだけOK |
-| thanks LINE CTA | LINEで求人全文を受け取る(30秒 · 無料 · 見るだけOK)。全文の解放タイミングは「お電話後」の説明文で担保 |
+| thanks LINE CTA | LINEで求人全文を受け取る(30秒 · 無料 · 見るだけOK)。hero/section/jobs/dock の全CTAをLINEへ統一。全文の解放タイミングは「お電話後」の説明文で担保 |
 
 **入力ステップ（step04〜06）の原則:** クマ・`cvr-step-reward`（返報）・`cvr-step-opp`・`cvr-cta-proof`・職場非公開の不安除去は**全ステップで表示**する。「ミニマル化」目的でも、迷う直前のメリット/機会損失コピーを `display:none` にしない。
 
@@ -76,9 +83,10 @@ thanks-v2 ヒーロー
 | Meta LP | `meta-lp/denkikouji/index.html` |
 | フォームJS | `assets/js/app.js` |
 | LP CSS | `assets/css/cvr-boost-denkikouji.css` |
-| Thanks | `thanks-v2/index.html` |
-| 予約→LINE解放 | `assets/js/thanks-booking-custom.js` |
-| LINEゲート | `assets/js/thanks-mobile-ux.js` |
+| Thanks（正＝root、WPLP/自前LP/p はミラー生成） | `thanks-v2/index.html` |
+| ThanksスマホUX・ドック（LINE一本化） | `assets/js/thanks-mobile-ux.js`（→ `thanks-v2-deferred.js` に束ねる） |
+| Thanks求人プレビュー・LINE導線 | `assets/js/thanks-job-preview.js` |
+| 予約バックエンド（LINE経由・ページ未読込で残置） | `assets/js/thanks-booking-*.js` / `assets/data/booking-slots.json` / `gas-recorder/` |
 
 ## 本番URL
 
