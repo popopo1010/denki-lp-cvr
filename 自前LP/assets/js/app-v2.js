@@ -612,13 +612,8 @@
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
         if (errBox) errBox.style.display = "none";
-        // 生年月日エリアにクマを移動してスクロール
-        const bday = group.querySelector(".p-step06__birthday");
-        if (bday && icon) {
-          moveIcon(bday, true);
-        } else {
-          moveIconById("#" + nextBtn.id, true);
-        }
+        // 入力が揃ったらクマをCTA（次へ）へ移動（旧実装は生年月日エリアに留まり誘導が切れていた）
+        moveIconById("#" + nextBtn.id, true);
         // 姓+名 両方埋まったら生年月日に視覚的誘導（first-name の入力完了時のみ）
         // iOS Safari の <select> は focus() ではピッカーが開かない仕様。
         // スクロール + ハイライトでユーザーにタップを促す。
