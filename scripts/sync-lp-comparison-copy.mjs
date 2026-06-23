@@ -73,7 +73,7 @@ const REPLACEMENTS = [
   ],
   [
     "<span>あなたに合う求人を見る</span>",
-    "<span>求人概要を見る（無料）</span>"
+    "<span>今より好条件の求人を見る（無料）</span>"
   ]
 ];
 
@@ -111,7 +111,7 @@ const PLAIN_REPLACEMENTS = [
     "送信後：<strong>比較軸の輪郭</strong>を表示 → 全文は10分のお電話ですり合わせ後（しつこい営業はしません）",
     "送信後、<strong>条件に合う求人</strong>をご案内"
   ],
-  ["<span>比較軸を見る（無料）</span>", "<span>求人概要を見る（無料）</span>"]
+  ["<span>比較軸を見る（無料）</span>", "<span>今より好条件の求人を見る（無料）</span>"]
 ];
 
 const ALL_REPLACEMENTS = REPLACEMENTS.concat(PLAIN_REPLACEMENTS);
