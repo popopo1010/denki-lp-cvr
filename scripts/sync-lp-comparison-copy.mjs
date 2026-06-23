@@ -64,10 +64,6 @@ const REPLACEMENTS = [
     "送信後、<strong>条件に合う求人</strong>をご案内"
   ],
   [
-    "営業電話は一切ありません。求人のご案内のみご連絡します。",
-    "しつこい営業はしません。条件に合う新着求人が出たら、SMSでお届けします"
-  ],
-  [
     "の条件にあった<span class=\"text-span-2\"><strong>新着求人が多数</strong></span>見つかりました。",
     "の経験を活かせる、<span class=\"text-span-2\"><strong>今より好条件</strong></span>の求人が見つかりそうです"
   ],
