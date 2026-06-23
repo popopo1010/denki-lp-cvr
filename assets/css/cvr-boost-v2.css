@@ -162,7 +162,6 @@
 
 /* ===== マイクロコピー・ステップ理由 ===== */
 .cvr-micro-copy { text-align: center; font-size: 12px; color: #888; margin-top: 12px; }
-.cvr-step-reason { text-align: center; font-size: 13px; color: #6b7280; margin: 4px 0; padding: 0 8px; line-height: 1.5; }
 .cvr-step-reward {
   text-align: center; font-size: 11px; color: #314c85;
   margin: 4px 0 10px; padding: 6px 10px; line-height: 1.45;
@@ -216,8 +215,6 @@
   font-weight: 600; font-size: 10px; line-height: 15px;
   z-index: 2; pointer-events: none;
 }
-.cvr-tel-reassurance { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #777; }
-.cvr-tel-reassurance svg { flex-shrink: 0; }
 
 /* ===== PP同意テキスト ===== */
 p.cvr-pp-text { text-align: center; font-size: 11px !important; color: #999 !important; margin-top: 6px; line-height: 1.45; }
@@ -293,6 +290,12 @@ p.cvr-pp-text a { color: #999 !important; text-decoration: underline; }
 .footer-dark .copyright { font-size: 10px; color: rgba(255,255,255,.5); margin-top: 8px; }
 
 /* ===== フォーム共通 ===== */
+/* フォーム中（FV以外の全ステップ）はWPテーマのフッター(.l-footer)を隠す。
+   入力ステップはコンテンツが短く .l-main{flex:1} でフッターが画面下に張り付き、
+   入力欄や sticky CTA に被さって表示崩れする（iOS実機/SNSアプリ内ブラウザで再発・同症状3回）。
+   focus/viewport の JS検知は空振りするためJS非依存で構造的に隠す。法務導線は step06 の
+   .cvr-pp-text で担保。経緯: docs/release-incidents.md 2026-06-15 */
+body.lp-form-step .l-footer { display: none !important; }
 .c-next-button span:first-child { font-size: 15px; font-weight: 700; }
 .c-nextLinkButton { font-size: 12px !important; color: #bbb !important; text-decoration: none !important; }
 
@@ -465,7 +468,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step .c-title01,
   body.lp-form-step .c-title02 { padding: 4px 0 2px; font-size: 14px; line-height: 1.35; }
   body.lp-form-step .c-title02 { padding-top: 8px; }
-  body.lp-form-step .cvr-step-reason { margin: 2px 0; font-size: 13px; line-height: 1.45; }
   body.lp-form-step .p-step05__info.c-info-text,
   body.lp-form-step .p-step06__info.c-info-text { margin: 4px 0; font-size: 12px; }
 
@@ -523,7 +525,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   }
 
   body.lp-form-step .c-section + .c-section .c-title02 { padding-top: 4px; }
-  body.lp-form-step .c-section + .c-section .cvr-step-reason { display: none; }
   /* 1ステップに複数設問がある場合（経験＋雇用形態など） */
   body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__img { display: none; }
   body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button {
@@ -560,7 +561,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     min-height: calc(100dvh - 130px) !important;
     padding-bottom: 8px;
   }
-  body.lp-form-step #step01 .cvr-step-reason { display: none; }
   body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 13px; padding: 4px 8px; line-height: 1.4; color: #475569; }
   body.lp-form-step #step01 .cvr-step-reward { display: block; }
   body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 18px; font-weight: 800; }
