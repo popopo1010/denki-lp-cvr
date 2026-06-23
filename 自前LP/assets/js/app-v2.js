@@ -19,6 +19,18 @@
     remove(name) { Cookie.set(name, "", -1); }
   };
 
+  // ========== 携帯番号バリデーション（060/070/080/090 始まりの11桁） ==========
+  const TEL_PREFIX_ERROR = "090・080・070・060から始まる携帯番号を入力してください";
+  const isValidMobileTel = (v) => /^0[6789]0[0-9]{8}$/.test(String(v || "").trim());
+  function hasInvalidTelPrefix(v) {
+    const s = String(v || "").trim();
+    if (!s) return false;
+    if (s.charAt(0) !== "0") return true;
+    if (s.length >= 2 && "6789".indexOf(s.charAt(1)) === -1) return true;
+    if (s.length >= 3 && s.charAt(2) !== "0") return true;
+    return false;
+  }
+
   // ========== サンクス遷移（thanks-v2 + GTM qualified） ==========
   const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
   const NENSHU_THANKS_V1_PATH = "/denki-lp-cvr/nenshu-shindan/thanks/";
@@ -383,6 +395,17 @@
       return Array.from(buttons).some(b => b.classList.contains(ACTIVE));
     }
 
+    // 資格選択後の自動遷移（HTMLの data-auto-advance-ms が有るときだけ）
+    const autoAdvanceMs = parseInt(group.dataset.autoAdvanceMs || "0", 10);
+    let autoAdvanceTimer = null;
+    function scheduleAutoAdvance() {
+      if (!autoAdvanceMs || !nextBtn) return;
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = setTimeout(() => {
+        if (hasAny() && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+      }, autoAdvanceMs);
+    }
+
     buttons.forEach(b => b.addEventListener("click", () => {
       b.classList.toggle(ACTIVE);
       updateHiddens();
@@ -390,7 +413,9 @@
         nextBtn.classList.remove(DISABLE);
         moveIconById("#" + nextBtn.id, true);
         target.classList.add(SKIP);
+        scheduleAutoAdvance();
       } else {
+        clearTimeout(autoAdvanceTimer);
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
       }
@@ -680,17 +705,49 @@
       const errBox = group.querySelector("#error-" + item.name);
       const errText = errBox ? errBox.querySelector("p") : null;
 
-      // 電話番号の「あと○桁」表示
+      // 電話番号: 桁表示 + プレフィックス検証(060/070/080/090) + 11桁で自動送信
       if (item.name === "your-tel") {
         const telNotice = document.getElementById("tel-notice");
-        if (telNotice) {
-          item.addEventListener("input", () => {
-            const len = item.value.length;
+        let telAutoTimer = null;
+        const clearTelAutoSubmit = () => { if (telAutoTimer) { clearTimeout(telAutoTimer); telAutoTimer = null; } };
+        const scheduleTelAutoSubmit = () => {
+          clearTelAutoSubmit();
+          telAutoTimer = setTimeout(() => {
+            if (!isValidMobileTel(item.value)) return;
+            if (nextBtn.classList.contains(DISABLE)) return;
+            if (nextBtn.style.pointerEvents === "none") return;
+            nextBtn.click();
+          }, 700);
+        };
+        item.addEventListener("input", () => {
+          const digits = item.value.replace(/\D/g, "");
+          if (digits !== item.value) item.value = digits;
+          const len = item.value.length;
+          if (telNotice) {
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
-            else if (len === 11) { telNotice.style.display = "none"; }
+            else if (len === 11 || hasInvalidTelPrefix(item.value)) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
-          });
-        }
+          }
+          if (isValidMobileTel(item.value)) {
+            if (errBox) errBox.style.display = "none";
+            states[i] = true; item.classList.add(SKIP);
+            moveIconById("#" + nextBtn.id);
+            updateBtn();
+            scheduleTelAutoSubmit();
+          } else {
+            if (errBox) {
+              if (hasInvalidTelPrefix(item.value)) {
+                errBox.style.display = "block";
+                if (errText) errText.textContent = TEL_PREFIX_ERROR;
+              } else if (errText && errText.textContent === TEL_PREFIX_ERROR) {
+                errBox.style.display = "none";
+              }
+            }
+            states[i] = false; item.classList.remove(SKIP);
+            updateBtn();
+            clearTelAutoSubmit();
+          }
+        });
       }
 
       item.addEventListener("blur", () => {
@@ -707,6 +764,10 @@
         }
         if (item.name === "your-tel" && item.value && /^[0-9]+$/.test(item.value) && item.value.length < 11) {
           if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "電話番号を11桁で入力してください（あと" + (11 - item.value.length) + "桁）"; }
+          states[i] = false; arr[i].classList.remove(SKIP);
+        }
+        if (item.name === "your-tel" && item.value && /^[0-9]{11}$/.test(item.value) && !isValidMobileTel(item.value)) {
+          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = TEL_PREFIX_ERROR; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
         if (states.every(Boolean)) moveIconById("#" + nextBtn.id);
