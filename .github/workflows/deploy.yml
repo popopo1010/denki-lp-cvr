@@ -213,7 +213,7 @@ jobs:
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/data/thanks-job-previews.json" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/assets/img/testimonials/avatar-kt.svg" | head -3
           html=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/")
-          echo "$html" | grep -q 'thanks-v2-deferred.js?v=16' || (echo "missing thanks-v2-deferred v=16" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-deferred.js?v=17' || (echo "missing thanks-v2-deferred v=17" && exit 1)
           echo "$html" | grep -q 'id="t-calendar"' && (echo "calendar should be removed (LINE一本化)" && exit 1) || true
           echo "$html" | grep -q 'booking-slots.json" as="fetch"' && (echo "booking-slots preload should be removed" && exit 1) || true
           echo "$html" | grep -q 'GTM-KV525PZ' || (echo "missing GTM on thanks-v2" && exit 1)
@@ -294,7 +294,7 @@ jobs:
           echo "$html" | grep -q 'thanks-license-profile.js' && (echo "standalone license profile should be removed" && exit 1) || true
           echo "$html" | grep -q 'data-line-position="jobs"' || (echo "missing jobs LINE CTA (LINE一本化)" && exit 1)
           echo "$html" | grep -q '10分だけ話を聞く' && (echo "talk-first CTA should be removed" && exit 1) || true
-          echo "$html" | grep -q 'id="t-future"' || (echo "missing t-future section" && exit 1)
+          echo "$html" | grep -q 'id="t-future"' && (echo "t-future section should be removed (簡素化)" && exit 1) || true
           echo "$html" | grep -q 'data-story-id' || (echo "missing testimonial stories" && exit 1)
           echo "$html" | grep -q '非公開求人の全文' || (echo "missing thanks copy" && exit 1)
           echo "$html" | grep -q 'thanks-job-previews.json" as="fetch"' && (echo "job previews preload should be removed" && exit 1) || true
