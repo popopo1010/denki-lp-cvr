@@ -1,78 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="'IPAGothic','Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="1200" height="520" font-family="'IPAGothic','Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#3a3f44"/><stop offset="0.55" stop-color="#26292d"/><stop offset="1" stop-color="#16181b"/>
     </linearGradient>
     <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#000000" stop-opacity="0.05"/><stop offset="1" stop-color="#000000" stop-opacity="0.5"/>
+      <stop offset="0" stop-color="#000000" stop-opacity="0.05"/><stop offset="1" stop-color="#000000" stop-opacity="0.4"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7c66a"/><stop offset="1" stop-color="#c19a3e"/></linearGradient>
-    <filter id="ds" x="-12%" y="-12%" width="124%" height="124%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.3"/></filter>
+    <filter id="ds" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/></filter>
   </defs>
 
-  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1200" height="520" fill="url(#bg)"/>
   <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="3">
-    <line x1="1080" y1="60" x2="1080" y2="820"/><line x1="1250" y1="60" x2="1250" y2="820"/>
-    <line x1="980" y1="120" x2="1560" y2="120"/><line x1="980" y1="320" x2="1560" y2="320"/>
+    <line x1="860" y1="40" x2="860" y2="480"/><line x1="1000" y1="40" x2="1000" y2="480"/>
+    <line x1="760" y1="120" x2="1180" y2="120"/>
   </g>
-  <rect width="1600" height="900" fill="url(#shade)"/>
+  <circle cx="980" cy="200" r="60" fill="#ffffff" fill-opacity="0.05"/>
+  <rect width="1200" height="520" fill="url(#shade)"/>
 
-  <!-- ブランド + 専門ピル -->
-  <g transform="translate(96,84)">
-    <rect x="0" y="-34" width="16" height="44" rx="3" fill="#2e8b57"/>
-    <text x="30" y="2" fill="#ffffff" font-size="30" font-weight="700" letter-spacing="1">電気工事バンク</text>
-    <g transform="translate(322,-30)">
-      <rect x="0" y="0" width="232" height="42" rx="21" fill="#2e8b57"/>
-      <text x="116" y="29" text-anchor="middle" fill="#ffffff" font-size="23" font-weight="800">電気業界 特化</text>
-    </g>
+  <!-- 専門ピル -->
+  <g transform="translate(48,40)">
+    <rect x="0" y="0" width="232" height="46" rx="23" fill="#2e8b57"/>
+    <text x="116" y="31" text-anchor="middle" fill="#ffffff" font-size="25" font-weight="800">電気業界 特化</text>
   </g>
 
-  <!-- 権威付け①：月桂冠 × 利用満足度（右上・余白を広げてかぶり解消） -->
-  <g transform="translate(1300,240)">
-    <g fill="url(#gold)">
-      <ellipse cx="-162" cy="72" rx="17" ry="7" transform="rotate(-16 -162 72)"/>
-      <ellipse cx="-176" cy="38" rx="17" ry="7" transform="rotate(-32 -176 38)"/>
-      <ellipse cx="-180" cy="2"  rx="17" ry="7" transform="rotate(-50 -180 2)"/>
-      <ellipse cx="-172" cy="-34" rx="16" ry="7" transform="rotate(-68 -172 -34)"/>
-      <ellipse cx="-152" cy="-66" rx="15" ry="6" transform="rotate(-84 -152 -66)"/>
-      <ellipse cx="-122" cy="-90" rx="13" ry="6" transform="rotate(-100 -122 -90)"/>
-    </g>
-    <g fill="url(#gold)" transform="scale(-1,1)">
-      <ellipse cx="-162" cy="72" rx="17" ry="7" transform="rotate(-16 -162 72)"/>
-      <ellipse cx="-176" cy="38" rx="17" ry="7" transform="rotate(-32 -176 38)"/>
-      <ellipse cx="-180" cy="2"  rx="17" ry="7" transform="rotate(-50 -180 2)"/>
-      <ellipse cx="-172" cy="-34" rx="16" ry="7" transform="rotate(-68 -172 -34)"/>
-      <ellipse cx="-152" cy="-66" rx="15" ry="6" transform="rotate(-84 -152 -66)"/>
-      <ellipse cx="-122" cy="-90" rx="13" ry="6" transform="rotate(-100 -122 -90)"/>
-    </g>
-    <text x="0" y="-34" text-anchor="middle" fill="#ffffff" font-size="25" font-weight="700">利用満足度</text>
-    <text x="0" y="48" text-anchor="middle" fill="url(#gold)" font-size="82" font-weight="900">94<tspan font-size="40">%</tspan></text>
-  </g>
-
-  <!-- メインコピー -->
+  <!-- メイン（大きく・主役） -->
   <g filter="url(#ds)">
-    <rect x="96" y="330" width="690" height="118" rx="10" fill="#ffffff"/>
-    <text x="128" y="410" fill="#2e8b57" font-size="70" font-weight="800" letter-spacing="1">電気業界の求人を、</text>
-    <rect x="96" y="476" width="900" height="124" rx="10" fill="#ffffff"/>
-    <text x="128" y="560" fill="#3a3f44" font-size="70" font-weight="800" letter-spacing="1">あなたの条件で<tspan fill="#2e8b57">検索</tspan></text>
-    <g transform="translate(872,516)" stroke="#2e8b57" stroke-width="9" fill="none" stroke-linecap="round">
-      <circle cx="30" cy="30" r="28"/><line x1="50" y1="50" x2="80" y2="80"/>
+    <rect x="48" y="150" width="824" height="104" rx="10" fill="#ffffff"/>
+    <text x="82" y="222" fill="#2e8b57" font-size="84" font-weight="800" letter-spacing="1">電気業界の求人を、</text>
+    <rect x="48" y="266" width="980" height="106" rx="10" fill="#ffffff"/>
+    <text x="82" y="340" fill="#2f3438" font-size="84" font-weight="800" letter-spacing="1">あなたの条件で<tspan fill="#2e8b57">検索</tspan></text>
+    <g transform="translate(872,288)" stroke="#2e8b57" stroke-width="10" fill="none" stroke-linecap="round">
+      <circle cx="34" cy="34" r="32"/><line x1="58" y1="58" x2="92" y2="92"/>
     </g>
   </g>
 
-  <!-- サブ：検索軸 -->
-  <rect x="96" y="630" width="720" height="62" rx="8" fill="#000000" fill-opacity="0.42"/>
-  <text x="124" y="672" fill="#ffffff" font-size="33" font-weight="700">資格・年収・勤務地で絞り込み</text>
+  <!-- サブ：検索軸（1本だけ） -->
+  <rect x="48" y="398" width="760" height="64" rx="8" fill="#000000" fill-opacity="0.45"/>
+  <text x="78" y="441" fill="#ffffff" font-size="36" font-weight="700">資格・年収・勤務地で絞り込み</text>
 
-  <!-- 左下ホワイト帯 -->
-  <polygon points="0,718 1010,786 1010,900 0,900" fill="#ffffff"/>
-  <text x="96" y="822" fill="#2e8b57" font-size="30" font-weight="800">完全無料</text>
-  <text x="262" y="822" fill="#3a3f44" font-size="22" font-weight="700">／登録30秒・現職に知られません</text>
-  <g transform="translate(96,844)">
-    <rect x="0" y="0" width="38" height="38" rx="6" fill="#2e8b57"/>
-    <path d="M9 19 l7 7 l14 -15" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="50" y="27" fill="#3a3f44" font-size="21" font-weight="700">厚生労働大臣許可　有料職業紹介事業許可番号 13-ユ-316946</text>
-  </g>
-
-  <text x="1504" y="880" text-anchor="end" fill="#ffffff" fill-opacity="0.5" font-size="20">※写真はイメージ（本番では差し替え）</text>
+  <text x="1152" y="500" text-anchor="end" fill="#ffffff" fill-opacity="0.5" font-size="18">※写真はイメージ（本番では差し替え）</text>
 </svg>
