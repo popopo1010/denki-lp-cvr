@@ -523,7 +523,7 @@
         root.innerHTML = renderCards(rest, profile, 1);
       } else {
         root.innerHTML =
-          '<p class="t-jobs__rest-note">上の1件をご確認ください。気になる方は下の日時から。</p>';
+          '<p class="t-jobs__rest-note">上の1件をご確認ください。気になる方はLINEで全文を受け取れます。</p>';
       }
     }
 
@@ -548,9 +548,6 @@
       btn._boundScroll = true;
       btn.addEventListener("click", function () {
         var target = btn.getAttribute("data-scroll-target");
-        if (target === "#t-calendar" && window.dkThanksExpandCalendar) {
-          window.dkThanksExpandCalendar({ scroll: false });
-        }
         var el = target ? document.querySelector(target) : null;
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
         pushDL("thanks_job_preview_cta", {
@@ -609,11 +606,8 @@
           job_title: title,
           hero_card: card.classList.contains("t-job-card--hero") ? 1 : 0
         });
-        if (window.dkThanksExpandCalendar) {
-          window.dkThanksExpandCalendar({ scroll: false });
-        }
-        var cal = document.getElementById("t-calendar");
-        if (cal) cal.scrollIntoView({ behavior: "smooth", block: "start" });
+        var lineSection = document.getElementById("line-section");
+        if (lineSection) lineSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       card.addEventListener("click", activate);
       card.addEventListener("keydown", function (e) {
