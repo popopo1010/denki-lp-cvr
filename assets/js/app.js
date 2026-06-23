@@ -642,9 +642,13 @@
 
     prefSel.addEventListener("change", () => {
       prefH.value = prefSel.options[prefSel.selectedIndex].textContent;
-      zipInput.value = ""; valid = false; cityH.value = "";
+      zipInput.value = ""; cityH.value = "";
+      // 都道府県だけで成立させ自動遷移（市区町村は任意）。
+      // 市区町村を選べばcitySelのchangeで上書き＋再スケジュールされ取得される。
       loadCities(prefH.value, "");
+      valid = true;
       updateIcons();
+      scheduleZipAutoAdvance();
     });
 
     citySel.addEventListener("change", () => {
