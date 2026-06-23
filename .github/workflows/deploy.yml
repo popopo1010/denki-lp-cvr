@@ -121,6 +121,12 @@ jobs:
           echo "--- minified sizes ---"
           ls -lh assets/js/app-v2.js assets/js/thanks-booking-bootstrap.js assets/css/thanks-page.css thanks-v2/index.html 2>/dev/null || true
 
+      - name: Optimize images (assets/img)
+        continue-on-error: true
+        run: |
+          npm i --no-save --no-audit --no-fund sharp@0.33.5 || { echo "sharp install failed; skip"; exit 0; }
+          node scripts/optimize-images.mjs
+
       - name: Setup SSH key
         env:
           SSH_KEY: ${{ secrets.XSERVER_SSH_KEY }}
