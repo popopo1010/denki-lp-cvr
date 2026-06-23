@@ -1,42 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="1200" height="520" font-family="'IPAGothic','Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 460" width="1200" height="460" font-family="'IPAGothic','Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#3a3f44"/><stop offset="0.55" stop-color="#26292d"/><stop offset="1" stop-color="#16181b"/>
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf3ee"/>
     </linearGradient>
-    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#000000" stop-opacity="0.05"/><stop offset="1" stop-color="#000000" stop-opacity="0.4"/>
-    </linearGradient>
-    <filter id="ds" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/></filter>
+    <filter id="soft" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#1f7a43" flood-opacity="0.18"/></filter>
   </defs>
 
-  <rect width="1200" height="520" fill="url(#bg)"/>
-  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="3">
-    <line x1="860" y1="40" x2="860" y2="480"/><line x1="1000" y1="40" x2="1000" y2="480"/>
-    <line x1="760" y1="120" x2="1180" y2="120"/>
-  </g>
-  <circle cx="980" cy="200" r="60" fill="#ffffff" fill-opacity="0.05"/>
-  <rect width="1200" height="520" fill="url(#shade)"/>
+  <rect width="1200" height="460" fill="url(#bg)"/>
+  <!-- 左の緑アクセント -->
+  <rect x="0" y="0" width="14" height="460" fill="#2e8b57"/>
+  <!-- 右上のさりげない円（電気＝スパーク感） -->
+  <circle cx="1090" cy="90" r="120" fill="#2e8b57" fill-opacity="0.06"/>
+  <circle cx="1150" cy="360" r="90" fill="#2e8b57" fill-opacity="0.05"/>
 
   <!-- 専門ピル -->
-  <g transform="translate(48,40)">
-    <rect x="0" y="0" width="232" height="46" rx="23" fill="#2e8b57"/>
-    <text x="116" y="31" text-anchor="middle" fill="#ffffff" font-size="25" font-weight="800">電気業界 特化</text>
+  <g transform="translate(60,40)">
+    <rect x="0" y="0" width="240" height="48" rx="24" fill="#2e8b57"/>
+    <text x="120" y="32" text-anchor="middle" fill="#ffffff" font-size="26" font-weight="800">電気業界 特化</text>
   </g>
 
-  <!-- メイン（大きく・主役） -->
-  <g filter="url(#ds)">
-    <rect x="48" y="150" width="824" height="104" rx="10" fill="#ffffff"/>
-    <text x="82" y="222" fill="#2e8b57" font-size="84" font-weight="800" letter-spacing="1">電気業界の求人を、</text>
-    <rect x="48" y="266" width="980" height="106" rx="10" fill="#ffffff"/>
-    <text x="82" y="340" fill="#2f3438" font-size="84" font-weight="800" letter-spacing="1">あなたの条件で<tspan fill="#2e8b57">検索</tspan></text>
-    <g transform="translate(872,288)" stroke="#2e8b57" stroke-width="10" fill="none" stroke-linecap="round">
-      <circle cx="34" cy="34" r="32"/><line x1="58" y1="58" x2="92" y2="92"/>
+  <!-- 見出し（濃色・高コントラスト） -->
+  <text x="60" y="190" fill="#1f7a43" font-size="78" font-weight="900" letter-spacing="1">電気業界の求人を、</text>
+
+  <!-- 検索バー風ビジュアル（検索サイトと一目で伝える） -->
+  <g filter="url(#soft)">
+    <rect x="60" y="226" width="1010" height="118" rx="59" fill="#ffffff" stroke="#2e8b57" stroke-width="4"/>
+    <text x="108" y="304" fill="#2f3438" font-size="62" font-weight="800">あなたの条件で検索</text>
+    <!-- 検索ボタン -->
+    <circle cx="1006" cy="285" r="46" fill="#2e8b57"/>
+    <g stroke="#ffffff" stroke-width="7" fill="none" stroke-linecap="round">
+      <circle cx="999" cy="278" r="18"/><line x1="1013" y1="292" x2="1028" y2="307"/>
     </g>
   </g>
 
-  <!-- サブ：検索軸（1本だけ） -->
-  <rect x="48" y="398" width="760" height="64" rx="8" fill="#000000" fill-opacity="0.45"/>
-  <text x="78" y="441" fill="#ffffff" font-size="36" font-weight="700">資格・年収・勤務地で絞り込み</text>
+  <!-- サブ -->
+  <text x="62" y="406" fill="#4a5560" font-size="36" font-weight="700">資格・年収・勤務地で絞り込み</text>
 
-  <text x="1152" y="500" text-anchor="end" fill="#ffffff" fill-opacity="0.5" font-size="18">※写真はイメージ（本番では差し替え）</text>
+  <text x="1150" y="446" text-anchor="end" fill="#9aa6ac" font-size="18">※画像はイメージ</text>
 </svg>
