@@ -643,10 +643,10 @@
     var visible = Array.from(root.querySelectorAll(".cvr-testimonial")).filter(function (c) {
       return c.style.display !== "none";
     });
-    if (visible.length <= 3) return;
-    var hiddenCount = visible.length - 3;
+    if (visible.length <= 2) return;
+    var hiddenCount = visible.length - 2;
     visible.forEach(function (card, i) {
-      if (i >= 3) card.classList.add("cvr-testimonial--extra");
+      if (i >= 2) card.classList.add("cvr-testimonial--extra");
     });
     var btn = document.createElement("button");
     btn.type = "button";
