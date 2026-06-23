@@ -455,6 +455,7 @@
         if (target) moveIconById("#" + target.id);
       }
     }
+    let prefAdvTimer = null;
     prefSel.addEventListener("change", () => {
       const opt = prefSel.options[prefSel.selectedIndex];
       if (opt && opt.value && opt.value !== "00" && opt.textContent) {
@@ -465,7 +466,15 @@
         valid = false;
       }
       updateBtn();
+      // 都道府県を選んだら自動で次へ（他ステップと挙動を統一）
+      clearTimeout(prefAdvTimer);
+      if (valid) {
+        prefAdvTimer = setTimeout(() => {
+          if (valid && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+        }, 450);
+      }
     });
+    group._clearPrefAdvance = () => clearTimeout(prefAdvTimer);
     updateBtn();
   }
 
