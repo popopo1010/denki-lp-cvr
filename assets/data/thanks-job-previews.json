@@ -52,28 +52,28 @@
   "salary_band_labels": {
     "high": "相場より高め",
     "mid": "相場程度",
-    "low": "相場よりちょい安め"
+    "low": "相場どおり"
   },
   "intent_band_labels": {
     "salary": {
-      "high": "相場より高くてもOK",
+      "high": "好条件",
       "mid": "相場程度",
-      "low": "相場よりやや低め"
+      "low": "相場どおり"
     },
     "stable": {
       "high": "相場より高め",
       "mid": "相場程度",
-      "low": "相場よりちょい安め"
+      "low": "相場どおり"
     },
     "area": {
       "high": "いい勤務地",
       "mid": "標準",
-      "low": "やすい"
+      "low": "標準エリア"
     },
     "private": {
-      "high": "相場より高くてもOK",
+      "high": "好条件",
       "mid": "相場程度",
-      "low": "相場よりやや低め"
+      "low": "相場どおり"
     }
   },
   "market_mid_by_family": {
