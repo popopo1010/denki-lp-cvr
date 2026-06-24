@@ -46,6 +46,7 @@
 - コピー・ステップ数・計測の一貫性は `docs/CV-LINE-playbook.md` を正とする。
 - リリース失敗の教訓（Deploy検証・CSS副作用）は `docs/release-incidents.md` を必ず参照する。
 - 入力ステップ（step04〜06）では、フッター（`.l-footer`）や `bottom:0` の sticky/fixed 要素を入力欄と同じ画面に出さない。被さると表示崩れの再発になる（同症状3回。経緯: `docs/release-incidents.md` 2026-06-15）。両CSSに `body.lp-input-step .l-footer{display:none}` で対処済み。プライバシー/利用規約の導線は step06 の `.cvr-pp-text` で担保。focus/viewport の JS検知はアプリ内ブラウザで空振りする前提で、被さり得る要素は構造的に隠す。
+- **FV・安心系の文言が本番に見えても、リポジトリを grep してヒットしなければ WPテーマ側＝repo 編集では消えない**。「しつこい営業なし」「営業電話なし」等の微コピーや FVコピーは、FVバナー画像（`first_banner*` 例 `first_banner0103.webp/jpg`）に焼き込み、または WPテーマ（`/wp-content/themes/original-thema/`）にある。本番URLは `denkilp.builders-job.com/wp-content/themes/original-thema/...` を直参照。**文言変更を頼まれたら、まずリポジトリ全体を grep（`しつこい営業`/`営業電話`/`営業`/`勧誘` 等）→ 0件なら「repo 側には無い。バナー画像の再生成 or WPテーマ編集が必要」と即返す**。repo の HTML/CSS/JS をいくら直しても本番から消えず、「直したのに残る／繰り返し指摘される」の典型原因になる（経緯: `docs/release-incidents.md` 2026-06-23 #⑤・2026-06-24）。
 
 ## LP作成・改善のリファレンス
 
