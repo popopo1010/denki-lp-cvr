@@ -39,6 +39,7 @@
 - **ブランチへの push ≠ 本番反映**：本番デプロイ（GitHub Actions `Deploy to Xserver`）は **`main` への push でのみ起動**する（`workflow_dispatch` 手動を除く）。作業ブランチ（例 `claude/*`）に push しただけ・PRを作っただけでは、本番（`denkilp.builders-job.com`）は更新されない。
   - 完了報告では必ず**現在地を明示**する：「①ブランチに push 済み → ②PR作成済み → ③main マージ済み → ④本番デプロイ済み（`?v=` 反映）」のどの段階か。未デプロイなら「本番はまだ旧版のまま」と一言添える。
   - main へのマージ＝本番デプロイ起動は本番影響のある操作。**明示の許可なく `main` へ push/マージしない**。
+- **【必ず確認】選択 → クマ（アイコン）が次のCTAへ移動する挙動**：LPフォームは、ステップで選択（資格・希望・都道府県等）すると `js-icon-target` のクマ（`.cvr-kuma` / `.c-fixed-icon` 等のフォロワーアイコン）が `moveIconById("#"+nextBtn.id, true)` で**次のCTAボタンへ移動**する。この挙動は**変更のたびに消えやすい**（再発多数。例: コミット `79491bf`「クマがCTAに移動しないバグ修正」）。app.js / app-v2.js / steps / CSS いずれを触っても、**スマホで「選択したらクマがCTAへ移動するか」を必ず確認する**。実機確認できない場合も、各選択ハンドラ（radio/checkbox/select）が選択完了時に `moveIconById("#"+nextBtn.id …)` を呼ぶ配線が残っているかをコードで点検する。
 
 ## denkikouji の CV + LINE
 
