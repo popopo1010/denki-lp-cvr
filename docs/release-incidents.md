@@ -143,6 +143,20 @@
 
 ---
 
+## 2026-06-24 — 施工管理LP変更でDeploy検証が落ちた（検証文字列の同期漏れ）
+
+**症状:** `sekoukanri/` の資格選択ステップ改修（CSS版 `?v20260715`→`?v20260624`、step01 `auto-advance-ms="1300"`→`"2800"`）を main マージ。rsyncは成功したが、Deploy検証ステップが6回リトライ後 `denkikouji or sekoukanri still on stale assets` で exit 1。
+
+**原因:** `deploy.yml` の `verify_sekoukanri_lp()` が**本番が返すべき文字列をハードコード**している（`cvr-boost-sekoukanri.css?v20260715` / `auto-advance-ms="1300"`）。コンテンツ側だけ更新し検証側を更新しなかったため、新バージョンを「未伝播」と誤判定。ファイル自体は本番反映済みだった。
+
+**対応:** `deploy.yml` の該当 grep を新値（`?v20260624` / `"2800"`）に同期して再デプロイ。
+
+**再発防止:**
+- `?v=`（CSSキャッシュバスター）や `data-auto-advance-ms` 等、**`deploy.yml` の `verify_*_lp()` が grep している値を変えたら、必ず同コミットで deploy.yml も更新**する。変更前に `grep -n 'v20260\|auto-advance\|?v=' .github/workflows/deploy.yml` で検証対象を確認。
+- 「cache not propagated」失敗は伝播待ちではなく**検証文字列のズレ**であることが多い。リトライ増ではなく期待値を疑う。
+
+---
+
 ## チェックコマンド（定番）
 
 ```bash
