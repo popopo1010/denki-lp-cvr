@@ -1190,12 +1190,12 @@ body.lp-form-step #step05 .c-next-button {
     margin: 0 !important;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-    min-height: 64px;
-    padding: 14px 8px;
+    min-height: 76px;
+    padding: 16px 10px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
     min-height: 0;
-    font-size: 17px;
+    font-size: 18px;
     line-height: 1.35;
   }
   /* 選択肢が8個以下のLP(電気工事士6択など)は大きめサイズ + アイコン表示。
@@ -1249,14 +1249,14 @@ body.lp-form-step #step05 .c-next-button {
 
   /* 9+選択肢のみ追加圧縮（短い画面でも読める下限に留める） */
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) {
-    gap: 5px;
+    gap: 6px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-    min-height: 44px;
-    padding: 8px 4px;
+    min-height: 58px;
+    padding: 12px 6px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
-    font-size: 13px;
+    font-size: 15px;
   }
 }
 
