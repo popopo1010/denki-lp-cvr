@@ -255,9 +255,9 @@ jobs:
             echo "$app_js" | grep -q 'is-step-active' || return 1
             css=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/cvr-boost-sekoukanri.css")
             echo "$css" | grep -q 'is-step-active' || return 1
-            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260715' || return 1
+            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260624' || return 1
             echo "$sekou_lp" | grep -q 'app.js?v20260801' || return 1
-            echo "$sekou_lp" | grep -q 'auto-advance-ms="1300"' || return 1
+            echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
             echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260701' || return 1
             echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1
             echo "$sekou_lp" | grep -q 'cvr-lp-hub' && return 1 || true
