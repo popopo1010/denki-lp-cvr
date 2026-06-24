@@ -188,6 +188,7 @@ jobs:
               --exclude='実装依頼書.md' \
               --exclude='package.json' \
               --exclude='README.md' \
+              --exclude='docs/' \
               --exclude='/thanks/' \
               --exclude='WPLP/thanks/' \
               --exclude='自前LP/thanks/' \
