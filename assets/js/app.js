@@ -647,7 +647,12 @@
       // 市区町村を選べばcitySelのchangeで上書き＋再スケジュールされ取得される。
       loadCities(prefH.value, "");
       valid = true;
-      updateIcons();
+      // 選択完了 → クマ(アイコン)を次のCTAへ移動（js-icon-target / moveIconById）。
+      // ※「選択したらCTAへ移動」は回帰しやすい。変更時は必ず確認（CLAUDE.md）。
+      target.classList.add(SKIP);
+      prefSel.classList.add(SKIP);
+      updateBtn();
+      moveIconById("#" + nextBtn.id, true);
       scheduleZipAutoAdvance();
     });
 
