@@ -47,6 +47,12 @@
 - リリース失敗の教訓（Deploy検証・CSS副作用）は `docs/release-incidents.md` を必ず参照する。
 - 入力ステップ（step04〜06）では、フッター（`.l-footer`）や `bottom:0` の sticky/fixed 要素を入力欄と同じ画面に出さない。被さると表示崩れの再発になる（同症状3回。経緯: `docs/release-incidents.md` 2026-06-15）。両CSSに `body.lp-input-step .l-footer{display:none}` で対処済み。プライバシー/利用規約の導線は step06 の `.cvr-pp-text` で担保。focus/viewport の JS検知はアプリ内ブラウザで空振りする前提で、被さり得る要素は構造的に隠す。
 
+## sekoukanri（施工管理）資格選択ステップ（step01）
+
+- step01「どの資格をお持ちですか？」は**複数選択**（`js-checkbox-button` / 「続けてタップ」）。`#step01[data-auto-advance-ms]` で最後のタップから一定時間後に自動で次へ進む（タップごとにタイマー再セット＝デバウンス）。
+- **教訓（2026-06-24）**：自動遷移が速すぎると「複数お持ちの方は続けてタップ」と矛盾し、1つ選んだ瞬間に画面が飛ぶ＝「早く移動しすぎる」。施工管理ファミリー全体（`sekoukanri*` / `meta-lp*/sekoukanri*`、旧 1300〜900ms）を **2800ms** に統一。値はHTMLの `data-auto-advance-ms` 属性。`scripts/generate-sekoukanri-variants.py` はこの属性を上書きしないため、テンプレート `sekoukanri/index.html` の値が再生成で variant にも引き継がれる。
+- **視認性**：全工種11択のボタンは `cvr-boost-sekoukanri.css` の `:has(.p-step01__button:nth-of-type(7))` ルールで制御（通常画面 min-height 76px・font 18px / 短い画面 58px・15px）。8択以下の variant はこのルールに該当せず別サイズ。CSS変更時は `sekoukanri/index.html` の `?v=` を更新してキャッシュバスト。
+
 ## LP作成・改善のリファレンス
 
 - 新規LP設計・CVR改善の考え方（木下勝寿／北の達人の転用ナレッジ含む）→ **`LP作成リファレンス.md`**
