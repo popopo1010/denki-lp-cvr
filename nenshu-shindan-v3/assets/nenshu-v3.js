@@ -1,0 +1,287 @@
+/* =========================================================
+   年収診断 LP v3 ステップエンジン + 推定年収算出（自己完結）
+   - 依存ライブラリなし。新ドメインのルートに置いても動作する。
+   - フォーム送信先 / サンクス遷移は data-* 属性で外部設定可能。
+   ========================================================= */
+(function () {
+  "use strict";
+
+  /* ---- 推定年収モデル（万円） ----
+     金額は当社利用者データの相場レンジに基づくエイリアス。
+     ※ 数値の正確性は要確認項目。本番反映前に最新データで検証する。 */
+  var LICENSE = {
+    "第一種電気工事士": { min: 420, max: 650, avg: 520 },
+    "第二種電気工事士": { min: 350, max: 550, avg: 430 },
+    "1級電気工事施工管理技士": { min: 520, max: 820, avg: 660 },
+    "2級電気工事施工管理技士": { min: 400, max: 680, avg: 540 },
+    "電気主任技術者": { min: 480, max: 750, avg: 600 },
+    "その他": null
+  };
+
+  var EXP_MULT = {
+    "未経験": 0.80,
+    "1年未満": 0.85,
+    "1〜3年": 0.95,
+    "4〜6年": 1.05,
+    "7〜9年": 1.15,
+    "10年以上": 1.25
+  };
+
+  /* 現在年収ラベル → 概算数値（万円） */
+  var INCOME_VAL = {
+    "400万円未満": 380,
+    "400万円台": 450,
+    "500万円台": 550,
+    "600万円台": 650,
+    "700万円台": 750,
+    "800万円台": 850,
+    "900万円以上": 950
+  };
+
+  var PREFS = [
+    "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+    "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+    "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+    "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+    "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+    "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+    "熊本県","大分県","宮崎県","鹿児島県","沖縄県"
+  ];
+
+  /* 進捗バーに対応するステップ順（first/result は対象外） */
+  var PROGRESS_STEPS = ["income", "exp", "license", "field", "intent", "form"];
+
+  var data = {};
+  var steps = {};
+  var current = "first";
+
+  function $(sel, ctx) { return (ctx || document).querySelector(sel); }
+  function $all(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
+
+  /* ---- ステップ遷移 ---- */
+  function goTo(key) {
+    if (!steps[key]) return;
+    Object.keys(steps).forEach(function (k) {
+      steps[k].classList.toggle("is-active", k === key);
+    });
+    current = key;
+    window.scrollTo(0, 0);
+    updateProgress(key);
+    if (key === "result") renderResult();
+  }
+
+  function updateProgress(key) {
+    var idx = PROGRESS_STEPS.indexOf(key);
+    // form の次（result）でも form を完了扱いにする
+    if (key === "result") idx = PROGRESS_STEPS.length - 1;
+    $all(".nv-progress__num").forEach(function (el, i) {
+      el.classList.remove("is-active", "is-done");
+      if (idx < 0) return;
+      if (i < idx) el.classList.add("is-done");
+      else if (i === idx) el.classList.add("is-active");
+    });
+    $all(".nv-progress__arrow").forEach(function (el, i) {
+      el.classList.toggle("is-done", idx >= 0 && i < idx);
+    });
+  }
+
+  /* ---- 単一選択（自動遷移） ---- */
+  function wireSingleSelect(stepEl) {
+    var group = stepEl.getAttribute("data-group");
+    var next = stepEl.getAttribute("data-next");
+    $all(".nv-opt", stepEl).forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        $all(".nv-opt", stepEl).forEach(function (b) { b.classList.remove("is-active"); });
+        btn.classList.add("is-active");
+        data[group] = btn.getAttribute("data-value");
+        // 選択が見えるよう少し待ってから前進
+        setTimeout(function () { goTo(next); }, 320);
+      });
+    });
+  }
+
+  /* ---- 戻る ---- */
+  function wireBack() {
+    $all("[data-back]").forEach(function (btn) {
+      btn.addEventListener("click", function () { goTo(btn.getAttribute("data-back")); });
+    });
+  }
+
+  /* ---- フォーム検証 ---- */
+  function showError(id, msg) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add("is-shown");
+  }
+  function clearError(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove("is-shown");
+  }
+
+  function validateForm() {
+    var ok = true;
+    var pref = $("#nv-pref").value;
+    var year = $("#nv-year").value.trim();
+    var lname = $("#nv-lname").value.trim();
+    var fname = $("#nv-fname").value.trim();
+    var tel = $("#nv-tel").value.replace(/[^0-9]/g, "");
+    var consent = $("#nv-consent").checked;
+
+    ["err-pref", "err-name", "err-year", "err-tel", "err-consent"].forEach(clearError);
+
+    if (!pref) { showError("err-pref", "都道府県を選択してください"); ok = false; }
+    if (!lname || !fname) { showError("err-name", "姓・名をご入力ください"); ok = false; }
+    var y = parseInt(year, 10);
+    if (!year || isNaN(y) || y < 1940 || y > 2009) {
+      showError("err-year", "生まれ年を西暦4桁でご入力ください（例：1990）"); ok = false;
+    }
+    if (tel.length !== 11 || tel.charAt(0) !== "0") {
+      showError("err-tel", "携帯番号を11桁・ハイフンなしでご入力ください"); ok = false;
+    }
+    if (!consent) { showError("err-consent", "利用規約・プライバシーポリシーへの同意が必要です"); ok = false; }
+
+    if (ok) {
+      data.pref = pref;
+      data.birthYear = y;
+      data.name = lname + " " + fname;
+      data.tel = tel;
+    }
+    return ok;
+  }
+
+  /* ---- 推定年収算出 ---- */
+  function round10(n) { return Math.round(n / 10) * 10; }
+
+  function computeEstimate() {
+    var lic = LICENSE[data.license];
+    var mult = EXP_MULT[data.exp] || 1;
+    if (!lic) {
+      return { unknown: true };
+    }
+    var est = round10(lic.avg * mult);
+    if (est < lic.min) est = lic.min;
+    if (est > lic.max + 50) est = lic.max + 50;
+    var low = Math.max(lic.min, round10(est - 40));
+    var high = round10(est + 60);
+    var cur = INCOME_VAL[data.income];
+    var diff = null;
+    if (cur != null && est - cur >= 20) diff = round10(est - cur);
+    return { unknown: false, est: est, low: low, high: high, current: cur, diff: diff };
+  }
+
+  function renderResult() {
+    var r = computeEstimate();
+    var nameEl = $("#nv-result-name");
+    if (nameEl) nameEl.textContent = (data.name ? data.name.split(" ")[0] + " さん、" : "") + "診断おつかれさまでした";
+
+    var box = $("#nv-result-amount");
+    var diffBox = $("#nv-result-diff");
+    if (r.unknown) {
+      box.innerHTML = '<p class="nv-result__caption">あなたの推定適正年収</p>' +
+        '<p class="nv-result__big">担当が<br>個別に算出します</p>' +
+        '<p class="nv-result__range">資格・経験を踏まえ、無料でお伝えします</p>';
+      diffBox.style.display = "none";
+      return;
+    }
+    box.innerHTML = '<p class="nv-result__caption">あなたの推定適正年収</p>' +
+      '<p class="nv-result__big"><span class="nv-amt">' + r.est + '</span> 万円</p>' +
+      '<p class="nv-result__range">想定レンジ：' + r.low + '万円 〜 ' + r.high + '万円</p>';
+
+    if (r.diff) {
+      diffBox.style.display = "block";
+      diffBox.innerHTML = '今の年収より <span class="nv-amt">+' + r.diff + '</span> 万円アップの可能性';
+    } else {
+      diffBox.style.display = "none";
+    }
+  }
+
+  /* ---- リード送信（プレースホルダ） ---- */
+  function submitLead() {
+    // TODO: 本番フォーム送信先を設定（WPCF7 / GAS / 自前API 等）。
+    // 現状はGTM dataLayer発火 + sessionStorage保存のみ（要・送信先確定）。
+    var endpoint = document.body.getAttribute("data-lead-endpoint") || "";
+    var payload = {
+      lp: window.__LP_ID || "nenshu-shindan-v3",
+      income: data.income,
+      exp: data.exp,
+      license: data.license,
+      field: data.field,
+      intent: data.intent,
+      pref: data.pref,
+      birthYear: data.birthYear,
+      name: data.name,
+      tel: data.tel,
+      ts: Date.now()
+    };
+    try { sessionStorage.setItem("nv3_lead", JSON.stringify(payload)); } catch (e) {}
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "lead_form_submit",
+      lp_slug: payload.lp,
+      page_location: location.href,
+      page_path: location.pathname
+    });
+    if (endpoint) {
+      try {
+        fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(function () {});
+      } catch (e) {}
+    }
+  }
+
+  /* ---- 初期化 ---- */
+  function buildPrefOptions() {
+    var sel = $("#nv-pref");
+    if (!sel) return;
+    PREFS.forEach(function (p) {
+      var o = document.createElement("option");
+      o.value = p; o.textContent = p;
+      sel.appendChild(o);
+    });
+  }
+
+  function init() {
+    $all(".nv-step").forEach(function (el) { steps[el.getAttribute("data-step")] = el; });
+    buildPrefOptions();
+
+    // FV: 診断開始
+    var startBtn = $("#nv-start");
+    if (startBtn) startBtn.addEventListener("click", function () { goTo("income"); });
+
+    // 単一選択ステップ
+    $all(".nv-step[data-group]").forEach(wireSingleSelect);
+    wireBack();
+
+    // フォーム送信 → 推定年収表示
+    var finalBtn = $("#nv-submit");
+    if (finalBtn) {
+      finalBtn.addEventListener("click", function () {
+        if (!validateForm()) return;
+        submitLead();
+        goTo("result");
+      });
+    }
+
+    // result の最終CTA（求人紹介へ）
+    var resultCta = $("#nv-result-cta");
+    if (resultCta) {
+      resultCta.addEventListener("click", function () {
+        var thanks = document.body.getAttribute("data-thanks-url");
+        if (thanks) location.href = thanks;
+      });
+    }
+
+    updateProgress("first");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
