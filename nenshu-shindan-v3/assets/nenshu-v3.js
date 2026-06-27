@@ -96,13 +96,30 @@
     }
   }
 
+  // 本番ドメインのみ実送信を許可。新ドメイン確定後はここに追加する。
+  // これ以外（localhost / 127.0.0.1 / *.github.io プレビュー / file: / 検証VM 等）からの
+  // 送信は常にテスト扱いにし、本番 Zapier/GAS/Slack へは送らない。
+  var PRODUCTION_HOSTS = ["nenshu.builders-job.com", "denkilp.builders-job.com"];
+
+  function isProductionHost() {
+    try {
+      return PRODUCTION_HOSTS.indexOf((location.hostname || "").toLowerCase()) !== -1;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function isTestLead(tel, last, first) {
-    var t = String(tel || "").trim();
+    // 本番ドメイン以外からの送信は無条件でテスト（本番データ汚染の最重要ガード）
+    if (!isProductionHost()) return true;
+    // ?test=1 / ?_test=1 / ?dk_test=1 で本番ドメインでも安全に動作確認できる
+    try { if (/[?&](?:_test|dk_test|test)=1(?:&|$)/.test(location.search)) return true; } catch (e) {}
+    var t = String(tel || "").replace(/[^0-9]/g, "");
     var ln = String(last || "").trim();
     var fn = String(first || "").trim();
-    if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return true;
-    if (/テスト/.test(ln + fn)) return true;
-    try { if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return true; } catch (e) {}
+    // 明らかなダミー電話番号（連番・繰り返し）
+    if (/^0[789]0(12345678|11112222|11111111|00000000|99999999|12341234)$/.test(t)) return true;
+    if (/テスト|ダミー|てすと|test|dummy/i.test(ln + fn)) return true;
     return false;
   }
 
