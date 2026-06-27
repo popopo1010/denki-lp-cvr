@@ -7,14 +7,14 @@
   "use strict";
 
   /* ---- 推定年収モデル（万円） ----
-     金額は当社利用者データの相場レンジに基づくエイリアス。
-     ※ 数値の正確性は要確認項目。本番反映前に最新データで検証する。 */
+     公開求人データ（求人ボックス・建職バンク 等／2026年時点）をもとにした概算レンジ。
+     ※ あくまで概算。最新の求人クローリング結果で随時更新する想定（要確認項目）。 */
   var LICENSE = {
-    "第一種電気工事士": { min: 420, max: 650, avg: 520 },
-    "第二種電気工事士": { min: 350, max: 550, avg: 430 },
-    "1級電気工事施工管理技士": { min: 520, max: 820, avg: 660 },
-    "2級電気工事施工管理技士": { min: 400, max: 680, avg: 540 },
-    "電気主任技術者": { min: 480, max: 750, avg: 600 },
+    "第一種電気工事士": { min: 450, max: 620, avg: 520 },
+    "第二種電気工事士": { min: 350, max: 500, avg: 420 },
+    "1級電気工事施工管理技士": { min: 500, max: 800, avg: 590 },
+    "2級電気工事施工管理技士": { min: 400, max: 620, avg: 490 },
+    "電気主任技術者": { min: 480, max: 780, avg: 560 },
     "その他": null
   };
 
@@ -71,6 +71,39 @@
     var o = { event: event, lp_slug: window.__LP_ID || "nenshu-shindan-v3" };
     if (extra) Object.keys(extra).forEach(function (k) { o[k] = extra[k]; });
     window.dataLayer.push(o);
+  }
+
+  /* ===== リード送信（既存LPと同一パイプライン: Zapier + GAS） ===== */
+  var ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
+  var clientIp = "";
+
+  function fetchClientIp() {
+    fetch("https://api.ipify.org?format=json")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.ip) clientIp = d.ip; })
+      .catch(function () {});
+  }
+
+  function postTo(url, body) {
+    if (!url) return;
+    try {
+      var blob = new Blob([body], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+      var sent = navigator.sendBeacon && navigator.sendBeacon(url, blob);
+      if (!sent) fetch(url, { method: "POST", mode: "no-cors", keepalive: true, body: body }).catch(function () {});
+    } catch (e) {
+      fetch(url, { method: "POST", mode: "no-cors", keepalive: true, body: body }).catch(function () {});
+    }
+  }
+
+  function isTestLead(tel, last, first) {
+    var t = String(tel || "").trim();
+    var ln = String(last || "").trim();
+    var fn = String(first || "").trim();
+    if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return true;
+    if (/テスト/.test(ln + fn)) return true;
+    try { if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return true; } catch (e) {}
+    return false;
   }
 
   /* ---- ステップ遷移 ---- */
@@ -168,6 +201,8 @@
     if (ok) {
       data.pref = pref;
       data.birthYear = y;
+      data.lastName = lname;
+      data.firstName = fname;
       data.name = lname + " " + fname;
       data.tel = tel;
     }
@@ -232,28 +267,43 @@
     }
   }
 
-  /* ---- リード送信（プレースホルダ） ---- */
+  /* ---- リード送信（既存LPと同一: WPCF7互換フィールド名で Zapier + GAS へ） ---- */
   function submitLead() {
-    // TODO: 本番フォーム送信先を設定（WPCF7 / GAS / 自前API 等）。
-    // 現状はGTM dataLayer発火 + sessionStorage保存のみ（要・送信先確定）。
-    var endpoint = document.body.getAttribute("data-lead-endpoint") || "";
     data.occ = classifyOccupation(data.license);
-    var payload = {
-      lp: window.__LP_ID || "nenshu-shindan-v3",
-      income: data.income,
-      exp: data.exp,
-      license: data.license,
-      occupation: data.occ,
-      field: data.field,
-      intent: data.intent,
-      pref: data.pref,
-      birthYear: data.birthYear,
-      name: data.name,
-      tel: data.tel,
-      ts: Date.now()
-    };
+
+    // テストリードは送信しない（既存LPと同じガード）
+    if (isTestLead(data.tel, data.lastName, data.firstName)) {
+      pushDL("lead_form_submit_test", { occupation: data.occ });
+      return;
+    }
+
+    var params = new URLSearchParams();
+    // 既存パイプライン（Googleスプレッドシート/Zapier）が解釈するWPCF7フィールド名に合わせる
+    params.append("your-tel", data.tel || "");
+    params.append("your-last-name", data.lastName || "");
+    params.append("your-first-name", data.firstName || "");
+    params.append("your-license01", data.license || "");
+    params.append("your-experience", data.exp || "");
+    params.append("your-pref", data.pref || "");
+    params.append("your-birthday-year", data.birthYear || "");
+    params.append("your-willingness", data.intent || "");
+    // v3で追加収集する項目
+    params.append("your-income", data.income || "");
+    params.append("your-field", data.field || "");
+    params.append("your-occupation", data.occ || "");
+    // メタ情報（既存LPと同じキー）
+    params.append("_page", location.href);
+    params.append("_referrer", document.referrer || "");
+    params.append("_submitted_at", new Date().toISOString());
+    params.append("_lp", window.__LP_ID || "nenshu-shindan-v3");
+    params.append("_ip", clientIp);
+    params.append("_user_agent", navigator.userAgent || "");
+
+    var body = params.toString();
+    postTo(ZAPIER_URL, body);
+    postTo(GAS_URL, body);
+
     try {
-      sessionStorage.setItem("nv3_lead", JSON.stringify(payload));
       sessionStorage.setItem("nv3_occ", data.occ);
     } catch (e) {}
     pushDL("lead_form_submit", {
@@ -261,16 +311,6 @@
       page_location: location.href,
       page_path: location.pathname
     });
-    if (endpoint) {
-      try {
-        fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          keepalive: true
-        }).catch(function () {});
-      } catch (e) {}
-    }
   }
 
   /* ---- 初期化 ---- */
@@ -287,6 +327,10 @@
   function init() {
     $all(".nv-step").forEach(function (el) { steps[el.getAttribute("data-step")] = el; });
     buildPrefOptions();
+
+    // 送信前に確実に取得するため、アイドル時にクライアントIPを取得（既存LPと同様）
+    if (typeof requestIdleCallback === "function") requestIdleCallback(fetchClientIp, { timeout: 5000 });
+    else setTimeout(fetchClientIp, 2000);
 
     // FV: 診断開始
     var startBtn = $("#nv-start");

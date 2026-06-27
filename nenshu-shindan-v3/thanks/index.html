@@ -68,10 +68,10 @@
   (function () {
     /* ===== 職種別 LINE友だち追加URL =====
        診断した資格区分に応じて最適なLINE公式アカウントへ振り分ける。
+       URLは既存LP（thanks-v2）で実際に使用しているものを採用。
+       施工管理用に別のLINE公式アカウントが用意され次第、sekoukanri を差し替えるだけでよい。
        - denki      : 電気工事士（第一種/第二種/電気主任/その他）
-       - sekoukanri : 施工管理（1級/2級 電気施工管理）
-       TODO[要確認]: 施工管理向けの専用LINE URLが分かれている場合は sekoukanri を差し替える。
-                     現状リポジトリに存在する確定URLは lin.ee/PzFJp7H のみのため暫定で同一。 */
+       - sekoukanri : 施工管理（1級/2級 電気施工管理） */
     var LINE_URLS = {
       denki: "https://lin.ee/PzFJp7H",
       sekoukanri: "https://lin.ee/PzFJp7H"
