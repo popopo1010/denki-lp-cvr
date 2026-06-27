@@ -51,12 +51,27 @@
   /* 進捗バーに対応するステップ順（first/result は対象外） */
   var PROGRESS_STEPS = ["income", "exp", "license", "field", "intent", "form"];
 
+  /* 診断資格 → 職種区分（thanksのLINE出し分けに使用） */
+  function classifyOccupation(license) {
+    if (license === "1級電気工事施工管理技士" || license === "2級電気工事施工管理技士") {
+      return "sekoukanri"; // 施工管理
+    }
+    return "denki"; // 電気工事士・電気主任技術者・その他
+  }
+
   var data = {};
   var steps = {};
   var current = "first";
 
   function $(sel, ctx) { return (ctx || document).querySelector(sel); }
   function $all(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
+
+  function pushDL(event, extra) {
+    window.dataLayer = window.dataLayer || [];
+    var o = { event: event, lp_slug: window.__LP_ID || "nenshu-shindan-v3" };
+    if (extra) Object.keys(extra).forEach(function (k) { o[k] = extra[k]; });
+    window.dataLayer.push(o);
+  }
 
   /* ---- ステップ遷移 ---- */
   function goTo(key) {
@@ -67,7 +82,12 @@
     current = key;
     window.scrollTo(0, 0);
     updateProgress(key);
-    if (key === "result") renderResult();
+    var idx = PROGRESS_STEPS.indexOf(key);
+    if (idx >= 0) pushDL("diagnosis_step", { step_no: idx + 1, step_name: key });
+    if (key === "result") {
+      renderResult();
+      pushDL("diagnosis_result_view", { occupation: data.occ || classifyOccupation(data.license) });
+    }
   }
 
   function updateProgress(key) {
@@ -91,8 +111,12 @@
     var next = stepEl.getAttribute("data-next");
     $all(".nv-opt", stepEl).forEach(function (btn) {
       btn.addEventListener("click", function () {
-        $all(".nv-opt", stepEl).forEach(function (b) { b.classList.remove("is-active"); });
+        $all(".nv-opt", stepEl).forEach(function (b) {
+          b.classList.remove("is-active");
+          b.setAttribute("aria-pressed", "false");
+        });
         btn.classList.add("is-active");
+        btn.setAttribute("aria-pressed", "true");
         data[group] = btn.getAttribute("data-value");
         // 選択が見えるよう少し待ってから前進
         setTimeout(function () { goTo(next); }, 320);
@@ -171,6 +195,18 @@
   }
 
   function renderResult() {
+    // 「計算中」演出 → 結果表示（推定の納得感を高める）
+    var calc = $("#nv-calc");
+    var body = $("#nv-result-body");
+    if (calc && body) {
+      calc.style.display = "block";
+      body.style.display = "none";
+      setTimeout(function () {
+        calc.style.display = "none";
+        body.style.display = "block";
+      }, 1100);
+    }
+
     var r = computeEstimate();
     var nameEl = $("#nv-result-name");
     if (nameEl) nameEl.textContent = (data.name ? data.name.split(" ")[0] + " さん、" : "") + "診断おつかれさまでした";
@@ -201,11 +237,13 @@
     // TODO: 本番フォーム送信先を設定（WPCF7 / GAS / 自前API 等）。
     // 現状はGTM dataLayer発火 + sessionStorage保存のみ（要・送信先確定）。
     var endpoint = document.body.getAttribute("data-lead-endpoint") || "";
+    data.occ = classifyOccupation(data.license);
     var payload = {
       lp: window.__LP_ID || "nenshu-shindan-v3",
       income: data.income,
       exp: data.exp,
       license: data.license,
+      occupation: data.occ,
       field: data.field,
       intent: data.intent,
       pref: data.pref,
@@ -214,11 +252,12 @@
       tel: data.tel,
       ts: Date.now()
     };
-    try { sessionStorage.setItem("nv3_lead", JSON.stringify(payload)); } catch (e) {}
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-      event: "lead_form_submit",
-      lp_slug: payload.lp,
+    try {
+      sessionStorage.setItem("nv3_lead", JSON.stringify(payload));
+      sessionStorage.setItem("nv3_occ", data.occ);
+    } catch (e) {}
+    pushDL("lead_form_submit", {
+      occupation: data.occ,
       page_location: location.href,
       page_path: location.pathname
     });
@@ -251,7 +290,17 @@
 
     // FV: 診断開始
     var startBtn = $("#nv-start");
-    if (startBtn) startBtn.addEventListener("click", function () { goTo("income"); });
+    if (startBtn) startBtn.addEventListener("click", function () {
+      pushDL("diagnosis_start");
+      goTo("income");
+    });
+
+    // 携帯番号: 数字以外を除去
+    var telEl = $("#nv-tel");
+    if (telEl) telEl.addEventListener("input", function () {
+      var cleaned = telEl.value.replace(/[^0-9]/g, "").slice(0, 11);
+      if (cleaned !== telEl.value) telEl.value = cleaned;
+    });
 
     // 単一選択ステップ
     $all(".nv-step[data-group]").forEach(wireSingleSelect);
@@ -272,7 +321,10 @@
     if (resultCta) {
       resultCta.addEventListener("click", function () {
         var thanks = document.body.getAttribute("data-thanks-url");
-        if (thanks) location.href = thanks;
+        if (!thanks) return;
+        var occ = data.occ || classifyOccupation(data.license);
+        pushDL("result_cta_click", { occupation: occ });
+        location.href = thanks + (thanks.indexOf("?") >= 0 ? "&" : "?") + "occ=" + occ;
       });
     }
 
