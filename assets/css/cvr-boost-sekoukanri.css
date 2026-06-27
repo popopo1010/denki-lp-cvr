@@ -1306,6 +1306,32 @@ body {
   }
 }
 
+/* ===== FV(step-first) スカスカ・崩れ修正 + ヘッダー視認性 =====
+   app.js が step-first に inline で min-height:calc(100svh - 200px) を、
+   .cvr-micro-copy に margin-top:auto を付与する。アプリ内ブラウザ(Instagram等)では
+   svh が実ビューポートより大きく算出されるため、CTA直下に巨大な空白が生まれ
+   「崩れ・スカスカ・トップが重なって見えない」状態になる。
+   FVは内容なりの高さに収め、空白を排除する（CTAは引き続きファーストビュー内）。
+   inline style を上書きするため !important が必要。 */
+@media (max-width: 767px) {
+  /* ヘッダーをアプリ内ブラウザ/ノッチのバーに被らせない */
+  .l-header__container {
+    padding-top: max(6px, env(safe-area-inset-top, 0px));
+  }
+
+  /* FV: 巨大空白を排除して内容なりの高さに */
+  #step-first,
+  body.lp-form-step #step-first.is-step-active {
+    min-height: auto !important;
+  }
+  #step-first .cvr-micro-copy {
+    margin-top: 14px !important;
+    padding-bottom: 6px;
+  }
+  /* CTA下に次セクションをわずかに覗かせて読み進めを促す */
+  #step-first { padding-bottom: 20px; }
+}
+
 /* ===== PC最適化 ===== */
 @media (min-width: 768px) {
   .cvr-trust-bar { gap: 24px; padding: 10px 16px; }
