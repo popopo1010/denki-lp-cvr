@@ -157,6 +157,25 @@
 
 ---
 
+## 2026-06-27 — 施工管理LPのFVが「スカスカ・崩れ・トップが重なって見えない」（svh×フルハイトFVの罠）
+
+**症状:** オーナー実機（Instagramアプリ内ブラウザ）で `sekoukanri/`（全工種）のFVが崩れて見える。CTAボタン直下に巨大な空白ができ、マイクロコピー・次セクションがフォールド外へ押し出され、トップが詰まって/重なって見える。
+
+**原因:** `app.js` の `showPage("#step-first")` が FV に **inline で** `min-height:calc(100svh - 200px)` を、`.cvr-micro-copy` に `margin-top:auto` を付与している（FVを1画面に伸ばし、マイクロコピーを最下部にピン留めする「3秒FV」設計）。アプリ内ブラウザ（Instagram等）では **`svh` が実ビューポートより大きく算出される**ため、FV枠が想定より高くなり、`margin-top:auto` の空白が肥大化。CTA直下が巨大な空白になり「崩れ・スカスカ」に見えた。**過去に「FVを最適化（フルハイト化）」した結果の副作用で、再発しやすいパターン。**
+
+**対応:** `cvr-boost-sekoukanri.css`（sekoukanri専用）で inline を `!important` 上書きし、FVを**内容なりの高さ**に。
+- `#step-first { min-height: auto !important }` ＋ `#step-first .cvr-micro-copy { margin-top: 14px !important }` で巨大空白を排除（CTAは引き続きFV内）。
+- ヘッダー `.l-header__container { padding-top: max(6px, env(safe-area-inset-top)) }` でノッチ/アプリ内バーの被りを軽減。
+- CSS `?v20260624→?v20260627` に bump、`deploy.yml` の `verify_sekoukanri_lp()` の grep 値も同期。`app.js` は多数LP共有のため不変、sekoukanri CSS のみで対処。
+
+**再発防止:**
+- **FVを「フルハイト化（`min-height:calc(100svh|dvh|vh - N)`）＋ `margin-top:auto`」で最適化するときは、アプリ内ブラウザ（Instagram/LINE等）で巨大空白にならないか必ず確認**する。in-appブラウザでは `svh/dvh/lvh` が実ビューポートと一致しない前提で考える。空白が出るなら内容なり高さ（`min-height:auto`）に逃がす。
+- FVの高さ・余白を司るのは **`app.js` の inline style（共有・触らない）** と **各 `cvr-boost-*.css`**。挙動修正は共有JSを避け、対象LPのCSSで `!important` 上書きする（denkikouji等への波及を防ぐ）。
+- CSSを変えたら `?v=` を bump し、**同コミットで `deploy.yml` の `verify_*_lp()` grep 値も更新**（同症状は 2026-06-24 と同型）。
+- 確認は通常画面だけでなく**短尺ビューポート（in-app相当）**でもFVをレンダリングし、CTA下に空白が出ないこと・次セクションが覗くことを見る。
+
+---
+
 ## チェックコマンド（定番）
 
 ```bash
