@@ -20,36 +20,9 @@
 
 /* ===== step-first: 3秒FV（木下流・信頼帯はフォーム以降） ===== */
 
-/* ===== 大分類不安の3ピル（4段階コピー） ===== */
-.cvr-objection-pills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin: 0 0 10px;
-  padding: 0 8px;
-  list-style: none;
-}
-.cvr-objection-pills li {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #047857;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  border-radius: 999px;
-}
-.cvr-objection-pills li::before {
-  content: "✓";
-  font-size: 10px;
-}
 
 /* ===== マイクロコピー・ステップ理由 ===== */
 .cvr-micro-copy { text-align: center; font-size: 12px; color: #888; margin-top: 12px; line-height: 1.5; }
-.cvr-step-reason { text-align: center; font-size: 11px; color: #888; margin: 4px 0; padding: 0 8px; line-height: 1.5; }
 .cvr-step-reward {
   text-align: center; font-size: 11px; color: #314c85;
   margin: 4px 0 10px; padding: 6px 10px; line-height: 1.45;
@@ -95,9 +68,6 @@
 }
 .cvr-cta-proof--badge .cvr-cta-proof__sub strong {
   color: #314c85;
-}
-#step05 .cvr-almost-done {
-  margin: 8px 0 4px;
 }
 #step05 .cvr-step-reward {
   margin-bottom: 12px;
@@ -242,14 +212,6 @@
   line-height: 1.4;
 }
 
-.cvr-thanks-bridge {
-  margin: 8px 0 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: #314c85;
-  line-height: 1.5;
-  text-align: center;
-}
 
 body.lp-form-step .cvr-floating-cta {
   display: none !important;
@@ -259,39 +221,7 @@ body.lp-form-step .cvr-floating-cta {
   font-size: 12px; color: #666; text-align: center;
   margin: -8px 0 16px; padding: 0 8px; line-height: 1.5;
 }
-.cvr-specialty-badge {
-  display: block; text-align: center; margin: 8px 0 4px;
-  font-size: 12px; font-weight: 800; color: #314c85;
-  background: #e8eef7; border-radius: 20px; padding: 4px 12px;
-  width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto;
-}
-.cvr-fv-note {
-  text-align: center; font-size: 11px; color: #666;
-  margin: 0 0 8px; line-height: 1.45; padding: 0 8px;
-}
-.cvr-lp-hub {
-  text-align: center; font-size: 11px; color: #666;
-  margin: 0 0 10px; line-height: 1.5; padding: 0 8px;
-}
-.cvr-lp-hub a { color: #314c85; font-weight: 700; text-decoration: underline; }
 
-/* ===== 進捗演出 ===== */
-.cvr-almost-done { text-align: center; margin: 16px 0 8px; }
-.cvr-almost-done p {
-  display: inline-block; padding: 6px 20px;
-  background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
-  border-radius: 20px; font-size: 13px; font-weight: 700; color: #314c85;
-}
-.cvr-final-step {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  margin: 16px 0 8px; padding: 10px 16px;
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 10px;
-}
-.cvr-final-step__icon {
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; background: #fff; border-radius: 50%;
-}
-.cvr-final-step p { font-size: 14px; font-weight: 700; color: #2e7d32; }
 
 /* 無効時の送信CTA: 薄ピンクだと壊れて見えるためグレーで非活性を明示 */
 #step06 .c-submit-button.is-disable {
@@ -528,28 +458,6 @@ body.lp-input-step .l-footer {
 /* 遅延描画 */
 .cvr-testimonials, .cvr-faq { position: relative; z-index: 0; content-visibility: auto; contain-intrinsic-size: auto 480px; }
 
-/* ===== 離脱防止モーダル ===== */
-@keyframes cvr-exitFadeIn { from { opacity: 0 } to { opacity: 1 } }
-@keyframes cvr-exitScaleIn { from { transform: scale(.9); opacity: 0 } to { transform: scale(1); opacity: 1 } }
-.cvr-exit-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 9999;
-  display: flex; align-items: center; justify-content: center; padding: 16px;
-  animation: cvr-exitFadeIn .3s;
-}
-.cvr-exit-modal {
-  background: #fff; border-radius: 16px; padding: 32px 24px;
-  text-align: center; max-width: 340px; width: 100%; animation: cvr-exitScaleIn .3s;
-}
-.cvr-exit-modal__title { font-size: 18px; font-weight: 800; color: #333; margin-bottom: 12px; }
-.cvr-exit-modal__text { font-size: 13px; line-height: 1.7; color: #666; margin-bottom: 20px; }
-.cvr-exit-modal__text strong { color: #ff5966; }
-.cvr-exit-modal__btn {
-  display: block; width: 100%; padding: 14px; border: none; border-radius: 10px;
-  background: #ff5966; color: #fff; font-size: 15px; font-weight: 700;
-  cursor: pointer; margin-bottom: 8px; box-shadow: 0 3px 0 #be5156;
-}
-.cvr-exit-modal__btn:hover { transform: translateY(2px); box-shadow: none; }
-.cvr-exit-modal__close { display: block; width: 100%; padding: 8px; border: none; background: transparent; color: #999; font-size: 12px; cursor: pointer; }
 
 /* ===== グローバル ===== */
 .c-button:active, .p-firstButton:active { transform: scale(.97); }
@@ -633,7 +541,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step .c-title01,
   body.lp-form-step .c-title02 { padding: 4px 0 2px; font-size: 14px; line-height: 1.35; }
   body.lp-form-step .c-title02 { padding-top: 8px; }
-  body.lp-form-step .cvr-step-reason { margin: 2px 0; font-size: 10px; line-height: 1.4; }
   body.lp-form-step .p-step05__info.c-info-text,
   body.lp-form-step .p-step06__info.c-info-text { margin: 4px 0; font-size: 10px; }
 
@@ -679,7 +586,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   }
 
   body.lp-form-step .c-section + .c-section .c-title02 { padding-top: 4px; }
-  body.lp-form-step .c-section + .c-section .cvr-step-reason { display: none; }
   /* 1ステップに複数設問がある場合（経験＋雇用形態など） */
   body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__img { display: none; }
   body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button {
@@ -716,7 +622,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     min-height: calc(100dvh - 130px) !important;
     padding-bottom: 8px;
   }
-  body.lp-form-step #step01 .cvr-step-reason { display: none; }
   body.lp-form-step .cvr-step-reward { margin: 2px 0 6px; font-size: 10px; padding: 4px 8px; line-height: 1.35; }
   body.lp-form-step #step01 .cvr-step-reward { display: block; }
   body.lp-form-step #step01 .c-title01 { padding: 4px 0; font-size: 15px; font-weight: 800; }
