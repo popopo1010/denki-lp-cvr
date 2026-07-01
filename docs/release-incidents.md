@@ -208,3 +208,13 @@ node scripts/e2e-thanks-v2-release.mjs
 bash scripts/verify-production-release.sh   # デプロイ後
 gh run list --workflow=deploy.yml --limit 3
 ```
+
+## 2026-07-01 step01自動遷移タイマーの残存でステップ重複表示（app.js / app-v2.js 共通）
+
+- 症状: denkikouji-v2 で「step03(実務経験)とstep04(都道府県)が画面に同時表示」される。再現手順＝step03で経験選択→step04→**戻る**→step03→**次へ**。以後 step03 が step04 に重なって残る。
+- 原因: step01(資格 checkbox) の `data-auto-advance-ms`(2800ms) の自動遷移タイマー（`scheduleAutoAdvance` の `setTimeout`）が、**ユーザーが手動で先に進んでもクリアされず**、2800ms後に `nextBtn.click()`（step01→step03）を発火。現在表示中のステップ（step04等）に step03 を重ねて表示していた。`showPage` は対象ページの表示のみ行い他ページを隠さない設計のため、残存タイマー由来の誤 `showPage("#step03")` で重複が残る。
+- 影響範囲: **step01に自動遷移(2800ms)を持つ全LP**。共有 `assets/js/app.js`（denkikouji本番/v3/v4/v5/v6・sekoukanri系）と `assets/js/app-v2.js`（全v2系34LP）の双方に同一バグ。ミラー(WPLP/自前LP)も同じ。
+- 対応: 自動遷移タイマーの発火条件に「step01がまだ表示中」を追加。
+  `if (hasAny() && !nextBtn.classList.contains(DISABLE) && getComputedStyle(group).display !== "none") nextBtn.click();`
+  app.js / app-v2.js 両方＋ミラー(WPLP/自前LP)を同一化。レンダリングで再現手順→重複解消を確認。
+- 再発防止: **自動遷移/自動送信のタイマーは発火時に「そのステップがまだ可視か」を必ず確認する**（`getComputedStyle(group).display !== "none"` か `group.offsetParent !== null`）。手動遷移でタイマーをクリアし損ねても誤爆しないよう防御的に書く。app.js と app-v2.js は同種ロジックを持つため両方直す（②のドリフト教訓と同じ）。

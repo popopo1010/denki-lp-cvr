@@ -506,7 +506,7 @@
       if (!autoAdvanceMs || !nextBtn) return;
       clearTimeout(autoAdvanceTimer);
       autoAdvanceTimer = setTimeout(() => {
-        if (hasAny() && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+        if (hasAny() && !nextBtn.classList.contains(DISABLE) && getComputedStyle(group).display !== "none") nextBtn.click();
       }, autoAdvanceMs);
     }
     group._clearAutoAdvance = () => clearTimeout(autoAdvanceTimer);
