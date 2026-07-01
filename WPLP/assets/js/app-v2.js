@@ -135,6 +135,7 @@
 
   // ========== Page transitions ==========
   function showPage(pageId) {
+    try{console.log("SHOWPAGE",pageId,(new Error().stack||"").split("\n").slice(2,5).join(" <- "));}catch(e){}
     const page = document.querySelector(pageId);
     if (!page) return;
 
@@ -402,7 +403,7 @@
       if (!autoAdvanceMs || !nextBtn) return;
       clearTimeout(autoAdvanceTimer);
       autoAdvanceTimer = setTimeout(() => {
-        if (hasAny() && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+        if (hasAny() && !nextBtn.classList.contains(DISABLE) && getComputedStyle(group).display !== "none") nextBtn.click();
       }, autoAdvanceMs);
     }
 
