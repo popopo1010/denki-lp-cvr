@@ -92,6 +92,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 #step-first .cvr-fv-hero,#step-first .cvr-fv-badgewrap{opacity:.5}
 #step-first .c-title01{opacity:1;font-weight:800}
 #step-first .p-first__buttonArea .p-firstButton{border:2px solid #1a1a1a;box-shadow:0 4px 14px rgba(0,0,0,.15);background:#fff;font-weight:800;position:relative;z-index:2}
+/* v5: step01/step03の選択肢グリッド上部にクマ用の余白を確保（上部配置の重なり回避） */
+#step01 .p-step01__buttonArea,#step03 .p-step03__buttonArea{margin-top:44px}
     </style>
     <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014"></noscript>
@@ -99,6 +101,29 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260628"></noscript>
     <script>window.__LP_ID="denkikouji-v5";</script>
     <script src="../assets/js/app.js?v20260801" defer></script>
+    <!-- v5専用: step01/step03のクマを「選択肢の上部」へ補正（共有app.jsは非改変・クマ→CTA移動は維持） -->
+    <script>
+    (function(){
+      function inChoiceGrid(el){
+        var p = el && el.parentNode;
+        if(!p || !p.classList || !p.classList.contains("c-button-grid")) return false;
+        return !!(p.closest && p.closest("#step01, #step03"));
+      }
+      function fix(icon){
+        if(!icon) return;
+        if(inChoiceGrid(icon)){
+          if(icon.style.bottom !== "auto"){ icon.style.bottom = "auto"; icon.style.top = "-22px"; }
+        }
+      }
+      function setup(){
+        var icon = document.querySelector(".cvr-kuma");
+        if(!icon){ setTimeout(setup,150); return; }
+        try{ new MutationObserver(function(){ fix(icon); }).observe(icon,{attributes:true,attributeFilter:["style"]}); }catch(e){}
+        fix(icon);
+      }
+      if(document.readyState!=="loading") setup(); else document.addEventListener("DOMContentLoaded", setup);
+    })();
+    </script>
 </head>
 
 <body class="wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
