@@ -69,7 +69,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 .cvr-progress__bar{height:100%;width:0;background:linear-gradient(90deg,#314c85,#5c6bc0);border-radius:999px}
 .c-text-box,.c-select-box02 select{min-height:52px;font-size:16px}
 .c-next-button,.c-submit-button{min-height:48px}
-@media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));padding-top:0;padding-bottom:0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:auto;padding-bottom:max(8px,env(safe-area-inset-bottom))}#step-first>picture img{max-height:150px!important;object-fit:cover;object-position:center 35%;width:100%;border-radius:8px}.p-firstButton__icon{display:none}.p-firstButton{min-height:76px}body.lp-form-step .c-next-button{min-height:48px}}
+@media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));padding-top:0;padding-bottom:0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:auto;padding-bottom:max(8px,env(safe-area-inset-bottom))}#step-first>picture img{max-height:88px!important;object-fit:cover;object-position:center 35%;width:100%;border-radius:8px}.p-firstButton__icon{display:none}.p-firstButton{min-height:76px}body.lp-form-step .c-next-button{min-height:48px}}
 .cvr-ba{display:flex;align-items:stretch;gap:6px;margin:8px 0 2px}
 .cvr-ba__cell{flex:1;border-radius:8px;padding:8px 8px;text-align:center;line-height:1.3}
 .cvr-ba__before{background:#f2f3f5;color:#777}
@@ -87,6 +87,11 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 .cvr-salary__name{font-size:12px;color:#333}
 .cvr-salary__val{font-size:15px;font-weight:900;color:#1a1a1a;background:linear-gradient(transparent 60%,#ffe066 60%);padding:0 3px}
 .cvr-salary__note{font-size:10px;color:#888;text-align:center;margin:5px 0 0}
+/* v5 FV: 最初のタップに集中（選択肢以外をグレーアウト・選択肢を最も目立たせる） */
+#step-first>picture{opacity:.5;filter:grayscale(30%)}
+#step-first .cvr-fv-hero,#step-first .cvr-fv-badgewrap{opacity:.5}
+#step-first .c-title01{opacity:1;font-weight:800}
+#step-first .p-first__buttonArea .p-firstButton{border:2px solid #1a1a1a;box-shadow:0 4px 14px rgba(0,0,0,.15);background:#fff;font-weight:800;position:relative;z-index:2}
     </style>
     <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014"></noscript>
