@@ -467,8 +467,9 @@
       }
       updateBtn();
       // 都道府県を選んだら自動で次へ（他ステップと挙動を統一）
+      // window.__noAreaAutoAdvance が true のLPでは無効（既定は従来通り）
       clearTimeout(prefAdvTimer);
-      if (valid) {
+      if (valid && !window.__noAreaAutoAdvance) {
         prefAdvTimer = setTimeout(() => {
           if (valid && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
         }, 450);
