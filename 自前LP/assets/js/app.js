@@ -642,9 +642,18 @@
 
     prefSel.addEventListener("change", () => {
       prefH.value = prefSel.options[prefSel.selectedIndex].textContent;
-      zipInput.value = ""; valid = false; cityH.value = "";
+      zipInput.value = ""; cityH.value = "";
+      // 都道府県だけで成立させ自動遷移（市区町村は任意）。
+      // 市区町村を選べばcitySelのchangeで上書き＋再スケジュールされ取得される。
       loadCities(prefH.value, "");
-      updateIcons();
+      valid = true;
+      // 選択完了 → クマ(アイコン)を次のCTAへ移動（js-icon-target / moveIconById）。
+      // ※「選択したらCTAへ移動」は回帰しやすい。変更時は必ず確認（CLAUDE.md）。
+      target.classList.add(SKIP);
+      prefSel.classList.add(SKIP);
+      updateBtn();
+      moveIconById("#" + nextBtn.id, true);
+      scheduleZipAutoAdvance();
     });
 
     citySel.addEventListener("change", () => {
