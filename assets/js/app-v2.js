@@ -995,6 +995,13 @@
       initCookieName();
       initZapierMirror();
       preventEnter();
+      // initZipCode等のupdateIcons()が初期化時にkumaをstep04入力エリアへ移動する場合があるため、
+      // FV表示中はkumaを定位置(.cvr-kuma-wrap)へ戻す（FVでクマが消える不具合の防止）
+      if (!document.body.classList.contains("lp-form-step")) {
+        const fvWrap = document.querySelector("#step-first .cvr-kuma-wrap");
+        const kuma = document.querySelector(".cvr-kuma");
+        if (fvWrap && kuma && kuma.parentNode !== fvWrap) { kuma.style.cssText = ""; fvWrap.appendChild(kuma); }
+      }
     });
   }
 
