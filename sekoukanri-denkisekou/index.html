@@ -298,19 +298,19 @@
     </div>
   </div>
   <p class="p-step05__info c-info-text"><svg viewBox="0 0 24 24" role="presentation" class="icon" style="width: 12px; height: 12px;"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" style="fill: currentcolor;"></path></svg>現在の職場に公開されることはありません</p>
-  <h2 class="c-title02">お住まいの郵便番号</h2>
+  <h2 class="c-title02">お住まいの都道府県</h2>
   <p class="cvr-step-reward"><strong>通勤しやすい求人</strong>を優先表示（あと2ステップ）</p>
   <input type="hidden" class="p-country-name" value="Japan">
 
-  <div class="p-step05__address c-zip-text js-icon-target" id="step04-icon-start-target">
+  <div class="p-step05__address" hidden>
     <p class="c-zip-text__notice" id="zip-notice">ハイフンなし</p>
     <span class="wpcf7-form-control-wrap" data-name="your-zip"><input size="40" maxlength="7" class="wpcf7-form-control wpcf7-tel wpcf7-text wpcf7-validates-as-tel p-postal-code" id="zip" aria-invalid="false" placeholder="1234567" value="" type="tel" name="your-zip" style="padding-left:48px" /></span>
   </div>
 
-  <details class="p-step05__accordion" id="select-box-accordion">
-    <summary class="p-step05__accordionTrigger" id="select-box-accordion-trigger">郵便番号がわからない方はこちら<span class="arrow"></span></summary>
+  <details class="p-step05__accordion" id="select-box-accordion" open>
+    <summary class="p-step05__accordionTrigger" id="select-box-accordion-trigger" style="display:none">郵便番号がわからない方はこちら<span class="arrow"></span></summary>
     <div class="p-step05__accordionBody">
-      <div class="p-step05__accordionBodyInner">
+      <div class="p-step05__accordionBodyInner c-zip-text js-icon-target" id="step04-icon-start-target">
         <div class="c-select-box">
           <select id="pref" name="pref" class="js-icon-target"></select>
         </div>
