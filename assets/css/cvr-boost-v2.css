@@ -303,12 +303,12 @@ body.lp-form-step .l-footer { display: none !important; }
 .cvr-kuma-wrap { position: relative; }
 .cvr-kuma-wrap > .cvr-kuma {
   position: absolute;
-  right: 0;
-  top: -36px; /* ボタンの上にはみ出るように配置 */
+  right: -4px;
+  top: 0; /* 最初のCTA(2択ボタン)の右上に密着＝CTAを指す。負のtopでタイトル側に浮かせない（v1準拠） */
   z-index: 5;
   display: block;
 }
-.cvr-kuma { text-align: right; margin: 0; }
+.cvr-kuma { text-align: right; margin: 0; pointer-events: none; }
 .cvr-kuma img { width: 56px; height: auto; animation: cvr-kumaWave 2s ease-in-out infinite; }
 @keyframes cvr-kumaWave {
   0%, 100% { transform: translateX(0); }
