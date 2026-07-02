@@ -218,3 +218,21 @@ gh run list --workflow=deploy.yml --limit 3
   `if (hasAny() && !nextBtn.classList.contains(DISABLE) && getComputedStyle(group).display !== "none") nextBtn.click();`
   app.js / app-v2.js 両方＋ミラー(WPLP/自前LP)を同一化。レンダリングで再現手順→重複解消を確認。
 - 再発防止: **自動遷移/自動送信のタイマーは発火時に「そのステップがまだ可視か」を必ず確認する**（`getComputedStyle(group).display !== "none"` か `group.offsetParent !== null`）。手動遷移でタイマーをクリアし損ねても誤爆しないよう防御的に書く。app.js と app-v2.js は同種ロジックを持つため両方直す（②のドリフト教訓と同じ）。
+
+## 2026-07-03 step06表示時にページ上部が見えない（scrollTo(0,0)がスクロールアンカリングに巻き戻される）
+
+- 症状: 最終ステップ(step06 電話番号)に進むと、ヘッダー/STEP表示/タイトルが画面外に消え、入力欄だけが見える（オーナー実機報告）。LPにより発生・非発生が分かれた（denkikouji=OK、sekoukanri系/v3=NG）。
+- 原因は3層:
+  1. `showPage` の autofocus 後 `scrollIntoView({block:"center"})` が、入力欄を中央寄せしてトップを画面外へ押し出す → `block:"nearest"`（見えていればスクロールしない）に変更。
+  2. `html{scroll-behavior:smooth}`（全cvr-boost CSS）下では `window.scrollTo(0,0)` がアニメーション化され、他のsmoothスクロールに割り込まれて途中で止まる → 切替時は `documentElement.style.scrollBehavior="auto"` で一時無効化して瞬時スクロール。
+  3. **本丸**: `scrollTo(0,0)` を「旧ページ display:none → 新ページ display:block」の同期処理中（レイアウトdirty）に呼ぶと、直後のレイアウト確定時に**スクロールアンカリングが旧スクロール位置を復元**し、scrollTo が無かったことになる。→ 表示切替の**後**に `void page.offsetHeight` で reflow を強制してから `scrollTo(0,0)`。
+- 対応: app.js / app-v2.js 両方＋ミラー(WPLP/自前LP)同期。Playwright(375px)で denkikouji / sekoukanri / sekoukanri-denkisekou / meta-lp/denkikouji / v3 / v2 の6系統で step06 到達時 scrollY=0・上部可視・tel focus を確認。
+- 再発防止: **ページ切替のスクロールリセットは「表示切替後＋reflow強制＋瞬時(scroll-behavior無効化)」の3点セット**で行う。デバッグ時、フック内で `scrollY` を読むだけでレイアウトが flush され再現が消える（ハイゼンバグ）ことに注意。
+
+## 2026-07-03 meta-lp/denkikouji の遅延ステップが404でフォーム停止（6/21から本番露出）
+
+- 症状: meta-lp/denkikouji で step01(資格)から先に進めない。step03以降が `data-lazy-src` の遅延読み込みで、その fetch が404のためマウントされない。
+- 原因: 2026-06-21 PR#21 で導入された `data-lazy-src="../denkikouji/steps-lazy.html"` が、`/meta-lp/denkikouji/` 基準で **自分自身のディレクトリ**（`/meta-lp/denkikouji/steps-lazy.html`＝存在しない）に解決される相対パス誤り。導入時から一度も動いていない。正: `../../denkikouji/steps-lazy.html`。
+- 発見: 2026-07-03 の step06 全LP挙動確認（Playwright全ステップ走行）で step03 クリックが要素なしで失敗し発覚。**全ステップを実走するE2Eでしか捕まらない**タイプの欠陥。
+- 対応: パス修正＋`scripts/check-lazy-steps.mjs` 新設（全HTMLの `data-lazy-src` をHTML基準で解決し実在確認）。deploy.yml / release-pre-check.sh に組み込み、404なら**デプロイ前にブロック**。
+- 再発防止: 相対パスの partial 参照を追加/変更したら、**そのページのディレクトリ基準で解決先を確認**する（`../` の数え間違いに注意）。遅延読み込みはコンソールにエラーが出ず静かに壊れるため、ガードスクリプトで機械検証する。
