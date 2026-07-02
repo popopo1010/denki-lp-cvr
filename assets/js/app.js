@@ -974,7 +974,7 @@
       ["中国・四国", ["広島県","岡山県","山口県","愛媛県","香川県","徳島県","高知県","鳥取県","島根県"]],
       ["九州・沖縄", ["福岡県","熊本県","鹿児島県","長崎県","大分県","宮崎県","佐賀県","沖縄県"]]
     ];
-    let h = '<option value="00" selected disabled>都道府県</option>';
+    let h = '<option value="00" selected disabled>都道府県を選択</option>';
     let idx = 0;
     REGIONS.forEach(r => {
       h += '<optgroup label="' + r[0] + '">';
