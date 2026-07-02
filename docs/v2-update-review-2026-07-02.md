@@ -46,11 +46,14 @@
 
 ## 5. アクション一覧（優先度順）
 
-### P0（今週・実装は小さい）
-1. **v2 step06に電話の安心文を移植**（v1 `denkikouji/steps-lazy.html:201` と同文言）。対象: `denkikouji-v2` / `sekoukanri-v2`。→ 最大離脱点への直撃、QS「LP体験」にも寄与。
-2. **v5の「FV最初のタップ集中」をv2へ移植**（step-first早期離脱17%対策）。同時に R1 の svh フォールバックを確認・実装。
-3. **偽ライブ通知の停止/実データ化**をオーナーに確認（R2）。
-4. ~~禁止コピー一掃（R4）~~ → 済（本ブランチ）。
+### P0（今週・実装は小さい）→ **2026-07-02 本ブランチで実装済み**
+1. ~~v2 step06に電話の安心文を移植~~ → **済**。denkikouji-v2 / sekoukanri-v2 / sekoukanri-*-v2（3種）/ meta-lp-v2の4LPに v1同文言（完全無料・現在の職場に知られることもありません）を追加。`cvr-boost-v2.css` に対応CSSも追加。
+2. ~~v5の「FV最初のタップ集中」をv2へ移植~~ → **済**（root v2 5LPのインラインCSSに v5 #45 準拠のルールを追加：FV画像を減光・選択ボタンを強調）。svh は `min(calc(100svh - 200px), 560px)` で上限を設定（インラインcritical CSS＋`cvr-boost-v2.css`）。in-appブラウザの巨大空白を構造的に抑止。
+3. ~~偽ライブ通知の停止/実データ化~~ → **オーナー判断「ありのまま」を受け撤去済み**。`cvr-live-notification`（58ファイル）と静的な新着件数バッジ `new-job-count`（42ファイル）を全パイプライン（root・WPLP・自前LP・meta-lp・nenshu-shindan・v2-deploy/wp-html・dk_lp・denkikouji-search）から一掃。app.js / app-v2.js 内の `initNotifications` は要素が無いため no-op（デッドコード。次回JS変更時に削除する — app.jsの`?v`はdeploy検証が `v20260801` 固定値で見ているため今回は非改変）。
+4. ~~禁止コピー一掃（R4）~~ → 済。
+5. **Clarityステップイベント（P1-6）も実装済み**: `app-v2.js` の `form_step` 送信箇所と送信完了時に `clarity('set','lp_step',…)` を追加（WPLP/自前LPミラー同期済み・`check-lp-bridge-release.mjs` 10/10 pass）。`app.js`（v1）への同実装は次回のv1変更に同乗させる。
+6. **年収コピー（P1-7）を先行実装**: denkikouji-v2 FVに「年収500万円以上の求人も多数」を追加（RSA勝ち見出し「年収500万以上・年休120日以上」と整合）。**本番反映前の要確認: 「500万円以上の求人が多数ある」ことの事実確認**。
+7. `?v=` は v2系一式を `v20260702a` にバンプ（deploy検証の期待値はv1系のみのため影響なし）。
 
 ### P1（v2を数字の出る状態に）
 5. **v2への少額配信開始**: Google「統合」グループ配下でLPAB（Final URL＝`/denkikouji-v2/`）。Meta側は sekoukanri-v2 / meta-lp-v2 でテスト。台帳 `_lp` で自動分離。

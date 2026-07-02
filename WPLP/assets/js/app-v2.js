@@ -109,6 +109,9 @@
       page_location: location.href,
       page_path: location.pathname
     });
+    if (window.clarity) {
+      try { window.clarity("set", "lp_step", "submitted"); } catch (e) { /* no-op */ }
+    }
   }
 
   // ========== Icon system (DOM移動方式) ==========
@@ -1126,6 +1129,10 @@
       btn.addEventListener("click", function () {
         if (btn.dataset.pageTo && window.dataLayer) {
           window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
+        }
+        // ClarityのExport APIはステップ別ファネルを返さないため、到達ステップをタグ付けする
+        if (btn.dataset.pageTo && window.clarity) {
+          try { window.clarity("set", "lp_step", btn.dataset.pageTo); } catch (e) { /* no-op */ }
         }
       });
     });
