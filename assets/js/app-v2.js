@@ -138,7 +138,6 @@
 
   // ========== Page transitions ==========
   function showPage(pageId) {
-    try{console.log("SHOWPAGE",pageId,(new Error().stack||"").split("\n").slice(2,5).join(" <- "));}catch(e){}
     const page = document.querySelector(pageId);
     if (!page) return;
 
@@ -1049,42 +1048,6 @@
     return match && match[2] ? decodeURIComponent(match[2].replace(/\+/g, " ")) : null;
   }
 
-  // ========== リアルタイム通知ローテーション ==========
-  var notifications = [
-    { area: "東京都", time: "3分前" },
-    { area: "大阪府", time: "5分前" },
-    { area: "神奈川県", time: "8分前" },
-    { area: "愛知県", time: "12分前" },
-    { area: "福岡県", time: "15分前" },
-    { area: "埼玉県", time: "18分前" },
-    { area: "千葉県", time: "22分前" },
-    { area: "北海道", time: "25分前" },
-    { area: "兵庫県", time: "28分前" },
-    { area: "広島県", time: "32分前" },
-  ];
-
-  function initNotifications() {
-    var el = document.getElementById("live-notification");
-    if (!el) return;
-    var textEl = el.querySelector(".cvr-live-notification__text");
-    if (!textEl) return;
-    var index = Math.floor(Math.random() * notifications.length);
-
-    function show() {
-      var n = notifications[index];
-      textEl.innerHTML = "<strong>" + n.area + "</strong>の方が<strong>" + n.time + "</strong>に登録しました";
-      el.classList.add("is-visible");
-    }
-
-    setTimeout(function () {
-      show();
-      setInterval(function () {
-        el.classList.remove("is-visible");
-        setTimeout(function () { index = (index + 1) % notifications.length; show(); }, 500);
-      }, 8000);
-    }, 2000);
-  }
-
   // ========== 離脱防止 ==========
   function initExitIntent() {
     var shown = false;
@@ -1193,7 +1156,6 @@
     initExitIntent();
 
     function runCvrBoostRest() {
-      initNotifications();
       initFormTracking();
       initCountUp();
     }
