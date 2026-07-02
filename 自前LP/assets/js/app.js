@@ -603,7 +603,8 @@
     function scheduleZipAutoAdvance() {
       clearTimeout(zipAutoTimer);
       zipAutoTimer = setTimeout(() => {
-        if (valid && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+        // step01と同じ表示中ガード（#54）: 別ステップ表示中に残存タイマーで遷移しない
+        if (valid && !nextBtn.classList.contains(DISABLE) && getComputedStyle(group).display !== "none") nextBtn.click();
       }, 700);
     }
     group._clearZipAutoAdvance = () => clearTimeout(zipAutoTimer);
