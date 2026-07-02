@@ -263,7 +263,7 @@ body.lp-form-step .cvr-floating-cta {
   font-weight: 600; font-size: 11px; line-height: 15px;
   z-index: 2; pointer-events: none;
 }
-.cvr-tel-reassurance { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 8px; font-size: 10px; color: #94a3b8; }
+.cvr-tel-reassurance { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 8px; font-size: 10px; color: #94a3b8; padding-right: 52px; /* 追従クマ(右下)と重ならない余白 */ }
 .cvr-tel-reassurance svg { flex-shrink: 0; }
 
 /* ===== PP同意テキスト ===== */
