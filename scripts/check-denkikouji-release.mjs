@@ -44,7 +44,7 @@ const EXPECT = {
   ["FV 全5ステップ", lp.includes("全5ステップ")],
   ["step01 あと4", lp.includes("あと4ステップ")],
   ["step06 損失回避コピー", lazy.includes("いま見ないと損")],
-  ["step06 満足度94%", lazy.includes("利用者の<strong>94%</strong>が満足と回答")],
+  ["step06 満足度96.4%", lazy.includes("利用者の<strong>96.4%</strong>が満足と回答")],
   ["submit CTA 文言", lazy.includes("あなたに合う求人を見る")],
   ["thanks-v2 遷移", app.includes("thanks-v2")],
   ["dk_lp_lead_v1", app.includes("dk_lp_lead_v1")],

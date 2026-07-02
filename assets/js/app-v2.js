@@ -1149,16 +1149,17 @@
       els.forEach(function (el) {
         var raw = el.textContent;
         var suffix = raw.replace(/[\d,]/g, "");
-        var target = parseInt(raw.replace(/[^\d]/g, ""), 10);
+        var target = parseFloat(raw.replace(/[^\d.]/g, ""));
+        var dec = (raw.match(/\.(\d+)/) || [0, ""])[1].length;
         var duration = 1500;
         var startTime = null;
         function step(ts) {
           if (!startTime) startTime = ts;
           var progress = Math.min((ts - startTime) / duration, 1);
-          var val = Math.floor(progress * target);
-          el.textContent = val.toLocaleString() + suffix;
+          var val = progress * target;
+          el.textContent = (dec ? val.toFixed(dec) : Math.floor(val).toLocaleString()) + suffix;
           if (progress < 1) requestAnimationFrame(step);
-          else el.textContent = target.toLocaleString() + suffix;
+          else el.textContent = (dec ? target.toFixed(dec) : target.toLocaleString()) + suffix;
         }
         requestAnimationFrame(step);
       });
