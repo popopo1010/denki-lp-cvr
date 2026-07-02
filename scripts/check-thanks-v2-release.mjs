@@ -49,7 +49,7 @@ const requiredStrings = [
   ["t-license-badge", "license badge"],
   ["t-sec-head", "section illustration head"],
   ["t-hero__reassure", "major-category objection one-liner"],
-  ["しつこい営業は", "hero reassure copy（簡素化）"],
+  ["無理なおすすめは", "hero reassure copy（簡素化）"],
   ["t-hero--compact", "compact hero layout"],
   ["thanks-hero-title", "hero title id for name personalization"],
   ["あなた向けの非公開求人", "jobs section title（簡素化）"],

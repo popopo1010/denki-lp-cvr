@@ -401,7 +401,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .l-header__container { padding: 4px 8px; }
 
   /* FV: マイクロコピーをビューポート最下部へ (displayはJSのshowPageで制御) */
-  #step-first { flex-direction: column; min-height: calc(100vh - 200px); min-height: calc(100svh - 200px); }
+  #step-first { flex-direction: column; min-height: calc(100vh - 200px); min-height: min(calc(100svh - 200px), 560px); }
   #step-first .cvr-micro-copy { margin-top: auto; padding-bottom: 8px; }
   #step-first .c-nextLink { visibility: hidden; height: 0; overflow: hidden; }
 
@@ -703,3 +703,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     object-fit: contain;
   }
 }
+
+/* 電話欄の安心文（v1 cvr-boost.css と同仕様） */
+.cvr-tel-reassurance { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #777; }
+.cvr-tel-reassurance svg { flex-shrink: 0; }
