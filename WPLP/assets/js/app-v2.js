@@ -154,8 +154,6 @@
 
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
 
-    window.scrollTo(0, 0);
-
     if (pageId === "#step06" || pageId === "#step-last") {
       prewarmThanksBookingSlots();
     }
@@ -173,6 +171,16 @@
       page.style.transform = "translateX(50px)";
       page.style.transition = "none";
     }
+
+    // ページ切替「後」に瞬時スクロールでトップへ戻す（step06で上部が隠れる問題 2026-07-03）。
+    // レイアウトが未反映(dirty)のまま scrollTo すると、直後のレイアウト確定時に
+    // スクロールアンカリングが旧位置を復元してしまうため、reflow を強制してから戻す。
+    // html{scroll-behavior:smooth} もアニメーション化で他スクロールに割り込まれるため一時的に無効化。
+    var deSB = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    void page.offsetHeight;
+    window.scrollTo(0, 0);
+    document.documentElement.style.scrollBehavior = deSB;
 
     // step-firstはCSS制御の元位置(.cvr-kuma-wrap)に戻し、それ以外は入力エリアに移動
     if (pageId === "#step-first") {

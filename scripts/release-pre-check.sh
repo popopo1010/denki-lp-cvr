@@ -7,6 +7,7 @@ cd "$ROOT"
 echo "== 0 禁止コピー/ラベル =="
 node scripts/check-banned-copy.mjs
 node scripts/check-kuma-anchor.mjs
+node scripts/check-lazy-steps.mjs
 
 echo "== 1/5 thanks-v2 静的 =="
 node scripts/check-thanks-v2-release.mjs

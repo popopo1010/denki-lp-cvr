@@ -273,8 +273,6 @@
     );
     updateProgress(pageId);
 
-    window.scrollTo(0, 0);
-
     if (pageId === "#step05") {
       const errBox = document.getElementById("error-name");
       if (errBox) errBox.style.display = "none";
@@ -293,6 +291,16 @@
       page.style.transform = "translateX(50px)";
       page.style.transition = "none";
     }
+
+    // ページ切替「後」に瞬時スクロールでトップへ戻す（step06で上部が隠れる問題 2026-07-03）。
+    // レイアウトが未反映(dirty)のまま scrollTo すると、直後のレイアウト確定時に
+    // スクロールアンカリングが旧位置を復元してしまうため、reflow を強制してから戻す。
+    // html{scroll-behavior:smooth} もアニメーション化で他スクロールに割り込まれるため一時的に無効化。
+    var deSB = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    void page.offsetHeight;
+    window.scrollTo(0, 0);
+    document.documentElement.style.scrollBehavior = deSB;
 
     const isInputStep = pageId === "#step04" || pageId === "#step05" || pageId === "#step06";
     const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step05__accordionBodyInner, .p-step06__name, .p-step07__tel");
@@ -324,7 +332,7 @@
       }
       if (isInputStep) {
         requestAnimationFrame(() => {
-          autoFocusEl.scrollIntoView({ block: "center", behavior: "smooth" });
+          autoFocusEl.scrollIntoView({ block: "nearest", behavior: "smooth" }); // 既に見えていればスクロールしない（step06で上部が隠れる問題 2026-07-03）
         });
       }
     }
