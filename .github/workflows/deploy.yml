@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Check banned copy (禁止コピー/ラベルの再発防止)
+        run: node scripts/check-banned-copy.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js

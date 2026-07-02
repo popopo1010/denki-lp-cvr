@@ -1,0 +1,12 @@
+# assets/ 配下の静的ファイルの長期キャッシュ（2026-07-02 軽量化）
+# CSS/JS は全参照が ?v= でバージョン管理されているため immutable で安全。
+# 画像を内容差し替えする場合はファイル名を変えること（例: sekoukanri_hero-sp.webp）。
+# JSON（assets/data/booking-slots.json 等）は5分同期があるためキャッシュさせない。
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|webp|jpe?g|png|gif|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.json$">
+    Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
