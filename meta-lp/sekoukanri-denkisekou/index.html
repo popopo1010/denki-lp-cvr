@@ -277,12 +277,12 @@
   <details class="p-step05__accordion" id="select-box-accordion" open>
     <summary class="p-step05__accordionTrigger" id="select-box-accordion-trigger" style="display:none">郵便番号がわからない方はこちら<span class="arrow"></span></summary>
     <div class="p-step05__accordionBody">
-      <div class="p-step05__accordionBodyInner c-zip-text js-icon-target" id="step04-icon-start-target">
-        <div class="c-select-box">
-          <select id="pref" name="pref" class="js-icon-target"></select>
+      <div class="p-step05__accordionBodyInner js-icon-target" style="display:flex;flex-direction:column;gap:10px;padding:4px 0" id="step04-icon-start-target">
+        <div class="c-select-box" style="width:100%">
+          <select id="pref" name="pref" class="js-icon-target" style="width:100%;font-size:17px;padding:13px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;-webkit-appearance:menulist"></select>
         </div>
-        <div class="c-select-box">
-          <select id="city" name="city" class="js-icon-target">
+        <div class="c-select-box" style="width:100%;display:none">
+          <select id="city" name="city" class="js-icon-target" style="width:100%;font-size:17px;padding:13px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;-webkit-appearance:menulist">
             <option value="" selected disabled="">市区町村</option>
           </select>
         </div>
