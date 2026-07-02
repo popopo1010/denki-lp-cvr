@@ -917,3 +917,14 @@ body {
   .cvr-testimonial { padding: 20px; }
   .cvr-testimonial__text { font-size: 14px; }
 }
+
+/* FVボタン/タイトルのテーマ装飾を無効化（2026-07-03 本番スマホでズレ・矢印二重をオーナー指摘） */
+@media (max-width: 767px) {
+  #step-first .c-title01 { background: none !important; text-align: center !important; padding: 0 !important; }
+  #step-first .p-firstButton { min-height: 64px !important; height: auto !important; padding: 10px 0 !important; }
+  #step-first .p-firstButton__container { justify-content: center !important; padding: 0 40px !important; }
+  #step-first .p-firstButton__container::before, #step-first .p-firstButton__container::after,
+  #step-first .p-firstButton__text::before, #step-first .p-firstButton__text::after,
+  #step-first .p-firstButton .arrow { display: none !important; content: none !important; }
+  #step-first .p-firstButton__text { text-align: center !important; }
+}
