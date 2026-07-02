@@ -113,7 +113,7 @@
       "jobs": [
         {"title": "大手ゼネコン 建築現場 施工管理", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収600〜820万円", "salary_min": 600, "salary_max": 820, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},
         {"title": "インフラ新設 土木施工管理", "area": "神奈川県", "region": "関東", "prefs": ["神奈川県"], "salary": "年収580〜780万円", "salary_min": 580, "salary_max": 780, "intents": ["salary", "stable"], "traits": ["high_salary", "weekend_off"], "tags": ["週休2日", "残業20h以下"]},
-        {"title": "商業施設新築 電気工事施工管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収620〜850万円", "salary_min": 620, "salary_max": 850, "intents": ["private", "salary"], "traits": ["private", "high_salary"], "tags": ["非公開", "高待遇"]},
+        {"title": "商業施設新築 電気施工管理", "area": "大阪府", "region": "近畿", "prefs": ["大阪府"], "salary": "年収620〜850万円", "salary_min": 620, "salary_max": 850, "intents": ["private", "salary"], "traits": ["private", "high_salary"], "tags": ["非公開", "高待遇"]},
         {"title": "物流ターミナル 新設工事監督", "area": "愛知県", "region": "中部", "prefs": ["愛知県"], "salary": "年収550〜720万円", "salary_min": 550, "salary_max": 720, "intents": ["area", "stable"], "traits": ["weekend_off"], "tags": ["土日休み", "直行直帰"]},
         {"title": "病院増築 設備施工管理", "area": "福岡県", "region": "九州", "prefs": ["福岡県"], "salary": "年収530〜680万円", "salary_min": 530, "salary_max": 680, "intents": ["stable", "area"], "traits": ["low_ot"], "tags": ["長期安定", "残業少なめ"]},
         {"title": "再エネEPC 現場管理（施工管理）", "area": "埼玉県", "region": "関東", "prefs": ["埼玉県"], "salary": "年収570〜750万円", "salary_min": 570, "salary_max": 750, "intents": ["salary", "private"], "traits": ["private"], "tags": ["非公開", "資格手当"]}
@@ -200,8 +200,8 @@
       ]
     },
     {
-      "match": ["1級電気工事施工管理技士", "電気施工管理 1級", "電気工事施工管理 1級"],
-      "label": "1級電気工事施工管理技士",
+      "match": ["1級電気施工管理技士", "電気施工管理 1級", "電気施工管理 1級"],
+      "label": "1級電気施工管理技士",
       "voice": "1級電気施工管理で年収700〜900万帯の非公開案件を紹介した事例があります",
       "jobs": [
         {"title": "再エネEPC 電気施工管理（1級）", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収720〜950万円", "salary_min": 720, "salary_max": 950, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "年収交渉代行"]},
@@ -213,8 +213,8 @@
       ]
     },
     {
-      "match": ["2級電気工事施工管理技士", "電気施工管理 2級", "電気工事施工管理 2級"],
-      "label": "2級電気工事施工管理技士",
+      "match": ["2級電気施工管理技士", "電気施工管理 2級", "電気施工管理 2級"],
+      "label": "2級電気施工管理技士",
       "voice": "2級電気施工管理でも年収600万前後の非公開案件を紹介しています",
       "jobs": [
         {"title": "オフィスビル新築 電気施工管理", "area": "東京都", "region": "関東", "prefs": ["東京都"], "salary": "年収580〜760万円", "salary_min": 580, "salary_max": 760, "intents": ["salary", "private"], "traits": ["private", "high_salary"], "tags": ["非公開", "賞与2回"]},

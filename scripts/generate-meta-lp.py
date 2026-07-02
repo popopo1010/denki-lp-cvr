@@ -39,7 +39,7 @@ SOURCES = [
         "dest": "meta-lp/sekoukanri-denkisekou/index.html",
         "lp_id": "sekoukanri-denkisekou-meta",
         "canonical": f"{BASE_URL}/sekoukanri-denkisekou/",
-        "eyebrow": "電気工事施工管理専門",
+        "eyebrow": "電気施工管理専門",
         "title": "設備・電気施工の<br><strong>高待遇求人</strong>を無料紹介",
         "cta_primary": "無料で求人をチェック",
         "cta_secondary": "まず情報だけ見る",

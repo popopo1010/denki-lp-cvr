@@ -35,7 +35,7 @@
       "id": "denki_sekou_1",
       "label": "1級電気施工管理技士",
       "license_match": [
-        "1級電気工事施工管理技士",
+        "1級電気施工管理技士",
         "電気施工管理 1級",
         "1級電気施工管理"
       ],
@@ -53,7 +53,7 @@
     "denki_sekou_2": {
       "id": "denki_sekou_2",
       "label": "2級電気施工管理技士",
-      "license_match": ["2級電気工事施工管理技士", "電気施工管理 2級"],
+      "license_match": ["2級電気施工管理技士", "電気施工管理 2級"],
       "lp_slugs": [],
       "featured_story": "nw",
       "story_order": ["nw", "mk", "kt", "sm", "tn"],
