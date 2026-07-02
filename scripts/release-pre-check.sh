@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+echo "== 0 禁止コピー/ラベル =="
+node scripts/check-banned-copy.mjs
+
 echo "== 1/5 thanks-v2 静的 =="
 node scripts/check-thanks-v2-release.mjs
 
