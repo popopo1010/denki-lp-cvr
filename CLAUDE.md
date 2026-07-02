@@ -54,7 +54,8 @@
 
 - step01「どの資格をお持ちですか？」は**複数選択**（`js-checkbox-button` / 「続けてタップ」）。`#step01[data-auto-advance-ms]` で最後のタップから一定時間後に自動で次へ進む（タップごとにタイマー再セット＝デバウンス）。
 - **教訓（2026-06-24）**：自動遷移が速すぎると「複数お持ちの方は続けてタップ」と矛盾し、1つ選んだ瞬間に画面が飛ぶ＝「早く移動しすぎる」。施工管理ファミリー全体（`sekoukanri*` / `meta-lp*/sekoukanri*`、旧 1300〜900ms）を **2800ms** に統一。値はHTMLの `data-auto-advance-ms` 属性。`scripts/generate-sekoukanri-variants.py` はこの属性を上書きしないため、テンプレート `sekoukanri/index.html` の値が再生成で variant にも引き継がれる。
-- **視認性**：全工種11択のボタンは `cvr-boost-sekoukanri.css` の `:has(.p-step01__button:nth-of-type(7))` ルールで制御（通常画面 min-height 76px・font 18px / 短い画面 58px・15px）。8択以下の variant はこのルールに該当せず別サイズ。CSS変更時は `sekoukanri/index.html` の `?v=` を更新してキャッシュバスト。
+- **視認性（2026-07-02 現仕様）**：step01のモバイルは**2カラム×必ず1行**で1画面に収める。級・種別は `q-grade` チップ（1級/2級/第一種/第二種）、表示名は**「技士」省略**（例:「1級 建築施工管理」。denkikouji系の「1級電気施工管理」と同じ流儀。**data-valueは技士付きのまま不変**）。実装は `cvr-boost-sekoukanri.css` のstep01メディアブロック（grid 1fr 1fr・flex+nowrapの`!important`強制・font 16px・min-height 48px）。CSS変更時は `?v=` を全参照＋deploy.yml期待値までバンプ。
+- **【教訓 2026-07-02】step01レイアウトの罠**：WPテーマは `.c-button__text` に `text-align:justify`、ボタン群に**flexレイアウト**を持つ。①ラベルにinline-block断片を作るとjustifyで文字がバラける（「建 施工管理技/築 士」化）、②コンテナへの `grid-template-columns` 指定はテーマがflexだと無効。対策は「flexコンテナごと `display:grid!important` で奪う＋テキストは flex+nowrap でjustify無効化」。**テーマCSSはサンドボックス/ローカルから取得できない**ため、ローカルスクショが正常でも本番で崩れうる——step01系のレイアウト変更は本番反映後にスマホ実機で必ず確認する。
 - **【FVの罠】svh×フルハイトFVでスカスカ/崩れ**：`app.js` が FV(`#step-first`)に inline で `min-height:calc(100svh - 200px)` ＋ `.cvr-micro-copy{margin-top:auto}` を付与する。**アプリ内ブラウザ(Instagram/LINE)では `svh/dvh/lvh` が実ビューポートより大きく算出され、CTA直下に巨大な空白が出て「崩れ・スカスカ・トップが重なって見えない」状態になる**（2026-06-27 再発）。FVを「フルハイト化＋margin-top:auto」で最適化するときは in-app相当の短尺ビューポートで空白を確認。出るなら `cvr-boost-sekoukanri.css` 側で `#step-first{min-height:auto!important}` ＋ `.cvr-micro-copy{margin-top:○○!important}` と内容なり高さに逃がす。共有の `app.js` は触らず対象LPのCSSで上書きする。経緯: `docs/release-incidents.md` 2026-06-27。
 
 ## LP作成・改善のリファレンス
