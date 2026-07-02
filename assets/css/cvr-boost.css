@@ -788,3 +788,6 @@ body {
   .cvr-testimonial { padding: 20px; }
   .cvr-testimonial__text { font-size: 14px; }
 }
+
+/* ステップ推移はSTEP①-⑤ドットに一本化（プログレスバー+「あとN」は撤去 2026-07-03） */
+.cvr-progress { display: none !important; }

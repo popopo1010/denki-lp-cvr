@@ -694,7 +694,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   }
 
   /* 進捗の二重表示を解消（バーに一本化） */
-  body.lp-form-step .c-step { display: none; }
+  body.lp-form-step .c-step { display: block; } /* STEP①-⑤ドット復活（2026-07-03 オーナー指示: バーよりドットが分かりやすい） */
   body.lp-form-step .cvr-progress { margin-bottom: 8px; }
   body.lp-form-step .cvr-progress__label {
     margin: 4px 0 0;
@@ -928,3 +928,16 @@ body {
   #step-first .p-firstButton .arrow { display: none !important; content: none !important; }
   #step-first .p-firstButton__text { text-align: center !important; }
 }
+
+/* denkikouji FV: CTA縦幅アップ＋テーマ赤▶矢印の確実な除去（2026-07-03 オーナー指摘） */
+@media (max-width: 767px) {
+  #step-first .p-first__buttonArea .p-firstButton { min-height: 72px !important; padding: 14px 0 !important; }
+  /* テーマ由来の矢印(擬似要素/要素)を全て消し、自前の › (::before) だけ残す */
+  #step-first .p-firstButton::after,
+  #step-first .p-firstButton__container::before, #step-first .p-firstButton__container::after,
+  #step-first .p-firstButton__text::before, #step-first .p-firstButton__text::after,
+  #step-first .p-firstButton .arrow, #step-first .p-firstButton i { display: none !important; content: none !important; background: none !important; }
+}
+
+/* ステップ推移はSTEP①-⑤ドットに一本化（プログレスバー+「あとN」は撤去 2026-07-03） */
+.cvr-progress { display: none !important; }

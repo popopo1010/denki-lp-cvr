@@ -247,7 +247,7 @@ jobs:
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
             echo "$denki_lp" | grep -q 'app.js?v20260801' || return 1
-            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260702c' || return 1
+            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260703' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
             app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
             echo "$app_js" | grep -q 'thanks-v2' || return 1
@@ -261,7 +261,7 @@ jobs:
             echo "$app_js" | grep -q 'is-step-active' || return 1
             css=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/cvr-boost-sekoukanri.css")
             echo "$css" | grep -q 'is-step-active' || return 1
-            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260702f' || return 1
+            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260703' || return 1
             echo "$sekou_lp" | grep -q 'app.js?v20260801' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
             echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260701c' || return 1

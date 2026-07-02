@@ -182,7 +182,7 @@
         wrap.appendChild(icon);
       }
     } else {
-      const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
+      const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step05__accordionBodyInner, .p-step06__name, .p-step07__tel");
       if (firstArea && icon) {
         firstArea.style.position = "relative";
         firstArea.appendChild(icon);
