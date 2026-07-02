@@ -404,7 +404,7 @@ body.lp-input-step .l-footer {
 
 /* クマアイコン */
 .cvr-kuma-wrap { position: relative; }
-.cvr-kuma-wrap > .cvr-kuma { position: absolute; right: -4px; top: 0; z-index: 3; }
+.cvr-kuma-wrap > .cvr-kuma { position: absolute; right: 0; bottom: -38px; z-index: 3; } /* CTA化ボタンの矢印を隠さない（v2/sekoukanriと統一） */
 .cvr-kuma { text-align: right; margin-top: -10px; margin-bottom: -10px; pointer-events: none; }
 .cvr-kuma img { width: 48px; height: auto; animation: cvr-kumaWave 2s ease-in-out infinite; }
 @keyframes cvr-kumaWave {
