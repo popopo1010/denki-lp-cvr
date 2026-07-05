@@ -1,6 +1,15 @@
 (() => {
   "use strict";
 
+  // アプリ内ブラウザ（Instagram/LINE/Facebook等）検知。半透明バーが上部に被さり
+  // 最上部のSTEP表示が隠れて見えるため、CSS側(html.dk-inapp)で余白を確保する（2026-07-05）。
+  try {
+    if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|Messenger/i.test(navigator.userAgent)) {
+      document.documentElement.classList.add("dk-inapp");
+    }
+  } catch (e) { /* no-op */ }
+
+
   // ========== Cookie ==========
   const Cookie = {
     set(name, value, days) {

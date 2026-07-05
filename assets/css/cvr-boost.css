@@ -791,3 +791,9 @@ body {
 
 /* ステップ推移はSTEP①-⑤ドットに一本化（プログレスバー+「あとN」は撤去 2026-07-03） */
 .cvr-progress { display: none !important; }
+
+/* アプリ内ブラウザ(Instagram/LINE等)は半透明バーが上部〜約100pxに被さるため、
+   フォームステップの最上部(STEP表示)に余白を確保して隠れないようにする(2026-07-05 オーナー実機報告) */
+@media (max-width: 767px) {
+  html.dk-inapp body.lp-form-step .js-page-body { padding-top: 44px !important; }
+}
