@@ -126,7 +126,9 @@
     }
     icon.style.cssText = "position:absolute;right:0;bottom:-30px;pointer-events:none;z-index:3;opacity:1";
     if (scroll && wrapper) {
-      setTimeout(() => wrapper.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+      // block:"center"は上部(STEP表示/タイトル)を画面外へ押し出す(頻出バグ 2026-07-05)。
+      // nearestならCTAが見えていればスクロールせず、見えない時だけ最小限で表示する。
+      setTimeout(() => wrapper.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
     }
   }
 
@@ -642,7 +644,7 @@
           const bdayYear = document.getElementById("bday-year");
           if (bdayYear) {
             setTimeout(() => {
-              bdayYear.scrollIntoView({ behavior: "smooth", block: "center" });
+              bdayYear.scrollIntoView({ behavior: "smooth", block: "nearest" }); // center禁止(上部が隠れる 2026-07-05)
               bdayYear.focus();
               bdayYear.classList.add("js-pulse-highlight");
               setTimeout(() => bdayYear.classList.remove("js-pulse-highlight"), 2400);

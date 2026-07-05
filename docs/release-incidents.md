@@ -245,3 +245,11 @@ gh run list --workflow=deploy.yml --limit 3
   3. **dk_lp が旧JSのまま取り残し**: `dk_lp/assets/js/app.js`（?v20260630固定）が本体app.jsから145行ドリフト（step06スクロール修正・都道府県optgroup・タイマーガード等が未反映）→本体から同期＋?v bump。`dk_lp/denkikouji/assets/js/main.js`（完全独自実装）にも step06 3点セット修正（reflow強制+瞬時scrollTo / focus preventScroll / nearest）を移植。
   4. **WPLP/自前LP の貼り付け用HTMLの ?v が旧値のまま**（app.js?v20260630 / app-v2.js?v1781300000）→ 最新（v20260703d / v20260703b）に統一。1年immutableキャッシュ下では旧?vのままWPに貼ると再訪者に旧JSが配られ続ける。
 - 教訓: **共有JSの「ミラー」はWPLP/自前LPだけではない**。dk_lp のような別ディレクトリの複製・独自実装も横展開の対象に含める（バグ修正はリポジトリ全体を `scrollTo\|scrollIntoView` 等で grep して全実装に当てる）。ローカル検証では **WPテーマCSS由来の挙動（.js-form-group非表示等）が再現しない**ため、ローカルNGでも「テーマCSS前提の構造か」を確認してから本番バグと断定する。
+
+## 2026-07-05 step04/05でも上部（STEP表示・タイトル）が隠れる（オーナー実機・頻出報告）
+
+- 症状: 実機（アプリ内ブラウザ）で step04（都道府県）・step05（お名前）でも、STEP表示〜タイトルが画面上部に隠れる。step06修正（2026-07-03）後も残存。
+- 原因: 選択のたびにクマ移動と同時に走る `moveIcon` の `scrollIntoView({block:"center"})`（CTAを画面中央へ寄せる）と、step05の生まれ年への `block:"center"` スクロールが、**上部を画面外へ押し出していた**。step06のautofocusで直したのと同じ「center寄せ」クラスの残り。
+- 対応: `moveIcon`（app.js/app-v2.js 111・129行）と `bdayYear`（783・645行）の scrollIntoView を **`block:"nearest"`** に変更（CTAが見えていればスクロールなし、見えない時だけ最小限）。全ミラー（WPLP/自前LP/dk_lp）同期、`app.js?v20260705a` / `app-v2.js?v20260705a` に bump。クマのCTA移動（DOM移動）と41LP全ステップ実走は維持を確認。
+- 補足: アプリ内ブラウザは半透明バーが上部に被さるため、scrollY=0 でも最上部の要素はぼけて見える。これはブラウザ仕様で、コードでは消せない——「隠れてはいけない情報を最上部1行に置かない」設計側の注意で吸収する。
+- 再発防止: CLAUDE.md に**【頻出バグ】上部が隠れる＝スクロール4クラス（center寄せ／smooth割り込み／アンカリング復元／focusのpreventScroll漏れ）を全実装でgrep確認**のルールを追加。今後 `block:"center"` は原則禁止。
