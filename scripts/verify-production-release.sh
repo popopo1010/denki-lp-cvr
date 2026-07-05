@@ -2,8 +2,13 @@
 # 本番リリース前 HTTP 確認（Deploy Verify と同等 + LP ブリッジ）
 set -euo pipefail
 BASE="${RELEASE_VERIFY_BASE:-https://denkilp.builders-job.com/denki-lp-cvr}"
-CACHE_BUSTER="${RELEASE_APP_JS_CACHE:-v20260714}"
-DENKI_CSS_CACHE="${RELEASE_DENKI_CSS_CACHE:-v20260715}"
+# 期待する ?v はリポジトリのHTMLから自動導出する（固定値だとbump時に更新漏れで
+# 偽の失敗になるため。2026-07-03: v20260714固定のまま取り残されていた）
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+APP_JS_V_DEFAULT="$(grep -o 'app\.js?v[0-9a-z]*' "$ROOT_DIR/denkikouji/index.html" | head -1 | cut -d? -f2 || true)"
+DENKI_CSS_V_DEFAULT="$(grep -o 'cvr-boost-denkikouji\.css?v[0-9a-z]*' "$ROOT_DIR/denkikouji/index.html" | head -1 | cut -d? -f2 || true)"
+CACHE_BUSTER="${RELEASE_APP_JS_CACHE:-${APP_JS_V_DEFAULT:-v20260703d}}"
+DENKI_CSS_CACHE="${RELEASE_DENKI_CSS_CACHE:-${DENKI_CSS_V_DEFAULT:-v20260703}}"
 MAX_ATTEMPTS="${RELEASE_VERIFY_ATTEMPTS:-6}"
 RETRY_SLEEP="${RELEASE_VERIFY_SLEEP:-15}"
 
