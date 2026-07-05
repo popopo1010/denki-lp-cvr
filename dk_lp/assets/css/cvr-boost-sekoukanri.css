@@ -1312,5 +1312,8 @@ body {
    SFSafariViewControllerはUAがSafariと同一でUA検知不能のため、無条件で適用する
    (2026-07-05 オーナー実機報告・複数ページで再発) */
 @media (max-width: 767px) {
-  body.lp-form-step .js-page-body { padding-top: 44px !important; }
+  /* viewport-fit=cover 下でキーボード表示中などにページがステータスバー/URLピルの
+     下まで潜り込む場合、env(safe-area-inset-top) にその潜り込み量が入る。
+     固定44pxでは不足するため動的に加算する（2026-07-05 実機で44px固定でも被り再発） */
+  body.lp-form-step .js-page-body { padding-top: calc(env(safe-area-inset-top, 0px) + 44px) !important; }
 }
