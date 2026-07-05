@@ -271,3 +271,10 @@ gh run list --workflow=deploy.yml --limit 3
 - 対応②: `validate({silent:true})` を導入し、**input中はエラー表示の切替とCTAスクロールを行わない（blur時のみ表示）**。app.js / app-v2.js / dk_lp main.js の3実装＋全ミラー。
 - 検証: 1文字ずつ実タイピングで「エラー点滅0・スクロールジャンプ0（v1）・blur時はエラー正常表示・4桁でnext活性」を確認。41LP実走・ガード全通過。
 - 教訓: **フォームのリアルタイム検証は「ボタン活性は即時・エラー表示はblur」**が原則。入力途中の値（部分入力）を不正としてUIを動かさない。SFSafariViewControllerはUA検知不能——「特定環境だけ余白」より「常時余白」の方が壊れない。
+
+## 2026-07-05(3) 44px固定でも被り再発 → safe-area連動の動的余白に変更
+
+- 症状: 常時44px余白の反映後も、実機（SFSafariViewController・キーボード表示中）でSTEP表示・タイトルがステータスバー/URLピルの裏に潜る（オーナー実機 IMG_8775）。
+- 原因: `viewport-fit=cover` 下でキーボード表示中はページが**画面最上端（ステータスバー裏）から描画**され、チュームの被り量が約100px超になり44pxでは不足。
+- 対応: 全cvr-boost*.css の余白を `padding-top: calc(env(safe-area-inset-top, 0px) + 44px)` に変更。潜り込み時はiOSが safe-area-inset-top（約59px）を報告するため合計約103pxとなり被りを回避。通常時（inset=0）は44pxのまま。
+- 注意: env(safe-area-inset-top) はローカルPlaywrightでは常に0のため、この効果は**実機でしか確認できない**。
