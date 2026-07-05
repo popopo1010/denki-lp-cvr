@@ -148,8 +148,21 @@
     });
   }
 
+  // 携帯番号のみ受け付ける（060/070/080/090 始まりの11桁）
+  const TEL_PREFIX_ERROR = "090・080・070・060から始まる携帯番号を入力してください";
+
   function isValidTel(value) {
-    return /^[0-9]{11}$/.test(String(value || "").trim());
+    return /^0[6789]0[0-9]{8}$/.test(String(value || "").trim());
+  }
+
+  // 入力途中でも携帯番号になり得ない先頭3桁を検知する
+  function hasInvalidTelPrefix(value) {
+    const v = String(value || "").trim();
+    if (!v) return false;
+    if (v.charAt(0) !== "0") return true;
+    if (v.length >= 2 && "6789".indexOf(v.charAt(1)) === -1) return true;
+    if (v.length >= 3 && v.charAt(2) !== "0") return true;
+    return false;
   }
 
   const LAZY_STEP_IDS = new Set(["step03", "step04", "step05", "step06"]);
@@ -260,8 +273,6 @@
     );
     updateProgress(pageId);
 
-    window.scrollTo(0, 0);
-
     if (pageId === "#step05") {
       const errBox = document.getElementById("error-name");
       if (errBox) errBox.style.display = "none";
@@ -281,8 +292,18 @@
       page.style.transition = "none";
     }
 
+    // ページ切替「後」に瞬時スクロールでトップへ戻す（step06で上部が隠れる問題 2026-07-03）。
+    // レイアウトが未反映(dirty)のまま scrollTo すると、直後のレイアウト確定時に
+    // スクロールアンカリングが旧位置を復元してしまうため、reflow を強制してから戻す。
+    // html{scroll-behavior:smooth} もアニメーション化で他スクロールに割り込まれるため一時的に無効化。
+    var deSB = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    void page.offsetHeight;
+    window.scrollTo(0, 0);
+    document.documentElement.style.scrollBehavior = deSB;
+
     const isInputStep = pageId === "#step04" || pageId === "#step05" || pageId === "#step06";
-    const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
+    const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step05__accordionBodyInner, .p-step06__name, .p-step07__tel");
     if (pageId === "#step-first" && icon) {
       // FVのクマはマークアップ定位置（cvr-kuma-wrap）で表示する。
       // firstArea のセレクタは FV の .p-first__buttonArea に一致しないため、
@@ -311,7 +332,7 @@
       }
       if (isInputStep) {
         requestAnimationFrame(() => {
-          autoFocusEl.scrollIntoView({ block: "center", behavior: "smooth" });
+          autoFocusEl.scrollIntoView({ block: "nearest", behavior: "smooth" }); // 既に見えていればスクロールしない（step06で上部が隠れる問題 2026-07-03）
         });
       }
     }
@@ -452,7 +473,9 @@
   function initCheckboxButtons(group) {
     const buttons = group.querySelectorAll(".js-checkbox-button");
     if (!buttons.length) return;
-    const hiddens = document.querySelectorAll(".hidden-checkbox");
+    // your-term（検索キーワード格納用）は資格チェックボックスではないため除外。
+    // 検索KW文字列がボタン値として誤って復元されるのを防ぐ。
+    const hiddens = document.querySelectorAll('.hidden-checkbox:not([name="your-term"])');
     const target = group.querySelector(".js-icon-target");
     const nextBtn = group.querySelector(".js-next-button");
     const vals = {};
@@ -491,7 +514,7 @@
       if (!autoAdvanceMs || !nextBtn) return;
       clearTimeout(autoAdvanceTimer);
       autoAdvanceTimer = setTimeout(() => {
-        if (hasAny() && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+        if (hasAny() && !nextBtn.classList.contains(DISABLE) && getComputedStyle(group).display !== "none") nextBtn.click();
       }, autoAdvanceMs);
     }
     group._clearAutoAdvance = () => clearTimeout(autoAdvanceTimer);
@@ -588,7 +611,8 @@
     function scheduleZipAutoAdvance() {
       clearTimeout(zipAutoTimer);
       zipAutoTimer = setTimeout(() => {
-        if (valid && !nextBtn.classList.contains(DISABLE)) nextBtn.click();
+        // step01と同じ表示中ガード（#54）: 別ステップ表示中に残存タイマーで遷移しない
+        if (valid && !nextBtn.classList.contains(DISABLE) && getComputedStyle(group).display !== "none") nextBtn.click();
       }, 700);
     }
     group._clearZipAutoAdvance = () => clearTimeout(zipAutoTimer);
@@ -627,9 +651,18 @@
 
     prefSel.addEventListener("change", () => {
       prefH.value = prefSel.options[prefSel.selectedIndex].textContent;
-      zipInput.value = ""; valid = false; cityH.value = "";
+      zipInput.value = ""; cityH.value = "";
+      // 都道府県だけで成立させ自動遷移（市区町村は任意）。
+      // 市区町村を選べばcitySelのchangeで上書き＋再スケジュールされ取得される。
       loadCities(prefH.value, "");
-      updateIcons();
+      valid = true;
+      // 選択完了 → クマ(アイコン)を次のCTAへ移動（js-icon-target / moveIconById）。
+      // ※「選択したらCTAへ移動」は回帰しやすい。変更時は必ず確認（CLAUDE.md）。
+      target.classList.add(SKIP);
+      prefSel.classList.add(SKIP);
+      updateBtn();
+      moveIconById("#" + nextBtn.id, true);
+      scheduleZipAutoAdvance();
     });
 
     citySel.addEventListener("change", () => {
@@ -808,7 +841,7 @@
           const len = item.value.length;
           if (telNotice) {
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
-            else if (len === 11) { telNotice.style.display = "none"; }
+            else if (len === 11 || hasInvalidTelPrefix(item.value)) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (11 - len) + "桁"; }
           }
 
@@ -820,6 +853,14 @@
             updateBtn();
             scheduleTelAutoSubmit();
           } else {
+            if (errBox) {
+              if (hasInvalidTelPrefix(item.value)) {
+                errBox.style.display = "block";
+                if (errText) errText.textContent = TEL_PREFIX_ERROR;
+              } else if (errText && errText.textContent === TEL_PREFIX_ERROR) {
+                errBox.style.display = "none";
+              }
+            }
             states[i] = false;
             item.classList.remove(SKIP);
             updateBtn();
@@ -837,7 +878,8 @@
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
         if (item.name === "your-tel" && item.value && !isValidTel(item.value)) {
-          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
+          const telMsg = hasInvalidTelPrefix(item.value) ? TEL_PREFIX_ERROR : "携帯番号11桁を半角数字で入力してください";
+          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = telMsg; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
         if (states.every(Boolean)) moveIconById("#" + nextBtn.id);
@@ -931,9 +973,23 @@
   function initPrefSelect() {
     const sel = document.getElementById("pref");
     if (!sel) return;
-    const prefs = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
-    let h = '<option value="00" selected disabled>都道府県</option>';
-    prefs.forEach((p, i) => { h += '<option value="' + String(i+1).padStart(2,"0") + '">' + p + '</option>'; });
+    // エリア別 optgroup（app-v2.js と同一。主要エリアを上に）
+    const REGIONS = [
+      ["関東", ["東京都","神奈川県","埼玉県","千葉県","栃木県","群馬県","茨城県"]],
+      ["関西", ["大阪府","兵庫県","京都府","滋賀県","奈良県","和歌山県"]],
+      ["東海", ["愛知県","静岡県","岐阜県","三重県"]],
+      ["北海道・東北", ["北海道","宮城県","福島県","青森県","山形県","秋田県","岩手県"]],
+      ["北陸・甲信越", ["新潟県","長野県","石川県","富山県","山梨県","福井県"]],
+      ["中国・四国", ["広島県","岡山県","山口県","愛媛県","香川県","徳島県","高知県","鳥取県","島根県"]],
+      ["九州・沖縄", ["福岡県","熊本県","鹿児島県","長崎県","大分県","宮崎県","佐賀県","沖縄県"]]
+    ];
+    let h = '<option value="00" selected disabled>都道府県を選択</option>';
+    let idx = 0;
+    REGIONS.forEach(r => {
+      h += '<optgroup label="' + r[0] + '">';
+      r[1].forEach(p => { idx++; h += '<option value="' + String(idx).padStart(2,"0") + '">' + p + '</option>'; });
+      h += '</optgroup>';
+    });
     sel.innerHTML = h;
   }
 
@@ -1005,6 +1061,14 @@
       if (isTestLeadSubmission(tel, last, first)) return;
       sentOnce = true;
       try {
+        // 送信時点でも検索KWを再捕捉する最終保険。load/DOMContentLoaded 経路で
+        // 取りこぼしても（utm_termが後付けされた・他スクリプトに上書きされた等）、
+        // _page と同じ location を見て your-term に確実に反映してから送る。
+        const termField = form.querySelector('input[name="your-term"]');
+        if (termField && !termField.value) {
+          const kw = resolveSearchKeyword();
+          if (kw) termField.value = kw.slice(0, 200);
+        }
         const fd = new FormData(form);
         const params = new URLSearchParams();
         fd.forEach((v, k) => { if (!k.startsWith("_wpcf7")) params.append(k, v == null ? "" : String(v)); });
@@ -1025,6 +1089,39 @@
     form.addEventListener("submit", sendToMirrors, { capture: true });
   }
 
+  // ========== 検索キーワード（広告流入の utm_term など）==========
+  // 流入URLの検索KWを拾って隠しフィールド your-term(#hidden4) に入れ、
+  // リード通知(Slack)/シートの「キーワード」として記録する。拾えなければ空のまま。
+  //
+  // 注意: cvr-boost.js / app-v2.js にも同等のロジックがあるが、app.js 系LP（denkikouji 等）
+  // では cvr-boost.js を window load 後に遅延注入するため、cvr-boost.js 側の
+  // DOMContentLoaded ハンドラが発火せず your-term が空のままになっていた。
+  // ここ（initForm: window load で確実に実行）でセットして取りこぼしを防ぐ。
+  // sessionStorage キーは cvr-boost.js / app-v2.js と共通（dk_utm_term）。
+  const SEARCH_KW_KEYS = ["utm_term", "keyword", "kw"];
+  const SEARCH_KW_SESSION_KEY = "dk_utm_term";
+
+  function resolveSearchKeyword() {
+    try {
+      const q = new URLSearchParams(location.search);
+      for (const key of SEARCH_KW_KEYS) {
+        const v = (q.get(key) || "").trim();
+        if (v) {
+          try { sessionStorage.setItem(SEARCH_KW_SESSION_KEY, v); } catch (e) { /* private mode */ }
+          return v;
+        }
+      }
+      try { return sessionStorage.getItem(SEARCH_KW_SESSION_KEY) || ""; } catch (e) { return ""; }
+    } catch (e) { return ""; }
+  }
+
+  function initSearchKeyword() {
+    const kw = resolveSearchKeyword();
+    if (!kw) return;
+    const field = document.querySelector('input[name="your-term"]');
+    if (field && !field.value) field.value = kw.slice(0, 200);
+  }
+
   // ========== Init ==========
   function initForm() {
     const form = document.querySelector(".wpcf7-form");
@@ -1040,6 +1137,7 @@
 
     queueMicrotask(() => {
       form.querySelectorAll(".js-form-group").forEach(initFormGroup);
+      initSearchKeyword();
       initCookieName();
       initZapierMirror();
       preventEnter();
@@ -1085,5 +1183,22 @@
       initForm();
       loadCvrBoostDeferred();
     }
+  });
+
+  // キーボード表示中（入力欄フォーカス中）は body.lp-kb-open を立てる。
+  // iOSでviewportが縮むと sticky CTA（.c-nextLink）が入力欄・フッターに被さるため、
+  // CSS側でstickyを解除する（docs/release-incidents.md 2026-06-12）
+  document.addEventListener("focusin", (e) => {
+    if (e.target && e.target.matches && e.target.matches("input, select, textarea")) {
+      document.body.classList.add("lp-kb-open");
+    }
+  });
+  document.addEventListener("focusout", () => {
+    setTimeout(() => {
+      const ae = document.activeElement;
+      if (!ae || !ae.matches || !ae.matches("input, select, textarea")) {
+        document.body.classList.remove("lp-kb-open");
+      }
+    }, 60);
   });
 })();

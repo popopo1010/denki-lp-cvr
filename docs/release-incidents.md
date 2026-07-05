@@ -236,3 +236,12 @@ gh run list --workflow=deploy.yml --limit 3
 - 発見: 2026-07-03 の step06 全LP挙動確認（Playwright全ステップ走行）で step03 クリックが要素なしで失敗し発覚。**全ステップを実走するE2Eでしか捕まらない**タイプの欠陥。
 - 対応: パス修正＋`scripts/check-lazy-steps.mjs` 新設（全HTMLの `data-lazy-src` をHTML基準で解決し実在確認）。deploy.yml / release-pre-check.sh に組み込み、404なら**デプロイ前にブロック**。
 - 再発防止: 相対パスの partial 参照を追加/変更したら、**そのページのディレクトリ基準で解決先を確認**する（`../` の数え間違いに注意）。遅延読み込みはコンソールにエラーが出ず静かに壊れるため、ガードスクリプトで機械検証する。
+
+## 2026-07-03 全LP網羅スイープで発見した参照切れ・鏡像ドリフト（エラーゼロ総点検）
+
+- 全HTML静的参照スキャン（src/href/data-lazy-src/srcset/imagesrcset・1287参照）＋全99ページのブラウザ実ロード＋標準フロー41LPの全ステップ実走を実施。発見と対応:
+  1. **dk_lp/sekokanri のFV画像srcsetが1階層不足**（`../assets/`→正 `../../assets/`）でスマホ用webpが404。pictureフォールバックで見た目は保たれるがLCP劣化。→修正＋`scripts/check-local-refs.mjs` 新設（srcset系まで含む相対参照の実在検証、deploy/release-pre-checkでブロック）。
+  2. **v2-deploy/wp-html の sekoukanri hero webp が相対参照**（WP貼り付け先では解決不能）→ 既存の絶対URL（github.io）に統一。
+  3. **dk_lp が旧JSのまま取り残し**: `dk_lp/assets/js/app.js`（?v20260630固定）が本体app.jsから145行ドリフト（step06スクロール修正・都道府県optgroup・タイマーガード等が未反映）→本体から同期＋?v bump。`dk_lp/denkikouji/assets/js/main.js`（完全独自実装）にも step06 3点セット修正（reflow強制+瞬時scrollTo / focus preventScroll / nearest）を移植。
+  4. **WPLP/自前LP の貼り付け用HTMLの ?v が旧値のまま**（app.js?v20260630 / app-v2.js?v1781300000）→ 最新（v20260703d / v20260703b）に統一。1年immutableキャッシュ下では旧?vのままWPに貼ると再訪者に旧JSが配られ続ける。
+- 教訓: **共有JSの「ミラー」はWPLP/自前LPだけではない**。dk_lp のような別ディレクトリの複製・独自実装も横展開の対象に含める（バグ修正はリポジトリ全体を `scrollTo\|scrollIntoView` 等で grep して全実装に当てる）。ローカル検証では **WPテーマCSS由来の挙動（.js-form-group非表示等）が再現しない**ため、ローカルNGでも「テーマCSS前提の構造か」を確認してから本番バグと断定する。

@@ -278,12 +278,20 @@
     stopBounce();
     icon = page.querySelector(".js-fixed-icon");
 
-    window.scrollTo(0, 0);
-
     page.style.display = "block";
     page.style.opacity = "0";
     page.style.transform = "translateX(50px)";
     page.style.transition = "none";
+
+    // ページ切替「後」に瞬時スクロールでトップへ戻す（step06で上部が隠れる問題 2026-07-03）。
+    // レイアウトが未反映(dirty)のまま scrollTo すると、直後のレイアウト確定時に
+    // スクロールアンカリングが旧位置を復元してしまうため、reflow を強制してから戻す。
+    // scroll-behavior:smooth もアニメーション化で他スクロールに割り込まれるため一時的に無効化。
+    var deSB = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    void page.offsetHeight;
+    window.scrollTo(0, 0);
+    document.documentElement.style.scrollBehavior = deSB;
 
     // クマを最初のボタンエリアに配置
     const firstBtnArea = page.querySelector(".p-first__buttonArea, .c-button-grid, .c-zip-text, .p-step06__name, .p-step07__tel");
@@ -302,7 +310,11 @@
         setTimeout(() => {
           startBounce();
           const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
-          if (autoFocus && !autoFocus.value) autoFocus.focus();
+          if (autoFocus && !autoFocus.value) {
+            // preventScroll無しのfocus()は入力欄まで自動スクロールし上部が隠れる（2026-07-03）
+            try { autoFocus.focus({ preventScroll: true }); } catch (e) { autoFocus.focus(); }
+            autoFocus.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          }
         }, 320);
       });
     });
