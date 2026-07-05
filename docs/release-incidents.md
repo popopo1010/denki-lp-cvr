@@ -253,3 +253,12 @@ gh run list --workflow=deploy.yml --limit 3
 - 対応: `moveIcon`（app.js/app-v2.js 111・129行）と `bdayYear`（783・645行）の scrollIntoView を **`block:"nearest"`** に変更（CTAが見えていればスクロールなし、見えない時だけ最小限）。全ミラー（WPLP/自前LP/dk_lp）同期、`app.js?v20260705a` / `app-v2.js?v20260705a` に bump。クマのCTA移動（DOM移動）と41LP全ステップ実走は維持を確認。
 - 補足: アプリ内ブラウザは半透明バーが上部に被さるため、scrollY=0 でも最上部の要素はぼけて見える。これはブラウザ仕様で、コードでは消せない——「隠れてはいけない情報を最上部1行に置かない」設計側の注意で吸収する。
 - 再発防止: CLAUDE.md に**【頻出バグ】上部が隠れる＝スクロール4クラス（center寄せ／smooth割り込み／アンカリング復元／focusのpreventScroll漏れ）を全実装でgrep確認**のルールを追加。今後 `block:"center"` は原則禁止。
+
+
+## 2026-07-05 アプリ内ブラウザの半透明バー被りを設計側で解消（dk-inapp）
+
+- 症状: center寄せスクロール全廃後も、アプリ内ブラウザ（Instagram/LINE等）では半透明バーが上部に被さり、scrollY=0でもSTEP表示がぼけて隠れて見える（ブラウザ仕様）。
+- 対応: UA検知（Instagram/FBAN/FBAV/FB_IAB/Line\//Messenger）で `html.dk-inapp` を付与（app.js / app-v2.js / dk_lp main.js）し、全cvr-boost*.css（root4本＋dk_lp4本）に `html.dk-inapp body.lp-form-step .js-page-body{padding-top:44px!important}` を追加。通常ブラウザは余白ゼロのまま。
+- 検証: Playwright で Instagram UA→44px / 通常UA→0px を4系統（v1/sekoukanri/v2/dk_lp独自）で確認。41LP全ステップ実走・クマ移動も維持。
+- bump: app.js?v20260705b / app-v2.js?v20260705b / cvr-boost系css v20260705 / dk_lp main.js?v=20260705。
+- 副収穫: e2e-denkikouji-lp.mjs の期待CSSが v20260623 固定で取り残されていたため、リポジトリHTMLからの自動導出に変更（verify-production-release.sh と同じクラス解消）。

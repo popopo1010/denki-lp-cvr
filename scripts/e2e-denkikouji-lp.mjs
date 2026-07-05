@@ -3,8 +3,12 @@
  * denkikouji LP 本番スモーク（送信ボタン・dataLayer）
  */
 import { chromium, devices } from "playwright";
+import { readFileSync } from "node:fs";
 
 const BASE = process.env.LP_E2E_BASE || "https://denkilp.builders-job.com/denki-lp-cvr";
+// 期待する ?v はリポジトリのHTMLから自動導出（固定値だとbump時の更新漏れで偽の失敗になる）
+const EXPECT_CSS = (readFileSync(new URL("../denkikouji/index.html", import.meta.url), "utf8")
+  .match(/cvr-boost-denkikouji\.css\?v[0-9a-z]+/) || ["cvr-boost-denkikouji.css?v"])[0];
 const results = [];
 
 function pass(n, d) {
@@ -21,10 +25,10 @@ async function main() {
   const page = await browser.newPage({ ...devices["iPhone 13"], locale: "ja-JP" });
 
   const lpHtml = await (await page.request.get(`${BASE}/denkikouji/`)).text();
-  if (lpHtml.includes("cvr-boost-denkikouji.css?v20260623")) {
-    pass("本番 CSS", "v20260623");
+  if (lpHtml.includes(EXPECT_CSS)) {
+    pass("本番 CSS", EXPECT_CSS);
   } else if (lpHtml.match(/cvr-boost-denkikouji\.css\?v202[0-9]+/)) {
-    fail("本番 CSS", "v20260623 未反映（デプロイ待ち）");
+    fail("本番 CSS", `${EXPECT_CSS} 未反映（デプロイ待ち）`);
   } else {
     fail("本番 CSS", "cache buster 不明");
   }
