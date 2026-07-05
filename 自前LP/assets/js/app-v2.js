@@ -632,9 +632,11 @@
       return true;
     }
 
-    // 生年月日 input の変更も validation に反映
+    // 生年月日 input の変更も validation に反映。
+    // タイピング中はエラー表示を切り替えない（1文字ごとに「19→199…」が不正扱いで
+    // エラーが出没しレイアウトがジャンプ＝「入力がバグる」体感 2026-07-05 オーナー報告）
     if (isYearInput) {
-      bdayYearInput.addEventListener("input", () => validate());
+      bdayYearInput.addEventListener("input", () => validate({ silent: true }));
       bdayYearInput.addEventListener("blur", () => validate());
     }
 
@@ -645,7 +647,8 @@
         target.classList.add(SKIP);
         if (errBox) errBox.style.display = "none";
         // 入力が揃ったらクマをCTA（次へ）へ移動（旧実装は生年月日エリアに留まり誘導が切れていた）
-        moveIconById("#" + nextBtn.id, true);
+        // タイピング中(silent)はスクロールさせない（4桁目入力の瞬間に画面が動くのを防止 2026-07-05）
+        moveIconById("#" + nextBtn.id, !opts.silent);
         // 姓+名 両方埋まったら生年月日に視覚的誘導（first-name の入力完了時のみ）
         // iOS Safari の <select> は focus() ではピッカーが開かない仕様。
         // スクロール + ハイライトでユーザーにタップを促す。
@@ -663,7 +666,7 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        if (errBox) {
+        if (errBox && !opts.silent) {
           errBox.style.display = "block";
           if (errText) {
             // どの項目が未入力かで具体的に出し分け

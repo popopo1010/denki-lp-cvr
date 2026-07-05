@@ -937,8 +937,10 @@ body {
   .cvr-testimonial__text { font-size: 14px; }
 }
 
-/* アプリ内ブラウザ(Instagram/LINE等)は半透明バーが上部〜約100pxに被さるため、
-   フォームステップの最上部(STEP表示)に余白を確保して隠れないようにする(2026-07-05 オーナー実機報告) */
+/* 上部の半透明バー(アプリ内ブラウザ/SFSafariViewController/Safariの縮小バー)に
+   STEP表示が潜り込まないよう、スマホのフォームステップは常時上部余白を確保する。
+   SFSafariViewControllerはUAがSafariと同一でUA検知不能のため、無条件で適用する
+   (2026-07-05 オーナー実機報告・複数ページで再発) */
 @media (max-width: 767px) {
-  html.dk-inapp body.lp-form-step .js-page-body { padding-top: 44px !important; }
+  body.lp-form-step .js-page-body { padding-top: 44px !important; }
 }

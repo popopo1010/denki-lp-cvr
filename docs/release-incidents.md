@@ -262,3 +262,12 @@ gh run list --workflow=deploy.yml --limit 3
 - 検証: Playwright で Instagram UA→44px / 通常UA→0px を4系統（v1/sekoukanri/v2/dk_lp独自）で確認。41LP全ステップ実走・クマ移動も維持。
 - bump: app.js?v20260705b / app-v2.js?v20260705b / cvr-boost系css v20260705 / dk_lp main.js?v=20260705。
 - 副収穫: e2e-denkikouji-lp.mjs の期待CSSが v20260623 固定で取り残されていたため、リポジトリHTMLからの自動導出に変更（verify-production-release.sh と同じクラス解消）。
+
+## 2026-07-05(2) SafariのURLピル被り＝常時余白化／生まれ年「入力がバグる」＝エラー点滅を修正
+
+- 症状①: dk-inapp（UA検知）方式の余白は、**SFSafariViewController／Safari本体（上部アドレスバー設定）ではUAがSafariと同一のため発動せず**、キーボード表示時に縮小URLピルがページ上部（〜約110px）に浮いて被さる（オーナー実機・複数ページ）。
+- 対応①: UA検知に依存せず **スマホのフォームステップ全部に常時 padding-top:44px**（`body.lp-form-step .js-page-body`、全cvr-boost*.css 8本）。`html.dk-inapp` のJS付与は将来のCSS出し分け用に残置。
+- 症状②: 生まれ年をタイピング中、「1→19→199」が毎キー不正扱いされ **#error-name が出没→レイアウトが上下ジャンプ＝「入力がバグる」**。v1は姓名でも同様、v2は年のみ。4桁目確定の瞬間のクマ移動スクロールも画面を動かしていた。
+- 対応②: `validate({silent:true})` を導入し、**input中はエラー表示の切替とCTAスクロールを行わない（blur時のみ表示）**。app.js / app-v2.js / dk_lp main.js の3実装＋全ミラー。
+- 検証: 1文字ずつ実タイピングで「エラー点滅0・スクロールジャンプ0（v1）・blur時はエラー正常表示・4桁でnext活性」を確認。41LP実走・ガード全通過。
+- 教訓: **フォームのリアルタイム検証は「ボタン活性は即時・エラー表示はblur」**が原則。入力途中の値（部分入力）を不正としてUIを動かさない。SFSafariViewControllerはUA検知不能——「特定環境だけ余白」より「常時余白」の方が壊れない。

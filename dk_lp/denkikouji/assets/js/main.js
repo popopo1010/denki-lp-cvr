@@ -649,7 +649,8 @@
       return namesOk && yearOk;
     }
 
-    function validate() {
+    function validate(opts) {
+      opts = opts || {};
       if (allFilled()) {
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
@@ -658,7 +659,9 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        if (errBox) {
+        // タイピング中(silent)はエラー表示を切り替えない。1文字ごとにエラーが出没すると
+        // レイアウトがジャンプし「入力がバグる」体感になる（2026-07-05 オーナー報告）
+        if (errBox && !opts.silent) {
           errBox.style.display = "block";
           if (errText) {
             const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
@@ -672,12 +675,12 @@
     }
 
     inputs.forEach((input) => {
-      input.addEventListener("blur", validate);
-      input.addEventListener("input", validate);
+      input.addEventListener("blur", () => validate());
+      input.addEventListener("input", () => validate({ silent: true }));
     });
     if (birthYear) {
-      birthYear.addEventListener("blur", validate);
-      birthYear.addEventListener("input", validate);
+      birthYear.addEventListener("blur", () => validate());
+      birthYear.addEventListener("input", () => validate({ silent: true }));
     }
 
     nextBtn.classList.add(DISABLE);

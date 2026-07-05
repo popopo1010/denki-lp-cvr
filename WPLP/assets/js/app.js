@@ -718,11 +718,14 @@
         nextBtn.classList.remove(DISABLE);
         target.classList.add(SKIP);
         if (errBox) errBox.style.display = "none";
-        moveIconById("#" + nextBtn.id, true);
+        // タイピング中(silent)はスクロールさせない（4桁目入力の瞬間に画面が動く「入力バグ」防止 2026-07-05）
+        moveIconById("#" + nextBtn.id, !opts.silent);
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        if (errBox) {
+        // タイピング中(silent)はエラー表示を切り替えない。1文字ごとに
+        // エラーボックスが出没するとレイアウトが上下にジャンプし「入力がバグる」体感になる（2026-07-05 オーナー報告）
+        if (errBox && !opts.silent) {
           if (shouldShowErrors()) {
             errBox.style.display = "block";
             if (errText) {
@@ -744,14 +747,14 @@
     inputs.forEach((input) => {
       input.addEventListener("input", () => {
         touched.add(input.id || input.name);
-        validate();
+        validate({ silent: true });
       });
       input.addEventListener("blur", () => validate());
     });
     if (birthYear) {
       birthYear.addEventListener("input", () => {
         touched.add("bday-year");
-        validate();
+        validate({ silent: true });
       });
       birthYear.addEventListener("blur", () => validate());
     }
