@@ -34,6 +34,9 @@ jobs:
       - name: Check lazy steps paths (遅延ステップ404の再発防止)
         run: node scripts/check-lazy-steps.mjs
 
+      - name: Check local refs (相対参照404の再発防止・srcset含む)
+        run: node scripts/check-local-refs.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js
