@@ -27,7 +27,9 @@ node scripts/sync-thanks-v2-mirrors.mjs
 
 echo ""
 echo "== 5/6 予約枠 JSON =="
-node scripts/sync-booking-slots.js
+# 予約バックエンドはLINE一本化後の残置（ページ未読込）。deploy.yml と同様に
+# GAS到達不可（プロキシ403等）でチェック全体を止めない（warning扱いで続行）
+node scripts/sync-booking-slots.js || echo "⚠ 予約枠JSON同期に失敗（GAS未到達）。deployと同じく非致命として続行"
 
 echo ""
 echo "== 6/6 本番 HTTP =="
