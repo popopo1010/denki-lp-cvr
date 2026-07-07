@@ -8,6 +8,9 @@ name: Snapshot WP theme CSS
 
 on:
   workflow_dispatch:
+  # GitHub App経由ではworkflow_dispatchが403のため、snapshot-nowブランチへのpushでも起動できる
+  push:
+    branches: [snapshot-now]
   schedule:
     - cron: '0 21 * * 1' # 毎週月曜 6:00 JST
 
