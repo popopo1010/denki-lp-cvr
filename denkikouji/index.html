@@ -2,9 +2,6 @@
 <html lang="ja">
 
 <head>
-<!-- LCP画像はLandingHub画像プロキシ経由で配信されるため先行接続（PSI推定 -310ms） -->
-<link rel="preconnect" href="https://aao-rdt-dpimcjts.landinghub.site">
-<link rel="dns-prefetch" href="//aao-rdt-dpimcjts.landinghub.site">
 <!-- LandingHub Dispatcher -->
 <script data-landinghub="dispatcher-helper-tag">(function(w,d,i,wl){const u=new URL('https://airport.landinghub.cloud/dispatcher/manifest.json');u.searchParams.set('id',i);u.searchParams.set('location',w.location.href);wl.length&&u.searchParams.set('wl',wl.join(','));const l=d.createElement('link');l.rel='preload';l.as='fetch';l.crossOrigin='anonymous';l.href=u.href;d.head.prepend(l)})(window,document,'2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513',[])</script>
 <script src="https://airport.landinghub.cloud/dispatcher/latest/index.js?id=2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513" data-landinghub="dispatcher-tag" referrerpolicy="strict-origin"></script>
@@ -60,9 +57,6 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 .l-header__message .emphasis-1{color:#90d7ff}.l-header__message .emphasis-2{color:#f17a85}
 .l-main{flex:1;margin:4px auto;width:90%}.c-container{position:relative;width:100%;max-width:407px;margin:0 auto;padding:0 16px 32px}
 .js-form-group{display:none}
-/* CLS対策: FVはJS(load後showPage)を待たず初期HTMLから表示する。app.jsが同じレイアウトを引き継ぐ */
-#step-first{display:flex;flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}
-#step-first .cvr-micro-copy{margin-top:auto}
 .cvr-hero-badge{display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 16px;margin:8px 0;background:linear-gradient(135deg,#ff5966,#ff8a65);border-radius:8px;color:#fff}
 .cvr-hero-badge__count{font-size:28px;font-weight:800;line-height:1}
 .p-firstButton{min-height:76px;width:100%}
@@ -91,7 +85,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260705b" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260705b"></noscript>
     <script>window.__LP_ID="denkikouji";</script>
-    <script src="../assets/js/app.js?v20260708" defer></script>
+    <script src="../assets/js/app.js?v20260707" defer></script>
 </head>
 
 <body class="wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
