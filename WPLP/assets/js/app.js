@@ -15,7 +15,7 @@
   // フォーカス確定後、入力欄がキーボード上に見えることを保証できる場合のみ、
   // ステップ上部が見える位置までスクロールを戻す。CSS側のscroll-margin-topとセット。
   (function () {
-    var BAR = 52; // アプリ内上部バー相当
+    var BAR = 96; // アプリ内上部バー相当（LINE実測~83pt+余裕。2026-07-08）
     document.addEventListener("focusin", function (e) {
       if (!document.documentElement.classList.contains("dk-inapp")) return;
       var t = e.target;

@@ -64,6 +64,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 #step-first{display:flex;flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px);opacity:1;transform:none}
 /* アプリ内ブラウザ: フォーカス時のブラウザ主導スクロールでSTEP表示が隠れないよう入力欄の上に余白を要求（2026-07-08） */
 html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-top:120px}
+/* LINEの上部バーは実測~83ptで44pxでは足りない。入力ステップ(step04-06)は96pxでバーの下から開始（2026-07-08） */
+html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
 .cvr-progress{display:none;margin-bottom:12px}.cvr-progress.is-visible{display:block}
 .c-text-box,.c-select-box02 select{min-height:52px;font-size:16px}
 .c-next-button,.c-submit-button,.meta-fv__cta{min-height:48px}
@@ -76,7 +78,7 @@ html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-t
     <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1"></noscript>
     <script>window.__LP_ID="denkikouji-meta";</script>
-    <script src="../../assets/js/app.js?v20260711" defer></script>
+    <script src="../../assets/js/app.js?v20260712" defer></script>
 </head>
 
 <body class="meta-short-lp wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
