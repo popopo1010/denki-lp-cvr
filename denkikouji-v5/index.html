@@ -64,6 +64,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
    showPage終着インラインと同じ値。opacity/transformの明示は外部CSS(WPテーマ等)による
    コンテナ隠しの保険（2026-07-08 FV非表示インシデント） */
 #step-first{display:flex;flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px);opacity:1;transform:none}
+/* アプリ内ブラウザ: フォーカス時のブラウザ主導スクロールでSTEP表示が隠れないよう入力欄の上に余白を要求（2026-07-08） */
+html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-top:120px}
 .cvr-newjob{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:5px 12px;margin:0;background:#fff;border:1px solid #e6e6e6;border-radius:999px;color:#555;font-size:12px}
 .cvr-newjob__tag{font-size:11px;font-weight:700;color:#777}
 .cvr-newjob__count{font-size:16px;font-weight:800;line-height:1;color:#ff5966}
@@ -111,7 +113,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260708a" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260708a"></noscript>
     <script>window.__LP_ID="denkikouji-v5";</script>
-    <script src="../assets/js/app.js?v20260710" defer></script>
+    <script src="../assets/js/app.js?v20260711" defer></script>
     <!-- v5専用: step01/step03のクマを「選択肢の上部」へ補正（共有app.jsは非改変・クマ→CTA移動は維持） -->
     <script>
     (function(){
