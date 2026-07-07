@@ -2,6 +2,17 @@
 
 再発防止用。リリース前は `docs/CV-LINE-playbook.md` のチェックリストと併用。
 
+## 2026-07-08 全LPのFVが本番でのみ非表示（PageSpeed改善 #85）
+
+- 症状: #85（CLS改善）デプロイ直後、denkikouji・sekoukanri両方で**FVの領域だけ確保され中身が完全に見えない**（アプリ内ブラウザのオーナー実機で発覚）。約16分後にrevertで復旧、原因修正版 #86 を再デプロイ。
+- 原因: 旧 `showPage` はload時アニメーションの終着で必ずインライン `opacity:1; transform:translateX(0)` を `#step-first` に焼き付けていた。#85のskipAnim経路がopacityを省略したため、**本番にのみ存在する外部CSS（WPテーマ style.css / LandingHub注入）のFVコンテナを隠すルールが露出**した。
+- ローカルで再現しなかった理由: **WPテーマstyle.cssはWAFが非ブラウザIP/サンドボックスを403で遮断するためローカル/CI/Playwrightから一切読めない**。ローカルの12項目テストは全PASSだった。deploy.ymlのVerifyも文字列grepのみで描画は検証しない。
+- 修正: skipAnim時もアニメ経路の終着と**完全同一のインライン**を焼き付ける＋critical CSSに `#step-first{opacity:1;transform:none}` の保険（#86）。敵対CSS注入のPlaywright回帰テストで担保。
+- 再発防止:
+  - **表示に関わる変更はstagingブランチへpush→STG実機確認→mainマージ**（`本番反映手順書.md`「ステージング」参照。deploy.ymlがstagingブランチを `denki-lp-cvr-stg/` へ配信）。
+  - テーマCSSは `Snapshot WP theme CSS` ワークフローで `assets/css/theme-snapshot.css` にスナップショットし、ローカル検証に読み込む。
+  - **JSが要素の表示状態を制御するときは「最終状態のopacity/transform/displayを常に明示」**する。省略した瞬間、外部CSSとの偶然の均衡が壊れる。
+
 ## 2026-06-23 v2系LPの一連の修正で起きたミス（AIエージェント作業）
 
 電気工事士LPの「検索サイト化」改修中に発生した複数のミスをまとめて記録。再発防止のため必読。

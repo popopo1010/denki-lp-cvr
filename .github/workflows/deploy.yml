@@ -1,8 +1,13 @@
 name: Deploy to Xserver
 
+# main への push → 本番（XSERVER_DEPLOY_PATH）
+# staging への push → ステージング（XSERVER_DEPLOY_PATH-stg、noindex付き）
+# 本番と同じ minify パイプライン・同じサーバー・本物のWPテーマCSS/LandingHub/WAF環境で
+# マージ前にスマホ実機確認するための経路（2026-07-08 FV非表示インシデントの再発防止）。
+# 使い方: git push -f origin <作業ブランチ>:staging → /denki-lp-cvr-stg/ を実機で確認 → mainへPR
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 
 concurrency:
@@ -19,6 +24,19 @@ jobs:
       XSERVER_DEPLOY_PATH: ${{ secrets.XSERVER_DEPLOY_PATH }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve deploy target (main=本番 / staging=STG)
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_NAME}" = "staging" ]; then
+            echo "DEPLOY_SUFFIX=-stg" >> "$GITHUB_ENV"
+            echo "DEPLOY_URL_BASE=https://denkilp.builders-job.com/denki-lp-cvr-stg" >> "$GITHUB_ENV"
+            echo "deploying to STAGING"
+          else
+            echo "DEPLOY_SUFFIX=" >> "$GITHUB_ENV"
+            echo "DEPLOY_URL_BASE=https://denkilp.builders-job.com/denki-lp-cvr" >> "$GITHUB_ENV"
+            echo "deploying to PRODUCTION"
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -181,6 +199,16 @@ jobs:
           echo "ok=false" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Add noindex .htaccess (STGのみ)
+        if: github.ref_name == 'staging'
+        run: |
+          cat > .htaccess <<'EOF'
+          <IfModule mod_headers.c>
+          Header set X-Robots-Tag "noindex, nofollow"
+          </IfModule>
+          EOF
+          echo "staging .htaccess created"
+
       - name: Deploy via rsync
         env:
           HOSTKEY_OK: ${{ steps.hostkey.outputs.ok }}
@@ -208,7 +236,7 @@ jobs:
               --exclude='自前LP/thanks/' \
               --exclude='nenshu-shindan/thanks/' \
               -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
-              ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/"; then
+              ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}/"; then
               deploy_ok=true
               echo "rsync succeeded on attempt ${attempt}"
               break
@@ -222,9 +250,31 @@ jobs:
           fi
 
       - name: Apply WP legacy redirects (.htaccess)
+        if: github.ref_name != 'staging'
         run: bash scripts/apply-wp-root-redirects.sh
 
+      - name: Verify staging deployment (STGのみ)
+        if: github.ref_name == 'staging'
+        run: |
+          set -euo pipefail
+          verified=false
+          for attempt in 1 2 3 4 5 6; do
+            lp=$(curl -s "${DEPLOY_URL_BASE}/denkikouji/")
+            sekou=$(curl -s "${DEPLOY_URL_BASE}/sekoukanri/")
+            if echo "$lp" | grep -q 'app.js?v' && echo "$sekou" | grep -q 'app.js?v'; then
+              verified=true; break
+            fi
+            echo "staging not propagated yet (attempt ${attempt}/6), waiting 15s..."
+            sleep 15
+          done
+          [ "$verified" = "true" ] || { echo "::error::staging pages not serving"; exit 1; }
+          # noindexヘッダの確認（本番流出防止）
+          curl -sI "${DEPLOY_URL_BASE}/denkikouji/" | grep -qi 'x-robots-tag: *noindex' \
+            || { echo "::error::staging missing X-Robots-Tag noindex"; exit 1; }
+          echo "staging OK: ${DEPLOY_URL_BASE}/denkikouji/ ほか"
+
       - name: Verify deployment
+        if: github.ref_name != 'staging'
         run: |
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" | head -3

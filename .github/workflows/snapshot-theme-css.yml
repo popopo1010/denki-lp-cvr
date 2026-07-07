@@ -1,0 +1,56 @@
+name: Snapshot WP theme CSS
+
+# WPテーマ style.css はリポジトリ外にあり、ローカル/CI から取得できない（WAFが非ブラウザIPを403）。
+# 一方 GitHub Actions ランナーからは取得できる（deploy.yml の Verify deployment で実証済み）ため、
+# 本番の style.css を assets/css/theme-snapshot.css としてスナップショットし、差分があればPRを作る。
+# 目的: テーマCSSをリポジトリ管理下に置き、ローカル/Playwrightテストを本番と同じCSSで走らせる
+# （2026-07-08 FV非表示インシデントの再発防止。経緯: docs/release-incidents.md）。
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 21 * * 1' # 毎週月曜 6:00 JST
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch theme CSS from production
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 3 --retry-delay 5 \
+            "https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" \
+            -o assets/css/theme-snapshot.css
+          # サニティチェック: 小さすぎる・HTMLエラーページなら失敗させる
+          size=$(wc -c < assets/css/theme-snapshot.css)
+          [ "$size" -gt 10000 ] || { echo "::error::theme css too small (${size} bytes)"; exit 1; }
+          if head -c 300 assets/css/theme-snapshot.css | grep -qi '<html'; then
+            echo "::error::got HTML instead of CSS"; exit 1
+          fi
+          echo "fetched ${size} bytes"
+
+      - name: Create PR if changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git add assets/css/theme-snapshot.css
+          if git diff --cached --quiet; then
+            echo "No changes in theme CSS"; exit 0
+          fi
+          BR="theme-css-snapshot"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BR"
+          git commit -m "WPテーマstyle.cssスナップショット更新（自動）"
+          git push -f origin "$BR"
+          gh pr create --base main --head "$BR" \
+            --title "WPテーマCSSスナップショット更新" \
+            --body "本番の style.css との差分を検知しました。差分を確認してからマージしてください（マージ＝本番デプロイ起動。theme-snapshot.css の追加/更新のみならLP表示への影響はありません＝LPはまだ本番WPのstyle.cssを直接参照しています）。" \
+            || echo "PR already exists (updated by force-push)"
