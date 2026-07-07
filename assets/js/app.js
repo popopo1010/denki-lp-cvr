@@ -103,6 +103,9 @@
       page_location: location.href,
       page_path: location.pathname
     });
+    if (window.clarity) {
+      try { window.clarity("set", "lp_step", "submitted"); } catch (e) { /* no-op */ }
+    }
   }
 
   // ========== Icon system (DOM移動方式) ==========
@@ -251,9 +254,24 @@
   }
 
   // ========== Page transitions ==========
+  let lastTrackedStep = null;
+
+  function trackStep(pageId) {
+    if (pageId === lastTrackedStep) return;
+    lastTrackedStep = pageId;
+    const stepName = pageId.replace(/^#/, "");
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: "form_step", step_name: stepName });
+    // ClarityのExport APIはステップ別ファネルを返さないため、到達ステップをタグ付けする
+    if (window.clarity) {
+      try { window.clarity("set", "lp_step", stepName); } catch (e) { /* no-op */ }
+    }
+  }
+
   function showPage(pageId) {
     const page = document.querySelector(pageId);
     if (!page) return;
+    trackStep(pageId);
 
     // ステップ重なり防止: アクティブな step にだけ is-step-active を付与し、
     // 他は inline で確実に隠す（CSS側の :not(.is-step-active) 安全網とセット）
