@@ -2,6 +2,9 @@
 <html lang="ja">
 
 <head>
+<!-- LCP画像等はLandingHub画像プロキシ経由で配信されるため先行接続（標準・PSI推定 -310ms） -->
+<link rel="preconnect" href="https://aao-rdt-dpimcjts.landinghub.site">
+<link rel="dns-prefetch" href="//aao-rdt-dpimcjts.landinghub.site">
 <!-- LandingHub Dispatcher -->
 <script data-landinghub="dispatcher-helper-tag">(function(w,d,i,wl){const u=new URL('https://airport.landinghub.cloud/dispatcher/manifest.json');u.searchParams.set('id',i);u.searchParams.set('location',w.location.href);wl.length&&u.searchParams.set('wl',wl.join(','));const l=d.createElement('link');l.rel='preload';l.as='fetch';l.crossOrigin='anonymous';l.href=u.href;d.head.prepend(l)})(window,document,'2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513',[])</script>
 <script src="https://airport.landinghub.cloud/dispatcher/latest/index.js?id=2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513" data-landinghub="dispatcher-tag" referrerpolicy="strict-origin"></script>
@@ -49,7 +52,7 @@
     <style>@media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding:0 8px 0}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:auto;padding-bottom:8px}}</style>
     <link rel="stylesheet" href="../assets/css/style-v2.css">
     <script>window.__LP_ID="sekoukanri-kentiku-v2";</script>
-    <script src="../assets/js/app-v2.js?v20260705c" defer></script>
+    <script src="../assets/js/app-v2.js?v20260708c" defer></script>
 </head>
 
 <body>
@@ -127,7 +130,7 @@
 
 <div class="p-first js-page-body js-form-group" id="step-first">
 
-    <picture><source srcset="../assets/img/sekoukanri_hero.webp" type="image/webp"><img fetchpriority="high" decoding="async" src="../assets/img/sekoukanri_hero.jpg" alt="建築施工管理専門,あなたの資格から建築現場のオススメ求人を無料で紹介" width="1200" height="727"></picture>
+    <picture><source srcset="../assets/img/sekoukanri_hero.webp" type="image/webp"><img fetchpriority="high" decoding="async" width="1200" height="727" sizes="(max-width:767px) 100vw, 407px" src="../assets/img/sekoukanri_hero.jpg" alt="建築施工管理専門,あなたの資格から建築現場のオススメ求人を無料で紹介" width="1200" height="727"></picture>
 <div class="cvr-fv-headline">
   <p class="cvr-fv-headline__problem">同じ資格でも、年収に<strong>200万円の差</strong>。</p>
   <p class="cvr-fv-headline__question">あなたの市場価値、今いくらですか？</p>
@@ -156,7 +159,7 @@
                 </span>
             </button>
         </div>
-        <div class="cvr-kuma" onclick="document.querySelector('.p-first__buttonArea').scrollIntoView({behavior:'smooth',block:'center'})" style="cursor:pointer"><img src="../assets/img/follower_icon.svg" alt="選択してください" loading="lazy" style="width:48px"></div>
+        <div class="cvr-kuma" onclick="document.querySelector('.p-first__buttonArea').scrollIntoView({behavior:'smooth',block:'center'})" style="cursor:pointer"><img src="../assets/img/follower_icon.svg" alt="選択してください" loading="lazy" width="48" height="48" style="width:48px"></div>
     </div>
 <p class="cvr-micro-copy">選ぶだけでOK！ 30秒で完了します</p>
 <p class="cvr-step-reward">この回答で：<strong>転職時期に合った案内</strong>に切り替わります（全5ステップ・約30秒）</p>

@@ -2,6 +2,9 @@
 <html lang="ja">
 
 <head>
+<!-- LCP画像等はLandingHub画像プロキシ経由で配信されるため先行接続（標準・PSI推定 -310ms） -->
+<link rel="preconnect" href="https://aao-rdt-dpimcjts.landinghub.site">
+<link rel="dns-prefetch" href="//aao-rdt-dpimcjts.landinghub.site">
 <!-- LandingHub Dispatcher -->
 <script data-landinghub="dispatcher-helper-tag">(function(w,d,i,wl){const u=new URL('https://airport.landinghub.cloud/dispatcher/manifest.json');u.searchParams.set('id',i);u.searchParams.set('location',w.location.href);wl.length&&u.searchParams.set('wl',wl.join(','));const l=d.createElement('link');l.rel='preload';l.as='fetch';l.crossOrigin='anonymous';l.href=u.href;d.head.prepend(l)})(window,document,'2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513',[])</script>
 <script src="https://airport.landinghub.cloud/dispatcher/latest/index.js?id=2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513" data-landinghub="dispatcher-tag" referrerpolicy="strict-origin"></script>
@@ -58,7 +61,7 @@
 #step-first .p-firstButton::before{content:"›";position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:22px;font-weight:800;color:rgba(255,255,255,.9);z-index:1}
 @media (prefers-reduced-motion:no-preference){
 #step-first .p-firstButton::after{content:"";position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);animation:cvrFvShine 3s ease-in-out infinite}
-@keyframes cvrFvShine{0%{left:-75%}45%{left:125%}100%{left:125%}}
+@keyframes cvrFvShine{0%{transform:skewX(-20deg) translateX(0)}45%{transform:skewX(-20deg) translateX(400%)}100%{transform:skewX(-20deg) translateX(400%)}}
 }
 @media(max-width:767px){#step-first .p-first__buttonArea{display:flex;flex-direction:column;gap:10px}#step-first .p-first__buttonArea .p-firstButton{width:100%;min-height:56px}#step-first .p-firstButton .p-firstButton__icon{display:none}#step-first .cvr-micro-copy{padding-right:52px}}
 </style>
@@ -143,7 +146,7 @@
 
 <div class="p-first js-page-body js-form-group" id="step-first">
 
-    <picture><source srcset="../assets/img/sekoukanri_hero.webp" type="image/webp"><img fetchpriority="high" decoding="async" src="../assets/img/sekoukanri_hero.jpg" alt="電気施工管理専門,あなたの資格から設備・電気施工のオススメ求人を無料で紹介"></picture><p class="cvr-fv-range" style="text-align:center;font-weight:800;font-size:14px;color:#b3541e;margin:10px 0 2px">年収<span style="font-size:18px">800万円以上</span>の求人も多数</p>
+    <picture><source srcset="../assets/img/sekoukanri_hero.webp" type="image/webp"><img fetchpriority="high" decoding="async" width="1200" height="727" sizes="(max-width:767px) 100vw, 407px" src="../assets/img/sekoukanri_hero.jpg" alt="電気施工管理専門,あなたの資格から設備・電気施工のオススメ求人を無料で紹介"></picture><p class="cvr-fv-range" style="text-align:center;font-weight:800;font-size:14px;color:#b3541e;margin:10px 0 2px">年収<span style="font-size:18px">800万円以上</span>の求人も多数</p>
 
 <p class="cvr-specialty-badge">電気施工管理専門</p>
 <p class="cvr-fv-note">電気施工管理専門｜転職しなくても無料で相談OK</p>
@@ -163,7 +166,7 @@
                 </span>
             </button>
         </div>
-        <div class="cvr-kuma" onclick="document.querySelector('.p-first__buttonArea').scrollIntoView({behavior:'smooth',block:'center'})" style="cursor:pointer"><img src="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/follower_icon.svg" alt="選択してください" loading="lazy" style="width:48px"></div>
+        <div class="cvr-kuma" onclick="document.querySelector('.p-first__buttonArea').scrollIntoView({behavior:'smooth',block:'center'})" style="cursor:pointer"><img src="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/follower_icon.svg" alt="選択してください" loading="lazy" width="48" height="48" style="width:48px"></div>
     </div>
 <p class="cvr-lp-hub">工種別の専門LP：<a href="../sekoukanri-kentiku/">建築施工管理</a> · <a href="../sekoukanri-doboku/">土木施工管理</a> · <a href="../sekoukanri-denkisekou/">電気施工管理</a></p>
 <p class="cvr-micro-copy">選ぶだけでOK！ 30秒で完了します</p>

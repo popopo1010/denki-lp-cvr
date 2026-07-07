@@ -148,7 +148,11 @@
   }
 
   // ========== Page transitions ==========
-  function showPage(pageId) {
+  // skipAnim: 初回表示（load時のstep-first）用。opacity:0→フェードインの掛け直しと
+  // load時のscrollTo(0,0)をスキップする。終着状態(opacity:1/transform)は必ず明示する
+  // （2026-07-08 FV非表示インシデント: WPテーマCSSの .js-page-body{opacity:0} を
+  //   旧アニメ終着インラインが偶然打ち消していた。app.jsと同一パターン）。
+  function showPage(pageId, skipAnim) {
     const page = document.querySelector(pageId);
     if (!page) return;
 
@@ -169,7 +173,9 @@
     }
 
     if (pageId === "#step-first") {
-      page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
+      page.style.cssText = skipAnim
+        ? "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:1;transform:translateX(0)"
+        : "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
       var mc = page.querySelector(".cvr-micro-copy");
       if (mc) mc.style.marginTop = "auto";
     } else if (pageId === "#step01") {
@@ -186,11 +192,14 @@
     // レイアウトが未反映(dirty)のまま scrollTo すると、直後のレイアウト確定時に
     // スクロールアンカリングが旧位置を復元してしまうため、reflow を強制してから戻す。
     // html{scroll-behavior:smooth} もアニメーション化で他スクロールに割り込まれるため一時的に無効化。
-    var deSB = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = "auto";
-    void page.offsetHeight;
-    window.scrollTo(0, 0);
-    document.documentElement.style.scrollBehavior = deSB;
+    // 初回表示（skipAnim）はページ切替ではないためスクロールを動かさない。
+    if (!skipAnim) {
+      var deSB = document.documentElement.style.scrollBehavior;
+      document.documentElement.style.scrollBehavior = "auto";
+      void page.offsetHeight;
+      window.scrollTo(0, 0);
+      document.documentElement.style.scrollBehavior = deSB;
+    }
 
     // step-firstはCSS制御の元位置(.cvr-kuma-wrap)に戻し、それ以外は入力エリアに移動
     if (pageId === "#step-first") {
@@ -212,17 +221,25 @@
     // setTimeoutの中で focus() してもキーボードは開かないため、ここで先に同期で focus する。
     // (transition前にfocusしてもinputは見えているのでUX的に問題ない)
     const autoFocusEl = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
-    if (autoFocusEl && !autoFocusEl.value) {
+    // アプリ内ブラウザ(LINE/Instagram等)ではステップ到達時の自動フォーカスをしない
+    // （キーボードオープン時のブラウザ主導スクロールでSTEP表示が隠れる。2026-07-08 再発対策）
+    if (autoFocusEl && !autoFocusEl.value && !document.documentElement.classList.contains("dk-inapp")) {
       try { autoFocusEl.focus({ preventScroll: true }); } catch (e) { autoFocusEl.focus(); }
     }
 
-    requestAnimationFrame(() => {
+    if (skipAnim) {
+      // アニメーション無しでも終着状態は必ず明示（FV非表示インシデント対策）
+      page.style.opacity = "1";
+      page.style.transform = "translateX(0)";
+    } else {
       requestAnimationFrame(() => {
-        page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";
-        page.style.opacity = "1";
-        page.style.transform = "translateX(0)";
+        requestAnimationFrame(() => {
+          page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";
+          page.style.opacity = "1";
+          page.style.transform = "translateX(0)";
+        });
       });
-    });
+    }
   }
 
   function handleStepClick(e) {
@@ -1045,7 +1062,7 @@
 
   window.addEventListener("load", () => {
     if (!document.body.classList.contains("p-pageThanks")) {
-      if (document.getElementById("step-first")) showPage("#step-first");
+      if (document.getElementById("step-first")) showPage("#step-first", true);
       initForm();
     }
   });

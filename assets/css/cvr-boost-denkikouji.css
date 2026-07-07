@@ -494,9 +494,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .cvr-live-notification { padding: 4px 8px; margin-bottom: 4px; }
   .cvr-live-notification__text { font-size: 10px; }
 
-  /* バナー画像 */
+  /* バナー画像 — v6と同じ150px（100pxだとFVが縮んで中途半端な高さになる。2026-07-08 オーナー指摘） */
   #step-first > picture, .p-first > picture { display: block; }
-  #step-first > picture img, .p-first > picture img { max-height: 100px !important; object-fit: cover; width: 100%; border-radius: 6px; }
+  #step-first > picture img, .p-first > picture img { max-height: 150px !important; object-fit: cover; object-position: center 35%; width: 100%; border-radius: 8px; }
 
   /* ヒーローバッジ */
   .cvr-hero-badge { padding: 4px 10px; margin: 2px 0; }
