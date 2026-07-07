@@ -311,8 +311,12 @@
     }
 
     if (pageId === "#step-first") {
+      // skipAnim時もアニメーション経路の「終着状態」と完全同一のインラインを焼き付ける。
+      // 本番のWPテーマ/LandingHub由来のCSSがFVコンテナをopacity:0等で隠すことがあり、
+      // 従来はアニメ終着の opacity:1/transform が偶然それを打ち消していた
+      // （2026-07-08 FV非表示インシデント。opacity省略で全LPのFVが本番で消えた）。
       page.style.cssText = skipAnim
-        ? "display:flex;flex-direction:column;min-height:calc(100svh - 200px)"
+        ? "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:1;transform:translateX(0)"
         : "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
       var mc = page.querySelector(".cvr-micro-copy");
       if (mc) mc.style.marginTop = "auto";
@@ -374,7 +378,11 @@
       }
     }
 
-    if (!skipAnim) {
+    if (skipAnim) {
+      // アニメーション無しでも終着状態（opacity:1/transform:0）は必ず明示する（FV非表示インシデント対策）
+      page.style.opacity = "1";
+      page.style.transform = "translateX(0)";
+    } else {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";

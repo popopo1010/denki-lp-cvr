@@ -60,8 +60,9 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 .l-header__message .emphasis-1{color:#90d7ff}.l-header__message .emphasis-2{color:#f17a85}
 .l-main{flex:1;margin:4px auto;width:90%}.c-container{position:relative;width:100%;max-width:407px;margin:0 auto;padding:0 16px 32px}
 .js-form-group{display:none}
-/* CLS対策: FVはJS(load後showPage)を待たず初期HTMLから表示する。app.jsが同じレイアウトを引き継ぐ */
-#step-first{display:flex;flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}
+/* CLS対策: FVはJS(load後showPage)を待たず初期HTMLから表示する。app.jsが同じレイアウトを引き継ぐ。
+   opacity/transformの明示はWPテーマ等の外部CSSにコンテナを隠されない保険（2026-07-08 FV非表示インシデント） */
+#step-first{display:flex;flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px);opacity:1;transform:none}
 #step-first .cvr-micro-copy{margin-top:auto}
 .cvr-hero-badge{display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 16px;margin:8px 0;background:linear-gradient(135deg,#ff5966,#ff8a65);border-radius:8px;color:#fff}
 .cvr-hero-badge__count{font-size:28px;font-weight:800;line-height:1}
@@ -91,7 +92,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
     <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260705b" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260705b"></noscript>
     <script>window.__LP_ID="denkikouji";</script>
-    <script src="../assets/js/app.js?v20260708" defer></script>
+    <script src="../assets/js/app.js?v20260709" defer></script>
 </head>
 
 <body class="wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
