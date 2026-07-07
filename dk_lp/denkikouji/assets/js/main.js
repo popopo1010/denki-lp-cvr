@@ -319,7 +319,9 @@
         setTimeout(() => {
           startBounce();
           const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
-          if (autoFocus && !autoFocus.value) {
+          // アプリ内ブラウザではキーボードオープン時のブラウザ主導スクロールでSTEP表示が隠れるため
+          // 自動フォーカスしない（再発 2026-07-08。preventScrollでは防げない）
+          if (autoFocus && !autoFocus.value && !document.documentElement.classList.contains("dk-inapp")) {
             // preventScroll無しのfocus()は入力欄まで自動スクロールし上部が隠れる（2026-07-03）
             try { autoFocus.focus({ preventScroll: true }); } catch (e) { autoFocus.focus(); }
             autoFocus.scrollIntoView({ block: "nearest", behavior: "smooth" });

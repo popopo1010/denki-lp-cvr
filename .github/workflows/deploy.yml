@@ -305,7 +305,7 @@ jobs:
           verify_denki_lp() {
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
-            echo "$denki_lp" | grep -q 'app.js?v20260709' || return 1
+            echo "$denki_lp" | grep -q 'app.js?v20260710' || return 1
             echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260705b' || return 1
             echo "$denki_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
@@ -323,7 +323,7 @@ jobs:
             echo "$css" | grep -q 'is-step-active' || return 1
             echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260705b' || return 1
             echo "$sekou_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
-            echo "$sekou_lp" | grep -q 'app.js?v20260709' || return 1
+            echo "$sekou_lp" | grep -q 'app.js?v20260710' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
             echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260701c' || return 1
             echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1
