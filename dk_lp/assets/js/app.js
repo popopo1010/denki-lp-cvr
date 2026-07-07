@@ -268,7 +268,10 @@
     }
   }
 
-  function showPage(pageId) {
+  // skipAnim: 初回表示（load時のstep-first）用。FVはcritical CSSで最初から表示済みのため、
+  // opacity:0→フェードインを掛け直すと「一瞬消える」うえ、load時のscrollTo(0,0)は
+  // 先読みでスクロール中のユーザーを引き戻す。両方スキップしてCLS/UXを守る。
+  function showPage(pageId, skipAnim) {
     const page = document.querySelector(pageId);
     if (!page) return;
     trackStep(pageId);
@@ -308,7 +311,9 @@
     }
 
     if (pageId === "#step-first") {
-      page.style.cssText = "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
+      page.style.cssText = skipAnim
+        ? "display:flex;flex-direction:column;min-height:calc(100svh - 200px)"
+        : "display:flex;flex-direction:column;min-height:calc(100svh - 200px);opacity:0;transform:translateX(50px);transition:none";
       var mc = page.querySelector(".cvr-micro-copy");
       if (mc) mc.style.marginTop = "auto";
     } else if (pageId === "#step01") {
@@ -325,11 +330,14 @@
     // レイアウトが未反映(dirty)のまま scrollTo すると、直後のレイアウト確定時に
     // スクロールアンカリングが旧位置を復元してしまうため、reflow を強制してから戻す。
     // html{scroll-behavior:smooth} もアニメーション化で他スクロールに割り込まれるため一時的に無効化。
-    var deSB = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = "auto";
-    void page.offsetHeight;
-    window.scrollTo(0, 0);
-    document.documentElement.style.scrollBehavior = deSB;
+    // 初回表示（skipAnim）はページ切替ではないためスクロールを動かさない。
+    if (!skipAnim) {
+      var deSB = document.documentElement.style.scrollBehavior;
+      document.documentElement.style.scrollBehavior = "auto";
+      void page.offsetHeight;
+      window.scrollTo(0, 0);
+      document.documentElement.style.scrollBehavior = deSB;
+    }
 
     const isInputStep = pageId === "#step04" || pageId === "#step05" || pageId === "#step06";
     const firstArea = page.querySelector(".c-button-grid, .c-zip-text, .p-step05__accordionBodyInner, .p-step06__name, .p-step07__tel");
@@ -366,13 +374,15 @@
       }
     }
 
-    requestAnimationFrame(() => {
+    if (!skipAnim) {
       requestAnimationFrame(() => {
-        page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";
-        page.style.opacity = "1";
-        page.style.transform = "translateX(0)";
+        requestAnimationFrame(() => {
+          page.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)";
+          page.style.opacity = "1";
+          page.style.transform = "translateX(0)";
+        });
       });
-    });
+    }
   }
 
   function handleStepClick(e) {
@@ -1211,7 +1221,7 @@
 
   window.addEventListener("load", () => {
     if (!document.body.classList.contains("p-pageThanks")) {
-      if (document.getElementById("step-first")) showPage("#step-first");
+      if (document.getElementById("step-first")) showPage("#step-first", true);
       initForm();
       loadCvrBoostDeferred();
     }
