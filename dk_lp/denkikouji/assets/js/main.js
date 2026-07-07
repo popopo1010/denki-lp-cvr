@@ -9,6 +9,34 @@
     }
   } catch (e) { /* no-op */ }
 
+  // アプリ内ブラウザ: ユーザーが入力欄をタップしてキーボードが開くと、ブラウザが入力欄を
+  // 可視ビューポート最上部へスクロールし、STEP表示・タイトルが上部バーの裏に隠れる
+  // （2026-07-08 再々発。autofocus廃止では「ユーザー自身のタップ」は防げない）。
+  // フォーカス確定後、入力欄がキーボード上に見えることを保証できる場合のみ、
+  // ステップ上部が見える位置までスクロールを戻す。CSS側のscroll-margin-topとセット。
+  (function () {
+    var BAR = 52; // アプリ内上部バー相当
+    document.addEventListener("focusin", function (e) {
+      if (!document.documentElement.classList.contains("dk-inapp")) return;
+      var t = e.target;
+      if (!t || !t.matches || !t.matches('input[type="tel"], input[type="text"]')) return;
+      var group = t.closest(".js-form-group");
+      if (!group) return;
+      setTimeout(function () {
+        var head = group.querySelector(".c-step, .c-title01") || group;
+        var hr = head.getBoundingClientRect();
+        if (hr.top >= BAR) return; // 隠れていない
+        var delta = hr.top - BAR; // 負値: この分だけ戻す
+        var vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight * 0.55;
+        var ir = t.getBoundingClientRect();
+        if (ir.bottom - delta < vvh - 8) {
+          window.scrollBy({ top: delta, left: 0, behavior: "auto" });
+        }
+      }, 300);
+    }, true);
+  })();
+
+
 
   // ========== Cookie ==========
   const Cookie = {
