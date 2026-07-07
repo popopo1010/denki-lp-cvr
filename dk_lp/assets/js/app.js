@@ -365,7 +365,13 @@
     const autoFocusEl = page.querySelector(
       'input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])'
     );
-    if (autoFocusEl && !autoFocusEl.value) {
+    // アプリ内ブラウザ(LINE/Instagram等)ではステップ到達時の自動フォーカスをしない：
+    // キーボードが開く瞬間にブラウザが入力欄を可視ビューポート最上部へスクロールし、
+    // STEP表示・タイトルが上部半透明バーの裏に隠れる（再発 2026-07-08）。
+    // preventScroll も html.dk-inapp の padding-top:44px もこのブラウザ主導スクロールは防げない。
+    // ユーザーが入力欄をタップした時だけキーボードを開く（文脈を読んだ後なので隠れても問題ない）。
+    const inAppNoAutofocus = document.documentElement.classList.contains("dk-inapp");
+    if (autoFocusEl && !autoFocusEl.value && !inAppNoAutofocus) {
       try {
         autoFocusEl.focus({ preventScroll: true });
       } catch (e) {
