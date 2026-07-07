@@ -1022,8 +1022,9 @@ body.lp-form-step #step05 .c-next-button {
   .cvr-live-notification__text { font-size: 10px; }
 
   /* バナー画像 */
-  #step-first > picture, .p-first > picture { display: block; }
-  #step-first > picture img, .p-first > picture img { max-height: 100px !important; object-fit: cover; width: 100%; border-radius: 6px; }
+  /* 固定高さボックス: LandingHubのpicture組み替え/srcプロキシ差し替えでも枠が動かない（CLS対策 2026-07-08） */
+  #step-first > picture, .p-first > picture { display: block; height: 150px; overflow: hidden; border-radius: 8px; }
+  #step-first > picture img, .p-first > picture img { height: 100% !important; max-height: 150px !important; object-fit: cover; object-position: center 35%; width: 100%; border-radius: 8px; }
 
   /* ヒーローバッジ */
   .cvr-hero-badge { padding: 4px 10px; margin: 2px 0; }
@@ -1319,16 +1320,8 @@ body {
     padding-top: max(6px, env(safe-area-inset-top, 0px));
   }
 
-  /* FV: 巨大空白を排除して内容なりの高さに */
-  #step-first,
-  body.lp-form-step #step-first.is-step-active {
-    min-height: auto !important;
-  }
-  #step-first .cvr-micro-copy {
-    margin-top: 14px !important;
-    padding-bottom: 6px;
-  }
-  /* CTA下に次セクションをわずかに覗かせて読み進めを促す */
+  /* FV: denkikouji/v6と同じフルハイト（縦長画像150px+CTA下寄り+マイクロコピー最下部。
+     2026-07-08 オーナー指示で統一。in-appのsvh過大算出は -200px バッファで吸収） */
   #step-first { padding-bottom: 20px; }
 }
 

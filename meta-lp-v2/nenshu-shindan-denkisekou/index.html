@@ -59,6 +59,8 @@
 #step-first{display:flex;flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px);opacity:1;transform:none}
 /* アプリ内ブラウザ: フォーカス時のブラウザ主導スクロールでSTEP表示が隠れないよう入力欄の上に余白を要求（2026-07-08） */
 html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-top:120px}
+/* LINEの上部バーは実測~83ptで44pxでは足りない。入力ステップ(step04-06)は96pxでバーの下から開始（2026-07-08） */
+html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
     @media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding:0 8px 0}}
     </style>
     <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" media="print" onload="this.media='all'">
@@ -67,7 +69,7 @@ html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-t
     <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1">
     <link rel="stylesheet" href="../../nenshu-shindan/nenshu-shindan.css?v5">
     <script>window.__LP_ID="nenshu-shindan-denkisekou-meta-v2";</script>
-    <script src="../../assets/js/app-v2.js?v20260709c" defer></script>
+    <script src="../../assets/js/app-v2.js?v20260710c" defer></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
       var stepMap = {"step-first":1,"step01":2,"step03":3,"step04":4,"step05":5,"step06":6};
