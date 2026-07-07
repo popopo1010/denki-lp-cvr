@@ -2,6 +2,9 @@
 <html lang="ja">
 
 <head>
+<!-- LCP画像等はLandingHub画像プロキシ経由で配信されるため先行接続（標準・PSI推定 -310ms） -->
+<link rel="preconnect" href="https://aao-rdt-dpimcjts.landinghub.site">
+<link rel="dns-prefetch" href="//aao-rdt-dpimcjts.landinghub.site">
 <!-- LandingHub Dispatcher -->
 <script data-landinghub="dispatcher-helper-tag">(function(w,d,i,wl){const u=new URL('https://airport.landinghub.cloud/dispatcher/manifest.json');u.searchParams.set('id',i);u.searchParams.set('location',w.location.href);wl.length&&u.searchParams.set('wl',wl.join(','));const l=d.createElement('link');l.rel='preload';l.as='fetch';l.crossOrigin='anonymous';l.href=u.href;d.head.prepend(l)})(window,document,'2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513',[])</script>
 <script src="https://airport.landinghub.cloud/dispatcher/latest/index.js?id=2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513" data-landinghub="dispatcher-tag" referrerpolicy="strict-origin"></script>
@@ -51,7 +54,7 @@
     <link rel="stylesheet" href="../../assets/css/cvr-boost-v2.css?v20260705b">
     <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1">
     <script>window.__LP_ID="sekoukanri-denkisekou-meta-v2";</script>
-    <script src="../../assets/js/app-v2.js?v20260705c" defer></script>
+    <script src="../../assets/js/app-v2.js?v20260708c" defer></script>
 </head>
 
 <body class="meta-short-lp wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
