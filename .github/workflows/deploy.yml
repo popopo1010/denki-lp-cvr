@@ -203,12 +203,13 @@ jobs:
       - name: Add noindex .htaccess (STGのみ)
         if: github.ref_name == 'staging'
         run: |
-          cat > .htaccess <<'EOF'
+          # リポジトリ直下の .htaccess（HTML no-cache）に noindex を追記する（上書きしない）
+          cat >> .htaccess <<'EOF'
           <IfModule mod_headers.c>
           Header set X-Robots-Tag "noindex, nofollow"
           </IfModule>
           EOF
-          echo "staging .htaccess created"
+          echo "staging noindex appended to .htaccess"
 
       - name: Deploy via rsync
         env:
