@@ -1,0 +1,9 @@
+# LP直下のHTMLはキャッシュ再検証を必須にする（2026-07-08）
+# 背景: LINE等のアプリ内ブラウザが古いHTMLをキャッシュ配信し、修正が実機に届かない事象が再発
+# （インシデント「?v=を上げたのに効かない」と同型のHTML版）。アセットは ?v= 管理＋immutable
+# なので、HTMLだけ no-cache にすれば以後の修正は ETag 再検証（304）で数分以内に必ず行き渡る。
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
