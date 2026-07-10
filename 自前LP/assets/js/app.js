@@ -237,8 +237,19 @@
       });
   }
 
+  // 初期化済み判定はDOM属性ではなく実行時のWeakSetを正とする。
+  // 外部スクリプト（最適化ツール等）が初期化後のDOMを複製/差し替えると、
+  // data-lp-inited="1" だけが残ってリスナーの無い「死んだフォーム」になり、
+  // 選択・クリックしても進めなくなるため（2026-07-10 オーナー報告）。
+  const initedGroups = typeof WeakSet === "function" ? new WeakSet() : null;
+
+  function isGroupInited(group) {
+    return initedGroups ? initedGroups.has(group) : group.dataset.lpInited === "1";
+  }
+
   function initFormGroup(group) {
-    if (!group || group.dataset.lpInited === "1") return;
+    if (!group || isGroupInited(group)) return;
+    if (initedGroups) initedGroups.add(group);
     group.dataset.lpInited = "1";
     initRadioButtons(group);
     initRadioButtons02(group);
@@ -254,7 +265,10 @@
     if (!mount) return Promise.resolve(true);
 
     const finish = (html) => {
-      if (!html || lazyStepsReady) return true;
+      if (lazyStepsReady) return true;
+      // fetch失敗(html空)をtrue扱いすると、呼び出し側がマウント済みと誤認して
+      // クリックが無言で握りつぶされる（進めないバグの一因）。falseで再試行可能にする。
+      if (!html) return false;
       mount.insertAdjacentHTML("beforeend", html);
       lazyStepsReady = true;
       mount.removeAttribute("data-lazy-src");
@@ -266,7 +280,10 @@
     };
 
     if (lazyStepsPromise) {
-      return lazyStepsPromise.then((html) => finish(html)).catch(() => false);
+      return lazyStepsPromise.then((html) => finish(html)).catch(() => {
+        lazyStepsPromise = null; // 次のクリックで再取得できるようにする
+        return false;
+      });
     }
 
     const url = resolveLazyStepsUrl();
@@ -456,7 +473,14 @@
 
     if (LAZY_STEP_IDS.has(pageTo)) {
       ensureLazySteps().then((ok) => {
-        if (ok && document.getElementById(pageTo)) go();
+        if (ok && document.getElementById(pageTo)) { go(); return; }
+        // プリフェッチ失敗の取り残し等はここで1回だけ再取得して救済する。
+        // それでもダメなら計測に残す（従来は無言でクリックが死んでいた）。
+        ensureLazySteps().then((ok2) => {
+          if (ok2 && document.getElementById(pageTo)) { go(); return; }
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({ event: "lp_error", error_type: "lazy_steps_unavailable", step_to: pageTo });
+        });
       });
       return;
     }
@@ -1207,17 +1231,41 @@
   }
 
   // ========== Init ==========
+  // ステップ遷移のクリック委譲は form ではなく document に張る。
+  // form要素に張ると、外部スクリプトがフォームDOMを差し替えた瞬間に委譲ごと消え、
+  // 全ボタンが無反応（選択しても進めない）になる。documentならDOM差し替えに耐える。
+  let globalDelegationBound = false;
+  function bindGlobalDelegation() {
+    if (globalDelegationBound) return;
+    globalDelegationBound = true;
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
+      if (btn) handleStepClick({ currentTarget: btn });
+    });
+
+    // 自己修復: 未初期化（=初期化後にDOMが差し替わりリスナーが消えた）ステップ内での
+    // ユーザー操作を capture 段階で検知して即再初期化する。capture中に張り直した
+    // リスナーには、この操作イベント自体もターゲット到達時に届くため操作は失われない。
+    ["click", "change", "input", "focusin"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        const group = e.target && e.target.closest ? e.target.closest(".js-form-group") : null;
+        if (!group || isGroupInited(group)) return;
+        const sel = document.getElementById("pref");
+        if (sel && sel.options.length <= 1) initPrefSelect();
+        initFormGroup(group);
+        preventEnter();
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "lp_error", error_type: "form_group_reinit", step_name: group.id || "" });
+      }, true);
+    });
+  }
+
   function initForm() {
     const form = document.querySelector(".wpcf7-form");
     if (!form) return;
 
-    if (!form.dataset.stepDelegated) {
-      form.dataset.stepDelegated = "1";
-      form.addEventListener("click", (e) => {
-        const btn = e.target.closest(".js-step-button");
-        if (btn) handleStepClick({ currentTarget: btn });
-      });
-    }
+    bindGlobalDelegation();
 
     queueMicrotask(() => {
       form.querySelectorAll(".js-form-group").forEach(initFormGroup);
@@ -1230,6 +1278,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    // load前（画像やGTM待ち中）のクリックが無反応になる窓を無くすため、ここで委譲を張る。
+    // 各グループの初期化は自己修復リスナーが操作時に行うので、load前でも操作は失われない。
+    if (!document.body.classList.contains("p-pageThanks")) bindGlobalDelegation();
     initPrefSelect();
     initBirthday();
     updateProgress("#step-first");
