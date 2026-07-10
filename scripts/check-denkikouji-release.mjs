@@ -29,10 +29,12 @@ const meta = read("meta-lp/denkikouji/index.html");
 const css = read("assets/css/cvr-boost-denkikouji.css");
 const app = read("assets/js/app.js");
 
+// ?v= はHTMLから自動導出（固定値だとbump時の更新漏れで陳腐化する: 2026-07-10 に
+// css v20260705b / app v20260707 のまま取り残されていたのを発見）
 const EXPECT = {
-  css: "cvr-boost-denkikouji.css?v20260705b",
-  app: "app.js?v20260707",
-  lazy: "steps-lazy.html?v20260701c"
+  css: (lp.match(/cvr-boost-denkikouji\.css\?v[0-9a-z]+/) || ["cvr-boost-denkikouji.css?v"])[0],
+  app: (lp.match(/app\.js\?v[0-9a-z]+/) || ["app.js?v"])[0],
+  lazy: (lp.match(/steps-lazy\.html\?v[0-9a-z]+/) || ["steps-lazy.html?v"])[0]
 };
 
 [
