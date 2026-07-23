@@ -7,6 +7,8 @@
  *  - 面談予約確定 (_event=calendar_booked / book_slot / TimeRex Webhook): 電話/メールで行更新 + Slack通知。
  *  - 独自予約の空き枠 (doGet ?action=slots): Googleカレンダーから JSONP 返却。
  *  - 生年月日は year/month/day から "1990-10-10" 形式の your-birthday 列に集約。
+ *  - _page のクエリ文字列から utm_* / gclid 等の広告・計測パラメーターを個別列に自動展開
+ *    (TRACKING_PARAM_COLUMNS)。LP側の変更は不要。
  *  - シートが空または列が足りなければ PREFERRED_COLUMNS でヘッダー初期化。
  *  - 既存ヘッダーは保持しつつ、PREFERRED_COLUMNS にあって未存在の列は追加。
  *
@@ -58,9 +60,83 @@ const PREFERRED_COLUMNS = [
   "_submitted_at",
   "_page",
   "_referrer",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "gad_source",
+  "gad_campaignid",
+  "yclid",
+  "fbclid",
+  "msclkid",
   "_ip",
   "_user_agent"
 ];
+
+// _page（送信時URL）のクエリ文字列から個別列に展開する広告・計測パラメーター。
+// 追加・削除する場合は PREFERRED_COLUMNS / COLUMNS_LEGEND にも同名を反映すること。
+const TRACKING_PARAM_COLUMNS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "gad_source",
+  "gad_campaignid",
+  "yclid",
+  "fbclid",
+  "msclkid"
+];
+
+function decodeParam(s) {
+  try {
+    return decodeURIComponent(String(s).replace(/\+/g, " "));
+  } catch (e) {
+    return String(s);
+  }
+}
+
+// URL のクエリ文字列を { key: value } に分解する（先勝ちで重複キーは無視）。
+function parseQueryParams(url) {
+  var out = {};
+  if (!url) return out;
+  var q = String(url);
+  var hashIdx = q.indexOf("#");
+  if (hashIdx !== -1) q = q.substring(0, hashIdx);
+  var qIdx = q.indexOf("?");
+  if (qIdx === -1) return out;
+  q = q.substring(qIdx + 1);
+  var pairs = q.split("&");
+  for (var i = 0; i < pairs.length; i++) {
+    if (!pairs[i]) continue;
+    var eqIdx = pairs[i].indexOf("=");
+    var key = eqIdx === -1 ? pairs[i] : pairs[i].substring(0, eqIdx);
+    var val = eqIdx === -1 ? "" : pairs[i].substring(eqIdx + 1);
+    key = decodeParam(key);
+    val = decodeParam(val);
+    if (key && !(key in out)) out[key] = val;
+  }
+  return out;
+}
+
+// _page の URL から TRACKING_PARAM_COLUMNS を抜き出し、未設定の列だけ params に展開する。
+function applyTrackingParams(params) {
+  var url = params["_page"] || params["_referrer"];
+  if (!url) return;
+  var q = parseQueryParams(url);
+  for (var i = 0; i < TRACKING_PARAM_COLUMNS.length; i++) {
+    var col = TRACKING_PARAM_COLUMNS[i];
+    if (params[col] != null && params[col] !== "") continue;
+    if (q[col] != null && q[col] !== "") params[col] = q[col];
+  }
+}
 
 function toJst(value) {
   if (!value) return "";
@@ -165,6 +241,9 @@ function doPost(e) {
     // 通常のフォーム送信処理
     params["_received_at"] = toJst(new Date());
     if (params["_submitted_at"]) params["_submitted_at"] = toJst(params["_submitted_at"]);
+
+    // _page のクエリ文字列から広告・計測パラメーターを個別列に展開
+    applyTrackingParams(params);
 
     var by = params["your-birthday-year"];
     var bm = params["your-birthday-month"];
@@ -870,8 +949,21 @@ const COLUMNS_LEGEND = [
   ["calendar_guest_email", "予約者メール", "TimeRex ゲストメール"],
   ["calendar_tool", "予約ツール名", "TimeRex / 独自予約 など"],
   ["_submitted_at", "クライアント送信時刻", "ブラウザがフォーム送信した日本時間"],
-  ["_page", "送信時のURL", ""],
+  ["_page", "送信時のURL", "utm等の全パラメーター付き。下の個別列はここから自動抽出"],
   ["_referrer", "流入元URL", "どこからLPに来たか"],
+  ["utm_source", "流入元", "_page から自動抽出。例: google / yahoo / instagram"],
+  ["utm_medium", "媒体種別", "_page から自動抽出。例: cpc / display / social"],
+  ["utm_campaign", "キャンペーン名", "_page から自動抽出。例: lis_ad_010_02"],
+  ["utm_term", "検索キーワード", "_page から自動抽出。日本語はデコード済み（例: 電工 仕事探し）"],
+  ["utm_content", "広告クリエイティブ識別", "_page から自動抽出。A/Bや広告面の区別用"],
+  ["gclid", "Google広告クリックID", "_page から自動抽出。Google Ads の click id"],
+  ["gbraid", "Google iOSアプリ計測ID", "_page から自動抽出（アプリ→Web）"],
+  ["wbraid", "Google Web計測ID", "_page から自動抽出（Web→アプリ）"],
+  ["gad_source", "Google広告ソース", "_page から自動抽出"],
+  ["gad_campaignid", "GoogleキャンペーンID", "_page から自動抽出"],
+  ["yclid", "Yahoo広告クリックID", "_page から自動抽出。Yahoo広告の click id"],
+  ["fbclid", "Meta広告クリックID", "_page から自動抽出。Facebook/Instagram広告の click id"],
+  ["msclkid", "Microsoft広告クリックID", "_page から自動抽出"],
   ["_ip", "IPアドレス", "送信者IP (api.ipify.org経由)"],
   ["_user_agent", "UA文字列", "ブラウザ・デバイス情報"]
 ];
