@@ -25,6 +25,25 @@ const SHEET_NAME = "form_submissions";
 const TZ = "Asia/Tokyo";
 const TS_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
+// _page（送信時URL）のクエリ文字列から個別列に展開する広告・計測パラメーター。
+// この配列が唯一の定義元。PREFERRED_COLUMNS には _referrer の直後に自動挿入される。
+// 追加・削除したら COLUMNS_LEGEND（?setup=legend の凡例）にも説明を反映すること。
+const TRACKING_PARAM_COLUMNS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "gad_source",
+  "gad_campaignid",
+  "yclid",
+  "fbclid",
+  "msclkid"
+];
+
 const PREFERRED_COLUMNS = [
   "_received_at",
   "_lp",
@@ -60,39 +79,9 @@ const PREFERRED_COLUMNS = [
   "_submitted_at",
   "_page",
   "_referrer",
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_term",
-  "utm_content",
-  "gclid",
-  "gbraid",
-  "wbraid",
-  "gad_source",
-  "gad_campaignid",
-  "yclid",
-  "fbclid",
-  "msclkid",
+  ...TRACKING_PARAM_COLUMNS,
   "_ip",
   "_user_agent"
-];
-
-// _page（送信時URL）のクエリ文字列から個別列に展開する広告・計測パラメーター。
-// 追加・削除する場合は PREFERRED_COLUMNS / COLUMNS_LEGEND にも同名を反映すること。
-const TRACKING_PARAM_COLUMNS = [
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_term",
-  "utm_content",
-  "gclid",
-  "gbraid",
-  "wbraid",
-  "gad_source",
-  "gad_campaignid",
-  "yclid",
-  "fbclid",
-  "msclkid"
 ];
 
 function decodeParam(s) {
