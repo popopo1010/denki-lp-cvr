@@ -127,6 +127,61 @@ function applyTrackingParams(params) {
   }
 }
 
+/**
+ * 既存の全行の _page（無ければ _referrer）を遡って広告・計測パラメーターを個別列へ埋める。
+ * 空セルのみ埋め、既存の値は上書きしない（安全・冪等）。何度実行してもよい。
+ * 実行方法: GAS エディタで関数 backfillTrackingParams を選択して実行、または
+ *           Webアプリで …/exec?action=backfill_params&key=<WEBHOOK_SECRET> を開く。
+ * 戻り値: 処理概要の文字列（行数・埋めたセル数）。
+ */
+function backfillTrackingParams() {
+  var sheet = getSheet();
+  var header = ensureHeader(sheet);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return "no data rows";
+
+  var pageIdx = header.indexOf("_page");
+  var referrerIdx = header.indexOf("_referrer");
+  if (pageIdx === -1 && referrerIdx === -1) return "no _page/_referrer column";
+
+  // 対象列を確保（未存在なら作成）してインデックスを控える
+  var colIdx = {};
+  for (var t = 0; t < TRACKING_PARAM_COLUMNS.length; t++) {
+    colIdx[TRACKING_PARAM_COLUMNS[t]] = ensureColumn(sheet, header, TRACKING_PARAM_COLUMNS[t]);
+  }
+  var lastCol = header.length;
+
+  var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  var filled = 0;
+  var rowsTouched = 0;
+  for (var r = 0; r < values.length; r++) {
+    var url = "";
+    if (pageIdx !== -1 && values[r][pageIdx]) url = values[r][pageIdx];
+    else if (referrerIdx !== -1 && values[r][referrerIdx]) url = values[r][referrerIdx];
+    if (!url) continue;
+    var q = parseQueryParams(String(url));
+    var touched = false;
+    for (var k = 0; k < TRACKING_PARAM_COLUMNS.length; k++) {
+      var col = TRACKING_PARAM_COLUMNS[k];
+      var ci = colIdx[col];
+      var cur = values[r][ci];
+      if (cur !== "" && cur != null) continue; // 既存値は保持
+      if (q[col] != null && q[col] !== "") {
+        values[r][ci] = q[col];
+        filled++;
+        touched = true;
+      }
+    }
+    if (touched) rowsTouched++;
+  }
+
+  sheet.getRange(2, 1, values.length, lastCol).setValues(values);
+  var msg = "backfill done: data_rows=" + values.length +
+            " rows_updated=" + rowsTouched + " cells_filled=" + filled;
+  Logger.log(msg);
+  return msg;
+}
+
 function toJst(value) {
   if (!value) return "";
   var d = (value instanceof Date) ? value : new Date(value);
@@ -904,6 +959,11 @@ function doGet(e) {
   if (e && e.parameter && e.parameter.setup === "legend") {
     var msg = setupColumnsLegend();
     return ContentService.createTextOutput(msg).setMimeType(ContentService.MimeType.TEXT);
+  }
+  // ?action=backfill_params で既存行に広告・計測パラメーターを遡って埋める（要 key 認証）
+  if (e && e.parameter && e.parameter.action === "backfill_params") {
+    if (!webhookAuthorized(e)) return jsonError("unauthorized");
+    return jsonOk({ result: backfillTrackingParams() });
   }
   return ContentService.createTextOutput("LP form recorder is alive.")
     .setMimeType(ContentService.MimeType.TEXT);
