@@ -200,16 +200,23 @@ function agencyShareGetOrCreateSheet(ss, name) {
  * トリガーからも、エディタからの手動実行からも呼べる。
  */
 function syncAgencyShare() {
+  // どの理由で終わってもログに残す。無言で終わると
+  // 「実行できたのにシートが更新されない」に見えて原因が分からない。
+  function bail(msg) {
+    Logger.log(msg);
+    return msg;
+  }
+
   var ss = openAgencyShareSpreadsheet();
   if (!ss) {
-    return "NG: スクリプトプロパティ AGENCY_SHARE_SHEET_ID が未設定です。" +
-           "先に setupAgencyShare() を実行してください。";
+    return bail("NG: スクリプトプロパティ AGENCY_SHARE_SHEET_ID が未設定です。" +
+                "設定するか setupAgencyShare() を実行してください。");
   }
 
   var src = getSheet();
   var header = ensureHeader(src);
   var lastRow = src.getLastRow();
-  if (lastRow < 2) return "元データが空です";
+  if (lastRow < 2) return bail("NG: 元データ（" + SHEET_NAME + "）が空です");
 
   var values = src.getRange(2, 1, lastRow - 1, header.length).getValues();
   var idx = {};
@@ -402,6 +409,41 @@ function setupAgencyShareLegend(ss) {
   sheet.setColumnWidth(2, 220);
   sheet.setColumnWidth(3, 560);
   sheet.setFrozenRows(3);
+}
+
+/**
+ * 【診断用】「実行できたのにシートが更新されない」ときに、どこで止まっているかを1回で出す。
+ * エディタで実行し、実行ログを読む。値そのもの（ソルト等）は出さない。
+ */
+function diagnoseAgencyShare() {
+  var lines = [];
+  var id = agencyShareProp("AGENCY_SHARE_SHEET_ID");
+  lines.push("AGENCY_SHARE_SHEET_ID: " + (id ? id : "(未設定) ← これが原因です"));
+  lines.push("AGENCY_SHARE_SALT: " + (agencyShareProp("AGENCY_SHARE_SALT") ? "設定済み" : "(未設定。初回実行時に自動生成)"));
+
+  if (id) {
+    try {
+      var ss = SpreadsheetApp.openById(id);
+      lines.push("共有シート: 開けました『" + ss.getName() + "』");
+      lines.push("  タブ: " + ss.getSheets().map(function (s) { return s.getName(); }).join(" / "));
+      lines.push("  URL: https://docs.google.com/spreadsheets/d/" + id + "/edit");
+    } catch (err) {
+      lines.push("共有シート: 開けません ← IDが違うか権限がありません（" + err + "）");
+    }
+  }
+
+  try {
+    var src = getSheet();
+    lines.push("元データ: " + SHEET_NAME + " / " + Math.max(0, src.getLastRow() - 1) + "行");
+  } catch (err2) {
+    lines.push("元データ: 開けません（" + err2 + "）");
+  }
+
+  lines.push("Zoho連携: " + (typeof zohoEnabled === "function" && zohoEnabled() ? "有効" : "無効（ステージが取れません）"));
+
+  var out = lines.join("\n");
+  Logger.log(out);
+  return out;
 }
 
 /**
