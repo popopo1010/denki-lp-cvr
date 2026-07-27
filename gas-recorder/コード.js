@@ -76,6 +76,9 @@ const PREFERRED_COLUMNS = [
   "slack_thread_ts",
   "slack_channel_id",
   "calendar_event_id",
+  "zoho_lead_id",
+  "zoho_synced_at",
+  "zoho_error",
   "_submitted_at",
   "_page",
   "_referrer",
@@ -328,7 +331,21 @@ function doPost(e) {
       });
     }
 
-    return jsonOk({ slack_lead: slackLead });
+    // Zoho CRM 見込み客の自動作成。失敗してもスプシ記録とSlack通知は止めない。
+    var zohoLead = syncLeadToZoho(params);
+    if (zohoLead.ok) {
+      updateRowColumns(sheet, header, newRow, {
+        zoho_lead_id: zohoLead.id,
+        zoho_synced_at: toJst(new Date())
+      });
+    } else if (zohoLead.error) {
+      updateRowColumns(sheet, header, newRow, { zoho_error: zohoLead.error });
+      reportErrorToSlack("zoho_lead_create", zohoLead.error);
+    } else if (zohoLead.skipped && zohoLead.skipped !== "disabled") {
+      updateRowColumns(sheet, header, newRow, { zoho_error: "skipped: " + zohoLead.skipped });
+    }
+
+    return jsonOk({ slack_lead: slackLead, zoho_lead: zohoLead });
   } catch (err) {
     reportErrorToSlack("doPost", err);
     return jsonError(err);
@@ -997,6 +1014,9 @@ const COLUMNS_LEGEND = [
   ["calendar_guest_name", "予約者名", "TimeRex ゲスト名"],
   ["calendar_guest_email", "予約者メール", "TimeRex ゲストメール"],
   ["calendar_tool", "予約ツール名", "TimeRex / 独自予約 など"],
+  ["zoho_lead_id", "Zoho見込み客ID", "Zoho CRM の Leads レコードID。空なら未連携（backfillZohoLeads() で再送できる）"],
+  ["zoho_synced_at", "Zoho登録時刻", "見込み客を作成した日本時間"],
+  ["zoho_error", "Zoho連携エラー", "作成に失敗した理由、またはテスト送信として除外した記録"],
   ["_submitted_at", "クライアント送信時刻", "ブラウザがフォーム送信した日本時間"],
   ["_page", "送信時のURL", "utm等の全パラメーター付き。下の個別列はここから自動抽出"],
   ["_referrer", "流入元URL", "どこからLPに来たか"],
