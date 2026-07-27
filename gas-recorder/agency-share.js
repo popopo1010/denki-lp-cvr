@@ -293,16 +293,27 @@ function syncAgencyShare() {
   var records = [];
   var dealIds = [];
   var excludedTest = 0;
+  var excludedNoTel = 0;
   var excludedChannel = 0;
 
   for (var i = 0; i < values.length; i++) {
     var params = {};
     for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
 
-    // テスト送信は代理店に見せない（数字が荒れるだけ）
-    if (typeof zohoIsTestSubmission === "function" && zohoIsTestSubmission(params)) {
-      excludedTest++;
-      continue;
+    var dealId = String(params["zoho_deal_id"] || "").trim();
+
+    // 商談IDがある行は実在の候補者。テスト判定で落とさない。
+    // （Zoho連携側が商談を作る前にテスト判定を通しているため、通過している時点で本物）
+    // 未連携の行だけ、テスト送信・電話番号なし（thanksページのメール登録行など）を落とす。
+    if (!dealId) {
+      if (!String(params["your-tel"] || "").trim()) {
+        excludedNoTel++;
+        continue;
+      }
+      if (typeof zohoIsTestSubmission === "function" && zohoIsTestSubmission(params)) {
+        excludedTest++;
+        continue;
+      }
     }
 
     var track = zohoTrackingParams(params); // 個別列が空でも _page のURLから復元する
@@ -313,7 +324,6 @@ function syncAgencyShare() {
       continue;
     }
 
-    var dealId = String(params["zoho_deal_id"] || "").trim();
     if (dealId) dealIds.push(dealId);
 
     var received = String(params["_received_at"] || "").trim();
@@ -380,7 +390,7 @@ function syncAgencyShare() {
 
   // 何を落としたかは必ず出す。黙って絞ると「全件出ている」と誤解される。
   var msg = "共有シート更新: " + rows.length + "件" +
-            "（テスト送信 " + excludedTest + "件を除外" +
+            "（テスト送信 " + excludedTest + "件・電話番号なし " + excludedNoTel + "件を除外" +
             (filter ? " / チャネル絞り込み[" + filter.join(",") + "]で " + excludedChannel + "件を除外" : "") +
             " / ステージ取得 " + Object.keys(stages.map).length + "件）" +
             " 最終更新 " + toJst(new Date());

@@ -232,7 +232,7 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
       makeRow(header, { zoho_deal_id: "9999", "your-tel": "07033334444", _received_at: "2026-07-22 09:00:00" }),
       // テスト送信（同じ数字ばかり＋プレースホルダー氏名）は除外されるはず
       makeRow(header, {
-        zoho_deal_id: "1002", "your-tel": "11111111111",
+        zoho_deal_id: "", "your-tel": "11111111111",
         "your-last-name": "ああ", "your-first-name": ""
       })
     ],
@@ -386,6 +386,29 @@ console.log("5) Zoho取得が失敗しても落ちず、理由を戻り値に残
   check("行は書き出される", body.length === 1);
   check("ステージは 不明 になる", body[0][evalIn(ctx, "AGENCY_SHARE_COLUMNS").indexOf("ステージ")] === "不明");
   check("戻り値にZohoエラーが載る", /Zoho取得エラー/.test(result), result);
+}
+
+console.log("6b) 商談IDがある行はテスト判定で落とさない／電話番号なしの未連携行は落とす");
+{
+  const { share, result } = runSync({
+    rows: (header) => [
+      // 氏名も電話もテスト形式だが、Zohoに商談がある＝実在の候補者として扱う
+      makeRow(header, {
+        zoho_deal_id: "4001", "your-tel": "11111111111",
+        "your-last-name": "ああ", "your-first-name": ""
+      }),
+      // thanksページのメール登録などで電話が無く、CRMにも無い行は落とす
+      makeRow(header, { zoho_deal_id: "", "your-tel": "" }),
+      // 未連携でも電話が正常なら CRM未連携 として残す
+      makeRow(header, { zoho_deal_id: "", "your-tel": "08055556666" })
+    ],
+    stageRows: [{ id: "4001", Stage: "11_書類選考", Modified_Time: "2026-07-25T14:30:00+09:00" }]
+  });
+  const body = share.getSheetByName("候補者ステージ").grid.slice(1);
+  const stages = body.map((r) => r[11]); // 11 = ステージ列
+  check("2件残る（商談あり＋未連携で電話あり）", body.length === 2, `${body.length}件`);
+  check("商談ありのテスト形式行が残る", stages.includes("11_書類選考"), JSON.stringify(stages));
+  check("電話番号なしの未連携行は落ちる", /電話番号なし 1件を除外/.test(result), result);
 }
 
 console.log("7) チャネル絞り込み（Google広告だけ共有）");
