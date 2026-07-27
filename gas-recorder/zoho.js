@@ -596,3 +596,83 @@ function testZohoConnection() {
   var org = (res.body.org && res.body.org[0]) || {};
   return "ok: " + (org.company_name || org.primary_email || "connected");
 }
+
+/**
+ * 【セットアップ用】Zohoの認可コード → リフレッシュトークンの交換をGAS内で完結させる。
+ *
+ * 手動でcurlを叩いてトークンをコピペする運用は、
+ *  - Codeが10分・1回きりで、失敗した時点でも使い切りになる
+ *  - Code と refresh_token がどちらも "1000." 始まりで取り違えやすい
+ *  - コピー時の空白・改行混入に気づけない
+ * という事故が起きやすい。ここで交換まで済ませ、結果を直接スクリプトプロパティへ書く。
+ *
+ * 手順:
+ *  1. api-console で Generate Code → 表示された Code をコピー
+ *  2. スクリプトプロパティに ZOHO_AUTH_CODE として貼り付けて保存
+ *  3. この関数を実行（成功すると ZOHO_REFRESH_TOKEN が自動保存され、
+ *     使い終わった ZOHO_AUTH_CODE は削除される）
+ *  4. testZohoConnection() で確認
+ */
+function exchangeZohoCode() {
+  var props = PropertiesService.getScriptProperties();
+  var code = String(props.getProperty("ZOHO_AUTH_CODE") || "").trim();
+  if (!code) {
+    return "NG: スクリプトプロパティ ZOHO_AUTH_CODE が空です。" +
+           "api-console で Generate Code した Code を ZOHO_AUTH_CODE に貼って保存してから実行してください。";
+  }
+
+  var clientId = String(props.getProperty("ZOHO_CLIENT_ID") || "").trim();
+  var clientSecret = String(props.getProperty("ZOHO_CLIENT_SECRET") || "").trim();
+  if (!clientId || !clientSecret) return "NG: ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET が未設定です。";
+
+  var url = zohoAccountsHost() + "/oauth/v2/token" +
+    "?grant_type=authorization_code" +
+    "&client_id=" + encodeURIComponent(clientId) +
+    "&client_secret=" + encodeURIComponent(clientSecret) +
+    "&code=" + encodeURIComponent(code);
+
+  var res = UrlFetchApp.fetch(url, { method: "post", muteHttpExceptions: true });
+  var body = {};
+  try { body = JSON.parse(res.getContentText()); } catch (e) { body = {}; }
+
+  if (!body.refresh_token) {
+    var err = body.error || res.getContentText();
+    var hint = "";
+    if (String(err).indexOf("invalid_code") !== -1) {
+      hint = " ※Codeの期限切れ(10分)か、既に一度使われています。" +
+             "api-console で Generate Code から新しいCodeを発行し、" +
+             "ZOHO_AUTH_CODE に貼り直してすぐ実行してください。";
+    } else if (String(err).indexOf("invalid_client") !== -1) {
+      hint = " ※ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET を確認してください。";
+    }
+    return "NG: " + err + hint;
+  }
+
+  props.setProperty("ZOHO_REFRESH_TOKEN", body.refresh_token);
+  props.deleteProperty("ZOHO_AUTH_CODE");          // 使い切りなので残さない
+  CacheService.getScriptCache().remove("zoho_access_token"); // 旧トークンのキャッシュを捨てる
+
+  return "ok: ZOHO_REFRESH_TOKEN を保存しました（長さ " + body.refresh_token.length + "）。" +
+         "続けて testZohoConnection() を実行してください。";
+}
+
+/**
+ * 【診断用】保存されている認証情報の「形」だけを表示する。値そのものは出さない。
+ * 取り違え（Codeを入れている / access_tokenを入れている）や空白混入の切り分けに使う。
+ */
+function diagnoseZohoProps() {
+  var props = PropertiesService.getScriptProperties().getProperties();
+  var keys = ["ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REFRESH_TOKEN", "ZOHO_AUTH_CODE",
+              "ZOHO_ACCOUNTS_HOST", "ZOHO_API_HOST"];
+  var lines = [];
+  keys.forEach(function (k) {
+    var v = props[k];
+    if (v == null) { lines.push(k + ": (未設定)"); return; }
+    var trimmed = v.trim();
+    lines.push(k + ": 長さ" + v.length +
+      (v.length !== trimmed.length ? " ※前後に空白/改行あり" : "") +
+      " / 先頭6文字 " + trimmed.slice(0, 6) +
+      " / ドット数 " + (trimmed.split(".").length - 1));
+  });
+  return lines.join("\n");
+}
