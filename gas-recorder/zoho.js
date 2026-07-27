@@ -56,7 +56,8 @@ var ZOHO_SHIKAKU_MAP = {
 // テスト送信とみなす氏名（姓+名を連結して判定）
 var ZOHO_PLACEHOLDER_NAMES = [
   "あ", "ああ", "あああ", "ああい", "あい", "い", "いい",
-  "h", "hh", "テスト", "てすと", "test", "ytest", "さかな", "aaa"
+  "h", "hh", "テスト", "てすと", "test", "ytest", "さかな", "aaa",
+  "山田太郎", "やまだたろう", "ヤマダタロウ", "名前なし", "匿名", "テスト太郎"
 ];
 
 function zohoEnabled() {
@@ -74,10 +75,15 @@ function zohoApiHost() {
 }
 
 // アクセストークンは1時間有効。55分だけキャッシュして使い回す。
-function zohoAccessToken() {
+// forceRefresh=true でキャッシュを捨てて取り直す（401を食らったときの再試行用）。
+function zohoAccessToken(forceRefresh) {
   var cache = CacheService.getScriptCache();
-  var cached = cache.get("zoho_access_token");
-  if (cached) return cached;
+  if (forceRefresh) {
+    cache.remove("zoho_access_token");
+  } else {
+    var cached = cache.get("zoho_access_token");
+    if (cached) return cached;
+  }
 
   var url = zohoAccountsHost() + "/oauth/v2/token" +
     "?refresh_token=" + encodeURIComponent(getScriptProp("ZOHO_REFRESH_TOKEN")) +
@@ -95,22 +101,31 @@ function zohoAccessToken() {
   return body.access_token;
 }
 
+// キャッシュ中のアクセストークンが失効・無効化されていることがあるため、
+// 401 を食らったら一度だけトークンを取り直して再試行する。
 function zohoFetch(path, options) {
   options = options || {};
-  var params = {
-    method: options.method || "get",
-    muteHttpExceptions: true,
-    headers: { Authorization: "Zoho-oauthtoken " + zohoAccessToken() }
-  };
-  if (options.payload) {
-    params.contentType = "application/json";
-    params.payload = JSON.stringify(options.payload);
+
+  function call(forceRefresh) {
+    var params = {
+      method: options.method || "get",
+      muteHttpExceptions: true,
+      headers: { Authorization: "Zoho-oauthtoken " + zohoAccessToken(forceRefresh) }
+    };
+    if (options.payload) {
+      params.contentType = "application/json";
+      params.payload = JSON.stringify(options.payload);
+    }
+    var res = UrlFetchApp.fetch(zohoApiHost() + "/crm/" + ZOHO_API_VERSION + path, params);
+    var text = res.getContentText();
+    var json = {};
+    try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { raw: text }; }
+    return { code: res.getResponseCode(), body: json };
   }
-  var res = UrlFetchApp.fetch(zohoApiHost() + "/crm/" + ZOHO_API_VERSION + path, params);
-  var text = res.getContentText();
-  var json = {};
-  try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { raw: text }; }
-  return { code: res.getResponseCode(), body: json };
+
+  var result = call(false);
+  if (result.code === 401) result = call(true);
+  return result;
 }
 
 /**
@@ -175,34 +190,67 @@ function zohoNormalizeZip(s) {
   return z;
 }
 
-// 明らかなテスト送信（1111111111 のような番号 / 氏名「ああ」等）は Zoho に流さない
+// 09012345678 のような連番ダミー番号か。
+// 「一方向に」6桁以上つながっている場合のみ該当とする。
+// ※ 1,2,1,2 のような往復を連番扱いすると実在の番号を誤検知する
+//   （例: 09012123159 叶さん / 08034545213 永井さん）。方向が変わったら数え直す。
+function zohoIsSequentialTel(tel) {
+  var run = 1, dir = 0;
+  for (var i = 1; i < tel.length; i++) {
+    var diff = Number(tel.charAt(i)) - Number(tel.charAt(i - 1));
+    if ((diff === 1 || diff === -1) && (dir === 0 || diff === dir)) {
+      run++;
+      dir = diff;
+    } else if (diff === 1 || diff === -1) {
+      run = 2;
+      dir = diff;
+    } else {
+      run = 1;
+      dir = 0;
+    }
+    if (run >= 6) return true;
+  }
+  return false;
+}
+
+// 明らかなテスト送信（1111111111 / 09012345678 のような番号、氏名「ああ」「山田太郎」等）は Zoho に流さない
 function zohoIsTestSubmission(params) {
   var tel = zohoNormalizeTel(params["your-tel"]);
+
   var distinct = {};
   for (var i = 0; i < tel.length; i++) distinct[tel.charAt(i)] = true;
   if (Object.keys(distinct).length < 3) return true;
+  if (zohoIsSequentialTel(tel)) return true;
 
   var name = String(params["your-last-name"] || "").trim() + String(params["your-first-name"] || "").trim();
-  name = name.replace(/\s/g, "").toLowerCase();
+  name = name.replace(/\s|　/g, "").toLowerCase();
   return ZOHO_PLACEHOLDER_NAMES.indexOf(name) !== -1;
 }
 
-// LPの保有資格文字列 → Zohoの選択肢配列（複数選択）
+/**
+ * LPの保有資格文字列 → Zohoの選択肢配列（複数選択）。
+ * 戻り値: { values: [...], unmapped: [...] }
+ *   unmapped … 対応表に無くて「その他」に寄せた原文。shikaku_sonota に入れる分だけ。
+ */
 function zohoBuildShikaku(meta, raw) {
   var parts = String(raw || "").split(",");
-  var out = [];
+  var values = [], unmapped = [];
   for (var i = 0; i < parts.length; i++) {
     var key = parts[i].trim();
     if (!key) continue;
-    var mapped = ZOHO_SHIKAKU_MAP[key] || "その他";
+    var mapped = ZOHO_SHIKAKU_MAP[key];
+    if (!mapped) {
+      mapped = "その他";
+      unmapped.push(key);
+    }
     var valid = zohoValidOption(meta, "shikaku", mapped);
-    if (valid && out.indexOf(valid) === -1) out.push(valid);
+    if (valid && values.indexOf(valid) === -1) values.push(valid);
   }
-  if (out.length === 0) {
+  if (values.length === 0) {
     var none = zohoValidOption(meta, "shikaku", "資格無し");
-    if (none) out.push(none);
+    if (none) values.push(none);
   }
-  return out;
+  return { values: values, unmapped: unmapped };
 }
 
 // Zohoの商談1件ぶんのペイロードを作る
@@ -224,7 +272,14 @@ function buildZohoDeal(params, meta) {
     .filter(function (v) { return !!v; }).join("/");
   if (utm) info.push("utm: " + utm);
   info.push("LINE登録: " + (params["line_clicked_at"] ? ("済 " + params["line_clicked_at"]) : "未"));
+  if (String(params["email_captured_at"] || "").trim()) {
+    info.push("メール登録: 済 " + params["email_captured_at"]);
+  }
   if (tel.length !== 11) info.push("※電話番号が不正形式（原文: " + String(params["your-tel"] || "") + "）");
+
+  var zip = zohoNormalizeZip(params["your-zip"]);
+  // No_yubin は数値項目なので 0590031 → 590031 と先頭0が落ちる。原文をLP情報に残す。
+  if (zip && zip.charAt(0) === "0") info.push("郵便番号: " + zip);
 
   var deal = {
     Deal_Name: name + "/" + license,
@@ -241,14 +296,16 @@ function buildZohoDeal(params, meta) {
   if (received.length >= 10) deal.date_EuRegsiter = received.slice(0, 10);
 
   var shikaku = zohoBuildShikaku(meta, license);
-  if (shikaku.length && zohoFieldUsable(meta, "shikaku")) deal.shikaku = shikaku;
-  if (license && zohoFieldUsable(meta, "shikaku_sonota")) deal.shikaku_sonota = license;
+  if (shikaku.values.length && zohoFieldUsable(meta, "shikaku")) deal.shikaku = shikaku.values;
+  // 対応表に無くて「その他」に寄せた資格だけ原文を残す（マッピング済みは入れない）
+  if (shikaku.unmapped.length && zohoFieldUsable(meta, "shikaku_sonota")) {
+    deal.shikaku_sonota = shikaku.unmapped.join(", ");
+  }
 
   var pref = zohoValidOption(meta, "area", String(params["your-pref"] || "").trim());
   if (pref) deal.area = pref;
   if (String(params["your-city"] || "").trim()) deal.shikuchoson = String(params["your-city"]).trim();
 
-  var zip = zohoNormalizeZip(params["your-zip"]);
   if (zip) deal.No_yubin = Number(zip);
 
   if (String(params["your-birthday"] || "").trim()) deal.date_seinengappi = String(params["your-birthday"]).trim();
@@ -289,6 +346,38 @@ function syncDealToZoho(params, meta) {
     if (res.code === 201 && first.code === "SUCCESS") {
       return { ok: true, id: String(first.details && first.details.id) };
     }
+    return { ok: false, error: res.code + " " + JSON.stringify(first || res.body) };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+/**
+ * LINE追加クリック／メール登録が後から届いたときに、紐づく商談へ反映する。
+ * 該当行に zoho_deal_id が無ければ何もしない（初回送信時の作成に任せる）。
+ * 送るのは LP情報とメールアドレスだけ。ステージ等の営業運用項目は触らない。
+ * 例外は投げない（呼び出し元のイベント処理を落とさないため）。
+ */
+function updateZohoDealFromRow(sheet, header, rowNum) {
+  try {
+    if (!zohoEnabled()) return { ok: false, skipped: "disabled" };
+    var idCol = header.indexOf("zoho_deal_id");
+    if (idCol === -1) return { ok: false, skipped: "no_column" };
+
+    var row = sheet.getRange(rowNum, 1, 1, header.length).getValues()[0];
+    var dealId = String(row[idCol] || "").trim();
+    if (!dealId) return { ok: false, skipped: "not_linked" };
+
+    var params = {};
+    for (var c = 0; c < header.length; c++) params[header[c]] = row[c];
+
+    var deal = buildZohoDeal(params);
+    var payload = { id: dealId, lp_info: deal.lp_info };
+    if (deal.email_main) payload.email_main = deal.email_main;
+
+    var res = zohoFetch("/Deals", { method: "put", payload: { data: [payload] } });
+    var first = (res.body && res.body.data && res.body.data[0]) || {};
+    if (res.code === 200 && first.code === "SUCCESS") return { ok: true, id: dealId };
     return { ok: false, error: res.code + " " + JSON.stringify(first || res.body) };
   } catch (err) {
     return { ok: false, error: String(err) };
