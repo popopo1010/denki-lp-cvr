@@ -535,9 +535,13 @@ function backfillZohoDeals(limit) {
 }
 
 /**
- * 連携済み（zoho_deal_id がある）行を、今の項目マッピングで上書きし直す。
- * Zoho画面で選択肢を足したあとに1回まわすと過去分も追いつく。
- * 営業が運用する ステージ / 商談名 / 担当者 は送らない（上書きしない）。
+ * 連携済み（zoho_deal_id がある）行の「Zoho側で空いている項目だけ」を埋める。
+ *
+ * ※上書きはしない。既存の商談には別パイプラインが入れた独自形式の lp_info
+ *   （名前/年齢/経験/転職時期/資格…）や、検索KWが入った marketing_channel があり、
+ *   こちらの形式で塗り潰すと営業にとって情報が劣化するため。
+ *   営業が運用する ステージ / 商談名 / パイプライン / 担当者 も当然送らない。
+ *
  * 1回の実行で最大 limit 行（既定150行）。
  */
 function resyncZohoDealFields(limit) {
@@ -554,38 +558,71 @@ function resyncZohoDealFields(limit) {
   if (idCol === -1) return "zoho_deal_id 列がありません。先に backfillZohoDeals() を実行してください";
 
   var meta = zohoFieldMeta();
-  var batch = [], updated = 0, failed = 0;
+  // 埋める候補。ステージ・商談名・パイプラインは含めない
+  var FILLABLE = ["name_EU", "area", "shikaku", "shikaku_sonota", "shikuchoson",
+                  "No_yubin", "date_seinengappi", "date_EuRegsiter", "email_main",
+                  "lp_info", "marketing_channel"];
 
-  function flush() {
-    if (!batch.length) return;
+  // 対象行を集める（1商談につき1行。同じIDが複数行にある場合は最初の行を使う）
+  var targets = [], seen = {};
+  for (var i = 0; i < values.length && targets.length < limit; i++) {
+    var dealId = String(values[i][idCol] || "").trim();
+    if (!dealId || seen[dealId]) continue;
+    seen[dealId] = true;
+    var params = {};
+    for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
+    targets.push({ id: dealId, params: params });
+  }
+  if (!targets.length) return "連携済みの行がありません。先に backfillZohoDeals() を実行してください";
+
+  var updated = 0, failed = 0, skipped = 0, filledCount = {};
+
+  // Zoho側の現在値を50件ずつ取得 → 空いている項目だけ送る
+  for (var s = 0; s < targets.length; s += 50) {
+    var chunk = targets.slice(s, s + 50);
+    var ids = chunk.map(function (t) { return t.id; }).join(",");
+    var q = zohoFetch("/coql", {
+      method: "post",
+      payload: { select_query: "select id," + FILLABLE.join(",") + " from Deals where id in (" + ids + ") limit 50" }
+    });
+    if (q.code !== 200) { failed += chunk.length; continue; }
+
+    var current = {};
+    ((q.body && q.body.data) || []).forEach(function (r) { current[String(r.id)] = r; });
+
+    var batch = [];
+    chunk.forEach(function (t) {
+      var cur = current[t.id];
+      if (!cur) { failed++; return; }
+      var desired = buildZohoDeal(t.params, meta);
+      var payload = { id: t.id }, n = 0;
+      FILLABLE.forEach(function (f) {
+        var existing = cur[f];
+        var isEmpty = (existing == null || existing === "" ||
+                       (existing instanceof Array && existing.length === 0) ||
+                       (f === "area" && existing === "不明"));
+        if (!isEmpty) return;
+        var v = desired[f];
+        if (v == null || v === "" || (v instanceof Array && v.length === 0)) return;
+        payload[f] = v;
+        filledCount[f] = (filledCount[f] || 0) + 1;
+        n++;
+      });
+      if (n === 0) { skipped++; return; }
+      batch.push(payload);
+    });
+
+    if (!batch.length) continue;
     var res = zohoFetch("/Deals", { method: "put", payload: { data: batch } });
     var rows = (res.body && res.body.data) || [];
     for (var k = 0; k < batch.length; k++) {
       if (rows[k] && rows[k].code === "SUCCESS") updated++; else failed++;
     }
-    batch = [];
   }
 
-  for (var i = 0; i < values.length && (updated + failed + batch.length) < limit; i++) {
-    var dealId = String(values[i][idCol] || "").trim();
-    if (!dealId) continue;
-
-    var params = {};
-    for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
-
-    var deal = buildZohoDeal(params, meta);
-    // 営業が動かす項目は触らない
-    delete deal.Stage;
-    delete deal.Pipeline;
-    delete deal.Deal_Name;
-    deal.id = dealId;
-    batch.push(deal);
-    if (batch.length === 100) flush();
-  }
-  flush();
-
-  return "更新 " + updated + "件 / 失敗 " + failed + "件" +
-    (meta.ok ? "" : "（項目メタデータの取得に失敗したため既定マッピングで送信）");
+  var detail = Object.keys(filledCount).map(function (f) { return f + " " + filledCount[f]; }).join(" / ");
+  return "対象 " + targets.length + "件: 更新 " + updated + " / 埋める項目なし " + skipped + " / 失敗 " + failed +
+         (detail ? "\n埋めた項目: " + detail : "");
 }
 
 // 疎通確認用。エディタから実行して「ok: 組織名」が返れば認証まで通っている。
