@@ -63,6 +63,25 @@
 - **【教訓 2026-07-02】step01レイアウトの罠**：WPテーマは `.c-button__text` に `text-align:justify`、ボタン群に**flexレイアウト**を持つ。①ラベルにinline-block断片を作るとjustifyで文字がバラける（「建 施工管理技/築 士」化）、②コンテナへの `grid-template-columns` 指定はテーマがflexだと無効。対策は「flexコンテナごと `display:grid!important` で奪う＋テキストは flex+nowrap でjustify無効化」。**テーマCSSはサンドボックス/ローカルから取得できない**ため、ローカルスクショが正常でも本番で崩れうる——step01系のレイアウト変更は本番反映後にスマホ実機で必ず確認する。
 - **【FVの罠】svh×フルハイトFVでスカスカ/崩れ**：`app.js` が FV(`#step-first`)に inline で `min-height:calc(100svh - 200px)` ＋ `.cvr-micro-copy{margin-top:auto}` を付与する。**アプリ内ブラウザ(Instagram/LINE)では `svh/dvh/lvh` が実ビューポートより大きく算出され、CTA直下に巨大な空白が出て「崩れ・スカスカ・トップが重なって見えない」状態になる**（2026-06-27 再発）。FVを「フルハイト化＋margin-top:auto」で最適化するときは in-app相当の短尺ビューポートで空白を確認。出るなら `cvr-boost-sekoukanri.css` 側で `#step-first{min-height:auto!important}` ＋ `.cvr-micro-copy{margin-top:○○!important}` と内容なり高さに逃がす。共有の `app.js` は触らず対象LPのCSSで上書きする。経緯: `docs/release-incidents.md` 2026-06-27。
 
+## Zoho CRM 連携（LP送信 → 商談）
+
+- **【絶対】LP送信から作るのは「商談(Deals)」＝候補者（求職者）。会社ではない。**
+  - 取引先(Accounts)は**求人企業マスタ**。LP送信は求職者なので、**取引先レコードは作らない・触らない**。
+  - パイプライン `求職者対応` / ステージ `01_新規リード` に作る。商談名は `姓名/資格`（既存の命名に合わせる）。
+  - 見込み客(Leads)モジュールは営業が使っていない。**Leadsには入れない**（2026-07-27にLeadsへ入れた306件は削除済み）。
+  - `testZohoConnection()` が返す「会社名」は **Zohoアカウントの組織名（`/org`の応答）**であって、
+    取引先レコードではない。接続確認のために読むだけで何も作らない。**混同しないこと**。
+- 実装は `gas-recorder/zoho.js`。手順・項目対応・ハマりどころは `gas-recorder/Zoho連携セットアップ.md` を正とする。
+- **Stage は表示名と内部値がズレている**（`01_新規リード` の内部値は `求職者の見極め`）。
+  **APIには表示名を渡す**と通る。内部値だと `MAPPING_MISMATCH`。Pipelineとの組み合わせ違いも同じエラー。
+- 作成前に**電話番号でCOQL検索**して重複を防ぐ。営業が手で作った商談とぶつけない。
+- OAuthスコープは商談の CREATE/READ/UPDATE ＋ `settings.fields.READ` ＋ `coql.READ` ＋ `org.READ`。
+  Self Client は1アカウント1個だが、**同じClientから複数のリフレッシュトークンを発行でき、既存は無効化されない**。
+  他システム（`xchange-kb` の各スクリプト、別GAS、Slack_notion連携）も同じClientのトークンを使っているので、
+  **Self Client 自体を作り直さない**（Client ID/Secretが変わり全部壊れる）。
+- 取りこぼしは `backfillZohoDeals()`（`zoho_deal_id` が空の行が対象。1回80行）。
+  項目の入れ直しは `resyncZohoDealFields()`（**ステージ・商談名・パイプラインは送らない**＝営業の運用を上書きしない）。
+
 ## LP作成・改善のリファレンス
 
 - 新規LP設計・CVR改善の考え方（木下勝寿／北の達人の転用ナレッジ含む）→ **`LP作成リファレンス.md`**
