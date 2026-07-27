@@ -129,6 +129,28 @@ function zohoFetch(path, options) {
 }
 
 /**
+ * 失敗レスポンスを読める文字列にする。
+ * ※以前は data[0]（存在しないとき `{}`）だけを出していたため、認証エラーの本文が
+ *   丸ごと消えて「401 {}」としか分からなかった。本文が無い場合も原因の見当を添える。
+ */
+function zohoErrorText(res) {
+  var body = res.body || {};
+  var detail = (body.data && body.data[0]) ? body.data[0] : body;
+  var text = JSON.stringify(detail);
+  if (!text || text === "{}") text = "(応答本文なし)";
+
+  var hint = "";
+  if (res.code === 401) {
+    hint = " ※アクセストークンが無効。商談(Deals)権限を含まないスコープでリフレッシュ" +
+           "トークンを発行している場合に出る（OAUTH_SCOPE_MISMATCH）。" +
+           "Zoho連携セットアップ.md の手順1をやり直して ZOHO_REFRESH_TOKEN を差し替える。";
+  } else if (res.code === 403) {
+    hint = " ※権限不足。CRMユーザーのプロフィール権限を確認。";
+  }
+  return res.code + " " + text + hint;
+}
+
+/**
  * Deals の項目メタデータ（使える項目・各ピックリストの選択肢）を取得。
  * Zoho画面での項目追加・選択肢追加に自動追従させるための土台。6時間キャッシュ。
  * 取得に失敗したら「制約なし」を返し、送信自体は止めない。
@@ -417,7 +439,7 @@ function syncDealToZoho(params, meta) {
     if (res.code === 201 && first.code === "SUCCESS") {
       return { ok: true, id: String(first.details && first.details.id) };
     }
-    return { ok: false, error: res.code + " " + JSON.stringify(first || res.body) };
+    return { ok: false, error: zohoErrorText(res) };
   } catch (err) {
     return { ok: false, error: String(err) };
   }
@@ -449,7 +471,7 @@ function updateZohoDealFromRow(sheet, header, rowNum) {
     var res = zohoFetch("/Deals", { method: "put", payload: { data: [payload] } });
     var first = (res.body && res.body.data && res.body.data[0]) || {};
     if (res.code === 200 && first.code === "SUCCESS") return { ok: true, id: dealId };
-    return { ok: false, error: res.code + " " + JSON.stringify(first || res.body) };
+    return { ok: false, error: zohoErrorText(res) };
   } catch (err) {
     return { ok: false, error: String(err) };
   }
