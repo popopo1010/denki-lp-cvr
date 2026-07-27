@@ -253,6 +253,73 @@ function zohoBuildShikaku(meta, raw) {
   return { values: values, unmapped: unmapped };
 }
 
+/**
+ * 広告パラメータを取り出す。個別列が空でも `_page`（送信時URL）から読み直す。
+ * utm_* の個別列は2026-07に追加したもので、それ以前の行は列が空・URLにだけ情報がある。
+ * （コード.js の backfillTrackingParams() で列を埋められるが、未実行でも困らないようにする）
+ */
+function zohoTrackingParams(params) {
+  var keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id"];
+  var out = {};
+  var missing = false;
+  keys.forEach(function (k) {
+    out[k] = String(params[k] == null ? "" : params[k]).trim();
+    if (!out[k]) missing = true;
+  });
+
+  if (missing && params["_page"]) {
+    try {
+      var q = parseQueryParams(String(params["_page"]));
+      keys.forEach(function (k) {
+        if (!out[k] && q[k]) out[k] = String(q[k]).trim();
+      });
+    } catch (e) {
+      // URLが壊れていても致命傷にしない
+    }
+  }
+  return out;
+}
+
+/**
+ * マーケティングチャネル欄に「どこから来て、どのKW/クリエイティブで刺さったか」を入れる。
+ * 従来は utm_source だけ（google / ig）で、KWも広告も分からなかった。
+ *
+ *   検索広告: google/cpc｜014_denki_top_of_page｜KW: 電気 工事 士 求人 (phrase_match)
+ *   SNS広告 : ig/paid｜120248499798320789｜CR: denkovlog
+ *   自然流入: denkikouji｜自然流入
+ *
+ * ※Metaの広告セットIDはLPのURLに入ってこない（utm_id はキャンペーンIDと同値）。
+ *   広告セット単位で見たい場合は広告側のURLに {{adset.id}} を足す必要がある。
+ */
+function zohoMarketingChannel(params) {
+  var t = zohoTrackingParams(params);
+  var src = t.utm_source;
+  var med = t.utm_medium;
+  var camp = t.utm_campaign || t.utm_id;
+  var term = t.utm_term || String(params["your-term"] || "").trim();
+  var content = t.utm_content;
+
+  if (!src) {
+    return (String(params["_lp"] || "").trim() || "不明") + "｜自然流入";
+  }
+
+  var parts = [src + (med ? "/" + med : "")];
+  if (camp) parts.push(camp);
+
+  // 検索広告はKW、SNS広告はクリエイティブが知りたい情報
+  var isSearch = (med === "cpc" || med === "ppc" || src === "google" || src === "yahoo");
+  if (isSearch) {
+    var kw = "KW: " + (term || "不明");
+    if (content) kw += " (" + content + ")"; // Google はマッチタイプが入る
+    parts.push(kw);
+  } else {
+    parts.push("CR: " + (term || content || "不明"));
+  }
+
+  var out = parts.join("｜");
+  return out.length > 250 ? out.slice(0, 250) : out; // text項目の上限対策
+}
+
 // Zohoの商談1件ぶんのペイロードを作る
 function buildZohoDeal(params, meta) {
   meta = meta || zohoFieldMeta();
@@ -268,9 +335,13 @@ function buildZohoDeal(params, meta) {
     "転職意欲: " + (params["your-willingness"] || "未選択")
   ];
   if (String(params["your-term"] || "").trim()) info.push("検索語: " + String(params["your-term"]).trim());
-  var utm = [params["utm_source"], params["utm_medium"], params["utm_campaign"]]
+  var track = zohoTrackingParams(params);
+  var utm = [track.utm_source, track.utm_medium, track.utm_campaign]
     .filter(function (v) { return !!v; }).join("/");
   if (utm) info.push("utm: " + utm);
+  if (track.utm_term) info.push("utm_term: " + track.utm_term);
+  if (track.utm_content) info.push("utm_content: " + track.utm_content);
+  if (track.utm_id && track.utm_id !== track.utm_campaign) info.push("utm_id: " + track.utm_id);
   info.push("LINE登録: " + (params["line_clicked_at"] ? ("済 " + params["line_clicked_at"]) : "未"));
   if (String(params["email_captured_at"] || "").trim()) {
     info.push("メール登録: 済 " + params["email_captured_at"]);
@@ -288,7 +359,7 @@ function buildZohoDeal(params, meta) {
     m_phone_number: tel,
     name_EU: name,
     lp_info: info.join(" / "),
-    marketing_channel: String(params["utm_source"] || params["_lp"] || "")
+    marketing_channel: zohoMarketingChannel(params)
   };
 
   // 求職者登録日＝LP送信日

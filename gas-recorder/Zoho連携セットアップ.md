@@ -91,9 +91,27 @@ Apps Script エディタ → ⚙️ プロジェクトの設定 → スクリプ
 | your-birthday | 生年月日 `date_seinengappi` |
 | your-email | メールアドレス `email_main` |
 | _received_at | 求職者登録日 `date_EuRegsiter` |
-| utm_source（無ければLP名） | マーケティングチャネル `marketing_channel` |
+| utm一式（無ければ`_page`のURLから復元） | マーケティングチャネル `marketing_channel` … 下記参照 |
 | LP名・送信日時・経験・転職意欲・検索語・utm・LINE登録 | LP情報 `lp_info` にまとめて記録 |
 | — | パイプライン＝`求職者対応` / ステージ＝`01_新規リード` 固定 |
+
+### マーケティングチャネルの中身
+
+「どこから来て、どのKW/クリエイティブで刺さったか」が1行で読める形にしている。
+
+```
+google/cpc｜014_denki_top_of_page｜KW: 電気 工事 士 年収 (phrase_match)
+ig/paid｜120248499798320789｜CR: denkovlog
+denkikouji｜自然流入
+```
+
+- 検索広告（google / yahoo / medium=cpc）は **KW**、SNS広告は **クリエイティブ** を出す
+- 個別列（utm_source 等）が空でも **`_page` のURLから読み直す**。
+  utm_* の個別列は2026-07に追加したもので、それ以前の行は列が空・URLにだけ情報があるため
+- 実データ343行で検証：検索KW 180件 / クリエイティブ 145件 / 自然流入 18件
+
+**Metaの広告セットIDはLPのURLに入ってこない**（`utm_id` はキャンペーンIDと同値）。
+広告セット単位で見たい場合は、広告側のリンクURLに `{{adset.id}}` を持つパラメータを足す必要がある。
 
 ### 保有資格のマッピング
 
