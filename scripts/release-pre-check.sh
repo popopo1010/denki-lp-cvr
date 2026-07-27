@@ -9,6 +9,7 @@ node scripts/check-banned-copy.mjs
 node scripts/check-kuma-anchor.mjs
 node scripts/check-lazy-steps.mjs
 node scripts/check-local-refs.mjs
+node scripts/check-agency-share.mjs   # 代理店共有シートに個人情報が出ないこと
 
 echo "== 1/5 thanks-v2 静的 =="
 node scripts/check-thanks-v2-release.mjs

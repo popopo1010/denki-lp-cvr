@@ -79,6 +79,15 @@
   Self Client は1アカウント1個だが、**同じClientから複数のリフレッシュトークンを発行でき、既存は無効化されない**。
   他システム（`xchange-kb` の各スクリプト、別GAS、Slack_notion連携）も同じClientのトークンを使っているので、
   **Self Client 自体を作り直さない**（Client ID/Secretが変わり全部壊れる）。
+- **【絶対】マーケ代理店への共有に個人情報を出さない。** 共有は `gas-recorder/agency-share.js` が作る
+  **別スプレッドシート**（`AGENCY_SHARE_SHEET_ID`）だけ。`form_submissions` 本体や Zoho 画面は共有しない。
+  Googleの共有権限は**ファイル単位**でタブ単位に分けられないため、別ファイルにするのが唯一の安全な方法。
+  出してよいのは 匿名ID / 送信日 / LP / マーケチャネル / utm_* / **Zoho上の現ステージ** / ステージ更新日 / LINE登録の有無。
+  氏名・電話・メール・生年月日・住所・IP・UA・`_page` は出さない。列を足すときは `AGENCY_SHARE_COLUMNS`
+  の許可リストに追加が必要で、書き込み直前にPII混入検査が走る（検知したら1行も書かずに中止）。
+  変更したら `node scripts/check-agency-share.mjs` を実行する。手順は `gas-recorder/代理店共有セットアップ.md`。
+  **Zohoのビュー共有・CSVエクスポート・レポート共有で代理店に見せない**：商談の `lp_info` には
+  2026-05以前のレコードを中心に**氏名・電話番号・郵便番号がそのまま入っている**（旧フロー由来）。
 - 取りこぼしは `backfillZohoDeals()`（`zoho_deal_id` が空の行が対象。1回80行）。
   項目の入れ直しは `resyncZohoDealFields()`（**ステージ・商談名・パイプラインは送らない**＝営業の運用を上書きしない）。
 
