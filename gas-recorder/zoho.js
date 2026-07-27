@@ -585,7 +585,8 @@ function resyncZohoDealFields(limit) {
   }
   if (!targets.length) return zohoLog("連携済みの行がありません。先に backfillZohoDeals() を実行してください");
 
-  var updated = 0, failed = 0, skipped = 0, filledCount = {};
+  var updated = 0, failed = 0, skipped = 0, filledCount = {}, failReasons = {};
+  function noteFail(reason) { failReasons[reason] = (failReasons[reason] || 0) + 1; failed++; }
 
   // Zoho側の現在値を50件ずつ取得 → 空いている項目だけ送る
   for (var s = 0; s < targets.length; s += 50) {
@@ -595,7 +596,10 @@ function resyncZohoDealFields(limit) {
       method: "post",
       payload: { select_query: "select id," + FILLABLE.join(",") + " from Deals where id in (" + ids + ") limit 50" }
     });
-    if (q.code !== 200) { failed += chunk.length; continue; }
+    if (q.code !== 200) {
+      for (var f0 = 0; f0 < chunk.length; f0++) noteFail("現在値の取得に失敗: " + zohoErrorText(q));
+      continue;
+    }
 
     var current = {};
     ((q.body && q.body.data) || []).forEach(function (r) { current[String(r.id)] = r; });
@@ -603,7 +607,7 @@ function resyncZohoDealFields(limit) {
     var batch = [];
     chunk.forEach(function (t) {
       var cur = current[t.id];
-      if (!cur) { failed++; return; }
+      if (!cur) { noteFail("Zohoに該当商談なし（削除された可能性）"); return; }
       var desired = buildZohoDeal(t.params, meta);
       var payload = { id: t.id }, n = 0;
       FILLABLE.forEach(function (f) {
@@ -626,13 +630,21 @@ function resyncZohoDealFields(limit) {
     var res = zohoFetch("/Deals", { method: "put", payload: { data: batch } });
     var rows = (res.body && res.body.data) || [];
     for (var k = 0; k < batch.length; k++) {
-      if (rows[k] && rows[k].code === "SUCCESS") updated++; else failed++;
+      var r = rows[k];
+      if (r && r.code === "SUCCESS") { updated++; continue; }
+      // どの項目で弾かれたかまで残す。原因が分からないと直しようがない
+      var reason = r ? (r.code + ": " + (r.message || "")) : ("応答なし " + res.code);
+      if (r && r.details && r.details.api_name) reason += " [" + r.details.api_name + "]";
+      var sent = Object.keys(batch[k]).filter(function (x) { return x !== "id"; }).join(",");
+      noteFail(reason + " / 送信項目: " + sent);
     }
   }
 
   var detail = Object.keys(filledCount).map(function (f) { return f + " " + filledCount[f]; }).join(" / ");
+  var fails = Object.keys(failReasons).map(function (f) { return "  ・" + f + " × " + failReasons[f]; }).join("\n");
   return zohoLog("対象 " + targets.length + "件: 更新 " + updated + " / 埋める項目なし " + skipped + " / 失敗 " + failed +
-         (detail ? "\n埋めた項目: " + detail : ""));
+         (detail ? "\n埋めた項目: " + detail : "") +
+         (fails ? "\n失敗の内訳:\n" + fails : ""));
 }
 
 // 疎通確認用。エディタから実行して「ok: 組織名」が返れば認証まで通っている。
