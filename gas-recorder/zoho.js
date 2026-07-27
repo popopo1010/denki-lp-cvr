@@ -60,6 +60,16 @@ var ZOHO_PLACEHOLDER_NAMES = [
   "山田太郎", "やまだたろう", "ヤマダタロウ", "名前なし", "匿名", "テスト太郎"
 ];
 
+/**
+ * 実行ログに出しつつ同じ値を返す。
+ * Apps Script は関数の戻り値をログに表示しないため、エディタから手動実行したとき
+ * 「実行完了」しか出ず結果が分からなかった。手動実行する関数はこれを通す。
+ */
+function zohoLog(message) {
+  try { console.log(message); } catch (e) { /* ログに出せなくても処理は返す */ }
+  return message;
+}
+
 function zohoEnabled() {
   return !!(getScriptProp("ZOHO_CLIENT_ID") &&
             getScriptProp("ZOHO_CLIENT_SECRET") &&
@@ -484,7 +494,7 @@ function updateZohoDealFromRow(sheet, header, rowNum) {
  * Apps Script エディタから手動実行する想定。
  */
 function backfillZohoDeals(limit) {
-  if (!zohoEnabled()) return "ZOHO_* のスクリプトプロパティが未設定のため実行しません";
+  if (!zohoEnabled()) return zohoLog("ZOHO_* のスクリプトプロパティが未設定のため実行しません");
   limit = limit || 80;
 
   var sheet = getSheet();
@@ -495,7 +505,7 @@ function backfillZohoDeals(limit) {
   header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
   var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return "対象行なし";
+  if (lastRow < 2) return zohoLog("対象行なし");
 
   var values = sheet.getRange(2, 1, lastRow - 1, header.length).getValues();
   var idCol = header.indexOf("zoho_deal_id");
@@ -530,8 +540,8 @@ function backfillZohoDeals(limit) {
     }
   }
 
-  return "処理 " + processed + "行: 新規作成 " + created +
-    " / 既存に紐付け " + linked + " / テスト除外 " + skipped + " / 失敗 " + failed;
+  return zohoLog("処理 " + processed + "行: 新規作成 " + created +
+    " / 既存に紐付け " + linked + " / テスト除外 " + skipped + " / 失敗 " + failed);
 }
 
 /**
@@ -545,17 +555,17 @@ function backfillZohoDeals(limit) {
  * 1回の実行で最大 limit 行（既定150行）。
  */
 function resyncZohoDealFields(limit) {
-  if (!zohoEnabled()) return "ZOHO_* のスクリプトプロパティが未設定のため実行しません";
+  if (!zohoEnabled()) return zohoLog("ZOHO_* のスクリプトプロパティが未設定のため実行しません");
   limit = limit || 150;
 
   var sheet = getSheet();
   var header = ensureHeader(sheet);
   var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return "対象行なし";
+  if (lastRow < 2) return zohoLog("対象行なし");
 
   var values = sheet.getRange(2, 1, lastRow - 1, header.length).getValues();
   var idCol = header.indexOf("zoho_deal_id");
-  if (idCol === -1) return "zoho_deal_id 列がありません。先に backfillZohoDeals() を実行してください";
+  if (idCol === -1) return zohoLog("zoho_deal_id 列がありません。先に backfillZohoDeals() を実行してください");
 
   var meta = zohoFieldMeta();
   // 埋める候補。ステージ・商談名・パイプラインは含めない
@@ -573,7 +583,7 @@ function resyncZohoDealFields(limit) {
     for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
     targets.push({ id: dealId, params: params });
   }
-  if (!targets.length) return "連携済みの行がありません。先に backfillZohoDeals() を実行してください";
+  if (!targets.length) return zohoLog("連携済みの行がありません。先に backfillZohoDeals() を実行してください");
 
   var updated = 0, failed = 0, skipped = 0, filledCount = {};
 
@@ -621,17 +631,17 @@ function resyncZohoDealFields(limit) {
   }
 
   var detail = Object.keys(filledCount).map(function (f) { return f + " " + filledCount[f]; }).join(" / ");
-  return "対象 " + targets.length + "件: 更新 " + updated + " / 埋める項目なし " + skipped + " / 失敗 " + failed +
-         (detail ? "\n埋めた項目: " + detail : "");
+  return zohoLog("対象 " + targets.length + "件: 更新 " + updated + " / 埋める項目なし " + skipped + " / 失敗 " + failed +
+         (detail ? "\n埋めた項目: " + detail : ""));
 }
 
 // 疎通確認用。エディタから実行して「ok: 組織名」が返れば認証まで通っている。
 function testZohoConnection() {
-  if (!zohoEnabled()) return "ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET / ZOHO_REFRESH_TOKEN が未設定";
+  if (!zohoEnabled()) return zohoLog("ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET / ZOHO_REFRESH_TOKEN が未設定");
   var res = zohoFetch("/org");
-  if (res.code !== 200) return "NG: " + res.code + " " + JSON.stringify(res.body);
+  if (res.code !== 200) return zohoLog("NG: " + res.code + " " + JSON.stringify(res.body));
   var org = (res.body.org && res.body.org[0]) || {};
-  return "ok: " + (org.company_name || org.primary_email || "connected");
+  return zohoLog("ok: " + (org.company_name || org.primary_email || "connected"));
 }
 
 /**
@@ -660,7 +670,7 @@ function exchangeZohoCode() {
 
   var clientId = String(props.getProperty("ZOHO_CLIENT_ID") || "").trim();
   var clientSecret = String(props.getProperty("ZOHO_CLIENT_SECRET") || "").trim();
-  if (!clientId || !clientSecret) return "NG: ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET が未設定です。";
+  if (!clientId || !clientSecret) return zohoLog("NG: ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET が未設定です。");
 
   var url = zohoAccountsHost() + "/oauth/v2/token" +
     "?grant_type=authorization_code" +
@@ -682,15 +692,15 @@ function exchangeZohoCode() {
     } else if (String(err).indexOf("invalid_client") !== -1) {
       hint = " ※ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET を確認してください。";
     }
-    return "NG: " + err + hint;
+    return zohoLog("NG: " + err + hint);
   }
 
   props.setProperty("ZOHO_REFRESH_TOKEN", body.refresh_token);
   props.deleteProperty("ZOHO_AUTH_CODE");          // 使い切りなので残さない
   CacheService.getScriptCache().remove("zoho_access_token"); // 旧トークンのキャッシュを捨てる
 
-  return "ok: ZOHO_REFRESH_TOKEN を保存しました（長さ " + body.refresh_token.length + "）。" +
-         "続けて testZohoConnection() を実行してください。";
+  return zohoLog("ok: ZOHO_REFRESH_TOKEN を保存しました（長さ " + body.refresh_token.length + "）。" +
+         "続けて testZohoConnection() を実行してください。");
 }
 
 /**
@@ -711,5 +721,5 @@ function diagnoseZohoProps() {
       " / 先頭6文字 " + trimmed.slice(0, 6) +
       " / ドット数 " + (trimmed.split(".").length - 1));
   });
-  return lines.join("\n");
+  return zohoLog(lines.join("\n"));
 }
