@@ -392,7 +392,9 @@ function handleEmailCapture(params) {
         if (matchedRow > 0) {
           sheet.getRange(matchedRow, emailColIdx + 1).setValue(email);
           sheet.getRange(matchedRow, capturedColIdx + 1).setValue(nowJst);
-          return jsonOk({ matched: true, row: matchedRow });
+          // 紐づく商談があればメールアドレスをZohoにも反映する
+          var zohoUpdate = updateZohoDealFromRow(sheet, header, matchedRow);
+          return jsonOk({ matched: true, row: matchedRow, zoho_deal: zohoUpdate });
         }
       }
     }
@@ -446,7 +448,9 @@ function handleLineClick(params) {
 
     if (matchedRow > 0) {
       sheet.getRange(matchedRow, lineColIdx + 1).setValue(toJst(new Date()));
-      return jsonOk({ matched: true, row: matchedRow });
+      // 紐づく商談があれば LINE登録済みをZohoにも反映する
+      var zohoUpdate = updateZohoDealFromRow(sheet, header, matchedRow);
+      return jsonOk({ matched: true, row: matchedRow, zoho_deal: zohoUpdate });
     }
     return jsonOk({ matched: false, note: "no row" });
   } catch (err) {
