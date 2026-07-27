@@ -285,6 +285,29 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
   check("戻り値に件数が入る", /共有シート更新: 3件/.test(result), result);
 }
 
+console.log("1b) 事前に用意した空スプレッドシートのタブを流用する");
+{
+  const props = {
+    ZOHO_CLIENT_ID: "id", ZOHO_CLIENT_SECRET: "secret", ZOHO_REFRESH_TOKEN: "token",
+    AGENCY_SHARE_SHEET_ID: "share-sheet", AGENCY_SHARE_SALT: "fixed-salt"
+  };
+  const source = new FakeSpreadsheet("1JwwkLThWTMMmi9p1CMGK8gAz-I5f9cmueGFFpplZwGc", ["form_submissions"]);
+  // 手で作った（または事前に用意した）1タブだけのスプレッドシート
+  const share = new FakeSpreadsheet("share-sheet", ["シート1"]);
+  const ctx = buildContext({ props, spreadsheets: { [source.getId()]: source, "share-sheet": share } });
+  const header = evalIn(ctx, "PREFERRED_COLUMNS").slice();
+  const sheet = source.getSheetByName("form_submissions");
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  sheet.appendRow(makeRow(header, {}));
+  ctx.zohoFetch = () => ({ code: 200, body: { data: [{ id: "1001", Stage: "01_新規リード", Modified_Time: "2026-07-25T14:30:00+09:00" }] } });
+
+  ctx.syncAgencyShare();
+  const names = share.getSheets().map((s) => s.getName());
+  check("空タブ「シート1」が残らない", !names.includes("シート1"), JSON.stringify(names));
+  check("3タブになる", names.length === 3, JSON.stringify(names));
+  check("明細が書かれている", share.getSheetByName("候補者ステージ").grid.length === 2);
+}
+
 console.log("2) lead_id は同じ候補者で不変・別候補者で別値");
 {
   const run = () => runSync({

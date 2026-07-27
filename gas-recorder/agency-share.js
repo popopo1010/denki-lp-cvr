@@ -181,8 +181,18 @@ function openAgencyShareSpreadsheet() {
   return SpreadsheetApp.openById(id);
 }
 
+// 事前に手で用意した空スプレッドシート（「シート1」だけ、等）を渡された場合は、
+// その1枚を流用する。insertSheet だけだと空タブが残って代理店に紛らわしいため。
 function agencyShareGetOrCreateSheet(ss, name) {
-  return ss.getSheetByName(name) || ss.insertSheet(name);
+  var found = ss.getSheetByName(name);
+  if (found) return found;
+
+  var ours = [AGENCY_SHARE_DETAIL_SHEET, AGENCY_SHARE_SUMMARY_SHEET, AGENCY_SHARE_LEGEND_SHEET];
+  var sheets = ss.getSheets();
+  if (sheets.length === 1 && ours.indexOf(sheets[0].getName()) === -1) {
+    return sheets[0].setName(name);
+  }
+  return ss.insertSheet(name);
 }
 
 /**
