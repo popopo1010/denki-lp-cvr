@@ -65,9 +65,73 @@ var AGENCY_SHARE_PII_KEYS = [
 var AGENCY_SHARE_INCLUDE_CLICK_IDS = false;
 var AGENCY_SHARE_CLICK_ID_COLUMNS = ["gclid", "gbraid", "wbraid", "yclid", "fbclid", "msclkid"];
 
+/**
+ * 共有するチャネルの絞り込み。スクリプトプロパティ AGENCY_SHARE_UTM_SOURCE に
+ * カンマ区切りで utm_source を書くと、その流入元の行だけを共有する。
+ * 空・未設定なら全チャネル（Google / Meta / 自然流入すべて）。
+ *   例) "google"      … Google広告だけ。fb / ig（Meta）や自然流入は出さない
+ *       "google,fb"   … GoogleとMeta
+ *       （未設定）      … 全部
+ * ※Google広告は自動タグ設定で utm_source が付かず gclid だけ付くことがあるため、
+ *   "google" を指定したときは gclid/gbraid/wbraid を持つ行も対象に含める。
+ */
+function agencyShareSourceFilter() {
+  var raw = agencyShareProp("AGENCY_SHARE_UTM_SOURCE");
+  if (!raw) return null;
+  var list = raw.split(",").map(function (s) { return String(s).trim().toLowerCase(); })
+    .filter(function (s) { return !!s; });
+  return list.length ? list : null;
+}
+
+// utm_source の個別列が空でも _page のURLから拾う（gclid列は2026-07に追加のため）
+function agencyShareHasGoogleClickId(params) {
+  var keys = ["gclid", "gbraid", "wbraid"];
+  for (var i = 0; i < keys.length; i++) {
+    if (String(params[keys[i]] == null ? "" : params[keys[i]]).trim()) return true;
+  }
+  return /[?&](gclid|gbraid|wbraid)=[^&\s]/.test(String(params["_page"] || ""));
+}
+
+function agencyShareMatchesFilter(filter, track, params) {
+  if (!filter) return true;
+  var src = String(track.utm_source || "").trim().toLowerCase();
+  if (src) return filter.indexOf(src) !== -1;
+  return filter.indexOf("google") !== -1 && agencyShareHasGoogleClickId(params);
+}
+
 // Zohoに商談が無い/消えている行のステージ表記
 var AGENCY_SHARE_STAGE_UNLINKED = "CRM未連携";
 var AGENCY_SHARE_STAGE_UNKNOWN = "不明";
+
+var AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET = "キャンペーン別到達率";
+var AGENCY_SHARE_KEYWORD_FUNNEL_SHEET = "KW別到達率";
+
+// 到達率タブに出す通過点。rank はステージ名の先頭連番。
+var AGENCY_SHARE_MILESTONES = [
+  { label: "04_HOT以上", rank: 4 },
+  { label: "06_初回面談待ち以上", rank: 6 },
+  { label: "08_逆オファーOK以上", rank: 8 },
+  { label: "11_書類選考以上", rank: 11 },
+  { label: "21_内定以上", rank: 21 },
+  { label: "25_入社", rank: 25 }
+];
+
+/**
+ * ステージ名の先頭連番を進捗ランクにする（"01_新規リード" → 1）。
+ * ただし 27_ナーチャリング / 28_無効リード は**番号が大きいだけで前進ではない**ため 0 を返す。
+ * ここを素直に数値比較すると、無効リードが「内定到達」に化けて率が壊れる。
+ */
+var AGENCY_SHARE_NON_PROGRESS_MIN_RANK = 26;
+function agencyShareStageRank(stage) {
+  var m = /^(\d{1,2})[_ ]/.exec(String(stage == null ? "" : stage).trim());
+  if (!m) return 0;
+  var n = Number(m[1]);
+  return n >= AGENCY_SHARE_NON_PROGRESS_MIN_RANK ? 0 : n;
+}
+
+function agencySharePct(n, total) {
+  return total ? Math.round((n / total) * 1000) / 10 : 0;
+}
 
 function agencyShareColumns() {
   return AGENCY_SHARE_INCLUDE_CLICK_IDS
@@ -187,7 +251,8 @@ function agencyShareGetOrCreateSheet(ss, name) {
   var found = ss.getSheetByName(name);
   if (found) return found;
 
-  var ours = [AGENCY_SHARE_DETAIL_SHEET, AGENCY_SHARE_SUMMARY_SHEET, AGENCY_SHARE_LEGEND_SHEET];
+  var ours = [AGENCY_SHARE_DETAIL_SHEET, AGENCY_SHARE_SUMMARY_SHEET, AGENCY_SHARE_LEGEND_SHEET,
+              AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET];
   var sheets = ss.getSheets();
   if (sheets.length === 1 && ours.indexOf(sheets[0].getName()) === -1) {
     return sheets[0].setName(name);
@@ -224,9 +289,11 @@ function syncAgencyShare() {
 
   var salt = agencyShareSalt();
   var cols = agencyShareColumns();
+  var filter = agencyShareSourceFilter();
   var records = [];
   var dealIds = [];
   var excludedTest = 0;
+  var excludedChannel = 0;
 
   for (var i = 0; i < values.length; i++) {
     var params = {};
@@ -238,12 +305,19 @@ function syncAgencyShare() {
       continue;
     }
 
+    var track = zohoTrackingParams(params); // 個別列が空でも _page のURLから復元する
+
+    // チャネル絞り込み（Zohoへの問い合わせ前に落とす）
+    if (!agencyShareMatchesFilter(filter, track, params)) {
+      excludedChannel++;
+      continue;
+    }
+
     var dealId = String(params["zoho_deal_id"] || "").trim();
     if (dealId) dealIds.push(dealId);
 
     var received = String(params["_received_at"] || "").trim();
     var day = received.length >= 10 ? received.slice(0, 10) : "";
-    var track = zohoTrackingParams(params); // 個別列が空でも _page のURLから復元する
 
     records.push({
       params: params,
@@ -298,11 +372,17 @@ function syncAgencyShare() {
 
   writeAgencyShareDetail(ss, cols, rows);
   writeAgencyShareSummary(ss, cols, rows);
-  setupAgencyShareLegend(ss);
+  writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET,
+                         "utm_campaign", "キャンペーン");
+  writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET,
+                         "utm_term", "キーワード");
+  setupAgencyShareLegend(ss, filter);
 
+  // 何を落としたかは必ず出す。黙って絞ると「全件出ている」と誤解される。
   var msg = "共有シート更新: " + rows.length + "件" +
-            "（テスト送信 " + excludedTest + "件を除外 / ステージ取得 " +
-            Object.keys(stages.map).length + "件）" +
+            "（テスト送信 " + excludedTest + "件を除外" +
+            (filter ? " / チャネル絞り込み[" + filter.join(",") + "]で " + excludedChannel + "件を除外" : "") +
+            " / ステージ取得 " + Object.keys(stages.map).length + "件）" +
             " 最終更新 " + toJst(new Date());
   if (stages.errors.length) {
     msg += " ※Zoho取得エラー: " + stages.errors.join(" / ");
@@ -375,9 +455,78 @@ function writeAgencyShareSummary(ss, cols, rows) {
   sheet.setFrozenRows(1);
 }
 
-function setupAgencyShareLegend(ss) {
+/**
+ * キャンペーン別 / KW別の到達率タブ。
+ *
+ * 到達の判定は「**現在の**ステージ番号が通過点以上か」。ステージ履歴はZohoから取っていないので、
+ * 一度 08_逆オファーOK まで行ってから 27_ナーチャリング / 28_無効リード に戻った候補者は
+ * 到達に数えない＝**実態よりやや低めに出る**。この前提は凡例タブにも書く。
+ */
+function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel) {
+  var iKey = cols.indexOf(keyColumn);
+  var iStage = cols.indexOf("ステージ");
+  var iLine = cols.indexOf("LINE登録");
+
+  var groups = {};
+  var order = [];
+  function bucket(key) {
+    if (!groups[key]) {
+      groups[key] = { total: 0, line: 0, reach: {} };
+      order.push(key);
+    }
+    return groups[key];
+  }
+
+  var all = bucket("【全体】");
+  for (var i = 0; i < rows.length; i++) {
+    var key = String(rows[i][iKey] == null ? "" : rows[i][iKey]).trim() || "(なし)";
+    var rank = agencyShareStageRank(rows[i][iStage]);
+    var lineOk = rows[i][iLine] === "済";
+    var targets = [all, bucket(key)];
+    for (var t = 0; t < targets.length; t++) {
+      var g = targets[t];
+      g.total++;
+      if (lineOk) g.line++;
+      for (var m = 0; m < AGENCY_SHARE_MILESTONES.length; m++) {
+        var ms = AGENCY_SHARE_MILESTONES[m];
+        if (rank >= ms.rank) g.reach[ms.label] = (g.reach[ms.label] || 0) + 1;
+      }
+    }
+  }
+
+  var header = [keyLabel, "送信数", "LINE登録", "LINE登録率(%)"];
+  AGENCY_SHARE_MILESTONES.forEach(function (ms) {
+    header.push(ms.label, ms.label + "率(%)");
+  });
+
+  // 【全体】を先頭に固定し、残りは送信数の多い順
+  var keys = order.slice(1).sort(function (a, b) { return groups[b].total - groups[a].total; });
+  keys.unshift("【全体】");
+
+  var out = keys.map(function (key) {
+    var g = groups[key];
+    var row = [key, g.total, g.line, agencySharePct(g.line, g.total)];
+    AGENCY_SHARE_MILESTONES.forEach(function (ms) {
+      var n = g.reach[ms.label] || 0;
+      row.push(n, agencySharePct(n, g.total));
+    });
+    return row;
+  });
+
+  var sheet = agencyShareGetOrCreateSheet(ss, sheetName);
+  sheet.clear();
+  sheet.getRange(1, 1, 1, header.length).setValues([header])
+    .setFontWeight("bold").setBackground("#f0f0f0");
+  if (out.length) sheet.getRange(2, 1, out.length, header.length).setValues(out);
+  sheet.setFrozenRows(1);
+  sheet.setColumnWidth(1, 320);
+}
+
+function setupAgencyShareLegend(ss, filter) {
   var legend = [
     ["最終更新", toJst(new Date()), "1時間ごとに自動更新"],
+    ["対象チャネル", filter ? filter.join(" / ") + " のみ" : "全チャネル",
+     filter ? "この流入元以外（他媒体・自然流入）は掲載していません" : "Google / Meta / 自然流入すべて"],
     ["", "", ""],
     ["カラム名", "意味", "備考"],
     ["lead_id", "候補者の匿名ID", "本人には戻せない不可逆ハッシュ。同じ人は常に同じIDになるので重複・再訪の判定に使える"],
@@ -397,6 +546,16 @@ function setupAgencyShareLegend(ss) {
     ["ステージ更新日", "CRMレコードの最終更新日", "ステージ以外の項目更新でも動くため、あくまで目安"],
     ["LINE登録", "LINE登録の有無", "済 / 未"],
     ["", "", ""],
+    ["【タブの説明】", "", ""],
+    ["候補者ステージ", "1候補者1行の明細", "送信日・流入元・現在のステージ"],
+    ["チャネル別サマリ", "月 × 流入元の件数", "送信数・LINE登録数・ステージ別件数"],
+    ["キャンペーン別到達率", "utm_campaign ごとの到達率", "送信数を分母に、各段階へ到達した割合(%)"],
+    ["KW別到達率", "utm_term（検索KW）ごとの到達率", "検索広告以外は「(なし)」にまとまります"],
+    ["", "", ""],
+    ["※ 到達率の判定は『現在のステージ番号がその段階以上か』です。", "",
+     "一度先へ進んでから 27_ナーチャリング / 28_無効リード に戻った候補者は到達に数えないため、実態よりやや低めに出ます"],
+    ["※ 27_ナーチャリング / 28_無効リード は番号が大きいですが前進ではないため、到達判定から除外しています。", "", ""],
+    ["", "", ""],
     ["※ 個人情報（氏名・電話番号・メール・生年月日・住所）は共有していません。", "", ""],
     ["※ このシートは1時間ごとに自動更新されます（手動編集しても次回更新で消えます）。", "", ""]
   ];
@@ -404,11 +563,11 @@ function setupAgencyShareLegend(ss) {
   sheet.clear();
   sheet.getRange(1, 1, legend.length, 3).setValues(legend);
   sheet.getRange(1, 1, 1, 1).setFontWeight("bold");
-  sheet.getRange(3, 1, 1, 3).setFontWeight("bold").setBackground("#f0f0f0");
+  sheet.getRange(4, 1, 1, 3).setFontWeight("bold").setBackground("#f0f0f0");
   sheet.setColumnWidth(1, 160);
   sheet.setColumnWidth(2, 220);
   sheet.setColumnWidth(3, 560);
-  sheet.setFrozenRows(3);
+  sheet.setFrozenRows(4);
 }
 
 /**
@@ -439,6 +598,8 @@ function diagnoseAgencyShare() {
     lines.push("元データ: 開けません（" + err2 + "）");
   }
 
+  var filter = agencyShareSourceFilter();
+  lines.push("対象チャネル: " + (filter ? filter.join(" / ") + " のみ（AGENCY_SHARE_UTM_SOURCE）" : "全チャネル"));
   lines.push("Zoho連携: " + (typeof zohoEnabled === "function" && zohoEnabled() ? "有効" : "無効（ステージが取れません）"));
 
   var out = lines.join("\n");

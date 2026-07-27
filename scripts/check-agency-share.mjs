@@ -304,7 +304,7 @@ console.log("1b) 事前に用意した空スプレッドシートのタブを流
   ctx.syncAgencyShare();
   const names = share.getSheets().map((s) => s.getName());
   check("空タブ「シート1」が残らない", !names.includes("シート1"), JSON.stringify(names));
-  check("3タブになる", names.length === 3, JSON.stringify(names));
+  check("5タブになる", names.length === 5, JSON.stringify(names));
   check("明細が書かれている", share.getSheetByName("候補者ステージ").grid.length === 2);
 }
 
@@ -386,6 +386,77 @@ console.log("5) Zoho取得が失敗しても落ちず、理由を戻り値に残
   check("行は書き出される", body.length === 1);
   check("ステージは 不明 になる", body[0][evalIn(ctx, "AGENCY_SHARE_COLUMNS").indexOf("ステージ")] === "不明");
   check("戻り値にZohoエラーが載る", /Zoho取得エラー/.test(result), result);
+}
+
+console.log("7) チャネル絞り込み（Google広告だけ共有）");
+{
+  const { share, result } = runSync({
+    props: { AGENCY_SHARE_UTM_SOURCE: "google" },
+    rows: (header) => [
+      makeRow(header, {}), // utm_source=google
+      makeRow(header, {    // Meta
+        zoho_deal_id: "2001", "your-tel": "08055556666",
+        _page: "https://denkilp.builders-job.com/denkikouji-v2/?utm_source=fb&utm_medium=paid&utm_campaign=120248499798320789"
+      }),
+      makeRow(header, {    // 自然流入（utm無し・クリックIDも無し）
+        zoho_deal_id: "2002", "your-tel": "07033334444",
+        _page: "https://denkilp.builders-job.com/denkikouji/"
+      }),
+      makeRow(header, {    // Google自動タグ設定（utm無し・gclidだけ）
+        zoho_deal_id: "2003", "your-tel": "09088886666",
+        _page: "https://denkilp.builders-job.com/denkikouji/?gclid=EAIaIQobC"
+      })
+    ],
+    stageRows: [
+      { id: "1001", Stage: "04_HOT (リバース)", Modified_Time: "2026-07-25T14:30:00+09:00" },
+      { id: "2003", Stage: "01_新規リード", Modified_Time: "2026-07-25T14:30:00+09:00" }
+    ]
+  });
+  const body = share.getSheetByName("候補者ステージ").grid.slice(1);
+  const flat = body.flat().map(String).join("|");
+  check("Google行だけ残る（2件）", body.length === 2, `${body.length}件: ${flat}`);
+  check("Meta(fb)は除外", !flat.includes("fb"));
+  check("自然流入は除外", !flat.includes("2002"));
+  check("gclidのみのGoogle自動タグ行は含む", flat.includes("01_新規リード"));
+  check("除外件数がログに出る", /チャネル絞り込み\[google\]で 2件を除外/.test(result), result);
+}
+
+console.log("8) キャンペーン別・KW別の到達率タブ");
+{
+  const { share } = runSync({
+    rows: (header) => [
+      makeRow(header, { zoho_deal_id: "3001" }),
+      makeRow(header, { zoho_deal_id: "3002", "your-tel": "08055556666" }),
+      makeRow(header, { zoho_deal_id: "3003", "your-tel": "07033334444" }),
+      makeRow(header, { zoho_deal_id: "3004", "your-tel": "09088886666" })
+    ],
+    stageRows: [
+      { id: "3001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" },
+      { id: "3002", Stage: "21_内定", Modified_Time: "2026-07-25T14:30:00+09:00" },
+      { id: "3003", Stage: "28_無効リード", Modified_Time: "2026-07-25T14:30:00+09:00" },
+      { id: "3004", Stage: "01_新規リード", Modified_Time: "2026-07-25T14:30:00+09:00" }
+    ]
+  });
+
+  const camp = share.getSheetByName("キャンペーン別到達率");
+  const head = camp.grid[0];
+  const all = camp.grid[1];
+  const i8 = head.indexOf("08_逆オファーOK以上");
+  check("キャンペーンタブの1行目は【全体】", all[0] === "【全体】", String(all[0]));
+  check("送信数4件", all[1] === 4, String(all[1]));
+  check("08_逆オファーOK以上が2件（08と21）", all[i8] === 2, String(all[i8]));
+  check("08_逆オファーOK以上の率が50%", all[i8 + 1] === 50, String(all[i8 + 1]));
+  check("28_無効リードは到達に数えない",
+        all[head.indexOf("04_HOT以上")] === 2, String(all[head.indexOf("04_HOT以上")]));
+  check("21_内定以上は1件", all[head.indexOf("21_内定以上")] === 1);
+  check("25_入社は0件", all[head.indexOf("25_入社")] === 0);
+  check("キャンペーン名の行がある", camp.grid[2] && camp.grid[2][0] === "014_denki_top",
+        JSON.stringify(camp.grid[2] && camp.grid[2][0]));
+
+  const kw = share.getSheetByName("KW別到達率");
+  check("KWタブの見出しがキーワード", kw.grid[0][0] === "キーワード", String(kw.grid[0][0]));
+  check("KW行が検索語で立つ", kw.grid[2] && kw.grid[2][0] === "電気工事士",
+        JSON.stringify(kw.grid[2] && kw.grid[2][0]));
 }
 
 console.log("6) 未設定時は何もせず案内を返す");
