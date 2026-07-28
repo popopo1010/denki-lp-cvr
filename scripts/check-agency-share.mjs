@@ -468,7 +468,7 @@ console.log("8) キャンペーン別・KW別の到達率タブ");
   const all = camp.grid[1];
   const i8 = head.indexOf("逆オファーOK到達");
   check("キャンペーンタブの1行目は【全体】", all[0] === "【全体】", String(all[0]));
-  check("送信数4件", all[1] === 4, String(all[1]));
+  check("候補者数4件", all[1] === 4, String(all[1]));
   check("逆オファーOK到達が2件（08と21）", all[i8] === 2, String(all[i8]));
   check("到達率が50%", all[i8 + 1] === 50, String(all[i8 + 1]));
   check("28_無効リードは到達に数えない", all[i8] === 2);
@@ -481,6 +481,29 @@ console.log("8) キャンペーン別・KW別の到達率タブ");
   check("KWタブの見出しがキーワード", kw.grid[0][0] === "キーワード", String(kw.grid[0][0]));
   check("KW行が検索語で立つ", kw.grid[2] && kw.grid[2][0] === "電気工事士",
         JSON.stringify(kw.grid[2] && kw.grid[2][0]));
+}
+
+console.log("9) 日付型セルの _received_at と、同一候補者の重複送信");
+{
+  const { share, result } = runSync({
+    rows: (header) => [
+      // スプレッドシートが日付型で保持しているケース（本番で "Wed May 27" になっていた）
+      makeRow(header, { zoho_deal_id: "5001", _received_at: new Date("2026-05-27T01:15:00Z") }),
+      // 同じ候補者（同じ商談ID）の再送信。初回=6/1 を残す
+      makeRow(header, { zoho_deal_id: "5002", "your-tel": "08055556666", _received_at: "2026-06-10 09:00:00" }),
+      makeRow(header, { zoho_deal_id: "5002", "your-tel": "08055556666", _received_at: "2026-06-01 09:00:00" })
+    ],
+    stageRows: [{ id: "5002", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }]
+  });
+  const body = share.getSheetByName("候補者ステージ").grid.slice(1);
+  const days = body.map((r) => r[1]);
+  const months = body.map((r) => r[2]);
+  check("日付型セルが yyyy-MM-dd になる", days.includes("2026-05-27"), JSON.stringify(days));
+  check("送信月が yyyy-MM になる", months.every((m) => /^\d{4}-\d{2}$/.test(m)), JSON.stringify(months));
+  check("曜日文字列にならない", !days.some((d) => /[A-Za-z]/.test(String(d))), JSON.stringify(days));
+  check("同一候補者は1行に統合", body.length === 2, `${body.length}件`);
+  check("初回送信日が残る", days.includes("2026-06-01"), JSON.stringify(days));
+  check("統合件数がログに出る", /重複 1件を統合/.test(result), result);
 }
 
 console.log("6) 未設定時は何もせず案内を返す");

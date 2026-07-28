@@ -120,6 +120,21 @@ function agencyShareStageRank(stage) {
   return n >= AGENCY_SHARE_NON_PROGRESS_MIN_RANK ? 0 : n;
 }
 
+/**
+ * 送信日を "yyyy-MM-dd" にする。
+ * スプレッドシートは _received_at を**日付型セル**として持つことがあり、getValues() では
+ * Date オブジェクトで返る。String() すると "Wed May 27 2026 10:15:00 GMT+0900" になり、
+ * 先頭10文字を切ると "Wed May 27" という壊れた日付になる（本番で実際に発生）。
+ */
+function agencyShareDay(value) {
+  if (value instanceof Date) return toJst(value).slice(0, 10);
+  var s = String(value == null ? "" : value).trim();
+  if (!s) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  var jst = toJst(s);                      // 解釈できなければ元の文字列が返る
+  return /^\d{4}-\d{2}-\d{2}/.test(jst) ? jst.slice(0, 10) : "";
+}
+
 function agencySharePct(n, total) {
   return total ? Math.round((n / total) * 1000) / 10 : 0;
 }
@@ -282,7 +297,6 @@ function syncAgencyShare() {
   var cols = agencyShareColumns();
   var filter = agencyShareSourceFilter();
   var records = [];
-  var dealIds = [];
   var excludedTest = 0;
   var excludedNoTel = 0;
   var excludedChannel = 0;
@@ -315,10 +329,7 @@ function syncAgencyShare() {
       continue;
     }
 
-    if (dealId) dealIds.push(dealId);
-
-    var received = String(params["_received_at"] || "").trim();
-    var day = received.length >= 10 ? received.slice(0, 10) : "";
+    var day = agencyShareDay(params["_received_at"]);
 
     records.push({
       params: params,
@@ -345,6 +356,34 @@ function syncAgencyShare() {
         msclkid: String(params["msclkid"] || "")
       }
     });
+  }
+
+  // 同じ候補者の再送信は1人にまとめる（同一電話番号は同じ商談に紐づくため lead_id が同じ）。
+  // まとめないと到達率の分母が水増しされる。獲得したチャネルを残したいので初回送信を採用する。
+  var byLead = {};
+  var unique = [];
+  var duplicates = 0;
+  for (var d = 0; d < records.length; d++) {
+    var rec = records[d];
+    var leadId = rec.values.lead_id;
+    if (!leadId) { unique.push(rec); continue; }
+    var prev = byLead[leadId];
+    if (!prev) {
+      byLead[leadId] = rec;
+      unique.push(rec);
+      continue;
+    }
+    duplicates++;
+    if (String(rec.values["送信日"]) < String(prev.values["送信日"])) {
+      unique[unique.indexOf(prev)] = rec;   // より古い送信（初回接触）に差し替える
+      byLead[leadId] = rec;
+    }
+  }
+  records = unique;
+
+  var dealIds = [];
+  for (var q = 0; q < records.length; q++) {
+    if (records[q].dealId) dealIds.push(records[q].dealId);
   }
 
   var stages = fetchZohoStages(dealIds);
@@ -380,6 +419,7 @@ function syncAgencyShare() {
   var msg = "共有シート更新: " + rows.length + "件" +
             "（テスト送信 " + excludedTest + "件・電話番号なし " + excludedNoTel + "件を除外" +
             (filter ? " / チャネル絞り込み[" + filter.join(",") + "]で " + excludedChannel + "件を除外" : "") +
+            " / 同一候補者の重複 " + duplicates + "件を統合" +
             " / ステージ取得 " + Object.keys(stages.map).length + "件）" +
             " 最終更新 " + toJst(new Date());
   if (stages.errors.length) {
@@ -430,7 +470,7 @@ function writeAgencyShareSummary(ss, cols, rows) {
     if (r[iTarget] === AGENCY_SHARE_TARGET_MARK) groups[key].reached++;
   }
 
-  var header = ["送信月", "utm_source", "utm_medium", "utm_campaign", "送信数", "LINE登録数",
+  var header = ["送信月", "utm_source", "utm_medium", "utm_campaign", "候補者数", "LINE登録数",
                 AGENCY_SHARE_TARGET_LABEL, AGENCY_SHARE_TARGET_LABEL + "率(%)"];
   var out = Object.keys(groups).sort().reverse().map(function (key) {
     var g = groups[key];
@@ -478,7 +518,7 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel) 
     }
   }
 
-  var header = [keyLabel, "送信数", "LINE登録", "LINE登録率(%)",
+  var header = [keyLabel, "候補者数", "LINE登録", "LINE登録率(%)",
                 AGENCY_SHARE_TARGET_LABEL, AGENCY_SHARE_TARGET_LABEL + "率(%)"];
 
   // 【全体】を先頭に固定し、残りは送信数の多い順
@@ -508,7 +548,7 @@ function setupAgencyShareLegend(ss, filter) {
     ["", "", ""],
     ["カラム名", "意味", "備考"],
     ["lead_id", "候補者の匿名ID", "本人には戻せない不可逆ハッシュ。同じ人は常に同じIDになるので重複・再訪の判定に使える"],
-    ["送信日", "LPフォーム送信日", "日本時間"],
+    ["送信日", "LPフォーム送信日", "日本時間。同じ人が複数回送信している場合は初回送信日"],
     ["送信月", "送信日の年月", "集計用 (YYYY-MM)"],
     ["LP", "送信元LP", "denkikouji / sekoukanri / sekoukanri-doboku など"],
     ["マーケチャネル", "流入元の要約", "例: google/cpc｜014_denki_top_of_page｜KW: 電気工事士 求人 / ig/paid｜(campaign)｜CR: (クリエイティブ)"],
@@ -523,10 +563,13 @@ function setupAgencyShareLegend(ss, filter) {
      "空欄には「まだCRMに登録されていない（送信直後・連携エラー）」も含まれるため、厳密には『未到達 or 判定不能』"],
     ["LINE登録", "LINE登録の有無", "済 / 未"],
     ["", "", ""],
+    ["※ 同じ候補者の重複送信は1人にまとめています（初回送信のチャネルで集計）。", "",
+     "そのため候補者数は広告管理画面のCV数より少なくなることがあります"],
+    ["", "", ""],
     ["【タブの説明】", "", ""],
     ["候補者ステージ", "1候補者1行の明細", "送信日・流入元・逆オファーOK到達の有無"],
     ["チャネル別サマリ", "月 × 流入元の集計", "送信数・LINE登録数・逆オファーOK到達数と到達率"],
-    ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "送信数を分母にした到達割合(%)"],
+    ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "候補者数を分母にした到達割合(%)"],
     ["KW別到達率", "utm_term（検索KW）ごとの同上", "検索広告以外は「(なし)」にまとまります"],
     ["", "", ""],
     ["※ 判定は『現在のステージが 08_逆オファーOK 以上か』です。", "",
