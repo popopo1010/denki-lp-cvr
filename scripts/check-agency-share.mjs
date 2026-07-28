@@ -237,7 +237,7 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
       })
     ],
     stageRows: [
-      { id: "1001", Stage: "04_HOT", Modified_Time: "2026-07-25T14:30:00+09:00" }
+      { id: "1001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }
     ]
   });
 
@@ -256,15 +256,15 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
   check("氏名（姓+名）が出力に含まれない", !flat.includes(PII.last + PII.first));
   check("gclid は既定で共有しない", !flat.includes("Cj0abc"));
 
-  const byStage = Object.fromEntries(body.map((r) => [r[header.indexOf("ステージ")], r]));
-  check("Zohoの現ステージが反映される", "04_HOT" in byStage, JSON.stringify(Object.keys(byStage)));
-  check("未連携行は CRM未連携", "CRM未連携" in byStage);
-  check("Zohoに存在しないIDは 不明", "不明" in byStage);
-  check("ステージ更新日が日付だけ",
-        byStage["04_HOT"][header.indexOf("ステージ更新日")] === "2026-07-25",
-        String(byStage["04_HOT"][header.indexOf("ステージ更新日")]));
+  const iTarget = header.indexOf("逆オファーOK到達");
+  const marked = body.filter((r) => r[iTarget] === "✓");
+  check("逆オファーOK以上の行にチェックが付く", marked.length === 1, `${marked.length}件`);
+  check("未連携・CRMに無い行はチェックなし",
+        body.filter((r) => r[iTarget] === "").length === 2);
+  check("ステージ名そのものは出さない",
+        !body.flat().map(String).some((v) => v.includes("_逆オファー") || v.includes("未通電")));
 
-  const hot = byStage["04_HOT"];
+  const hot = marked[0];
   check("送信日が入る", hot[header.indexOf("送信日")] === "2026-07-20");
   check("送信月が入る", hot[header.indexOf("送信月")] === "2026-07");
   check("utm_source が入る", hot[header.indexOf("utm_source")] === "google");
@@ -278,8 +278,9 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
   check("lead_id から電話番号が復元できない", !flat.includes(PII.tel));
 
   const summary = share.getSheetByName("チャネル別サマリ");
-  check("サマリのヘッダーにステージ列が生える",
-        summary.grid[0].includes("04_HOT") && summary.grid[0].includes("送信数"),
+  check("サマリは逆オファーOK到達と率だけ",
+        summary.grid[0].includes("逆オファーOK到達") && summary.grid[0].includes("逆オファーOK到達率(%)") &&
+        !summary.grid[0].some((h) => String(h).includes("HOT")),
         JSON.stringify(summary.grid[0]));
   check("凡例シートが作られる", !!share.getSheetByName("凡例"));
   check("戻り値に件数が入る", /共有シート更新: 3件/.test(result), result);
@@ -384,7 +385,8 @@ console.log("5) Zoho取得が失敗しても落ちず、理由を戻り値に残
   const result = ctx.syncAgencyShare();
   const body = share.getSheetByName("候補者ステージ").grid.slice(1);
   check("行は書き出される", body.length === 1);
-  check("ステージは 不明 になる", body[0][evalIn(ctx, "AGENCY_SHARE_COLUMNS").indexOf("ステージ")] === "不明");
+  check("ステージ取得失敗時はチェックなし",
+        body[0][evalIn(ctx, "AGENCY_SHARE_COLUMNS").indexOf("逆オファーOK到達")] === "");
   check("戻り値にZohoエラーが載る", /Zoho取得エラー/.test(result), result);
 }
 
@@ -405,9 +407,9 @@ console.log("6b) 商談IDがある行はテスト判定で落とさない／電�
     stageRows: [{ id: "4001", Stage: "11_書類選考", Modified_Time: "2026-07-25T14:30:00+09:00" }]
   });
   const body = share.getSheetByName("候補者ステージ").grid.slice(1);
-  const stages = body.map((r) => r[11]); // 11 = ステージ列
+  const flags = body.map((r) => r[11]); // 11 = 逆オファーOK到達列
   check("2件残る（商談あり＋未連携で電話あり）", body.length === 2, `${body.length}件`);
-  check("商談ありのテスト形式行が残る", stages.includes("11_書類選考"), JSON.stringify(stages));
+  check("商談ありのテスト形式行が残る（11_書類選考→到達）", flags.includes("✓"), JSON.stringify(flags));
   check("電話番号なしの未連携行は落ちる", /電話番号なし 1件を除外/.test(result), result);
 }
 
@@ -440,7 +442,7 @@ console.log("7) チャネル絞り込み（Google広告だけ共有）");
   check("Google行だけ残る（2件）", body.length === 2, `${body.length}件: ${flat}`);
   check("Meta(fb)は除外", !flat.includes("fb"));
   check("自然流入は除外", !flat.includes("2002"));
-  check("gclidのみのGoogle自動タグ行は含む", flat.includes("01_新規リード"));
+  check("gclidのみのGoogle自動タグ行は含む", body.length === 2 && flat.includes("|"));
   check("除外件数がログに出る", /チャネル絞り込み\[google\]で 2件を除外/.test(result), result);
 }
 
@@ -464,15 +466,14 @@ console.log("8) キャンペーン別・KW別の到達率タブ");
   const camp = share.getSheetByName("キャンペーン別到達率");
   const head = camp.grid[0];
   const all = camp.grid[1];
-  const i8 = head.indexOf("08_逆オファーOK以上");
+  const i8 = head.indexOf("逆オファーOK到達");
   check("キャンペーンタブの1行目は【全体】", all[0] === "【全体】", String(all[0]));
   check("送信数4件", all[1] === 4, String(all[1]));
-  check("08_逆オファーOK以上が2件（08と21）", all[i8] === 2, String(all[i8]));
-  check("08_逆オファーOK以上の率が50%", all[i8 + 1] === 50, String(all[i8 + 1]));
-  check("28_無効リードは到達に数えない",
-        all[head.indexOf("04_HOT以上")] === 2, String(all[head.indexOf("04_HOT以上")]));
-  check("21_内定以上は1件", all[head.indexOf("21_内定以上")] === 1);
-  check("25_入社は0件", all[head.indexOf("25_入社")] === 0);
+  check("逆オファーOK到達が2件（08と21）", all[i8] === 2, String(all[i8]));
+  check("到達率が50%", all[i8 + 1] === 50, String(all[i8 + 1]));
+  check("28_無効リードは到達に数えない", all[i8] === 2);
+  check("ステージ名の列は無い", !head.some((h) => String(h).includes("_内定") || String(h).includes("HOT")),
+        JSON.stringify(head));
   check("キャンペーン名の行がある", camp.grid[2] && camp.grid[2][0] === "014_denki_top",
         JSON.stringify(camp.grid[2] && camp.grid[2][0]));
 

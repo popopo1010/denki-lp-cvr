@@ -40,8 +40,7 @@ var AGENCY_SHARE_COLUMNS = [
   "utm_content",
   "utm_term",
   "utm_id",
-  "ステージ",
-  "ステージ更新日",
+  "逆オファーOK到達",
   "LINE登録"
 ];
 
@@ -99,22 +98,14 @@ function agencyShareMatchesFilter(filter, track, params) {
   return filter.indexOf("google") !== -1 && agencyShareHasGoogleClickId(params);
 }
 
-// Zohoに商談が無い/消えている行のステージ表記
-var AGENCY_SHARE_STAGE_UNLINKED = "CRM未連携";
-var AGENCY_SHARE_STAGE_UNKNOWN = "不明";
-
 var AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET = "キャンペーン別到達率";
 var AGENCY_SHARE_KEYWORD_FUNNEL_SHEET = "KW別到達率";
 
-// 到達率タブに出す通過点。rank はステージ名の先頭連番。
-var AGENCY_SHARE_MILESTONES = [
-  { label: "04_HOT以上", rank: 4 },
-  { label: "06_初回面談待ち以上", rank: 6 },
-  { label: "08_逆オファーOK以上", rank: 8 },
-  { label: "11_書類選考以上", rank: 11 },
-  { label: "21_内定以上", rank: 21 },
-  { label: "25_入社", rank: 25 }
-];
+// 見たいのは「逆オファーOKまで到達したか」だけ。他のステージは出さない。
+// 別の段階も見たくなったら rank を足す（04_HOT なら 4、21_内定なら 21）。
+var AGENCY_SHARE_TARGET_LABEL = "逆オファーOK到達";
+var AGENCY_SHARE_TARGET_RANK = 8; // 08_逆オファーOK
+var AGENCY_SHARE_TARGET_MARK = "✓";
 
 /**
  * ステージ名の先頭連番を進捗ランクにする（"01_新規リード" → 1）。
@@ -344,8 +335,7 @@ function syncAgencyShare() {
         utm_content: track.utm_content,
         utm_term: track.utm_term,
         utm_id: track.utm_id,
-        "ステージ": "",
-        "ステージ更新日": "",
+        "逆オファーOK到達": "",
         "LINE登録": String(params["line_clicked_at"] || "").trim() ? "済" : "未",
         gclid: String(params["gclid"] || ""),
         gbraid: String(params["gbraid"] || ""),
@@ -361,14 +351,12 @@ function syncAgencyShare() {
   var rows = [];
   for (var k = 0; k < records.length; k++) {
     var rec = records[k];
-    if (rec.dealId) {
-      var found = stages.map[rec.dealId];
-      rec.values["ステージ"] = found ? (found.stage || AGENCY_SHARE_STAGE_UNKNOWN)
-                                     : AGENCY_SHARE_STAGE_UNKNOWN;
-      rec.values["ステージ更新日"] = found ? String(found.modified || "").slice(0, 10) : "";
-    } else {
-      rec.values["ステージ"] = AGENCY_SHARE_STAGE_UNLINKED;
-    }
+    // 到達＝現在のステージ番号が 08_逆オファーOK 以上。
+    // 未連携・CRMに無い・27/28（ナーチャリング/無効リード）はチェックなし。
+    var found = rec.dealId ? stages.map[rec.dealId] : null;
+    var rank = found ? agencyShareStageRank(found.stage) : 0;
+    rec.values[AGENCY_SHARE_TARGET_LABEL] = rank >= AGENCY_SHARE_TARGET_RANK
+      ? AGENCY_SHARE_TARGET_MARK : "";
 
     var row = cols.map(function (name) { return rec.values[name] == null ? "" : rec.values[name]; });
     assertNoPii(row, rec.params); // ここで落ちたら1行も書かずに終わる
@@ -421,40 +409,32 @@ function writeAgencyShareDetail(ss, cols, rows) {
 }
 
 /**
- * 月 × チャネル（source/medium/campaign）で、送信数・LINE登録数・ステージ別件数を集計する。
- * ステージ名は 01_ / 02_ … の連番始まりなので、名前順に並べればファネル順になる。
+ * 月 × チャネル（source/medium/campaign）で、送信数・LINE登録数・逆オファーOK到達数と到達率を出す。
+ * ステージ別の内訳は出さない（見たいのは逆オファーOKまで到達したかどうかだけ）。
  */
 function writeAgencyShareSummary(ss, cols, rows) {
   var iMonth = cols.indexOf("送信月");
   var iSrc = cols.indexOf("utm_source");
   var iMed = cols.indexOf("utm_medium");
   var iCamp = cols.indexOf("utm_campaign");
-  var iStage = cols.indexOf("ステージ");
+  var iTarget = cols.indexOf(AGENCY_SHARE_TARGET_LABEL);
   var iLine = cols.indexOf("LINE登録");
 
   var groups = {};
-  var stageNames = {};
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
-    var stage = String(r[iStage] || AGENCY_SHARE_STAGE_UNKNOWN);
-    stageNames[stage] = true;
     var key = [r[iMonth], r[iSrc] || "(なし)", r[iMed] || "(なし)", r[iCamp] || "(なし)"].join("\t");
-    if (!groups[key]) groups[key] = { total: 0, line: 0, stages: {} };
+    if (!groups[key]) groups[key] = { total: 0, line: 0, reached: 0 };
     groups[key].total++;
     if (r[iLine] === "済") groups[key].line++;
-    groups[key].stages[stage] = (groups[key].stages[stage] || 0) + 1;
+    if (r[iTarget] === AGENCY_SHARE_TARGET_MARK) groups[key].reached++;
   }
 
-  var stageCols = Object.keys(stageNames).sort();
-  var header = ["送信月", "utm_source", "utm_medium", "utm_campaign", "送信数", "LINE登録数"]
-    .concat(stageCols);
-
+  var header = ["送信月", "utm_source", "utm_medium", "utm_campaign", "送信数", "LINE登録数",
+                AGENCY_SHARE_TARGET_LABEL, AGENCY_SHARE_TARGET_LABEL + "率(%)"];
   var out = Object.keys(groups).sort().reverse().map(function (key) {
-    var parts = key.split("\t");
     var g = groups[key];
-    return parts.concat([g.total, g.line], stageCols.map(function (s) {
-      return g.stages[s] || 0;
-    }));
+    return key.split("\t").concat([g.total, g.line, g.reached, agencySharePct(g.reached, g.total)]);
   });
 
   var sheet = agencyShareGetOrCreateSheet(ss, AGENCY_SHARE_SUMMARY_SHEET);
@@ -466,22 +446,22 @@ function writeAgencyShareSummary(ss, cols, rows) {
 }
 
 /**
- * キャンペーン別 / KW別の到達率タブ。
+ * キャンペーン別 / KW別の到達率タブ。分母は送信数、分子は逆オファーOK到達数。
  *
- * 到達の判定は「**現在の**ステージ番号が通過点以上か」。ステージ履歴はZohoから取っていないので、
- * 一度 08_逆オファーOK まで行ってから 27_ナーチャリング / 28_無効リード に戻った候補者は
- * 到達に数えない＝**実態よりやや低めに出る**。この前提は凡例タブにも書く。
+ * 到達の判定は「**現在の**ステージ番号が 08_逆オファーOK 以上か」。ステージ履歴はZohoから
+ * 取っていないので、一度到達してから 27_ナーチャリング / 28_無効リード に戻った候補者は
+ * 数えない＝**実態よりやや低めに出る**。この前提は凡例タブにも書く。
  */
 function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel) {
   var iKey = cols.indexOf(keyColumn);
-  var iStage = cols.indexOf("ステージ");
+  var iTarget = cols.indexOf(AGENCY_SHARE_TARGET_LABEL);
   var iLine = cols.indexOf("LINE登録");
 
   var groups = {};
   var order = [];
   function bucket(key) {
     if (!groups[key]) {
-      groups[key] = { total: 0, line: 0, reach: {} };
+      groups[key] = { total: 0, line: 0, reached: 0 };
       order.push(key);
     }
     return groups[key];
@@ -490,24 +470,16 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel) 
   var all = bucket("【全体】");
   for (var i = 0; i < rows.length; i++) {
     var key = String(rows[i][iKey] == null ? "" : rows[i][iKey]).trim() || "(なし)";
-    var rank = agencyShareStageRank(rows[i][iStage]);
-    var lineOk = rows[i][iLine] === "済";
     var targets = [all, bucket(key)];
     for (var t = 0; t < targets.length; t++) {
-      var g = targets[t];
-      g.total++;
-      if (lineOk) g.line++;
-      for (var m = 0; m < AGENCY_SHARE_MILESTONES.length; m++) {
-        var ms = AGENCY_SHARE_MILESTONES[m];
-        if (rank >= ms.rank) g.reach[ms.label] = (g.reach[ms.label] || 0) + 1;
-      }
+      targets[t].total++;
+      if (rows[i][iLine] === "済") targets[t].line++;
+      if (rows[i][iTarget] === AGENCY_SHARE_TARGET_MARK) targets[t].reached++;
     }
   }
 
-  var header = [keyLabel, "送信数", "LINE登録", "LINE登録率(%)"];
-  AGENCY_SHARE_MILESTONES.forEach(function (ms) {
-    header.push(ms.label, ms.label + "率(%)");
-  });
+  var header = [keyLabel, "送信数", "LINE登録", "LINE登録率(%)",
+                AGENCY_SHARE_TARGET_LABEL, AGENCY_SHARE_TARGET_LABEL + "率(%)"];
 
   // 【全体】を先頭に固定し、残りは送信数の多い順
   var keys = order.slice(1).sort(function (a, b) { return groups[b].total - groups[a].total; });
@@ -515,12 +487,8 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel) 
 
   var out = keys.map(function (key) {
     var g = groups[key];
-    var row = [key, g.total, g.line, agencySharePct(g.line, g.total)];
-    AGENCY_SHARE_MILESTONES.forEach(function (ms) {
-      var n = g.reach[ms.label] || 0;
-      row.push(n, agencySharePct(n, g.total));
-    });
-    return row;
+    return [key, g.total, g.line, agencySharePct(g.line, g.total),
+            g.reached, agencySharePct(g.reached, g.total)];
   });
 
   var sheet = agencyShareGetOrCreateSheet(ss, sheetName);
@@ -550,21 +518,20 @@ function setupAgencyShareLegend(ss, filter) {
     ["utm_content", "コンテンツ", "検索広告はマッチタイプ、SNSはクリエイティブ"],
     ["utm_term", "キーワード", "検索広告のKW"],
     ["utm_id", "キャンペーンID", ""],
-    ["ステージ", "CRM上の現在のステージ", "01_新規リード → 02_未通電 → 04_HOT → 09_履歴書作成 … と進む。" +
-      AGENCY_SHARE_STAGE_UNLINKED + "＝CRM未登録（送信直後・連携エラー等）、" +
-      AGENCY_SHARE_STAGE_UNKNOWN + "＝CRM側で該当レコードが見つからない"],
-    ["ステージ更新日", "CRMレコードの最終更新日", "ステージ以外の項目更新でも動くため、あくまで目安"],
+    [AGENCY_SHARE_TARGET_LABEL, "08_逆オファーOK まで到達したか",
+     AGENCY_SHARE_TARGET_MARK + "＝到達済み（08_逆オファーOK 以上のステージ）／空欄＝未到達。" +
+     "空欄には「まだCRMに登録されていない（送信直後・連携エラー）」も含まれるため、厳密には『未到達 or 判定不能』"],
     ["LINE登録", "LINE登録の有無", "済 / 未"],
     ["", "", ""],
     ["【タブの説明】", "", ""],
-    ["候補者ステージ", "1候補者1行の明細", "送信日・流入元・現在のステージ"],
-    ["チャネル別サマリ", "月 × 流入元の件数", "送信数・LINE登録数・ステージ別件数"],
-    ["キャンペーン別到達率", "utm_campaign ごとの到達率", "送信数を分母に、各段階へ到達した割合(%)"],
-    ["KW別到達率", "utm_term（検索KW）ごとの到達率", "検索広告以外は「(なし)」にまとまります"],
+    ["候補者ステージ", "1候補者1行の明細", "送信日・流入元・逆オファーOK到達の有無"],
+    ["チャネル別サマリ", "月 × 流入元の集計", "送信数・LINE登録数・逆オファーOK到達数と到達率"],
+    ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "送信数を分母にした到達割合(%)"],
+    ["KW別到達率", "utm_term（検索KW）ごとの同上", "検索広告以外は「(なし)」にまとまります"],
     ["", "", ""],
-    ["※ 到達率の判定は『現在のステージ番号がその段階以上か』です。", "",
-     "一度先へ進んでから 27_ナーチャリング / 28_無効リード に戻った候補者は到達に数えないため、実態よりやや低めに出ます"],
-    ["※ 27_ナーチャリング / 28_無効リード は番号が大きいですが前進ではないため、到達判定から除外しています。", "", ""],
+    ["※ 判定は『現在のステージが 08_逆オファーOK 以上か』です。", "",
+     "一度到達してから 27_ナーチャリング / 28_無効リード に戻った候補者はチェックが外れるため、実態よりやや低めに出ます"],
+    ["※ 27_ナーチャリング / 28_無効リード は番号が大きいですが前進ではないため、到達扱いにしていません。", "", ""],
     ["", "", ""],
     ["※ 個人情報（氏名・電話番号・メール・生年月日・住所）は共有していません。", "", ""],
     ["※ このシートは1時間ごとに自動更新されます（手動編集しても次回更新で消えます）。", "", ""]
