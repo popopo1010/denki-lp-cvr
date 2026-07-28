@@ -100,6 +100,9 @@ function agencyShareMatchesFilter(filter, track, params) {
 
 var AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET = "キャンペーン別到達率";
 var AGENCY_SHARE_KEYWORD_FUNNEL_SHEET = "KW別到達率";
+var AGENCY_SHARE_MONTHLY_SHEET = "月別推移";
+// 広告費の手入力タブ。sync は**読むだけで消さない**（唯一、上書きしないタブ）。
+var AGENCY_SHARE_COST_SHEET = "広告コスト入力";
 
 // 見たいのは「逆オファーOKまで到達したか」だけ。他のステージは出さない。
 // 別の段階も見たくなったら rank を足す（04_HOT なら 4、21_内定なら 21）。
@@ -133,6 +136,11 @@ function agencyShareDay(value) {
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   var jst = toJst(s);                      // 解釈できなければ元の文字列が返る
   return /^\d{4}-\d{2}-\d{2}/.test(jst) ? jst.slice(0, 10) : "";
+}
+
+function agencyShareSetWidth(sheet, cols, columnName, px) {
+  var idx = cols.indexOf(columnName);
+  if (idx >= 0) sheet.setColumnWidth(idx + 1, px);
 }
 
 function agencySharePct(n, total) {
@@ -258,10 +266,12 @@ function agencyShareGetOrCreateSheet(ss, name) {
   if (found) return found;
 
   var ours = [AGENCY_SHARE_DETAIL_SHEET, AGENCY_SHARE_SUMMARY_SHEET, AGENCY_SHARE_LEGEND_SHEET,
-              AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET];
-  var sheets = ss.getSheets();
-  if (sheets.length === 1 && ours.indexOf(sheets[0].getName()) === -1) {
-    return sheets[0].setName(name);
+              AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET,
+              AGENCY_SHARE_MONTHLY_SHEET, AGENCY_SHARE_COST_SHEET];
+  var strays = ss.getSheets().filter(function (sh) { return ours.indexOf(sh.getName()) === -1; });
+  // ヘッダーだけ / 空の「シート1」「Untitled」等が1枚だけ残っているなら、それを流用する
+  if (strays.length === 1 && strays[0].getLastRow() <= 1) {
+    return strays[0].setName(name);
   }
   return ss.insertSheet(name);
 }
@@ -408,9 +418,14 @@ function syncAgencyShare() {
   });
 
   writeAgencyShareDetail(ss, cols, rows);
+  var costs = readAgencyShareCosts(ss);
   writeAgencyShareSummary(ss, cols, rows);
+  writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_MONTHLY_SHEET, "送信月", "送信月",
+                         { sortByKey: true, costs: { map: costs.byMonth, total: costs.total } });
   writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET,
-                         "utm_campaign", "キャンペーン");
+                         "utm_campaign", "キャンペーン",
+                         { costs: { map: costs.byCampaign, total: costs.total } });
+  // KWごとの広告費は取得できないため、KWタブに単価は出さない
   writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET,
                          "utm_term", "キーワード");
   setupAgencyShareLegend(ss, filter);
@@ -444,8 +459,10 @@ function writeAgencyShareDetail(ss, cols, rows) {
     sheet.getRange(2, 1, rows.length, cols.length).setValues(rows);
   }
   sheet.setFrozenRows(1);
-  sheet.setColumnWidth(cols.indexOf("マーケチャネル") + 1, 380);
-  sheet.setColumnWidth(cols.indexOf("ステージ") + 1, 140);
+  // 列名が変わっても落ちないようにする。indexOf が -1 のとき setColumnWidth(0,…) は例外になり、
+  // 明細だけ書けて他タブが古いまま残る（2026-07-28 に実際に発生）。
+  agencyShareSetWidth(sheet, cols, "マーケチャネル", 380);
+  agencyShareSetWidth(sheet, cols, AGENCY_SHARE_TARGET_LABEL, 130);
 }
 
 /**
@@ -486,13 +503,57 @@ function writeAgencyShareSummary(ss, cols, rows) {
 }
 
 /**
+ * 広告費の手入力タブを読む。**このタブだけは sync が消さない**（人が入力する場所）。
+ * 列: 年月(YYYY-MM) / キャンペーン(空欄=その月の全体) / 広告費(円)
+ * Google Ads を直接繋ぐようになったら、このタブを自動更新に差し替えるだけで単価計算はそのまま動く。
+ */
+function readAgencyShareCosts(ss) {
+  var out = { byMonth: {}, byCampaign: {}, total: 0, rows: 0 };
+  var sheet = ss.getSheetByName(AGENCY_SHARE_COST_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(AGENCY_SHARE_COST_SHEET);
+    sheet.getRange(1, 1, 1, 3)
+      .setValues([["年月 (YYYY-MM)", "キャンペーン (空欄=その月の全キャンペーン)", "広告費(円)"]])
+      .setFontWeight("bold").setBackground("#fff3cd");
+    sheet.getRange(2, 1, 1, 3).setValues([["2026-07", "014_denki_top_of_page", ""]]);
+    sheet.setColumnWidth(1, 140);
+    sheet.setColumnWidth(2, 320);
+    sheet.setColumnWidth(3, 120);
+    sheet.setFrozenRows(1);
+    return out;
+  }
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return out;
+  var values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  for (var i = 0; i < values.length; i++) {
+    var ym = values[i][0];
+    ym = (ym instanceof Date) ? toJst(ym).slice(0, 7) : String(ym == null ? "" : ym).trim().slice(0, 7);
+    var camp = String(values[i][1] == null ? "" : values[i][1]).trim();
+    var cost = Number(String(values[i][2] == null ? "" : values[i][2]).replace(/[^0-9.\-]/g, ""));
+    if (!cost || isNaN(cost)) continue;
+    out.rows++;
+    out.total += cost;
+    if (ym) out.byMonth[ym] = (out.byMonth[ym] || 0) + cost;
+    if (camp) out.byCampaign[camp] = (out.byCampaign[camp] || 0) + cost;
+  }
+  return out;
+}
+
+function agencyShareUnitCost(cost, count) {
+  if (!cost || !count) return "";
+  return Math.round(cost / count);
+}
+
+/**
  * キャンペーン別 / KW別の到達率タブ。分母は送信数、分子は逆オファーOK到達数。
  *
  * 到達の判定は「**現在の**ステージ番号が 08_逆オファーOK 以上か」。ステージ履歴はZohoから
  * 取っていないので、一度到達してから 27_ナーチャリング / 28_無効リード に戻った候補者は
  * 数えない＝**実態よりやや低めに出る**。この前提は凡例タブにも書く。
  */
-function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel) {
+function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel, opts) {
+  opts = opts || {};
   var iKey = cols.indexOf(keyColumn);
   var iTarget = cols.indexOf(AGENCY_SHARE_TARGET_LABEL);
   var iLine = cols.indexOf("LINE登録");
@@ -518,17 +579,26 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel) 
     }
   }
 
+  var costs = opts.costs || null;
   var header = [keyLabel, "候補者数", "LINE登録", "LINE登録率(%)",
                 AGENCY_SHARE_TARGET_LABEL, AGENCY_SHARE_TARGET_LABEL + "率(%)"];
+  if (costs) header = header.concat(["広告費(円)", "候補者単価(円)", AGENCY_SHARE_TARGET_LABEL + "単価(円)"]);
 
-  // 【全体】を先頭に固定し、残りは送信数の多い順
-  var keys = order.slice(1).sort(function (a, b) { return groups[b].total - groups[a].total; });
+  // 【全体】を先頭に固定。月別推移はキーの新しい順、それ以外は候補者数の多い順。
+  var keys = order.slice(1).sort(function (a, b) {
+    return opts.sortByKey ? String(b).localeCompare(String(a)) : groups[b].total - groups[a].total;
+  });
   keys.unshift("【全体】");
 
   var out = keys.map(function (key) {
     var g = groups[key];
-    return [key, g.total, g.line, agencySharePct(g.line, g.total),
-            g.reached, agencySharePct(g.reached, g.total)];
+    var row = [key, g.total, g.line, agencySharePct(g.line, g.total),
+               g.reached, agencySharePct(g.reached, g.total)];
+    if (costs) {
+      var cost = key === "【全体】" ? costs.total : (costs.map[key] || 0);
+      row.push(cost || "", agencyShareUnitCost(cost, g.total), agencyShareUnitCost(cost, g.reached));
+    }
+    return row;
   });
 
   var sheet = agencyShareGetOrCreateSheet(ss, sheetName);
@@ -569,9 +639,14 @@ function setupAgencyShareLegend(ss, filter) {
     ["【タブの説明】", "", ""],
     ["候補者ステージ", "1候補者1行の明細", "送信日・流入元・逆オファーOK到達の有無"],
     ["チャネル別サマリ", "月 × 流入元の集計", "送信数・LINE登録数・逆オファーOK到達数と到達率"],
-    ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "候補者数を分母にした到達割合(%)"],
+    ["月別推移", "月ごとの候補者数・到達数・到達率", "広告コスト入力タブに費用を入れると単価も出ます"],
+    ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "候補者数を分母にした到達割合(%)。費用があれば単価も"],
+    ["広告コスト入力", "★人が入力するタブ（自動更新で消えません）",
+     "年月 / キャンペーン / 広告費(円) を入れると、月別推移・キャンペーン別に「候補者単価」「逆オファーOK単価」が出ます"],
     ["KW別到達率", "utm_term（検索KW）ごとの同上", "検索広告以外は「(なし)」にまとまります"],
     ["", "", ""],
+    ["※ 単価は（広告費 ÷ 件数）です。広告コスト入力タブが空なら空欄になります。", "",
+     "キャンペーン名は広告側の名称と一致させてください（utm_campaign と突き合わせています）"],
     ["※ 判定は『現在のステージが 08_逆オファーOK 以上か』です。", "",
      "一度到達してから 27_ナーチャリング / 28_無効リード に戻った候補者はチェックが外れるため、実態よりやや低めに出ます"],
     ["※ 27_ナーチャリング / 28_無効リード は番号が大きいですが前進ではないため、到達扱いにしていません。", "", ""],

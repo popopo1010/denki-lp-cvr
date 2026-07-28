@@ -45,7 +45,12 @@ class FakeSheet {
   getLastRow() { return this.grid.length; }
   getLastColumn() { return this.grid.reduce((m, r) => Math.max(m, r.length), 0); }
   setFrozenRows() { return this; }
-  setColumnWidth() { return this; }
+  setColumnWidth(col, px) {
+    // GAS は 0 以下の列位置で "Those columns are out of bounds." を投げる。
+    // ダミー実装で握りつぶすと、列名変更による例外をテストで検知できない（2026-07-28 の再発防止）。
+    if (!(col >= 1)) throw new Error("Those columns are out of bounds. col=" + col);
+    return this;
+  }
   appendRow(row) { this.grid.push(row.slice()); return this; }
   getRange(row, col, numRows = 1, numCols = 1) {
     const sheet = this;
@@ -305,7 +310,7 @@ console.log("1b) 事前に用意した空スプレッドシートのタブを流
   ctx.syncAgencyShare();
   const names = share.getSheets().map((s) => s.getName());
   check("空タブ「シート1」が残らない", !names.includes("シート1"), JSON.stringify(names));
-  check("5タブになる", names.length === 5, JSON.stringify(names));
+  check("7タブになる", names.length === 7, JSON.stringify(names));
   check("明細が書かれている", share.getSheetByName("候補者ステージ").grid.length === 2);
 }
 
@@ -504,6 +509,56 @@ console.log("9) 日付型セルの _received_at と、同一候補者の重複�
   check("同一候補者は1行に統合", body.length === 2, `${body.length}件`);
   check("初回送信日が残る", days.includes("2026-06-01"), JSON.stringify(days));
   check("統合件数がログに出る", /重複 1件を統合/.test(result), result);
+}
+
+console.log("10) 月別推移と広告費からの単価");
+{
+  const props = {
+    ZOHO_CLIENT_ID: "id", ZOHO_CLIENT_SECRET: "secret", ZOHO_REFRESH_TOKEN: "token",
+    AGENCY_SHARE_SHEET_ID: "share-sheet", AGENCY_SHARE_SALT: "fixed-salt"
+  };
+  const source = new FakeSpreadsheet("1JwwkLThWTMMmi9p1CMGK8gAz-I5f9cmueGFFpplZwGc", ["form_submissions"]);
+  const share = new FakeSpreadsheet("share-sheet", []);
+  // 広告費を先に入れておく（人が入力するタブ）
+  const cost = share.insertSheet("広告コスト入力");
+  cost.getRange(1, 1, 3, 3).setValues([
+    ["年月 (YYYY-MM)", "キャンペーン", "広告費(円)"],
+    ["2026-07", "014_denki_top", 200000],
+    ["2026-06", "014_denki_top", 100000]
+  ]);
+  const ctx = buildContext({ props, spreadsheets: { [source.getId()]: source, "share-sheet": share } });
+  const header = evalIn(ctx, "PREFERRED_COLUMNS").slice();
+  const sheet = source.getSheetByName("form_submissions");
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  [
+    { id: "6001", tel: "09077778888", at: "2026-07-05 10:00:00" },
+    { id: "6002", tel: "08055556666", at: "2026-07-06 10:00:00" },
+    { id: "6003", tel: "07033334444", at: "2026-06-05 10:00:00" }
+  ].forEach((r) => sheet.appendRow(makeRow(header, { zoho_deal_id: r.id, "your-tel": r.tel, _received_at: r.at })));
+  ctx.zohoFetch = () => ({ code: 200, body: { data: [
+    { id: "6001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" },
+    { id: "6003", Stage: "21_内定", Modified_Time: "2026-07-25T14:30:00+09:00" }
+  ] } });
+
+  ctx.syncAgencyShare();
+  const m = share.getSheetByName("月別推移");
+  const head = m.grid[0];
+  check("月別推移タブができる", !!m && head[0] === "送信月", JSON.stringify(head));
+  check("単価の列がある", head.includes("逆オファーOK到達単価(円)"), JSON.stringify(head));
+  const rows = m.grid.slice(1);
+  const jul = rows.find((r) => r[0] === "2026-07");
+  const jun = rows.find((r) => r[0] === "2026-06");
+  check("先頭は【全体】", rows[0][0] === "【全体】", String(rows[0][0]));
+  check("新しい月が先", rows[1][0] === "2026-07", String(rows[1][0]));
+  check("7月: 候補者2人・到達1人", jul[1] === 2 && jul[4] === 1, JSON.stringify(jul));
+  check("7月の逆オファーOK単価 = 200000/1", jul[head.indexOf("逆オファーOK到達単価(円)")] === 200000, JSON.stringify(jul));
+  check("7月の候補者単価 = 200000/2", jul[head.indexOf("候補者単価(円)")] === 100000, JSON.stringify(jul));
+  check("6月の逆オファーOK単価 = 100000/1", jun[head.indexOf("逆オファーOK到達単価(円)")] === 100000, JSON.stringify(jun));
+  check("広告コスト入力タブは消されない",
+        share.getSheetByName("広告コスト入力").grid.length === 3,
+        String(share.getSheetByName("広告コスト入力").grid.length));
+  check("KWタブに単価は出さない",
+        !share.getSheetByName("KW別到達率").grid[0].some((h) => String(h).includes("単価")));
 }
 
 console.log("6) 未設定時は何もせず案内を返す");
