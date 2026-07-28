@@ -561,6 +561,39 @@ console.log("10) 月別推移と広告費からの単価");
         !share.getSheetByName("KW別到達率").grid[0].some((h) => String(h).includes("単価")));
 }
 
+console.log("11) 1タブが失敗しても他タブは更新し、どこが古いかを残す");
+{
+  const props = {
+    ZOHO_CLIENT_ID: "id", ZOHO_CLIENT_SECRET: "secret", ZOHO_REFRESH_TOKEN: "token",
+    AGENCY_SHARE_SHEET_ID: "share-sheet", AGENCY_SHARE_SALT: "fixed-salt"
+  };
+  const source = new FakeSpreadsheet("1JwwkLThWTMMmi9p1CMGK8gAz-I5f9cmueGFFpplZwGc", ["form_submissions"]);
+  const share = new FakeSpreadsheet("share-sheet", []);
+  const ctx = buildContext({ props, spreadsheets: { [source.getId()]: source, "share-sheet": share } });
+  const header = evalIn(ctx, "PREFERRED_COLUMNS").slice();
+  const sheet = source.getSheetByName("form_submissions");
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  sheet.appendRow(makeRow(header, {}));
+  ctx.zohoFetch = () => ({ code: 200, body: { data: [
+    { id: "1001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }
+  ] } });
+
+  // キャンペーン別到達率タブの書き込みだけを故意に失敗させる
+  const orig = ctx.writeAgencyShareFunnel;
+  ctx.writeAgencyShareFunnel = function (ss, cols, rows, sheetName, keyColumn, keyLabel, opts) {
+    if (sheetName === "キャンペーン別到達率") throw new Error("boom");
+    return orig(ss, cols, rows, sheetName, keyColumn, keyLabel, opts);
+  };
+
+  const result = ctx.syncAgencyShare();
+  check("他タブは更新される", share.getSheetByName("月別推移").grid.length > 1);
+  check("明細も更新される", share.getSheetByName("候補者ステージ").grid.length === 2);
+  check("戻り値に失敗タブ名が出る", /書き込み失敗タブ/.test(result) && /キャンペーン別到達率/.test(result), result);
+  const legend = share.getSheetByName("凡例").grid;
+  check("凡例に状態行がある", legend[1][0] === "状態", JSON.stringify(legend[1]));
+  check("凡例が古いタブを名指しする", String(legend[1][2]).includes("キャンペーン別到達率"), JSON.stringify(legend[1]));
+}
+
 console.log("6) 未設定時は何もせず案内を返す");
 {
   const ctx = buildContext({

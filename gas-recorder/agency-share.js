@@ -417,18 +417,40 @@ function syncAgencyShare() {
     return String(b[cols.indexOf("送信日")]).localeCompare(String(a[cols.indexOf("送信日")]));
   });
 
-  writeAgencyShareDetail(ss, cols, rows);
-  var costs = readAgencyShareCosts(ss);
-  writeAgencyShareSummary(ss, cols, rows);
-  writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_MONTHLY_SHEET, "送信月", "送信月",
-                         { sortByKey: true, costs: { map: costs.byMonth, total: costs.total } });
-  writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET,
-                         "utm_campaign", "キャンペーン",
-                         { costs: { map: costs.byCampaign, total: costs.total } });
+  // タブ単位で失敗を切り分ける。1つの例外で全体が止まると、書けたタブだけ新しく、
+  // 残りは古いまま無言で残る（2026-07-28 に発生。列名変更で setColumnWidth が例外）。
+  // どこが古いままかを凡例タブと戻り値に必ず出す。
+  var writeErrors = [];
+  function safeWrite(label, fn) {
+    try {
+      fn();
+    } catch (err) {
+      writeErrors.push(label + "（" + err + "）");
+    }
+  }
+
+  safeWrite(AGENCY_SHARE_DETAIL_SHEET, function () { writeAgencyShareDetail(ss, cols, rows); });
+
+  var costs = { byMonth: {}, byCampaign: {}, total: 0 };
+  safeWrite(AGENCY_SHARE_COST_SHEET, function () { costs = readAgencyShareCosts(ss); });
+
+  safeWrite(AGENCY_SHARE_SUMMARY_SHEET, function () { writeAgencyShareSummary(ss, cols, rows); });
+  safeWrite(AGENCY_SHARE_MONTHLY_SHEET, function () {
+    writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_MONTHLY_SHEET, "送信月", "送信月",
+                           { sortByKey: true, costs: { map: costs.byMonth, total: costs.total } });
+  });
+  safeWrite(AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET, function () {
+    writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET,
+                           "utm_campaign", "キャンペーン",
+                           { costs: { map: costs.byCampaign, total: costs.total } });
+  });
   // KWごとの広告費は取得できないため、KWタブに単価は出さない
-  writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET,
-                         "utm_term", "キーワード");
-  setupAgencyShareLegend(ss, filter);
+  safeWrite(AGENCY_SHARE_KEYWORD_FUNNEL_SHEET, function () {
+    writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET,
+                           "utm_term", "キーワード");
+  });
+  // 凡例は最後に、失敗があっても必ず書く（どのタブが古いままかを載せる場所）
+  setupAgencyShareLegend(ss, filter, writeErrors);
 
   // 何を落としたかは必ず出す。黙って絞ると「全件出ている」と誤解される。
   var msg = "共有シート更新: " + rows.length + "件" +
@@ -437,6 +459,12 @@ function syncAgencyShare() {
             " / 同一候補者の重複 " + duplicates + "件を統合" +
             " / ステージ取得 " + Object.keys(stages.map).length + "件）" +
             " 最終更新 " + toJst(new Date());
+  if (writeErrors.length) {
+    msg += " ※書き込み失敗タブ（内容が古いまま）: " + writeErrors.join(" / ");
+    if (typeof reportErrorToSlack === "function") {
+      reportErrorToSlack("syncAgencyShare/write", writeErrors.join(" / "));
+    }
+  }
   if (stages.errors.length) {
     msg += " ※Zoho取得エラー: " + stages.errors.join(" / ");
     if (typeof reportErrorToSlack === "function") {
@@ -610,9 +638,12 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel, 
   sheet.setColumnWidth(1, 320);
 }
 
-function setupAgencyShareLegend(ss, filter) {
+function setupAgencyShareLegend(ss, filter, writeErrors) {
+  writeErrors = writeErrors || [];
   var legend = [
     ["最終更新", toJst(new Date()), "1時間ごとに自動更新"],
+    ["状態", writeErrors.length ? "一部のタブが更新できませんでした" : "正常",
+     writeErrors.length ? "内容が古いまま: " + writeErrors.join(" / ") : "全タブを更新済み"],
     ["対象チャネル", filter ? filter.join(" / ") + " のみ" : "全チャネル",
      filter ? "この流入元以外（他媒体・自然流入）は掲載していません" : "Google / Meta / 自然流入すべて"],
     ["", "", ""],
@@ -658,11 +689,11 @@ function setupAgencyShareLegend(ss, filter) {
   sheet.clear();
   sheet.getRange(1, 1, legend.length, 3).setValues(legend);
   sheet.getRange(1, 1, 1, 1).setFontWeight("bold");
-  sheet.getRange(4, 1, 1, 3).setFontWeight("bold").setBackground("#f0f0f0");
+  sheet.getRange(5, 1, 1, 3).setFontWeight("bold").setBackground("#f0f0f0");
   sheet.setColumnWidth(1, 160);
   sheet.setColumnWidth(2, 220);
   sheet.setColumnWidth(3, 560);
-  sheet.setFrozenRows(4);
+  sheet.setFrozenRows(5);
 }
 
 /**
