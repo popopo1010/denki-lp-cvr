@@ -614,7 +614,10 @@ function buildLeadSlackMessage(params) {
   var byear      = params["your-birthday-year"] || "";
   var bmonth     = params["your-birthday-month"] || "";
   var bday       = params["your-birthday-day"] || "";
-  var birthday   = params["your-birthday"] || (byear ? byear + "/" + bmonth + "/" + bday : "");
+  // 現行LPは生まれ年のみ収集。年だけのとき「1990//」と崩れないようにする
+  var birthday   = params["your-birthday"] ||
+    (byear && bmonth && bday ? byear + "/" + bmonth + "/" + bday :
+     byear ? byear + "年生まれ（年のみ回答）" : "");
   var willingness = params["your-willingness"] || "";
   var license    = params["your-license01"] || "";
   var experience = params["your-experience"] || "";

@@ -222,6 +222,29 @@ function zohoNormalizeZip(s) {
   return z;
 }
 
+/**
+ * 生年月日を Zoho の date 項目形式（YYYY-MM-DD）に組み立てる。
+ * 現行LPは「生まれ年（西暦）」しか聞かないため、フル日付が無い行がほとんど。
+ * その場合は月日を 4/1 に仮置きして返す（年齢が分かる状態にするのが目的）。
+ * 仮置きかどうかは yearOnly で返し、呼び出し側が lp_info に明記する。
+ * ※シート経由（backfill / resync）では `your-birthday` セルが日付型に
+ *   変換されていることがあるため、Date オブジェクトも受ける。
+ * 戻り値: { date: "YYYY-MM-DD" | "", yearOnly: boolean }
+ */
+function zohoBuildBirthday(params) {
+  var full = params["your-birthday"];
+  if (Object.prototype.toString.call(full) === "[object Date]" && !isNaN(full.getTime())) {
+    return { date: Utilities.formatDate(full, "Asia/Tokyo", "yyyy-MM-dd"), yearOnly: false };
+  }
+  var s = String(full == null ? "" : full).trim();
+  var m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) return { date: m[1] + "-" + pad2(m[2]) + "-" + pad2(m[3]), yearOnly: false };
+
+  var y = String(params["your-birthday-year"] == null ? "" : params["your-birthday-year"]).trim();
+  if (/^(19|20)\d{2}$/.test(y)) return { date: y + "-04-01", yearOnly: true };
+  return { date: "", yearOnly: false };
+}
+
 // 09012345678 のような連番ダミー番号か。
 // 「一方向に」6桁以上つながっている場合のみ該当とする。
 // ※ 1,2,1,2 のような往復を連番扱いすると実在の番号を誤検知する
@@ -384,6 +407,10 @@ function buildZohoDeal(params, meta) {
   // No_yubin は数値項目なので 0590031 → 590031 と先頭0が落ちる。原文をLP情報に残す。
   if (zip && zip.charAt(0) === "0") info.push("郵便番号: " + zip);
 
+  // 生まれ年のみ回答のときは月日を 4/1 に仮置きする。実誕生日と混同しないよう明記。
+  var birthday = zohoBuildBirthday(params);
+  if (birthday.yearOnly) info.push("生年月日は年のみ回答（月日は4/1の仮置き）");
+
   var deal = {
     Deal_Name: name + "/" + license,
     Pipeline: ZOHO_DEAL_PIPELINE,
@@ -411,7 +438,7 @@ function buildZohoDeal(params, meta) {
 
   if (zip) deal.No_yubin = Number(zip);
 
-  if (String(params["your-birthday"] || "").trim()) deal.date_seinengappi = String(params["your-birthday"]).trim();
+  if (birthday.date) deal.date_seinengappi = birthday.date;
   if (String(params["your-email"] || "").trim()) deal.email_main = String(params["your-email"]).trim();
 
   return deal;
