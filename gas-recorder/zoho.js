@@ -674,6 +674,17 @@ function resyncZohoDealFields(limit) {
          (fails ? "\n失敗の内訳:\n" + fails : ""));
 }
 
+/**
+ * resyncZohoDealFields() を全行ぶん一括実行するエントリポイント。
+ * エディタの「実行」からは引数を渡せず、既定の150行では
+ * 「毎回先頭150行だけ処理して151行目以降に届かない」ため（再開カーソルなし）、
+ * 連携済み行が150行を超えたらこちらを実行する。
+ * 1000行 ≒ COQL 20回 + 更新20バッチで、GASの6分制限には収まる。
+ */
+function resyncZohoDealFieldsAll() {
+  return resyncZohoDealFields(1000);
+}
+
 // 疎通確認用。エディタから実行して「ok: 組織名」が返れば認証まで通っている。
 function testZohoConnection() {
   if (!zohoEnabled()) return zohoLog("ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET / ZOHO_REFRESH_TOKEN が未設定");
