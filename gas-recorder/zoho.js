@@ -223,22 +223,29 @@ function zohoNormalizeZip(s) {
 }
 
 /**
+ * 日付らしき値を Zoho の date 項目形式（YYYY-MM-DD）にする。変換できなければ ""。
+ * シート経由（backfill / resync）ではセルが日付型（Dateオブジェクト）に変換されて
+ * いることがあり、String() すると "Tue Aug 05 …" になって INVALID_DATA で弾かれる。
+ * "2026/8/5 12:34:56" のような日時文字列も日付部分だけ取り出す。
+ */
+function zohoToDateString(v) {
+  if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime())) {
+    return Utilities.formatDate(v, "Asia/Tokyo", "yyyy-MM-dd");
+  }
+  var m = String(v == null ? "" : v).trim().match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  return m ? m[1] + "-" + pad2(m[2]) + "-" + pad2(m[3]) : "";
+}
+
+/**
  * 生年月日を Zoho の date 項目形式（YYYY-MM-DD）に組み立てる。
  * 現行LPは「生まれ年（西暦）」しか聞かないため、フル日付が無い行がほとんど。
  * その場合は月日を 4/1 に仮置きして返す（年齢が分かる状態にするのが目的）。
  * 仮置きかどうかは yearOnly で返し、呼び出し側が lp_info に明記する。
- * ※シート経由（backfill / resync）では `your-birthday` セルが日付型に
- *   変換されていることがあるため、Date オブジェクトも受ける。
  * 戻り値: { date: "YYYY-MM-DD" | "", yearOnly: boolean }
  */
 function zohoBuildBirthday(params) {
-  var full = params["your-birthday"];
-  if (Object.prototype.toString.call(full) === "[object Date]" && !isNaN(full.getTime())) {
-    return { date: Utilities.formatDate(full, "Asia/Tokyo", "yyyy-MM-dd"), yearOnly: false };
-  }
-  var s = String(full == null ? "" : full).trim();
-  var m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-  if (m) return { date: m[1] + "-" + pad2(m[2]) + "-" + pad2(m[3]), yearOnly: false };
+  var full = zohoToDateString(params["your-birthday"]);
+  if (full) return { date: full, yearOnly: false };
 
   var y = String(params["your-birthday-year"] == null ? "" : params["your-birthday-year"]).trim();
   if (/^(19|20)\d{2}$/.test(y)) return { date: y + "-04-01", yearOnly: true };
@@ -421,9 +428,9 @@ function buildZohoDeal(params, meta) {
     marketing_channel: zohoMarketingChannel(params)
   };
 
-  // 求職者登録日＝LP送信日
-  var received = String(params["_received_at"] || "");
-  if (received.length >= 10) deal.date_EuRegsiter = received.slice(0, 10);
+  // 求職者登録日＝LP送信日（日付型セル・"2026/8/5" 形式も正規化する）
+  var received = zohoToDateString(params["_received_at"]);
+  if (received) deal.date_EuRegsiter = received;
 
   var shikaku = zohoBuildShikaku(meta, license);
   if (shikaku.values.length && zohoFieldUsable(meta, "shikaku")) deal.shikaku = shikaku.values;
