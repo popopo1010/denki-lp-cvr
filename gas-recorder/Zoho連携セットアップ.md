@@ -88,12 +88,28 @@ Apps Script エディタ → ⚙️ プロジェクトの設定 → スクリプ
 | your-tel | 電話番号 `m_phone_number`（先頭0が落ちた10桁は 0 を補完） |
 | your-license01 | 保有資格 `shikaku`（**複数選択**。原文は `shikaku_sonota` にも保存） |
 | your-pref / your-city / your-zip | 都道府県 `area` / 市区町村 `shikuchoson` / 郵便番号 `No_yubin` |
-| your-birthday | 生年月日 `date_seinengappi` |
+| your-birthday（無ければ your-birthday-year から組み立て） | 生年月日 `date_seinengappi` … 下記参照 |
 | your-email | メールアドレス `email_main` |
 | _received_at | 求職者登録日 `date_EuRegsiter` |
 | utm一式（無ければ`_page`のURLから復元） | マーケティングチャネル `marketing_channel` … 下記参照 |
 | LP名・送信日時・経験・転職意欲・検索語・utm・LINE登録 | LP情報 `lp_info` にまとめて記録 |
 | — | パイプライン＝`求職者対応` / ステージ＝`01_新規リード` 固定 |
+
+### 生年月日の 4/1 仮置きルール（2026-08-05〜）
+
+- 現行LPのフォームは**生まれ年（西暦）しか聞かない**（`your-birthday-year` のみ。月日の入力欄なし）。
+  そのままだとフル日付が組み立てられず、Zoho の生年月日 `date_seinengappi` が常に空になっていた。
+- 対応：`zohoBuildBirthday()`（zoho.js）が、フル日付 `your-birthday` が無く生まれ年だけある場合に
+  **`YYYY-04-01`（4月1日仮置き）** を組み立てて `date_seinengappi` に入れる。
+  Zoho 側の `date_seinengappi` はただの date 型（min/max・バリデーションなし）なので 4/1 は問題なく登録できる。
+- **仮置きであることは `lp_info` に「生年月日は年のみ回答（月日は4/1の仮置き）」と明記**する。
+  営業が実際の誕生日と混同しないため。年齢計算上は 4/1 生まれ扱い（学年区切りと同じ）になる点に注意。
+- スプレッドシートの `your-birthday` 列には仮置き日付を**書き込まない**（シートは実際の回答のまま）。
+  仮置きは Zoho へ送るペイロード上だけで行う。
+- 既存の連携済み商談への反映は `resyncZohoDealFields()` で行える（`date_seinengappi` が空の商談だけ埋まる。
+  ただし既存商談の `lp_info` は空でない限り触らないため、仮置き注記は付かない）。
+- 反映には GAS 側のデプロイ更新（clasp push または Apps Script エディタで反映）が必要。
+  **main にマージしただけでは GAS は更新されない。**
 
 ### マーケティングチャネルの中身
 
