@@ -20,7 +20,7 @@ html{scroll-behavior:smooth}
 .l-header__message{margin-top:4px}
 .l-header__message span{font-weight:700;font-size:12px}
 .l-header__message .emphasis-1{color:#90d7ff}
-.l-header__message .emphasis-2{color:#f17a85}
+.l-header__message .emphasis-2{color:#ffa8b0}
 
 /* Main */
 .l-main{flex:1;margin:4px auto;width:92%}
@@ -70,7 +70,7 @@ html{scroll-behavior:smooth}
 .c-title01{padding:6px 0 4px;font-weight:700;font-size:17px;text-align:center}
 .c-title-top{padding:8px 0;background:rgba(24,88,1,.25);margin-bottom:8px}
 .c-title02{display:flex;align-items:center;padding-top:16px;font-weight:700;font-size:16px}
-.c-title02::before{display:block;width:16px;height:16px;margin:0 8px;background:#f17a85;content:""}
+.c-title02::before{display:block;width:16px;height:16px;margin:0 8px;background:#ffa8b0;content:""}
 .c-info-text{display:flex;align-items:center;justify-content:center;font-size:12px;text-align:center;margin-top:16px}
 
 /* First step buttons */

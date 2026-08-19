@@ -195,7 +195,7 @@ def build_step01(v: dict, *, nenshu: bool = False) -> str:
 def build_testimonials(v: dict) -> str:
     lines = [
         '<div class="cvr-testimonials">',
-        f'    <h3 class="cvr-testimonials__title">{v["testimonials_title"]}</h3>',
+        f'    <h2 class="cvr-testimonials__title">{v["testimonials_title"]}</h2>',
         f'    <p class="cvr-testimonials__lead">{v["testimonials_lead"]}</p>',
     ]
     for avatar, name, role, text in v["testimonials"]:

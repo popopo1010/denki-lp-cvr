@@ -1,0 +1,27 @@
+# サイト死活の切り分け用プローブ（2026-08-19 STG 403報告の調査で追加）
+# GitHubランナーから本番/STG/WPルートのHTTPステータスを取得してログに出すだけ。
+# デプロイや書き込みは一切しない。不要になったら削除してよい。
+name: Probe site status
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check HTTP status from GitHub runner
+        run: |
+          set +e
+          UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          for u in \
+            "https://denkilp.builders-job.com/" \
+            "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/" \
+            "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri/" \
+            "https://denkilp.builders-job.com/denki-lp-cvr-stg/denkikouji/" \
+            "https://denkilp.builders-job.com/denki-lp-cvr-stg/assets/css/cvr-boost-denkikouji.css?v20260819a"; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -A "$UA" --max-time 30 "$u")
+            echo "STATUS ${code:-ERR} $u"
+          done
+          echo "done (always green: 判定はログのSTATUS行で行う)"
