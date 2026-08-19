@@ -310,7 +310,7 @@
 }
 .ns-salary-data__card-avg {
   font-size: 11px;
-  color: #888;
+  color: #6f6f6f;
   white-space: nowrap;
 }
 .ns-salary-data__card-avg strong {
@@ -320,7 +320,7 @@
 .ns-salary-data__note {
   text-align: center;
   font-size: 10px;
-  color: #aaa;
+  color: #767676;
   margin-top: 10px;
 }
 
@@ -522,7 +522,7 @@
   background: linear-gradient(135deg, var(--ns-primary), var(--ns-accent));
 }
 .ns-lp .cvr-step-reason {
-  color: #888;
+  color: #6f6f6f;
   font-size: 10px;
   font-weight: 500;
 }
@@ -650,12 +650,12 @@
 .ns-lp .cvr-pp-text {
   text-align: center;
   font-size: 10px;
-  color: #999;
+  color: #767676;
   margin-top: 8px;
   line-height: 1.5;
 }
 .ns-lp .cvr-pp-text a {
-  color: #888;
+  color: #6f6f6f;
   text-decoration: underline;
 }
 

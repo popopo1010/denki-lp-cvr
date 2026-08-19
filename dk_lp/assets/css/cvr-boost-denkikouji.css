@@ -48,8 +48,8 @@
 }
 
 /* ===== マイクロコピー・ステップ理由 ===== */
-.cvr-micro-copy { text-align: center; font-size: 12px; color: #888; margin-top: 12px; line-height: 1.5; }
-.cvr-step-reason { text-align: center; font-size: 11px; color: #888; margin: 4px 0; padding: 0 8px; line-height: 1.5; }
+.cvr-micro-copy { text-align: center; font-size: 12px; color: #6f6f6f; margin-top: 12px; line-height: 1.5; }
+.cvr-step-reason { text-align: center; font-size: 11px; color: #6f6f6f; margin: 4px 0; padding: 0 8px; line-height: 1.5; }
 .cvr-step-reward {
   text-align: center; font-size: 11px; color: #314c85;
   margin: 4px 0 10px; padding: 6px 10px; line-height: 1.45;
@@ -298,8 +298,8 @@ body.lp-form-step .cvr-floating-cta {
 .cvr-tel-reassurance svg { flex-shrink: 0; }
 
 /* ===== PP同意テキスト ===== */
-p.cvr-pp-text { text-align: center; font-size: 9px !important; color: #bbb !important; margin-top: 6px; line-height: 1.4; }
-p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
+p.cvr-pp-text { text-align: center; font-size: 9px !important; color: #767676 !important; margin-top: 6px; line-height: 1.4; }
+p.cvr-pp-text a { color: #767676 !important; text-decoration: underline; }
 
 /* ===== 利用者の声 ===== */
 /* content-visibility: ファーストビュー外なので初期描画スキップ → LCP改善
@@ -332,7 +332,7 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 }
 .cvr-testimonial__meta { display: flex; flex-direction: column; flex: 1; }
 .cvr-testimonial__name { font-size: 13px; font-weight: 700; color: #333; }
-.cvr-testimonial__role { font-size: 11px; color: #888; }
+.cvr-testimonial__role { font-size: 11px; color: #6f6f6f; }
 .cvr-testimonial__stars { color: #FFC107; font-size: 14px; letter-spacing: 1px; }
 .cvr-testimonial__text { font-size: 13px; line-height: 1.7; color: #555; }
 .cvr-testimonial__text strong { color: #ff5966; }
@@ -358,7 +358,7 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 .cvr-faq__item summary::-webkit-details-marker { display: none; }
 .cvr-faq__item summary::after {
   content: "+"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-  font-size: 18px; color: #999;
+  font-size: 18px; color: #767676;
 }
 .cvr-faq__item[open] summary::after { content: "-"; }
 .cvr-faq__item p { padding: 0 16px 14px; font-size: 12px; line-height: 1.7; color: #666; }
@@ -372,7 +372,7 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
 
 /* ===== フォーム共通 ===== */
 .c-next-button span:first-child { font-size: 15px; font-weight: 700; }
-.c-nextLinkButton { font-size: 12px !important; color: #bbb !important; text-decoration: none !important; }
+.c-nextLinkButton { font-size: 12px !important; color: #767676 !important; text-decoration: none !important; }
 
 /* 送信CTA: 透明inputでタップ領域確保・ラベルは__textのみ表示 */
 .c-submit-button {
@@ -496,7 +496,7 @@ p.cvr-pp-text a { color: #bbb !important; text-decoration: underline; }
   cursor: pointer; margin-bottom: 8px; box-shadow: 0 3px 0 #be5156;
 }
 .cvr-exit-modal__btn:hover { transform: translateY(2px); box-shadow: none; }
-.cvr-exit-modal__close { display: block; width: 100%; padding: 8px; border: none; background: transparent; color: #999; font-size: 12px; cursor: pointer; }
+.cvr-exit-modal__close { display: block; width: 100%; padding: 8px; border: none; background: transparent; color: #767676; font-size: 12px; cursor: pointer; }
 
 /* ===== グローバル ===== */
 .c-button:active, .p-firstButton:active { transform: scale(.97); }

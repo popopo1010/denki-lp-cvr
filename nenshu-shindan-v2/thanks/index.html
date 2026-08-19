@@ -13,7 +13,7 @@ if('requestIdleCallback'in window)requestIdleCallback(g,{timeout:4e3});else wind
 
 <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014">
 <link rel="stylesheet" href="../../assets/css/cvr-boost-v2.css?v20260819a">
-<link rel="stylesheet" href="../nenshu-shindan.css?v8">
+<link rel="stylesheet" href="../nenshu-shindan.css?v9">
 <link rel="stylesheet" href="../../assets/css/thanks-calendar.css?v=5">
 <style>
 body{background:#f5f7fa}
@@ -28,18 +28,18 @@ body{background:#f5f7fa}
 .t-result__label{font-size:12px;font-weight:700;color:#e8520e;margin-bottom:4px}
 .t-result__msg{font-size:15px;font-weight:700;color:#333;line-height:1.6;margin-bottom:12px}
 .t-result__msg strong{color:#e8520e;font-size:18px}
-.t-result__note{font-size:11px;color:#999;line-height:1.5}
+.t-result__note{font-size:11px;color:#767676;line-height:1.5}
 .t-trust{margin:0 16px 24px}
 .t-contact{display:flex;align-items:center;gap:12px;padding:14px 16px;margin:0 16px 24px;background:#fff;border:2px solid #e8520e;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .t-contact__ic{display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:linear-gradient(135deg,#e8520e,#f57c00);border-radius:50%;flex-shrink:0}
 .t-contact__tx{font-size:13px;color:#333;line-height:1.6}
 .t-contact__tx strong{color:#e8520e}
-.t-contact__note{display:block;font-size:11px;color:#888;margin-top:4px}
+.t-contact__note{display:block;font-size:11px;color:#6f6f6f;margin-top:4px}
 .t-email{margin:0 16px 24px;padding:24px 20px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:2px solid #e8520e;position:relative;overflow:hidden}
 .t-email__badge{position:absolute;top:0;right:0;background:#e8520e;color:#fff;font-size:11px;font-weight:700;padding:4px 14px 4px 18px;border-radius:0 0 0 12px}
 .t-email h3{font-size:16px;font-weight:800;color:#333;text-align:center;margin:0 0 6px;line-height:1.5}
 .t-email h3 strong{color:#e8520e}
-.t-email__sub{font-size:12px;color:#888;text-align:center;margin-bottom:16px;line-height:1.6}
+.t-email__sub{font-size:12px;color:#6f6f6f;text-align:center;margin-bottom:16px;line-height:1.6}
 .t-bene{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
 .t-bene__i{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;line-height:1.4}
 .t-bene__i svg{flex-shrink:0}
@@ -51,37 +51,37 @@ body{background:#f5f7fa}
 .t-email__btn:hover{transform:translateY(2px);box-shadow:none}
 .t-email__btn:disabled{opacity:.6;cursor:not-allowed;animation:none}
 @keyframes t-pulse{0%,100%{box-shadow:0 3px 0 #c04009,0 0 0 0 rgba(232,82,14,.4)}50%{box-shadow:0 3px 0 #c04009,0 0 0 8px rgba(232,82,14,0)}}
-.t-email__note{display:flex;align-items:center;gap:4px;font-size:11px;color:#aaa;margin-top:4px;line-height:1.4}
+.t-email__note{display:flex;align-items:center;gap:4px;font-size:11px;color:#767676;margin-top:4px;line-height:1.4}
 .t-email__note svg{flex-shrink:0}
 .t-email__done{display:none;text-align:center;padding:16px 0}
 .t-email__done-ic{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:#fff3e0;border-radius:50%;margin-bottom:12px}
 .t-email__done-tx{font-size:15px;font-weight:700;color:#e8520e;margin-bottom:4px}
-.t-email__done-sub{font-size:12px;color:#888}
+.t-email__done-sub{font-size:12px;color:#6f6f6f}
 .t-tl{padding:0 16px;margin-bottom:28px}
 .t-tl__title{font-size:16px;font-weight:700;text-align:center;margin-bottom:20px;color:#333;position:relative;padding-bottom:8px}
 .t-tl__title::after{content:"";display:block;width:40px;height:3px;background:#e8520e;margin:8px auto 0;border-radius:2px}
 .t-step{display:flex;gap:14px;padding-bottom:24px;position:relative}
 .t-step:not(:last-child)::before{content:"";position:absolute;left:19px;top:40px;bottom:0;width:2px;background:#ddd}
 .t-step.is-cur::before{background:linear-gradient(180deg,#e8520e,#ddd)}
-.t-step__n{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;font-size:14px;font-weight:800;flex-shrink:0;background:#e8e8e8;color:#888}
+.t-step__n{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;font-size:14px;font-weight:800;flex-shrink:0;background:#e8e8e8;color:#6f6f6f}
 .t-step.is-done .t-step__n{background:#4CAF50;color:#fff}
 .t-step.is-cur .t-step__n{background:linear-gradient(135deg,#e8520e,#f57c00);color:#fff;box-shadow:0 3px 8px rgba(232,82,14,.3);animation:t-glow 2s infinite}
 @keyframes t-glow{0%,100%{box-shadow:0 3px 8px rgba(232,82,14,.3)}50%{box-shadow:0 3px 16px rgba(232,82,14,.5)}}
 .t-step__b{flex:1;padding-top:2px}
 .t-step__l{font-size:14px;font-weight:700;color:#333;margin-bottom:4px}
 .t-step.is-cur .t-step__l{color:#e8520e}
-.t-step__d{font-size:12px;color:#888;line-height:1.5}
+.t-step__d{font-size:12px;color:#6f6f6f;line-height:1.5}
 .t-step__tag{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:#e8520e;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
 .t-line{margin:0 16px 28px;padding:24px 16px;background:#fff;border-radius:16px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06)}
 .t-line h3{font-size:15px;font-weight:700;color:#333;margin:0 0 6px}
-.t-line__sub{font-size:12px;color:#888;margin-bottom:16px;line-height:1.5}
+.t-line__sub{font-size:12px;color:#6f6f6f;margin-bottom:16px;line-height:1.5}
 .t-line__btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:320px;margin:0 auto 12px;padding:14px 20px;background:#06C755;color:#fff;font-size:15px;font-weight:700;border:none;border-radius:12px;cursor:pointer;text-decoration:none;box-shadow:0 3px 0 #05a847;transition:transform .15s}
 .t-line__btn:hover{transform:translateY(2px);box-shadow:none}
-.t-line__note{font-size:11px;color:#aaa}
+.t-line__note{font-size:11px;color:#767676}
 .t-testi{padding:0 16px;margin-bottom:28px}
 .t-ref{margin:0 16px 28px;padding:20px 16px;background:#fff;border:1px dashed #e8520e;border-radius:12px;text-align:center}
 .t-ref h3{font-size:14px;font-weight:700;color:#333;margin:0 0 6px}
-.t-ref__tx{font-size:12px;color:#888;margin-bottom:14px;line-height:1.6}
+.t-ref__tx{font-size:12px;color:#6f6f6f;margin-bottom:14px;line-height:1.6}
 .t-ref__btns{display:flex;gap:10px;justify-content:center}
 .t-ref__btn{display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;color:#fff;text-decoration:none;transition:opacity .2s}
 .t-ref__btn:hover{opacity:.85}

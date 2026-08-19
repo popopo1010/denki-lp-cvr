@@ -97,7 +97,7 @@ html{scroll-behavior:smooth}
 /* Next/Back buttons */
 .c-nextLink{display:flex;align-items:center;margin-top:16px;position:relative}
 .c-nextLink .wpcf7-spinner{display:none}
-.c-nextLinkButton{width:94px;height:48px;font-size:12px;color:#bbb;text-decoration:none}
+.c-nextLinkButton{width:94px;height:48px;font-size:12px;color:#767676;text-decoration:none}
 .c-nextLinkButton--submit{margin-left:auto}
 .c-next-button{display:flex;position:relative;flex:1;align-items:center;justify-content:center;max-width:270px;height:54px;margin-left:auto;border-radius:8px;background:#ff5966;box-shadow:0 3px 0 #be5156;color:#fff;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 .c-next-button span:first-child{font-size:15px;font-weight:700}
@@ -161,7 +161,7 @@ html{scroll-behavior:smooth}
 .p-step07__tel{position:relative;margin-top:8px}
 
 /* Micro copies */
-.cvr-micro-copy{text-align:center;font-size:11px;color:#888;margin-top:6px}
+.cvr-micro-copy{text-align:center;font-size:11px;color:#6f6f6f;margin-top:6px}
 .cvr-step-reason{text-align:center;font-size:13px;color:#6b7280;margin-top:4px;margin-bottom:4px;line-height:1.5}
 .cvr-almost-done{text-align:center;margin:12px 0 8px}
 .cvr-almost-done p{display:inline-block;padding:6px 20px;background:linear-gradient(135deg,#e3f2fd,#e8eaf6);border-radius:20px;font-size:13px;font-weight:700;color:#314c85}
@@ -171,8 +171,8 @@ html{scroll-behavior:smooth}
 .cvr-tel-notice{position:absolute;top:-7px;right:4px;padding:2px 8px;border-radius:50px;background:#f5f4f2;color:#314c85;font-weight:600;font-size:10px;line-height:15px;z-index:2;pointer-events:none}
 .cvr-tel-reassurance{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#777;line-height:1.4}
 .cvr-tel-reassurance svg{flex-shrink:0}
-.cvr-pp-text{text-align:center;font-size:11px;color:#999;margin-top:6px;line-height:1.45}
-.cvr-pp-text a{color:#999;text-decoration:underline}
+.cvr-pp-text{text-align:center;font-size:11px;color:#767676;margin-top:6px;line-height:1.45}
+.cvr-pp-text a{color:#767676;text-decoration:underline}
 
 /* Kuma */
 .cvr-kuma-wrap{position:relative}
@@ -189,7 +189,7 @@ html{scroll-behavior:smooth}
 .cvr-testimonial__avatar{width:40px;height:40px;background:linear-gradient(135deg,#314c85,#5c6bc0);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .cvr-testimonial__meta{display:flex;flex-direction:column;flex:1}
 .cvr-testimonial__name{font-size:13px;font-weight:700;color:#333}
-.cvr-testimonial__role{font-size:11px;color:#888}
+.cvr-testimonial__role{font-size:11px;color:#6f6f6f}
 .cvr-testimonial__stars{color:#FFC107;font-size:14px;letter-spacing:1px}
 .cvr-testimonial__text{font-size:13px;line-height:1.7;color:#555}
 .cvr-testimonial__text strong{color:#ff5966}
@@ -201,7 +201,7 @@ html{scroll-behavior:smooth}
 .cvr-faq__item{border:1px solid #e8e8e8;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#fff}
 .cvr-faq__item summary{padding:14px 40px 14px 16px;font-size:13px;font-weight:700;color:#333;cursor:pointer;position:relative;line-height:1.5;list-style:none}
 .cvr-faq__item summary::-webkit-details-marker{display:none}
-.cvr-faq__item summary::after{content:"+";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:18px;color:#999}
+.cvr-faq__item summary::after{content:"+";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:18px;color:#767676}
 .cvr-faq__item[open] summary::after{content:"-"}
 .cvr-faq__item p{padding:0 16px 14px;font-size:12px;line-height:1.7;color:#666}
 
@@ -212,7 +212,7 @@ html{scroll-behavior:smooth}
 .cvr-exit-modal__text{font-size:13px;line-height:1.7;color:#666;margin-bottom:20px}
 .cvr-exit-modal__text strong{color:#ff5966}
 .cvr-exit-modal__btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;background:#ff5966;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;box-shadow:0 3px 0 #be5156}
-.cvr-exit-modal__close{display:block;width:100%;padding:8px;border:none;background:transparent;color:#999;font-size:12px;cursor:pointer}
+.cvr-exit-modal__close{display:block;width:100%;padding:8px;border:none;background:transparent;color:#767676;font-size:12px;cursor:pointer}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes scaleIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 
@@ -253,7 +253,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .p-step07__tel{position:relative;margin-top:8px}
 
 /* Micro copies */
-.cvr-micro-copy{text-align:center;font-size:11px;color:#888;margin-top:6px}
+.cvr-micro-copy{text-align:center;font-size:11px;color:#6f6f6f;margin-top:6px}
 .cvr-step-reason{text-align:center;font-size:13px;color:#6b7280;margin-top:4px;margin-bottom:4px;line-height:1.5}
 .cvr-almost-done{text-align:center;margin:12px 0 8px}
 .cvr-almost-done p{display:inline-block;padding:6px 20px;background:linear-gradient(135deg,#e3f2fd,#e8eaf6);border-radius:20px;font-size:13px;font-weight:700;color:#314c85}
@@ -263,8 +263,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .cvr-tel-notice{position:absolute;top:-7px;right:4px;padding:2px 8px;border-radius:50px;background:#f5f4f2;color:#314c85;font-weight:600;font-size:10px;line-height:15px;z-index:2;pointer-events:none}
 .cvr-tel-reassurance{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#777;line-height:1.4}
 .cvr-tel-reassurance svg{flex-shrink:0}
-.cvr-pp-text{text-align:center;font-size:11px;color:#999;margin-top:6px;line-height:1.45}
-.cvr-pp-text a{color:#999;text-decoration:underline}
+.cvr-pp-text{text-align:center;font-size:11px;color:#767676;margin-top:6px;line-height:1.45}
+.cvr-pp-text a{color:#767676;text-decoration:underline}
 
 /* Kuma */
 .cvr-kuma{text-align:right;margin-top:-10px;margin-bottom:-10px;pointer-events:none}

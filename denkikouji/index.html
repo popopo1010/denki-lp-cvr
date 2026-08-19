@@ -69,12 +69,6 @@ html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
 .cvr-progress__bar{height:100%;width:0;background:linear-gradient(90deg,#314c85,#5c6bc0);border-radius:999px}
 .c-text-box,.c-select-box02 select{min-height:52px;font-size:16px}
 .c-next-button,.c-submit-button{min-height:48px}
-/* ラボCLS対策: fold下セクションの骨格を非同期CSS(cvr-boost)と同値で先行適用（到着時のシフト防止） */
-.cvr-testimonials,.cvr-faq{position:relative;z-index:0;content-visibility:auto;contain-intrinsic-size:auto 480px}
-.cvr-testimonials{margin-top:32px;padding:0 4px}
-.cvr-faq{margin-top:32px;margin-bottom:24px;padding:0 4px}
-.cvr-testimonials__title{font-size:16px;font-weight:700;text-align:center;margin-bottom:16px;color:#333;padding-bottom:8px}
-.cvr-faq__title{font-size:16px;font-weight:700;text-align:center;margin-bottom:16px;color:#333}
 @media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));padding-top:0;padding-bottom:0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:auto;padding-bottom:max(8px,env(safe-area-inset-bottom))}#step-first>picture{display:block;height:150px;overflow:hidden;border-radius:8px}#step-first>picture img{height:100%!important;max-height:150px!important;object-fit:cover;object-position:center 35%;width:100%;border-radius:8px}.p-firstButton__icon{display:none}.p-firstButton{min-height:76px}body.lp-form-step .c-next-button{min-height:48px}}
 /* FV 2択ボタンのCTA化（v2/sekoukanriと統一・dead click対策 2026-07-02） */
 #step-first>picture{opacity:.55;filter:grayscale(25%)}
@@ -229,7 +223,7 @@ html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
             <span class="arrow"></span>
         </button>
     </div>
-    <p style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;color:#999;margin-top:6px"><svg viewBox="0 0 24 24" width="10" height="10"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" fill="#999"/></svg>個人情報は厳重に管理されています</p>
+    <p style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;color:#767676;margin-top:6px"><svg viewBox="0 0 24 24" width="10" height="10"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" fill="#767676"/></svg>個人情報は厳重に管理されています</p>
 </div>
 
 <div id="lazy-steps-mount" data-lazy-src="steps-lazy.html?v20260701c"></div>
