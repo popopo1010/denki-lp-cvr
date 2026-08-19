@@ -34,7 +34,7 @@
 |---|---|---|---|
 | R1 | **svh×フルハイトFVの罠**（in-appブラウザで巨大空白。sekoukanriで6/27再発済み）。v2をMeta配信するなら必ず踏む | `denkikouji-v2/index.html:57`（critical CSS）と `cvr-boost-v2.css:404` に `min-height:calc(100svh - 200px)` ＋ `.cvr-micro-copy{margin-top:auto}` | in-app相当の短尺ビューポートで確認し、必要なら `min-height:auto` フォールバック（P0、Meta配信の前提条件） |
 | R2 | **偽のライブ通知**：「東京都の方が3分前に登録しました」はハードコードのローテーション（`app-v2.js` initNotifications）。事実でない社会的証明で、CLAUDE.md原則4・広告ポリシー・景表法リスク | `denkikouji-v2/index.html:131`、`meta-lp-v2/nenshu-shindan-*`（「診断しました」版）、`app-v2.js:1041-1074` | 停止 or 台帳実データからの生成に置換。配信前にオーナー判断（P0） |
-| R3 | ダミー数値：FVの「今月の新着287件」は静的値。実績3点（13,829件/34,513人/94%）は要確認項目 | `denkikouji-v2/index.html:150-154, 112-129` | 事実確認・更新運用を決める（P1） |
+| R3 | ダミー数値：FVの「今月の新着287件」は静的値。実績3点（13,829件/34,513人/96.4%）は要確認項目 | `denkikouji-v2/index.html:150-154, 112-129` | 事実確認・更新運用を決める（P1） |
 | R4 | **禁止コピー「営業電話は一切ありません」が meta-lp-v2 に残存**（6/27一掃の漏れ） | `meta-lp-v2/nenshu-shindan-{kentiku,denkisekou,doboku}/index.html` | **本コミットで修正済み**（「完全無料・押し売りは一切ありません」へ） |
 | R5 | クマ→CTA移動の配線 | `app-v2.js` は各選択ハンドラで `moveIconById("#"+nextBtn.id)` を呼ぶ配線が現存（415/452/507/539/627行等） | 変更のたびにスマホ実機で要確認（既定ルール） |
 | R6 | 台帳に同一電話の重複リードが9番号（最大4回） | gas-recorder / Slack通知 | 重複フラグ付与を検討（P2、CVR過大評価とCA二重対応の防止） |
