@@ -27,9 +27,20 @@ jobs:
       - name: Fetch theme CSS from production
         run: |
           set -euo pipefail
-          curl -fsS --retry 3 --retry-delay 5 \
-            "https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" \
-            -o assets/css/theme-snapshot.css
+          # Xserverが数分単位で接続を弾くことがある（2026-08-17は約10分の接続不能で週次分が失敗）。
+          # 3ラウンド×(curl内リトライ3回)を120秒間隔で回し、10分超の断続にも耐える。
+          ok=false
+          for round in 1 2 3; do
+            if curl -fsS --retry 3 --retry-delay 10 --connect-timeout 20 \
+              "https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014" \
+              -o assets/css/theme-snapshot.css; then
+              ok=true
+              break
+            fi
+            echo "fetch round ${round} failed; retrying in 120s"
+            sleep 120
+          done
+          [ "$ok" = "true" ] || { echo "::error::could not fetch theme css"; exit 1; }
           # サニティチェック: 小さすぎる・HTMLエラーページなら失敗させる
           size=$(wc -c < assets/css/theme-snapshot.css)
           [ "$size" -gt 10000 ] || { echo "::error::theme css too small (${size} bytes)"; exit 1; }

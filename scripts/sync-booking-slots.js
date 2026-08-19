@@ -66,13 +66,36 @@ function fetchUrl(url, redirects) {
   });
 }
 
+/* GAS は一時的に 404/5xx を返すことがある（2026-08-18 に発生）ため再試行する */
+async function fetchWithRetry(url, attempts, delayMs) {
+  for (var i = 1; ; i++) {
+    try {
+      return await fetchUrl(url);
+    } catch (err) {
+      if (i >= attempts) throw err;
+      console.error(
+        "[sync-booking-slots] attempt " +
+          i +
+          " failed (" +
+          err.message +
+          "), retrying in " +
+          delayMs / 1000 +
+          "s"
+      );
+      await new Promise(function (r) {
+        setTimeout(r, delayMs);
+      });
+    }
+  }
+}
+
 async function main() {
   var url =
     GAS_URL +
     "?action=slots&days=" +
     encodeURIComponent(DAYS) +
     "&format=json";
-  var body = await fetchUrl(url);
+  var body = await fetchWithRetry(url, 3, 15000);
   var data = JSON.parse(body);
   if (!data || !data.ok || !Array.isArray(data.slots)) {
     throw new Error("invalid slots payload: " + body.slice(0, 200));

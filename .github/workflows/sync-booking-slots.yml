@@ -61,9 +61,19 @@ jobs:
           else
             SSH_CHECK="-o StrictHostKeyChecking=accept-new"
           fi
-          scp -P "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" ${SSH_CHECK} \
-            assets/data/booking-slots.json \
-            "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/assets/data/booking-slots.json"
+          # XserverへのSSHが一時的にタイムアウトすることがある（2026-08-19に発生）ため3回まで再試行
+          for attempt in 1 2 3; do
+            if scp -P "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" ${SSH_CHECK} \
+              -o ConnectTimeout=30 \
+              assets/data/booking-slots.json \
+              "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/assets/data/booking-slots.json"; then
+              exit 0
+            fi
+            echo "scp attempt ${attempt} failed; retrying in 30s"
+            sleep 30
+          done
+          echo "::error::scp failed after 3 attempts"
+          exit 1
 
       - name: Verify JSON on server
         run: |
