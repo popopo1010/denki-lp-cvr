@@ -37,7 +37,6 @@
     <meta property="og:site_name" content="国内最大級の施工管理 / 電気工事士の転職・求人サービス | 電気工事キャリア">
     <meta name="twitter:card" content="summary_large_image">
 
-    <link rel="preconnect" href="https://denkilp.builders-job.com" crossorigin>
     <link rel="dns-prefetch" href="//www.googletagmanager.com">
     <link rel="dns-prefetch" href="//geoapi.heartrails.com">
     <link rel="dns-prefetch" href="//zipcloud.ibsnet.co.jp">
@@ -90,10 +89,11 @@ html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
 }
 @media(max-width:767px){#step-first .p-first__buttonArea{display:flex;flex-direction:column;gap:10px}#step-first .p-first__buttonArea .p-firstButton{width:100%;max-width:none;min-height:56px}#step-first .p-firstButton .p-firstButton__icon{display:none}#step-first .cvr-micro-copy{padding-right:52px}}
 </style>
-    <link rel="stylesheet" href="../assets/css/theme-snapshot.css?v20260708a" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="../assets/css/theme-snapshot.css?v20260708a"></noscript>
-    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260708a" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260708a"></noscript>
+    <!-- CSSは同期読み込み（minify+gzip後 計~18KB）。旧print切替の非同期化はブラウザに最低優先度で
+         フェッチされ、低速回線ではCSS到着(~4s)時の再レイアウトがラボLCP再登録とCLS 0.168の
+         原因になっていた（2026-08-19 STG計測で精査）。1回のレンダリングで確定させる -->
+    <link rel="stylesheet" href="../assets/css/theme-snapshot.css?v20260708a">
+    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260708a">
     <script>window.__LP_ID="denkikouji";</script>
     <script src="../assets/js/app.js?v20260718" defer></script>
 </head>
