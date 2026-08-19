@@ -176,7 +176,7 @@
 .cvr-micro-copy {
   text-align: center;
   font-size: 12px;
-  color: #888;
+  color: #6f6f6f;
   margin-top: 12px;
   padding: 0 16px;
 }
@@ -184,7 +184,7 @@
 .cvr-step-reason {
   text-align: center;
   font-size: 11px;
-  color: #888;
+  color: #6f6f6f;
   margin-top: 4px;
   margin-bottom: 4px;
   padding: 0 8px;
@@ -328,13 +328,13 @@
 p.cvr-pp-text {
   text-align: center;
   font-size: 9px !important;
-  color: #bbb !important;
+  color: #767676 !important;
   margin-top: 6px;
   line-height: 1.4;
   font-weight: 400;
 }
 p.cvr-pp-text a {
-  color: #bbb !important;
+  color: #767676 !important;
   text-decoration: underline;
 }
 .cvr-testimonials {
@@ -406,7 +406,7 @@ p.cvr-pp-text a {
 
 .cvr-testimonial__role {
   font-size: 11px;
-  color: #888;
+  color: #6f6f6f;
 }
 
 .cvr-testimonial__stars {
@@ -481,7 +481,7 @@ p.cvr-pp-text a {
   transform: translateY(-50%);
   font-size: 18px;
   font-weight: 400;
-  color: #999;
+  color: #767676;
   transition: transform 0.2s;
 }
 
@@ -531,7 +531,7 @@ p.cvr-pp-text a {
 }
 .c-nextLinkButton {
   font-size: 12px !important;
-  color: #bbb !important;
+  color: #767676 !important;
   text-decoration: none !important;
 }
 /* クマアイコン（入力エリア右横に配置） */
@@ -677,7 +677,7 @@ p.cvr-pp-text a {
 .cvr-floating-cta__sub {
   text-align: center;
   font-size: 10px;
-  color: #888;
+  color: #6f6f6f;
   margin-top: 4px;
 }
 
@@ -749,7 +749,7 @@ p.cvr-pp-text a {
   padding: 8px;
   border: none;
   background: transparent;
-  color: #999;
+  color: #767676;
   font-size: 12px;
   cursor: pointer;
 }
