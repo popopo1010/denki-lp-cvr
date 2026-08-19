@@ -94,7 +94,16 @@ jobs:
             assets/js/thanks-page-context.js \
             assets/js/thanks-license-profile.js \
             assets/js/thanks-section-visuals.js \
-            assets/js/thanks-mobile-ux.js; do
+            assets/js/thanks-mobile-ux.js \
+            WPLP/assets/js/app.js \
+            WPLP/assets/js/app-v2.js \
+            自前LP/assets/js/app.js \
+            自前LP/assets/js/app-v2.js \
+            dk_lp/assets/js/app.js \
+            dk_lp/denkikouji/assets/js/main.js \
+            dk_lp/denkikouji/assets/js/cvr-boost.js \
+            dk_lp/sekokanri/assets/js/main.js \
+            dk_lp/sekokanri/assets/js/cvr-boost.js; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
           for f in \
@@ -106,7 +115,15 @@ jobs:
             assets/css/cvr-boost-v2.css \
             assets/css/denki-suite.css \
             assets/css/thanks-calendar.css \
-            assets/css/thanks-page.css; do
+            assets/css/thanks-page.css \
+            WPLP/assets/css/cvr-boost.css \
+            WPLP/assets/css/cvr-boost-v2.css \
+            自前LP/assets/css/style.css \
+            自前LP/assets/css/style-v2.css \
+            dk_lp/assets/css/cvr-boost-denkikouji.css \
+            dk_lp/assets/css/cvr-boost-sekoukanri.css \
+            dk_lp/denkikouji/assets/css/cvr-boost.css \
+            dk_lp/sekokanri/assets/css/cvr-boost.css; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
           HTML_MIN="npx -y --package=html-minifier-terser@7.2.0 -- html-minifier-terser"

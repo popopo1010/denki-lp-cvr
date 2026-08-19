@@ -11,7 +11,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const DIRS = ["assets/img"];
+/* 配信される画像ディレクトリすべてを対象にする（2026-08-19 拡大。従来は assets/img のみで
+ * 自前LP/ad-cr の JPG/PNG が未圧縮のまま配信されていた）。docs/ はデプロイ対象外なので含めない。 */
+const DIRS = ["assets/img", "自前LP/assets/img", "ad-cr/assets"];
 
 let sharp;
 try {
@@ -24,9 +26,16 @@ try {
 function listImages(dir) {
   const abs = path.join(ROOT, dir);
   if (!fs.existsSync(abs)) return [];
-  return fs.readdirSync(abs)
-    .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
-    .map((f) => path.join(abs, f));
+  const out = [];
+  const walk = (d) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, entry.name);
+      if (entry.isDirectory()) walk(p);
+      else if (/\.(jpe?g|png|webp)$/i.test(entry.name)) out.push(p);
+    }
+  };
+  walk(abs);
+  return out;
 }
 
 async function reencode(file) {

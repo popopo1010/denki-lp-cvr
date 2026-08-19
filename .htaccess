@@ -7,3 +7,13 @@
     Header set Cache-Control "no-cache, max-age=0, must-revalidate"
   </FilesMatch>
 </IfModule>
+
+# テキスト系の圧縮配信（2026-08-19 軽量化）
+# HTML/CSS/JS/JSON/SVG を gzip（対応していれば brotli）で転送し、転送量を50〜70%削減する。
+# 画像（webp/jpg/png）は圧縮済みフォーマットのため対象外。IfModuleガード付きで未対応環境でも無害。
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/x-javascript application/json image/svg+xml
+</IfModule>
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/javascript application/javascript application/x-javascript application/json image/svg+xml
+</IfModule>
