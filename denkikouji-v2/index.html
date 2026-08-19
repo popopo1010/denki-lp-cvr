@@ -3,13 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<!-- LCP画像等はLandingHub画像プロキシ経由で配信されるため先行接続（標準・PSI推定 -310ms） -->
-<link rel="preconnect" href="https://aao-rdt-dpimcjts.landinghub.site">
-<link rel="dns-prefetch" href="//aao-rdt-dpimcjts.landinghub.site">
-<!-- LandingHub Dispatcher -->
-<script data-landinghub="dispatcher-helper-tag">(function(w,d,i,wl){const u=new URL('https://airport.landinghub.cloud/dispatcher/manifest.json');u.searchParams.set('id',i);u.searchParams.set('location',w.location.href);wl.length&&u.searchParams.set('wl',wl.join(','));const l=d.createElement('link');l.rel='preload';l.as='fetch';l.crossOrigin='anonymous';l.href=u.href;d.head.prepend(l)})(window,document,'2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513',[])</script>
-<script src="https://airport.landinghub.cloud/dispatcher/latest/index.js?id=2e0ea63a-5ec9-44a1-ae01-3ed7a0ce8513" data-landinghub="dispatcher-tag" referrerpolicy="strict-origin"></script>
-<!-- End of LandingHub Dispatcher -->
+
     <!-- Google Tag Manager (lazy: 初回interaction or 8s後) -->
     <script>
     (function(){
@@ -70,7 +64,6 @@ html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-t
 /* LINEの上部バーは実測~83ptで44pxでは足りない。入力ステップ(step04-06)は96pxでバーの下から開始（2026-07-08） */
 html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
 @media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding:0 8px 0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:auto!important}#step-first .cvr-micro-copy{margin-top:14px!important;padding-bottom:4px}}
-    
 /* FV最初のタップ集中（v5 #45 準拠）＋ 2択ボタンのCTA化（dead click対策） */
 #step-first>picture{opacity:.55;filter:grayscale(25%)}
 #step-first .c-title01{font-weight:800}
@@ -155,7 +148,6 @@ html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
         </div>
     </div>
 </div>
-
 
 <div class="wp-block-contact-form-7-contact-form-selector">
 <div class="wpcf7 no-js" id="wpcf7-f2997-o1" lang="ja" dir="ltr" data-wpcf7-id="2997">
@@ -572,7 +564,6 @@ html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
         </article>
     </main>
 
-
 <footer class="l-footer">
     <div class="l-footer__info">
         <section class="footer-dark">
@@ -586,7 +577,6 @@ html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
         </section>
     </div>
 </footer>
-
 
 </body>
 </html>
