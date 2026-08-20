@@ -713,6 +713,21 @@
       birthYear.addEventListener("input", () => validate({ silent: true }));
     }
 
+    // 【2026-08-20 オーナー要望】この画面は必ず「姓」から入力を始める。
+    // iOSはユーザータップと同一ジェスチャ内の同期focus以外ではキーボードを開かないため、
+    // 自動遷移で到着すると姓への自動フォーカスが効かず、目立つ生まれ年を先にタップ→
+    // 年から入力が始まってしまう。氏名が未入力のうちに年へフォーカスが落ちた場合は
+    // 姓へ誘導する（年の編集中=値あり・氏名入力済みの場合は奪わない）
+    const guardLast = group.querySelector("#last-name");
+    const guardFirst = group.querySelector("#first-name");
+    if (birthYear && guardLast && guardFirst) {
+      birthYear.addEventListener("focus", () => {
+        if ((birthYear.value || "").trim()) return;
+        if ((guardLast.value || "").trim() || (guardFirst.value || "").trim()) return;
+        try { guardLast.focus({ preventScroll: true }); } catch (e) { guardLast.focus(); }
+      });
+    }
+
     nextBtn.classList.add(DISABLE);
   }
 
