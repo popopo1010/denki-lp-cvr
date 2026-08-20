@@ -1,9 +1,17 @@
 #!/usr/bin/env node
 /**
- * thanks-v2 本番検証（GTM dataLayer / 予約枠 / LINE先行フロー）
+ * thanks-v2 本番検証（GTM dataLayer / LINE先行フロー）
  * Usage: npx playwright install chromium && node scripts/e2e-thanks-v2-release.mjs
+ *
+ * 2026-08-20 全面更新: 2026-06-23のLINE一本化（予約カレンダー撤去）以前の期待値の
+ * まま放置されていたため現行仕様へ更新。JSの ?v= 期待値はハードコードせず
+ * リポジトリの thanks-v2/index.html から動的に導出する（陳腐化の再発防止）。
+ * 予約バックエンド（GAS/booking-slots.json）はLINE経由運用の残置のため
+ * 情報表示（warn）のみで合否に含めない。
  */
 import { chromium, devices } from "playwright";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const BASE = process.env.THANKS_E2E_BASE || "https://denkilp.builders-job.com/denki-lp-cvr";
 const GAS_URL =
@@ -18,37 +26,42 @@ function fail(name, detail) {
   results.push({ ok: false, name, detail });
   console.error(`✗ ${name}${detail ? `: ${detail}` : ""}`);
 }
+function warn(name, detail) {
+  // 合否に含めない情報表示（予約バックエンドの残置分など）
+  console.log(`⚠ ${name}${detail ? `: ${detail}` : ""}`);
+}
 
-/** 本番とリポのマイナーバージョン差を許容 */
-function htmlHasAny(html, patterns) {
-  return patterns.some((p) => html.includes(p));
+/** リポジトリの thanks-v2/index.html から現行の ?v= つきJS参照を導出する */
+function repoThanksJsRefs() {
+  const html = readFileSync(
+    fileURLToPath(new URL("../thanks-v2/index.html", import.meta.url)),
+    "utf-8"
+  );
+  return [...new Set(html.match(/thanks-[a-z0-9-]+\.js\?v=\d+/g) || [])];
 }
 
 async function testGasSlotsApi(page) {
-  const res = await page.request.get(`${GAS_URL}?action=slots&days=3&format=json`, {
-    maxRedirects: 5
-  });
-  if (!res.ok()) {
-    fail("GAS slots API", `HTTP ${res.status()}`);
-    return;
-  }
-  const data = await res.json();
-  if (data.ok && data.staff_count === 4 && (data.slots || []).length > 0) {
-    pass("GAS slots API", `staff=${data.staff_count} slots=${data.slots.length} gen=${(data.generated_at || "").slice(0, 19)}`);
-  } else {
-    fail("GAS slots API", JSON.stringify({ ok: data.ok, staff: data.staff_count, n: (data.slots || []).length }));
+  // 予約バックエンドはLINE経由運用向けの残置（ページ未読込）。疎通の情報表示のみ
+  try {
+    const res = await page.request.get(`${GAS_URL}?action=slots&days=3&format=json`, {
+      maxRedirects: 5
+    });
+    if (!res.ok()) return warn("GAS slots API(残置)", `HTTP ${res.status()}`);
+    const data = await res.json();
+    warn("GAS slots API(残置)", `ok=${data.ok} staff=${data.staff_count} slots=${(data.slots || []).length}`);
+  } catch (e) {
+    warn("GAS slots API(残置)", String(e).slice(0, 80));
   }
 }
 
 async function testBookingSlotsJson(page) {
-  const res = await page.request.get(`${BASE}/assets/data/booking-slots.json`);
-  const data = await res.json();
-  const gen = data.generated_at || "";
-  const ageOk = gen && Date.now() - Date.parse(gen) < 48 * 3600 * 1000;
-  if (data.ok && data.staff_count === 4 && (data.slots || []).length > 0 && ageOk) {
-    pass("booking-slots.json", `staff=${data.staff_count} slots=${data.slots.length} gen=${gen.slice(0, 19)}`);
-  } else {
-    fail("booking-slots.json", JSON.stringify({ ok: data.ok, staff: data.staff_count, n: (data.slots || []).length, gen }));
+  // 同上（残置バックエンドの鮮度は合否に含めない）
+  try {
+    const res = await page.request.get(`${BASE}/assets/data/booking-slots.json`);
+    const data = await res.json();
+    warn("booking-slots.json(残置)", `ok=${data.ok} n=${(data.slots || []).length} gen=${(data.generated_at || "").slice(0, 19)}`);
+  } catch (e) {
+    warn("booking-slots.json(残置)", String(e).slice(0, 80));
   }
 }
 
@@ -56,27 +69,16 @@ async function testThanksAssets(page) {
   const html = await (await page.request.get(`${BASE}/thanks-v2/?lp=denkikouji`)).text();
   const checks = [
     ["GTM-KV525PZ", html.includes("GTM-KV525PZ")],
-    ["thanks-v2-shared.js?v=8", html.includes("thanks-v2-shared.js?v=8")],
-    [
-      "thanks-page-context.js",
-      htmlHasAny(html, ["thanks-page-context.js?v=27", "thanks-page-context.js?v=28"])
-    ],
-    [
-      "thanks-booking-custom.js",
-      htmlHasAny(html, ["thanks-booking-custom.js?v=39", "thanks-booking-custom.js?v=40"])
-    ],
-    ["thanks-job-preview.js?v=19", html.includes("thanks-job-preview.js?v=19")],
-    ["thanks-v2-deferred.js?v=15", html.includes("thanks-v2-deferred.js?v=15")],
-    ["t-cal__toggle", html.includes("t-cal__toggle")],
-    ["10分相談枠", html.includes("10分相談枠")],
+    // JSの ?v= はリポジトリの thanks-v2/index.html と完全一致すること（配信取り残しの検知）
+    ...repoThanksJsRefs().map((ref) => [ref, html.includes(ref)]),
     ["LINEで求人全文を受け取る", html.includes("LINEで求人全文を受け取る")],
     ["非公開求人の全文", html.includes("非公開求人の全文")],
     ["line-gate-msg", html.includes('id="line-gate-msg"')],
-    [
-      "LINEセクションがカレンダーより上",
-      html.indexOf('id="line-section"') > 0 &&
-        html.indexOf('id="line-section"') < html.indexOf('id="t-calendar"')
-    ],
+    ["line-section", html.includes('id="line-section"')],
+    // LINE一本化（2026-06-23）: カレンダー・予約UI・予約JSはページに存在しないこと
+    ["カレンダー非存在", !html.includes('id="t-calendar"') && !html.includes("t-cal__toggle")],
+    ["予約UI非存在", !html.includes("booking-slot-root") && !html.includes("10分相談枠")],
+    ["予約JS未読込", !html.includes("thanks-booking-custom.js")],
     ["本登録なし", !html.includes("本登録")]
   ];
   checks.forEach(([k, v]) => (v ? pass("HTML", k) : fail("HTML", k)));
@@ -149,19 +151,9 @@ async function testGtmDataLayer(page) {
   }
 }
 
-async function testBookingAndLineGate(page) {
-  const gasBookPattern = /script\.google\.com\/macros\/s\/.*action=book/;
-  await page.route(gasBookPattern, async (route) => {
-    const url = route.request().url();
-    const cbMatch = url.match(/callback=([^&]+)/);
-    const cb = cbMatch ? decodeURIComponent(cbMatch[1]) : "lpBookingMock";
-    await route.fulfill({
-      status: 200,
-      contentType: "application/javascript",
-      body: `${cb}({"ok":true,"mock":true});`
-    });
-  });
-
+async function testLineFlow(page) {
+  // LINE一本化（2026-06-23）: thanksの主アクションはLINE登録のみ。
+  // 旧・予約カレンダー/ドック切替のテストは撤去済みUIのため削除（2026-08-20）
   await page.goto(
     `${BASE}/thanks-v2/?lp=denkikouji&_tel=09012345678&_name=${encodeURIComponent("テスト太郎")}`,
     { waitUntil: "domcontentloaded", timeout: 60000 }
@@ -169,32 +161,36 @@ async function testBookingAndLineGate(page) {
   await page.evaluate(() => {
     sessionStorage.setItem("dk_lp_lead_v1", JSON.stringify({ lp: "denkikouji", ts: Date.now() }));
     sessionStorage.setItem("_lp", "denkikouji");
-    sessionStorage.removeItem("dk_booking_done");
     sessionStorage.removeItem("dk_line_clicked");
   });
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForLoadState("load").catch(() => {});
 
-  // LINE先行フロー: 予約前からLINEは開いている
+  // LINEロック廃止: 最初からLINE CTAが有効であること
   const lineOpen = await page.evaluate(() => ({
     locked: document.body.classList.contains("is-line-locked"),
     ariaDisabled: document.getElementById("line-cta")?.getAttribute("aria-disabled"),
     heroLine: !!document.getElementById("line-cta-hero"),
     dockLineHidden: document.getElementById("thanks-dock-line")?.hidden,
-    dockBookHidden: document.getElementById("thanks-dock-book")?.hidden
+    calendar: !!document.getElementById("t-calendar")
   }));
   if (!lineOpen.locked && !lineOpen.ariaDisabled && lineOpen.heroLine) {
-    pass("LINE先行", "予約前からLINE CTAが有効");
+    pass("LINE先行", "初期状態からLINE CTAが有効");
   } else {
     fail("LINE先行", JSON.stringify(lineOpen));
   }
-  if (lineOpen.dockLineHidden === false && lineOpen.dockBookHidden === true) {
-    pass("ドック初期状態", "LINE CTAのみ表示");
+  if (lineOpen.dockLineHidden === false) {
+    pass("ドック初期状態", "LINE CTAが表示");
   } else {
     fail("ドック初期状態", JSON.stringify(lineOpen));
   }
+  if (!lineOpen.calendar) {
+    pass("カレンダーDOM非存在", "LINE一本化どおり");
+  } else {
+    fail("カレンダーDOM非存在", "t-calendar がDOMに存在する");
+  }
 
-  // LINEクリック → 計測 + ドックが予約CTAへ切替
+  // LINEクリック → 計測イベントとクリック済みフラグ
   const lineClick = await page.evaluate(() => {
     const link = document.getElementById("line-cta");
     if (!link) return { ok: false, reason: "no link" };
@@ -203,9 +199,7 @@ async function testBookingAndLineGate(page) {
     return {
       ok: !!ev,
       position: ev && ev.line_cta_position,
-      clickedFlag: sessionStorage.getItem("dk_line_clicked"),
-      dockLineHidden: document.getElementById("thanks-dock-line")?.hidden,
-      dockBookHidden: document.getElementById("thanks-dock-book")?.hidden
+      clickedFlag: sessionStorage.getItem("dk_line_clicked")
     };
   });
   if (lineClick.ok && lineClick.position === "section" && lineClick.clickedFlag === "1") {
@@ -213,84 +207,6 @@ async function testBookingAndLineGate(page) {
   } else {
     fail("dataLayer", `thanks_line_click missing/incomplete (${JSON.stringify(lineClick)})`);
   }
-  if (lineClick.dockLineHidden === true && lineClick.dockBookHidden === false) {
-    pass("ドック切替", "LINEクリック後は予約CTA");
-  } else {
-    fail("ドック切替", JSON.stringify(lineClick));
-  }
-
-  const expanded = await page.evaluate(() => {
-    if (typeof window.dkThanksExpandCalendar === "function") {
-      window.dkThanksExpandCalendar({ scroll: false });
-      return true;
-    }
-    return false;
-  });
-  if (!expanded) {
-    const toggle = page.locator("#t-cal-toggle");
-    if (await toggle.isVisible().catch(() => false)) {
-      await toggle.click();
-    }
-  }
-
-  await page.waitForSelector("#booking-slot-root .t-booking-slot", { timeout: 25000 }).catch(() => {});
-  const slotCount = await page.locator("#booking-slot-root .t-booking-slot").count();
-  if (slotCount > 0) {
-    pass("予約枠UI", `${slotCount} 枠`);
-  } else {
-    const root = await page.locator("#booking-slot-root").textContent();
-    fail("予約枠UI", (root || "").slice(0, 100));
-    return;
-  }
-
-  const asapText = await page.locator("#booking-asap").textContent().catch(() => "");
-  if (asapText.includes("いますぐ電話を希望する") && asapText.includes("最短の枠")) {
-    pass("いますぐ枠ボタン", asapText.replace(/\s+/g, " ").slice(0, 60));
-  } else {
-    fail("いますぐ枠ボタン", `text=${(asapText || "なし").slice(0, 80)}`);
-  }
-
-  await page.locator("#booking-slot-root .t-booking-slot").first().click();
-  await page.locator("#booking-confirm").click({ timeout: 10000 });
-
-  await page
-    .waitForFunction(() => document.body.classList.contains("is-booked"), { timeout: 15000 })
-    .catch(() => {});
-
-  const booked = await page.evaluate(() => ({
-    booked: document.body.classList.contains("is-booked"),
-    lineDoneNote: !!document.querySelector(".t-booking-done__line-done"),
-    dockVisible: document.getElementById("thanks-dock")?.classList.contains("is-visible")
-  }));
-
-  if (booked.booked) {
-    pass("予約完了", "is-booked");
-  } else {
-    fail("予約完了", JSON.stringify(booked));
-  }
-  if (booked.lineDoneNote) {
-    pass("予約完了カード", "LINE開設済みの案内（再CTAなし）");
-  } else {
-    fail("予約完了カード", "LINE開設済み案内が出ていない");
-  }
-  if (booked.dockVisible === false) {
-    pass("ドック", "LINE+予約 完了でドック退避");
-  } else {
-    fail("ドック", `両完了後もドック表示 (${JSON.stringify(booked)})`);
-  }
-
-  const dlBooking = await page.evaluate(() =>
-    (window.dataLayer || [])
-      .filter((e) => e && e.event === "thanks_booking_recommended_complete")
-      .length
-  );
-  if (dlBooking >= 1) {
-    pass("dataLayer", "thanks_booking_recommended_complete");
-  } else {
-    fail("dataLayer", "thanks_booking_recommended_complete missing");
-  }
-
-  await page.unroute(gasBookPattern);
 }
 
 async function thanksWithProfile(page, { lp, profile, expectBrand }) {
@@ -368,7 +284,7 @@ async function main() {
   await testGasSlotsApi(page);
   await testBookingSlotsJson(page);
   await testGtmDataLayer(page);
-  await testBookingAndLineGate(page);
+  await testLineFlow(page);
   await testNenshuRedirect(page);
 
   await thanksWithProfile(page, {
