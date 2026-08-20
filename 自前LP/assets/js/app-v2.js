@@ -288,9 +288,11 @@
       }
     }
 
-    cur.style.display = "none";
-    cur.style.opacity = "0";
-    cur.style.transform = "translateX(50px)";
+    if (cur) {
+      cur.style.display = "none";
+      cur.style.opacity = "0";
+      cur.style.transform = "translateX(50px)";
+    }
 
     showPage("#" + pageTo);
   }
@@ -1045,23 +1047,65 @@
   }
 
   // ========== Init ==========
+  // 初期化済み判定はDOM属性ではなく実行時のWeakSetを正とする（2026-08-19 app.jsから移植）。
+  // 外部スクリプトが初期化後のフォームDOMを差し替え/複製すると、data-lp-inited だけが残って
+  // リスナーの無い「死んだフォーム」になるため（2026-07-10 v1で発生・対策済みの同件）。
+  const initedGroups = typeof WeakSet === "function" ? new WeakSet() : null;
+
+  function isGroupInited(group) {
+    return initedGroups ? initedGroups.has(group) : group.dataset.lpInited === "1";
+  }
+
+  function initFormGroup(group) {
+    if (!group || isGroupInited(group)) return;
+    if (initedGroups) initedGroups.add(group);
+    group.dataset.lpInited = "1";
+    initRadioButtons(group);
+    initRadioButtons02(group);
+    initCheckboxButtons(group);
+    initZipCode(group);
+    initPrefOnly(group);
+    initNameInputs(group);
+    initRequiredItems(group);
+  }
+
+  let globalDelegationBound = false;
+  function bindGlobalDelegation() {
+    if (globalDelegationBound) return;
+    globalDelegationBound = true;
+
+    // ステップ遷移は document への委譲で拾う（フォームDOM差し替えに耐える・load前クリックも有効）
+    document.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
+      if (btn) handleStepClick({ currentTarget: btn });
+    });
+
+    // 自己修復: 未初期化（=初期化後にDOMが差し替わりリスナーが消えた）ステップ内での
+    // ユーザー操作を capture 段階で検知して即再初期化する。capture中に張り直した
+    // リスナーには、この操作イベント自体もターゲット到達時に届くため操作は失われない。
+    ["click", "change", "input", "focusin"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        const group = e.target && e.target.closest ? e.target.closest(".js-form-group") : null;
+        if (!group || isGroupInited(group)) return;
+        const sel = document.getElementById("pref");
+        if (sel && sel.options.length <= 1) initPrefSelect();
+        initFormGroup(group);
+        preventEnter();
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "lp_error", error_type: "form_group_reinit", step_name: group.id || "" });
+      }, true);
+    });
+  }
+
   function initForm() {
     const groups = document.querySelectorAll(".js-form-group");
     if (!groups.length) return;
 
     initLicenseIcons();
-    document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
+    bindGlobalDelegation();
 
     queueMicrotask(() => {
-      groups.forEach(g => {
-        initRadioButtons(g);
-        initRadioButtons02(g);
-        initCheckboxButtons(g);
-        initZipCode(g);
-        initPrefOnly(g);
-        initNameInputs(g);
-        initRequiredItems(g);
-      });
+      groups.forEach(initFormGroup);
       initCookieName();
       initZapierMirror();
       preventEnter();
@@ -1076,6 +1120,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    // load前（画像やGTM待ち中）のクリックが無反応になる窓を無くすため、ここで委譲を張る。
+    // 各グループの初期化は自己修復リスナーが操作時に行うので、load前でも操作は失われない。
+    if (!document.body.classList.contains("p-pageThanks")) bindGlobalDelegation();
     initPrefSelect();
     initBirthday();
     if (document.body.classList.contains("p-pageThanks")) {
@@ -1155,16 +1202,17 @@
 
   // ========== フォームトラッキング ==========
   function initFormTracking() {
-    document.querySelectorAll(".js-step-button").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (btn.dataset.pageTo && window.dataLayer) {
-          window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
-        }
-        // ClarityのExport APIはステップ別ファネルを返さないため、到達ステップをタグ付けする
-        if (btn.dataset.pageTo && window.clarity) {
-          try { window.clarity("set", "lp_step", btn.dataset.pageTo); } catch (e) { /* no-op */ }
-        }
-      });
+    // ボタン個別バインドはフォームDOM差し替えで計測が死ぬため、documentへの委譲に変更（2026-08-19）
+    document.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
+      if (!btn || !btn.dataset.pageTo) return;
+      if (window.dataLayer) {
+        window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
+      }
+      // ClarityのExport APIはステップ別ファネルを返さないため、到達ステップをタグ付けする
+      if (window.clarity) {
+        try { window.clarity("set", "lp_step", btn.dataset.pageTo); } catch (err) { /* no-op */ }
+      }
     });
   }
 

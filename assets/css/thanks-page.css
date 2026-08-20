@@ -197,7 +197,7 @@ body {
 }
 .cvr-testimonial__role {
   font-size: 11px;
-  color: #888;
+  color: #6f6f6f;
   margin-top: 2px;
 }
 .cvr-testimonial__rating {
@@ -629,7 +629,7 @@ body {
 .t-job-card__lock {
   margin: 0;
   font-size: 10px;
-  color: #888;
+  color: #6f6f6f;
 }
 .t-jobs__voice {
   margin: 0 0 12px;
@@ -719,7 +719,7 @@ body {
 .t-jobs__note {
   margin: 0;
   font-size: 10px;
-  color: #888;
+  color: #6f6f6f;
   line-height: 1.5;
   text-align: center;
 }
@@ -1003,7 +1003,7 @@ body {
   font-weight: 800;
   flex-shrink: 0;
   background: #e8e8e8;
-  color: #888;
+  color: #666;
 }
 .t-step.is-done .t-step__n {
   background: var(--t-accent);
@@ -1031,7 +1031,7 @@ body {
 }
 .t-step__d {
   font-size: 12px;
-  color: #888;
+  color: #6f6f6f;
   line-height: 1.5;
 }
 .t-step__tag {
@@ -2644,7 +2644,7 @@ html {
 
 .t-line__note {
   font-size: 11px;
-  color: #888;
+  color: #6f6f6f;
   text-align: center;
   line-height: 1.55;
 }
@@ -2723,7 +2723,7 @@ html {
 
 .t-email__sub {
   font-size: 12px;
-  color: #888;
+  color: #6f6f6f;
   text-align: center;
   margin-bottom: 16px;
   line-height: 1.6;
@@ -2814,7 +2814,7 @@ html {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #aaa;
+  color: #767676;
   margin-top: 4px;
   line-height: 1.4;
 }
@@ -2854,7 +2854,7 @@ html {
 
 .t-email__done-sub {
   font-size: 12px;
-  color: #888;
+  color: #6f6f6f;
 }
 
 @media (min-width: 768px) {

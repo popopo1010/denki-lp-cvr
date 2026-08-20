@@ -143,6 +143,52 @@ def enrich_nenshu(v: dict) -> dict:
 
 LOCAL_ICONS = {"kentiku", "doboku", "kankou"}
 
+# フォームLP（root/WPLP/自前LP）用のアイコン対応（現行本番markup準拠）:
+# 施工管理系はすべて denkisekou、電気工事士は denkikouji、その他は other の webp/png。
+FORM_QUAL_IMG = {
+    "1級建築施工管理技士": "denkisekou",
+    "2級建築施工管理技士": "denkisekou",
+    "1級土木施工管理技士": "denkisekou",
+    "2級土木施工管理技士": "denkisekou",
+    "1級電気施工管理技士": "denkisekou",
+    "2級電気施工管理技士": "denkisekou",
+    "1級管工事施工管理技士": "denkisekou",
+    "2級管工事施工管理技士": "denkisekou",
+    "第一種電気工事士": "denkikouji",
+    "第二種電気工事士": "denkikouji",
+    "その他の資格": "other",
+}
+
+GRADE_PREFIXES = ("第一種", "第二種", "1級", "2級")
+
+
+def qual_label_grade(value: str) -> str:
+    """q-gradeチップ表示（2026-07-02仕様: 級・種別をチップ化し「技士」を省略。data-valueは不変）"""
+    for p in GRADE_PREFIXES:
+        if value.startswith(p):
+            rest = value[len(p):]
+            if rest.endswith("技士"):
+                rest = rest[:-2]
+            return f'<span class="q-grade">{p}</span>{rest}'
+    return value
+
+
+def qual_button_form(value: str, *, grade_label: bool) -> str:
+    """フォームLP用ボタン。grade_label=True は root（q-gradeチップ）、False は WPLP/自前LP（フル名称）"""
+    img = FORM_QUAL_IMG[value]
+    icon_html = (
+        f'<span class="c-button__img"><picture><source srcset="{IMG_BASE}/{img}.webp" type="image/webp">'
+        f'<img loading="lazy" decoding="async" src="{IMG_BASE}/{img}.png" alt=""></picture></span>'
+    )
+    label = qual_label_grade(value) if grade_label else value
+    return (
+        f'        <button type="button" class="p-step01__button c-button c-check-button js-checkbox-button" '
+        f'data-value="{value}" data-group="license01">\n'
+        f"            {icon_html}\n"
+        f'            <span class="c-button__text">{label}</span>\n'
+        f"        </button>"
+    )
+
 
 def qual_display_label(value: str) -> str:
     for prefix in ("第一種", "第二種", "1級", "2級"):
@@ -172,24 +218,27 @@ def qual_button(value: str) -> str:
     )
 
 
-def build_step01(v: dict, *, nenshu: bool = False) -> str:
-    preview = ""
+def build_step01(v: dict, *, nenshu: bool = False, grade_label: bool = True) -> str:
+    parts = [
+        f'    <p class="c-title01">\n        <span class="js-icon-target">{v["step01_title"]}</span>\n    </p>'
+    ]
     if nenshu:
-        preview = (
+        # 年収診断のみ reason を出す（フォームLPは返報1行に集約: LP作成リファレンス 2.9）
+        parts.append(f'<p class="cvr-step-reason">{v["step01_reason"]}</p>')
+    parts.append(f'<p class="cvr-step-reward">{v["step01_reward"]}</p>')
+    if nenshu:
+        parts.append(
             '<div class="ns-salary-preview" id="ns-salary-preview" hidden aria-live="polite">\n'
             '    <p class="ns-salary-preview__label" id="ns-salary-preview-label">選択中の資格の年収相場</p>\n'
             '    <p class="ns-salary-preview__range" id="ns-salary-preview-range"></p>\n'
             '    <p class="ns-salary-preview__avg" id="ns-salary-preview-avg"></p>\n'
-            "</div>\n"
+            "</div>"
         )
-    buttons = "\n".join(qual_button(q) for q in v["quals"])
-    return (
-        f'    <p class="c-title01">\n        <span class="js-icon-target">{v["step01_title"]}</span>\n    </p>\n'
-        f'<p class="cvr-step-reason">{v["step01_reason"]}</p>\n'
-        f'<p class="cvr-step-reward">{v["step01_reward"]}</p>\n'
-        f"{preview}"
-        f'    <div class="p-step01__buttonArea c-button-grid">\n{buttons}\n    </div>'
-    ).replace("<div ", "<div ")
+        buttons = "\n".join(qual_button(q) for q in v["quals"])
+    else:
+        buttons = "\n".join(qual_button_form(q, grade_label=grade_label) for q in v["quals"])
+    parts.append(f'    <div class="p-step01__buttonArea c-button-grid">\n{buttons}\n    </div>')
+    return "\n".join(parts)
 
 
 def build_testimonials(v: dict) -> str:
@@ -218,9 +267,10 @@ def build_testimonials(v: dict) -> str:
     return "\n".join(lines)
 
 
-def apply_variant(html: str, v: dict, *, nenshu: bool = False) -> str:
+def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool = True, url_prefix: str = "") -> str:
     slug = v.get("path_slug", v["slug"])
-    url = f"{BASE_URL}/{slug}/"
+    # WPLP/自前LP は /denki-lp-cvr/WPLP/... 配下に配置されるため canonical/og:url にプレフィックスを含める
+    url = f"{BASE_URL}/{url_prefix + '/' if url_prefix else ''}{slug}/"
 
     html = re.sub(r"<title>[^<]+</title>", f"<title>{v['title']}</title>", html, count=1)
     html = re.sub(
@@ -270,14 +320,12 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False) -> str:
             f"<p class=\"ns-fv__card-title\">{v['ns_fv_title']}</p>",
         )
         if v.get("salary_card"):
-            m_sal = re.search(r'<motion class="ns-salary-data__cards">.*?</motion>\n    </div>', html, re.DOTALL)
+            # cards開き〜cards閉じ（</div>\n    </div> の後者）を salary_card で丸ごと置換する。
+            # 旧実装は置換後に閉じdivを1個余分に追記しており、全variantで </div> 過多を生んでいた（2026-08-19修正）
+            m_sal = re.search(r'<div class="ns-salary-data__cards">.*?</div>\n    </div>', html, re.DOTALL)
             if not m_sal:
-                m_sal = re.search(r'<div class="ns-salary-data__cards">.*?</motion>\n    </div>', html, re.DOTALL)
-            if not m_sal:
-                m_sal = re.search(r'<div class="ns-salary-data__cards">.*?</div>\n    </div>', html, re.DOTALL)
-            if m_sal:
-                html = html[: m_sal.start()] + v["salary_card"] + "\n    </motion>" + html[m_sal.end() :]
-                html = html.replace("\n    </motion>", "\n    </div>", 1)
+                raise RuntimeError("salary cards block not found")
+            html = html[: m_sal.start()] + v["salary_card"] + html[m_sal.end() :]
     else:
         fv = (
             f'<p class="cvr-specialty-badge">{v["label"]}専門</p>\n'
@@ -289,14 +337,19 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False) -> str:
         )
 
     step01_q = "お持ちの資格を選んでください" if nenshu else "どの資格をお持ちですか？"
+    # テンプレのstep01ブロック（タイトル〜buttonArea閉じ）を検出。buttonAreaがミニファイ1行でも
+    # c-nextLink側のインデントが変わっても壊れないよう、終端は「</div> の直後に c-nextLink が続く」lookaheadで判定
     m = re.search(
-        rf'    <p class="c-title01">\s*<span class="js-icon-target">{re.escape(step01_q)}</span>\s*</p>.*?    </div>\n<div class="c-nextLink">',
+        rf'<p class="c-title01">\s*<span class="js-icon-target">{re.escape(step01_q)}</span>\s*</p>.*?</div>(?=\s*<div class="c-nextLink">)',
         html,
         re.DOTALL,
     )
     if not m:
         raise RuntimeError("step01 block not found")
-    html = html[: m.start()] + build_step01(v, nenshu=nenshu) + "\n" + html[m.end() - len('<div class="c-nextLink">'):]
+    # タイトル行の先頭インデントは build_step01 側が持つため、置換開始位置を行頭まで戻す
+    start = html.rfind("\n", 0, m.start()) + 1
+    rest = re.sub(r"^\s*", "\n", html[m.end():], count=1)  # → '\n<div class="c-nextLink">…'（現行variantと同形）
+    html = html[:start] + build_step01(v, nenshu=nenshu, grade_label=grade_label) + rest
 
     m2 = re.search(r'<div class="cvr-testimonials">.*?</div>\n\n<div class="cvr-faq">', html, re.DOTALL)
     if not m2:
@@ -306,22 +359,30 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False) -> str:
     return html
 
 
+# prefix → (テンプレート, q-gradeチップラベルを使うか)
+# root はq-gradeチップ（2026-07-02仕様）、WPLP/自前LP は従来のフル名称ラベル（現行本番markup準拠）
 TEMPLATES = {
-    "": "sekoukanri/index.html",
-    "WPLP": "WPLP/sekoukanri/index.html",
-    "自前LP": "自前LP/sekoukanri/index.html",
+    "": ("sekoukanri/index.html", True),
+    "WPLP": ("WPLP/sekoukanri/index.html", False),
+    "自前LP": ("自前LP/sekoukanri/index.html", False),
 }
 
 
 def main() -> None:
-    for prefix, template_rel in TEMPLATES.items():
+    for prefix, (template_rel, grade_label) in TEMPLATES.items():
         template = (REPO / template_rel).read_text()
         for v in VARIANTS:
-            out_html = apply_variant(template, v)
+            out_html = apply_variant(template, v, grade_label=grade_label, url_prefix=prefix)
             out_dir = REPO / prefix / v["slug"] if prefix else REPO / v["slug"]
             out_dir.mkdir(parents=True, exist_ok=True)
             (out_dir / "index.html").write_text(out_html)
             print("wrote", out_dir.relative_to(REPO) / "index.html")
+            # rootファミリーは steps-lazy 分離アーキテクチャ。step03-06はファミリー共通のため
+            # テンプレートの steps-lazy.html をそのまま配布する（無いと遅延ステップが404＝フォーム死）
+            if not prefix:
+                steps = (REPO / "sekoukanri/steps-lazy.html").read_text()
+                (out_dir / "steps-lazy.html").write_text(steps)
+                print("wrote", out_dir.relative_to(REPO) / "steps-lazy.html")
 
     nenshu_tpl = (REPO / "nenshu-shindan/sekoukanri/index.html").read_text()
     for v in VARIANTS:
