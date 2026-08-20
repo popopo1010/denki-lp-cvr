@@ -364,7 +364,7 @@ jobs:
           fi
           bash scripts/verify-wp-legacy-redirects.sh
           echo "$html" | grep -q 'thanks-page-context.js?v=27' || (echo "missing thanks-page-context v=27" && exit 1)
-          echo "$html" | grep -qE 'thanks-page\.css\?v=56' || (echo "missing thanks-page.css v=56" && exit 1)
+          echo "$html" | grep -qE 'thanks-page\.css\?v=57' || (echo "missing thanks-page.css v=57" && exit 1)
           echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
           echo "$html" | grep -q 'thanks-job-preview.js?v=20' || (echo "missing job preview v=20" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)

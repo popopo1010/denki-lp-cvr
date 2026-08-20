@@ -560,7 +560,7 @@
 
 .t-line__note {
   font-size: 11px;
-  color: #888;
+  color: #6f6f6f;
   text-align: center;
   line-height: 1.55;
 }
@@ -638,7 +638,7 @@
 
 .t-email__sub {
   font-size: 12px;
-  color: #888;
+  color: #6f6f6f;
   text-align: center;
   margin-bottom: 16px;
   line-height: 1.6;
@@ -729,7 +729,7 @@
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #aaa;
+  color: #767676;
   margin-top: 4px;
   line-height: 1.4;
 }
@@ -769,7 +769,7 @@
 
 .t-email__done-sub {
   font-size: 12px;
-  color: #888;
+  color: #6f6f6f;
 }
 
 @media (min-width: 768px) {
