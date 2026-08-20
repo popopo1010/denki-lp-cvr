@@ -897,6 +897,20 @@
       });
     }
 
+    // 【2026-08-20 オーナー要望】この画面は必ず「姓」から入力を始める。
+    // iOSはユーザータップと同一ジェスチャ内の同期focus以外ではキーボードを開かないため、
+    // 自動遷移(タイマー/遅延ステップ)で到着すると姓への自動フォーカスが効かず、
+    // プレースホルダ「1990」が目立つ生まれ年を先にタップ→年から入力が始まってしまう。
+    // 氏名が未入力のうちに年へフォーカスが落ちた場合は姓へ誘導する
+    // （年の編集中=値あり・氏名入力済みの場合は奪わない。名→年の自動送りは氏名入力済みのため影響なし）
+    if (birthYear && lastNameInput && firstNameInput) {
+      birthYear.addEventListener("focus", () => {
+        if ((birthYear.value || "").trim()) return;
+        if ((lastNameInput.value || "").trim() || (firstNameInput.value || "").trim()) return;
+        try { lastNameInput.focus({ preventScroll: true }); } catch (e) { lastNameInput.focus(); }
+      });
+    }
+
     nextBtn.classList.add(DISABLE);
   }
 
