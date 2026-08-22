@@ -85,37 +85,6 @@
     return THANKS_V2_PATH + buildThanksQuery();
   }
 
-  function prewarmThanksBookingSlots() {
-    const el =
-      document.currentScript ||
-      document.querySelector('script[src*="app.js"]');
-    if (el && el.src && !document.querySelector("link[data-dk-booking-slots-preload]")) {
-      const jsonHref = el.src.replace(/app\.js(\?.*)?$/, "../data/booking-slots.json");
-      const preload = document.createElement("link");
-      preload.rel = "preload";
-      preload.as = "fetch";
-      preload.href = jsonHref;
-      preload.crossOrigin = "anonymous";
-      preload.setAttribute("data-dk-booking-slots-preload", "1");
-      document.head.appendChild(preload);
-    }
-    if (window.dkBookingSlotsFetch) {
-      window.dkBookingSlotsFetch(false);
-      return;
-    }
-    if (!el || !el.src) return;
-    const bootSrc = el.src.replace(/app\.js(\?.*)?$/, "thanks-booking-bootstrap.js?v=11");
-    if (document.querySelector('script[data-dk-booking-bootstrap]')) return;
-    const s = document.createElement("script");
-    s.src = bootSrc;
-    s.async = true;
-    s.setAttribute("data-dk-booking-bootstrap", "1");
-    s.onload = function () {
-      if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
-    };
-    document.head.appendChild(s);
-  }
-
   function persistLeadForThanks() {
     const lp = window.__LP_ID || "unknown";
     try {
@@ -1045,7 +1014,6 @@
               })
             );
           } catch (e) {}
-          prewarmThanksBookingSlots();
           persistLeadForThanks();
           setTimeout(() => { location.href = buildThanksUrl(); }, 600);
         }, 500);

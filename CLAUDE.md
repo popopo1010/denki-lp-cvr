@@ -51,7 +51,7 @@
 
 ## denkikouji の CV + LINE
 
-- フォーム完了後は `thanks-v2` へ。**2026-06-23〜 LINE一本化**：日程調整カレンダー（③予約）は撤去し、thanks の主アクションは LINE登録のみ（①登録完了→②LINEで受け取る）。日程調整は登録後のLINE上で実施。LINEロックは廃止、全文・社名のゲートは「電話」のまま（LINEで日程調整→お電話→LINEへ全文）。予約バックエンド（GAS・`booking-slots.json`・`thanks-booking-*.js`）はLINE経由向けに残置（ページ未読込）。
+- フォーム完了後は `thanks-v2` へ。**2026-06-23〜 LINE一本化**：日程調整カレンダー（③予約）は撤去し、thanks の主アクションは LINE登録のみ（①登録完了→②LINEで受け取る）。日程調整は登録後のLINE上で実施。LINEロックは廃止、全文・社名のゲートは「電話」のまま（LINEで日程調整→お電話→LINEへ全文）。予約バックエンド（GAS・`booking-slots.json`・`thanks-booking-*.js`）はLINE経由向けに残置（ページ未読込）。**2026-08-22 に最後の消費者だった年収診断サンクスのカレンダーも撤去し、予約UIはリポジトリから消滅**（LINEが全サンクスの最優先CTA）。同時に全LPのフォーム送信で走っていた予約枠プリウォーム（`booking-slots.json` 55KB の preload ＋ `thanks-booking-bootstrap.js` 読み込み）を削除した。`scripts/check-lp-bridge-release.mjs` が復活を自動ブロックする。
 - コピー・ステップ数・計測の一貫性は `docs/CV-LINE-playbook.md` を正とする。
 - リリース失敗の教訓（Deploy検証・CSS副作用）は `docs/release-incidents.md` を必ず参照する。
 - 入力ステップ（step04〜06）では、フッター（`.l-footer`）や `bottom:0` の sticky/fixed 要素を入力欄と同じ画面に出さない。被さると表示崩れの再発になる（同症状3回。経緯: `docs/release-incidents.md` 2026-06-15）。両CSSに `body.lp-input-step .l-footer{display:none}` で対処済み。プライバシー/利用規約の導線は step06 の `.cvr-pp-text` で担保。focus/viewport の JS検知はアプリ内ブラウザで空振りする前提で、被さり得る要素は構造的に隠す。

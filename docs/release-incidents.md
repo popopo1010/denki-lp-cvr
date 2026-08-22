@@ -317,3 +317,18 @@ gh run list --workflow=deploy.yml --limit 3
 - 教訓: **エラーを黙らせる前に「その処理はまだ必要か」を先に確かめる**。当初は「接続断は警告扱い＋本番JSONの鮮度監視」を実装しかけたが、定期実行をやめる判断になった時点で**鮮度監視は常に古くなって必ず失敗する有害な仕掛け**に変わる。リトライ強化・警告降格・監視追加はどれも「その処理が必要」が前提の対策で、前提が崩れると逆効果になる。
 - 教訓: 撤去した機能の**周辺設備が残る**。LINE一本化でカレンダーUIは消したが、それを支える5分cron・GAS・静的JSONは残り、1年近く誰も使わないまま動き続けてCIを鳴らしていた。機能撤去時は「その機能に給餌している定期処理」まで一緒に棚卸しする。
 - 残タスク（未実施）: `nenshu-shindan-v2/thanks` のカレンダーUI撤去と、予約バックエンド（`thanks-booking-*.js` / GAS / `booking-slots.json`）の要否判断。表示に関わるためSTG実機確認が必要。
+
+
+## 2026-08-22 予約カレンダー全廃と、全LPで空回りしていた予約枠プリウォームの撤去
+
+- 発端: `Sync booking slots JSON` のCI失敗メール調査。「カレンダーはもう使っていない」（オーナー）を起点に予約サブシステム全体を棚卸しした。
+- 判明したこと:
+  - `prewarmThanksBookingSlots()` が **全LP系統（app.js / app-v2.js / dk_lp 2実装）で無条件に発火**していた。app.js系は送信直前、**app-v2.js系は step06/step-last 到達時＝ユーザーが入力している最中**に、`booking-slots.json`（55KB）の preload と `thanks-booking-bootstrap.js`（8.4KB）読み込みを走らせていた。
+  - 消費者は `nenshu-shindan-v2/thanks` のカレンダーだけで、denkikouji系・sekoukanri系はLINE一本化で撤去済み。つまり**大半のLPで100%無駄な通信**が、CVRに最も効く「入力〜送信」の瞬間に発生していた。
+- 対応:
+  - 予約プリウォームを4実装から削除し、ミラー（WPLP / 自前LP / dk_lp）へ同期。`app.js?v20260822a`（32ファイル＋deploy.yml期待値）/ `app-v2.js?v20260822a`（28ファイル）/ dk_lp `main.js?v=20260822a`。
+  - 年収診断サンクス（v1・v2）からカレンダーブロック・予約スクリプトを撤去し、**LINEを最優先CTAへ昇格**（旧カレンダー位置へ移設、`t-line--secondary` の `opacity:.92` 格下げを解除）。`nenshu-shindan.css?v10`（18ファイル）。
+  - `check-lp-bridge-release.mjs` の needle から prewarm を外し、代わりに **`mustNotInclude` で復活を検知する回帰ガード**に置き換えた。
+- **踏んだ罠**: `thanks-calendar.css` は名前に反して**年収診断サンクスの基幹スタイル**（`.t-s` / `.t-line` / `.t-line__btn` / `.t-bene` を定義）だった。カレンダー撤去のついでにこのCSSリンクを外したところ、**昇格させたばかりのLINEブロックごとページ全体が無スタイルになる**寸前だった（nenshu thanks は `thanks-page.css` を読まないため代替が無い）。ファイル名から役割を推測せず、**消す前に「そのCSSが実際に何を定義しているか」を必ず引く**。
+- 検証: ローカル配信に対し Playwright 19/19 パス（4LP系統のステップ遷移・クマ存在・予約preload 0件／サンクスのカレンダー非存在・予約リクエスト0件・LINE CTA表示・LINEが先頭・**CSS生存（border 2px / radius 16px / opacity 1）**）。静的ガード8種＋bridge 14/14 パス。
+- 未実施（要削除承認）: 消費者ゼロになった `assets/js/thanks-booking-*.js`（6本）・`assets/data/booking-slots.json`・`scripts/sync-booking-slots.js`・`.github/workflows/sync-booking-slots.yml` の削除と、それに伴う deploy.yml の予約検証行の除去。`thanks-calendar.css` は上記の理由で**残す**（`.t-cal*` ルールのみ削除可）。

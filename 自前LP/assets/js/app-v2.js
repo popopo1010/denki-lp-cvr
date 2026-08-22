@@ -99,38 +99,6 @@
     return THANKS_V2_PATH + buildThanksQuery();
   }
 
-  function prewarmThanksBookingSlots() {
-    var el =
-      document.currentScript ||
-      document.querySelector('script[src*="app-v2.js"]');
-    if (el && el.src && !document.querySelector('link[data-dk-booking-slots-preload]')) {
-      var jsonHref = el.src.replace(/app-v2\.js(\?.*)?$/, "../data/booking-slots.json");
-      var preload = document.createElement("link");
-      preload.rel = "preload";
-      preload.as = "fetch";
-      preload.href = jsonHref;
-      preload.crossOrigin = "anonymous";
-      preload.setAttribute("data-dk-booking-slots-preload", "1");
-      document.head.appendChild(preload);
-    }
-    if (window.dkBookingSlotsFetch) {
-      window.dkBookingSlotsFetch(false);
-      return;
-    }
-    if (!el || !el.src) return;
-    var bootSrc = el.src.replace(
-      /app-v2\.js(\?.*)?$/,
-      "thanks-booking-bootstrap.js?v=11"
-    );
-    var s = document.createElement("script");
-    s.src = bootSrc;
-    s.async = true;
-    s.onload = function () {
-      if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
-    };
-    document.head.appendChild(s);
-  }
-
   function persistLeadForThanks() {
     const lp = window.__LP_ID || "unknown";
     try {
@@ -195,10 +163,6 @@
     }
 
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
-
-    if (pageId === "#step06" || pageId === "#step-last") {
-      prewarmThanksBookingSlots();
-    }
 
     if (pageId === "#step-first") {
       page.style.cssText = skipAnim
@@ -903,7 +867,6 @@
               })
             );
           } catch (e) {}
-          prewarmThanksBookingSlots();
           persistLeadForThanks();
           setTimeout(() => { location.href = buildThanksUrl(); }, 600);
         }, 500);

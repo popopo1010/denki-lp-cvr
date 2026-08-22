@@ -678,38 +678,9 @@
 }
 
 /* サンクス：予約優先 */
-.t-cal--nenshu-priority {
-  margin: 0 16px 20px;
-  border: 2px solid #e8520e;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(232, 82, 14, 0.12);
-}
-.t-cal--nenshu-priority .t-cal__head {
-  background: linear-gradient(135deg, #e8520e, #f57c00);
-  color: #fff;
-  padding: 12px 16px;
-  text-align: center;
-}
-.t-cal--nenshu-priority .t-cal__head h3 {
-  margin: 4px 0 0;
-  font-size: 16px;
-  font-weight: 800;
-}
-.t-cal--nenshu-priority .t-cal__step {
-  font-size: 11px;
-  font-weight: 700;
-  opacity: 0.95;
-  margin: 0;
-}
-.t-cal--nenshu-priority .t-cal__body {
-  padding: 14px 12px;
-  background: #fff;
-}
-.t-line--secondary {
-  opacity: 0.92;
-}
-.t-line--secondary .t-line__gate-note {
+
+/* LINEを最優先CTAへ昇格（2026-08-22 予約カレンダー撤去） */
+.t-line--primary .t-line__gate-note {
   font-size: 11px;
   color: #666;
   text-align: center;

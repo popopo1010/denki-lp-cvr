@@ -53,32 +53,6 @@
     return Cookie.get("user-name") || storageGet("dk_lp_user_name") || "";
   }
 
-  function prewarmThanksBookingSlots() {
-    const slotsUrl = CVR_ASSETS_BASE + "/data/booking-slots.json";
-    if (!document.querySelector("link[data-dk-booking-slots-preload]")) {
-      const preload = document.createElement("link");
-      preload.rel = "preload";
-      preload.as = "fetch";
-      preload.href = slotsUrl;
-      preload.crossOrigin = "anonymous";
-      preload.setAttribute("data-dk-booking-slots-preload", "1");
-      document.head.appendChild(preload);
-    }
-    if (window.dkBookingSlotsFetch) {
-      window.dkBookingSlotsFetch(false);
-      return;
-    }
-    if (document.querySelector("script[data-dk-booking-bootstrap]")) return;
-    const s = document.createElement("script");
-    s.src = CVR_ASSETS_BASE + "/js/thanks-booking-bootstrap.js?v=11";
-    s.async = true;
-    s.setAttribute("data-dk-booking-bootstrap", "1");
-    s.onload = function () {
-      if (window.dkBookingSlotsFetch) window.dkBookingSlotsFetch(false);
-    };
-    document.head.appendChild(s);
-  }
-
   function persistThanksBridgeSession() {
     const name = getDisplayName();
     if (name) {
@@ -153,7 +127,6 @@
       page_location: location.href,
       page_path: location.pathname
     });
-    prewarmThanksBookingSlots();
     location.href = buildThanksUrl();
   }
 

@@ -35,6 +35,18 @@ function mustInclude(rel, needles, label) {
   return true;
 }
 
+function mustNotInclude(rel, needles, label) {
+  const src = read(rel);
+  for (const n of needles) {
+    if (src.includes(n)) {
+      fail(label || rel, `should be removed: ${n}`);
+      return false;
+    }
+  }
+  pass(label || rel, `${needles.length} tokens absent`);
+  return true;
+}
+
 const gasUrl =
   "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
 
@@ -43,7 +55,6 @@ const bridgeNeedles = [
   "dk_job_intent",
   "dk_lead_profile",
   'sessionStorage.setItem("_tel"',
-  "prewarmThanksBookingSlots",
   "THANKS_V2_PATH",
   "dk_lp_lead_v1"
 ];
@@ -57,11 +68,24 @@ const dkNeedles = [
   "persistThanksBridgeSession",
   "CVR_ASSETS_BASE",
   "dk_job_intent",
-  'storageSet("_tel"',
-  "prewarmThanksBookingSlots"
+  'storageSet("_tel"'
 ];
 mustInclude("dk_lp/denkikouji/assets/js/main.js", dkNeedles, "dk_lp denkikouji main.js");
 mustInclude("dk_lp/sekokanri/assets/js/main.js", dkNeedles, "dk_lp sekokanri main.js");
+
+// 予約枠プリウォームの回帰ガード（2026-08-22 撤去）。
+// フォーム送信のたびに booking-slots.json(55KB) の preload と
+// thanks-booking-bootstrap.js の読み込みを走らせていたが、カレンダー撤去で
+// 消費者がゼロになったため削除した。復活すると全LPで無駄な通信が戻る。
+const prewarmGone = ["prewarmThanksBookingSlots", "dk-booking-slots-preload"];
+for (const f of [
+  "assets/js/app.js",
+  "assets/js/app-v2.js",
+  "dk_lp/denkikouji/assets/js/main.js",
+  "dk_lp/sekokanri/assets/js/main.js"
+]) {
+  mustNotInclude(f, prewarmGone, `no booking prewarm: ${f}`);
+}
 
 for (const mirror of ["WPLP/assets/js/app-v2.js", "自前LP/assets/js/app-v2.js"]) {
   const a = read("assets/js/app-v2.js");
