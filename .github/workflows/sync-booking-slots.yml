@@ -1,8 +1,16 @@
 name: Sync booking slots JSON
 
+# 【2026-08-22】5分ごとの定期実行を停止した。
+# この JSON は日程調整カレンダーの「初回表示を速くするためのキャッシュ」でしかなく、
+# 古い/無い場合は thanks-booking-bootstrap.js が GAS へ JSONP で直接取りに行く
+# （dkBookingSlotsFetch のフォールバック）。つまり同期を止めてもカレンダーは動く。
+# 一方でカレンダー動線自体は denkikouji系ではLINE一本化で撤去済み、残るは
+# nenshu-shindan-v2/thanks のみで、そちらも運用上は使っていない（オーナー確認済み 2026-08-22）。
+# 使われていない機能のために1日数百回Xserverへ SSH し、そのたびに一時的な到達不能で
+# CI失敗メールを飛ばしていたため、定期実行をやめて手動実行だけ残す。
+# 本番の booking-slots.json は deploy.yml が毎回のデプロイで生成・配信するので、
+# 手動実行が必要になる場面はほぼない。カレンダーを本格的に再開するなら schedule を戻す。
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 concurrency:
@@ -12,6 +20,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     env:
       XSERVER_HOST: ${{ secrets.XSERVER_HOST }}
       XSERVER_PORT: ${{ secrets.XSERVER_PORT }}
@@ -61,18 +70,23 @@ jobs:
           else
             SSH_CHECK="-o StrictHostKeyChecking=accept-new"
           fi
-          # XserverへのSSHが一時的にタイムアウトすることがある（2026-08-19に発生）ため3回まで再試行
-          for attempt in 1 2 3; do
+          # XserverへのSSHは数分まるごと到達不能になることがある（2026-08-19 / 2026-08-22）。
+          # 障害窓が5分前後あり30秒等間隔ではまたげないため、60s → 120s と広げて再試行する。
+          attempt=0
+          for wait in 60 120 ""; do
+            attempt=$((attempt + 1))
             if scp -P "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" ${SSH_CHECK} \
               -o ConnectTimeout=30 \
               assets/data/booking-slots.json \
               "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}/assets/data/booking-slots.json"; then
               exit 0
             fi
-            echo "scp attempt ${attempt} failed; retrying in 30s"
-            sleep 30
+            if [ -n "$wait" ]; then
+              echo "scp attempt ${attempt} failed; retrying in ${wait}s"
+              sleep "$wait"
+            fi
           done
-          echo "::error::scp failed after 3 attempts"
+          echo "::error::scp failed after ${attempt} attempts"
           exit 1
 
       - name: Verify JSON on server
