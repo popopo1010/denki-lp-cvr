@@ -303,3 +303,17 @@ gh run list --workflow=deploy.yml --limit 3
 - 原因: `viewport-fit=cover` 下でキーボード表示中はページが**画面最上端（ステータスバー裏）から描画**され、チュームの被り量が約100px超になり44pxでは不足。
 - 対応: 全cvr-boost*.css の余白を `padding-top: calc(env(safe-area-inset-top, 0px) + 44px)` に変更。潜り込み時はiOSが safe-area-inset-top（約59px）を報告するため合計約103pxとなり被りを回避。通常時（inset=0）は44pxのまま。
 - 注意: env(safe-area-inset-top) はローカルPlaywrightでは常に0のため、この効果は**実機でしか確認できない**。
+
+## 2026-08-22 booking-slots同期CIが1日数回失敗メールを飛ばす → 定期実行を停止
+
+- 症状: `Sync booking slots JSON` が断続的に失敗し「All jobs have failed」メールが1日数回届く（run #1413 / #1407 / #1401 / #1396 / #1395 / #1361 …＝直近100run中の約1割）。
+- 原因: 失敗するのは scp ステップだけで、ログは `ssh: connect to host … : Connection timed out` ×3。**同じrunで `ssh-keyscan` も5回全滅（`HOSTKEY_OK: false`）＝認証でも鍵でもなく、その数分間だけGitHubランナーからXserverのSSHポートに到達できない**ネットワーク側の一時障害。5分cronで1日数百回SSHしているため、Xserver側の接続制限に当たっていた可能性が高い。
+- 調査でわかったこと（対処方針を変えた決め手）:
+  - `booking-slots.json` は**カレンダーの初回表示を速くするためのキャッシュにすぎない**。静的JSONが古い（`ttl_sec` 300秒超）か無ければ `thanks-booking-bootstrap.js` の `dkBookingSlotsFetch` が **GAS へ JSONP で直接取りに行く**（bootstrap 194行〜）。**同期を止めてもカレンダーは動く**。
+  - カレンダー動線は denkikouji系・sekoukanri系では LINE一本化で撤去済み（`booking` 参照ゼロ）。残っているのは **`nenshu-shindan-v2/thanks` だけ**（`nenshu-shindan/thanks` はrsync除外で未配信）。`generate-lp-thanks-redirects.mjs` の SKIP_DIR_RE で nenshu-shindan系だけthanks-v2統一から外れているため生き残っていた。
+  - その年収診断のカレンダーも運用では使っていない（オーナー確認済み 2026-08-22）。
+- 対応: **`schedule` を削除し `workflow_dispatch` の手動実行のみに**。使っていない機能のために1日数百回SSHして障害を引き当て、メールを飛ばす構造自体をなくした。あわせて手動実行時に一時障害をまたげるよう scp のリトライ間隔を 30s等間隔 → **60s → 120s** に広げ、`timeout-minutes: 12` を追加。
+- 本番JSONの鮮度: `deploy.yml` が毎回のデプロイで `sync-booking-slots.js` を実行し rsync で配信するため、デプロイのたびに更新される。それ以外は GAS フォールバックが受け持つ。
+- 教訓: **エラーを黙らせる前に「その処理はまだ必要か」を先に確かめる**。当初は「接続断は警告扱い＋本番JSONの鮮度監視」を実装しかけたが、定期実行をやめる判断になった時点で**鮮度監視は常に古くなって必ず失敗する有害な仕掛け**に変わる。リトライ強化・警告降格・監視追加はどれも「その処理が必要」が前提の対策で、前提が崩れると逆効果になる。
+- 教訓: 撤去した機能の**周辺設備が残る**。LINE一本化でカレンダーUIは消したが、それを支える5分cron・GAS・静的JSONは残り、1年近く誰も使わないまま動き続けてCIを鳴らしていた。機能撤去時は「その機能に給餌している定期処理」まで一緒に棚卸しする。
+- 残タスク（未実施）: `nenshu-shindan-v2/thanks` のカレンダーUI撤去と、予約バックエンド（`thanks-booking-*.js` / GAS / `booking-slots.json`）の要否判断。表示に関わるためSTG実機確認が必要。
