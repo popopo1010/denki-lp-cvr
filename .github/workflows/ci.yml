@@ -1,0 +1,113 @@
+name: CI
+
+# 作業ブランチ / PR の時点で壊れを見つけるための検証。
+#
+# これまで静的チェックは deploy.yml（main・staging への push）の中でしか動いておらず、
+# 作業ブランチでは何も回っていなかった。壊れに気づくのが「main へマージした後」だと、
+# 直すのに本番デプロイをもう1回まわすことになる。ここで前倒しする。
+#
+# 本番/STGへは一切触らない（ネットワークも本番へは出さない）。
+on:
+  pull_request:
+  push:
+    branches-ignore: [main, staging]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: 静的チェック（禁止コピー・クマ・参照・?v=・フォーム配線）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 禁止コピー / ラベル接頭辞
+        run: node scripts/check-banned-copy.mjs
+
+      - name: クマ初期位置（CSS）
+        run: node scripts/check-kuma-anchor.mjs
+
+      - name: フォーム配線（スクロール・自己修復・クマ移動・ミラー・アプリ内ブラウザ余白）
+        run: node scripts/check-form-invariants.mjs
+
+      - name: 入力欄の属性（数字キーボード・自動入力）
+        run: node scripts/check-input-attrs.mjs
+
+      - name: キャッシュバスター ?v= の整合
+        run: node scripts/check-asset-versions.mjs
+
+      - name: 遅延ステップのパス解決
+        run: node scripts/check-lazy-steps.mjs
+
+      - name: 相対参照の解決（srcset含む）
+        run: node scripts/check-local-refs.mjs
+
+      - name: LPガード
+        run: node scripts/check-lp-guard.js
+
+      - name: denkikouji リリース静的チェック
+        run: node scripts/check-denkikouji-release.mjs
+
+      - name: thanks-v2 リリース静的チェック
+        run: node scripts/check-thanks-v2-release.mjs
+
+      - name: LP→GAS ブリッジ
+        run: node scripts/check-lp-bridge-release.mjs
+
+      - name: 代理店共有シートのPII混入検査
+        run: node scripts/check-agency-share.mjs
+
+  generated:
+    name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 生成・同期スクリプトを実行
+        run: |
+          set -euo pipefail
+          node scripts/sync-lp-canonical-urls.mjs
+          node scripts/generate-wp-redirects-fragment.mjs
+          node scripts/build-thanks-v2-deferred.mjs
+          node scripts/build-thanks-job-previews-family.mjs
+          node scripts/sync-thanks-v2-mirrors.mjs
+          node scripts/generate-lp-thanks-redirects.mjs
+          python3 scripts/generate-sekoukanri-variants.py
+
+      - name: コミット済みの内容と一致するか
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::生成スクリプトの出力がコミット内容と食い違う（手編集が次の再生成で消える）"
+            git --no-pager diff --stat
+            exit 1
+          fi
+          echo "生成物のドリフトなし"
+
+  e2e:
+    name: LPフォームのローカルE2E（実ブラウザ）
+    # 実ブラウザは時間がかかるので、PR（とworkflow_dispatch）でだけ回す。
+    # 作業ブランチへの push では静的チェック＋生成物ドリフトまで。
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Playwright（Chromiumのみ）
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: フォーム通し・自己修復・遅延ステップ復旧・load前クリック
+        run: node scripts/e2e-lp-flow-local.mjs

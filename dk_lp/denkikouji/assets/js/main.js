@@ -90,7 +90,15 @@
     return Cookie.get("user-name") || storageGet("dk_lp_user_name") || "";
   }
 
+  // 予約カレンダーを使うサンクスは nenshu-shindan 系だけ。thanks-v2 は 2026-06-23 の
+  // LINE一本化でカレンダーを撤去済み。ここ（dk_lp参照実装）の遷移先は常に thanks-v2 なので
+  // 予約枠JSON(約54KB)+bootstrapの先読みは常に無駄になる（2026-08-22 QA。app.js/app-v2.jsと同形）。
+  function thanksUsesBooking() {
+    return location.pathname.indexOf("/nenshu-shindan") !== -1;
+  }
+
   function prewarmThanksBookingSlots() {
+    if (!thanksUsesBooking()) return;
     const slotsUrl = CVR_ASSETS_BASE + "/data/booking-slots.json";
     if (!document.querySelector("link[data-dk-booking-slots-preload]")) {
       const preload = document.createElement("link");
@@ -107,7 +115,7 @@
     }
     if (document.querySelector("script[data-dk-booking-bootstrap]")) return;
     const s = document.createElement("script");
-    s.src = CVR_ASSETS_BASE + "/js/thanks-booking-bootstrap.js?v=11";
+    s.src = CVR_ASSETS_BASE + "/js/thanks-booking-bootstrap.js?v=12";
     s.async = true;
     s.setAttribute("data-dk-booking-bootstrap", "1");
     s.onload = function () {
@@ -249,6 +257,13 @@
     }
     icon.style.opacity = "1";
   }
+
+  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
+  // それまで app.js/dk_lp は 1924〜2010、app-v2.js だけ 1924〜2023 で、
+  // v2系のLPだけ「2023年生まれ（3歳）」が通ってZohoへ流れていた。
+  // さらに legacy select の選択肢は 2023 まで作られており、自分の検証と矛盾していた。
+  const BIRTH_YEAR_MIN = 1924;
+  const BIRTH_YEAR_MAX = 2010;
 
   function moveIconById(id) {
     if (!id || id === "#") return;
@@ -660,7 +675,7 @@
 
   function isValidBirthYear(value) {
     const year = parseInt(String(value || "").trim(), 10);
-    return year >= 1924 && year <= 2010;
+    return year >= BIRTH_YEAR_MIN && year <= BIRTH_YEAR_MAX;
   }
 
   // ========== Name inputs ==========
@@ -696,7 +711,7 @@
           if (errText) {
             const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
             errText.textContent = namesOk
-              ? "生年月日（西暦）は1924〜2010で入力してください"
+              ? `生年月日（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`
               : "必ず入力してください";
           }
         }

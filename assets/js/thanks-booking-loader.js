@@ -15,7 +15,7 @@
     document.head.appendChild(s);
   }
 
-  var bootUrl = base.replace(/thanks-booking-loader\.js.*$/, "thanks-booking-bootstrap.js?v=11");
+  var bootUrl = base.replace(/thanks-booking-loader\.js.*$/, "thanks-booking-bootstrap.js?v=12");
   var mode = (window.THANKS_BOOKING_MODE || "custom").toLowerCase();
   var uiFile = mode === "timerex" ? "thanks-booking.js" : "thanks-booking-custom.js";
   var uiUrl = base.replace(/thanks-booking-loader\.js.*$/, uiFile + "?v=11");

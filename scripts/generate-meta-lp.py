@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate Meta ad short LPs (real form, noindex) from existing specialty / nenshu pages."""
 import re
+import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -141,12 +142,21 @@ def apply_meta_transforms(html: str, cfg: dict) -> str:
         )
 
     if "meta-short-lp.css" not in html:
-        html = re.sub(
-            r'(<noscript><link rel="stylesheet" href="[^"]*cvr-boost[^"]*\.css[^"]*"></noscript>)',
-            r'\1\n    <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1" media="print" onload="this.media=\'all\'">\n    <noscript><link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1"></noscript>',
+        # 2026-08-19 に全LPのCSSは同期読み込みへ統一され、<noscript>フォールバックは消えた。
+        # 旧アンカー（noscript）に依存していたため meta-short-lp.css が注入されず、
+        # 再生成すると Meta短LP専用スタイル(.meta-fv*)ごと落ちていた（2026-08-22 QA で発見）。
+        # 現行マークアップ（cvr-boost*.css の同期link）を正しいアンカーにする。
+        html, n = re.subn(
+            r'(<link rel="stylesheet" href="[^"]*cvr-boost[^"]*\.css[^"]*">)',
+            r'\1\n    <link rel="stylesheet" href="../../assets/css/meta-short-lp.css?v1">',
             html,
             count=1,
         )
+        if n != 1:
+            raise ValueError(
+                "meta-short-lp.css の注入アンカー（cvr-boost*.css の <link>）が見つからない。"
+                "元LPのCSS読み込み方法が変わった可能性がある"
+            )
 
     html = html.replace(
         'data-lazy-src="steps-lazy.html',
@@ -199,15 +209,29 @@ def apply_meta_transforms(html: str, cfg: dict) -> str:
 
 
 def main() -> None:
+    # 既存の meta-lp/ は生成後に手で育てられている（インシデント対策CSS・遅延GTM等）。
+    # 素直に上書きすると、その手当てを黙って巻き戻して本番の広告LPを壊す。
+    # そのため既定は「新規作成のみ」。作り直したいときだけ --force を明示する
+    # （--force 後は必ず STG のスマホ実機で確認すること。2026-08-22 QA）。
+    force = "--force" in sys.argv
+    skipped = []
     for cfg in SOURCES:
         src = REPO / cfg["src"]
         dest = REPO / cfg["dest"]
         if not src.exists():
             raise FileNotFoundError(src)
+        if dest.exists() and not force:
+            skipped.append(cfg["dest"])
+            continue
         html = apply_meta_transforms(src.read_text(encoding="utf-8"), cfg)
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(html, encoding="utf-8")
         print("wrote", cfg["dest"])
+    if skipped:
+        print("skipped (既存・手編集を保護):")
+        for s in skipped:
+            print("  -", s)
+        print("上書きするなら: python3 scripts/generate-meta-lp.py --force  → STG実機確認まで必須")
 
 
 if __name__ == "__main__":

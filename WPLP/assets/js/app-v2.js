@@ -99,7 +99,16 @@
     return THANKS_V2_PATH + buildThanksQuery();
   }
 
+  // 予約カレンダーを使うサンクスは nenshu-shindan 系だけ。thanks-v2 は 2026-06-23 の
+  // LINE一本化でカレンダーを撤去済み（thanks-v2/index.html に booking 参照は0件）。
+  // それ以外のLPで予約枠JSON(約54KB)とbootstrapを先読みするのは純粋な無駄で、
+  // step06到達〜送信という一番詰まってほしくない瞬間に回線を奪う（2026-08-22 QA）。
+  function thanksUsesBooking() {
+    return location.pathname.indexOf("/nenshu-shindan") !== -1;
+  }
+
   function prewarmThanksBookingSlots() {
+    if (!thanksUsesBooking()) return;
     var el =
       document.currentScript ||
       document.querySelector('script[src*="app-v2.js"]');
@@ -120,7 +129,7 @@
     if (!el || !el.src) return;
     var bootSrc = el.src.replace(
       /app-v2\.js(\?.*)?$/,
-      "thanks-booking-bootstrap.js?v=11"
+      "thanks-booking-bootstrap.js?v=12"
     );
     var s = document.createElement("script");
     s.src = bootSrc;
@@ -153,6 +162,13 @@
 
   // ========== Icon system (DOM移動方式) ==========
   let icon = null;
+
+  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
+  // それまで app.js/dk_lp は 1924〜2010、app-v2.js だけ 1924〜2023 で、
+  // v2系のLPだけ「2023年生まれ（3歳）」が通ってZohoへ流れていた。
+  // さらに legacy select の選択肢は 2023 まで作られており、自分の検証と矛盾していた。
+  const BIRTH_YEAR_MIN = 1924;
+  const BIRTH_YEAR_MAX = 2010;
 
   function moveIcon(targetEl, scroll) {
     if (!icon || !targetEl) return;
@@ -674,7 +690,7 @@
         const v = (bdayYearInput.value || "").trim();
         if (!/^[0-9]{4}$/.test(v)) return false;
         const n = parseInt(v, 10);
-        if (n < 1924 || n > 2023) return false;
+        if (n < BIRTH_YEAR_MIN || n > BIRTH_YEAR_MAX) return false;
       }
       return true;
     }
@@ -728,7 +744,7 @@
                 missing.push("生まれ年(西暦4桁)");
               } else {
                 const n = parseInt(v, 10);
-                if (n < 1924 || n > 2023) missing.push("生まれ年(1924〜2023)");
+                if (n < BIRTH_YEAR_MIN || n > BIRTH_YEAR_MAX) missing.push(`生まれ年(${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX})`);
               }
             }
             if (missing.length === 0) {
@@ -966,7 +982,7 @@
     const y = document.getElementById("bday-year");
     const m = document.getElementById("bday-month");
     const d = document.getElementById("bday-day");
-    if (y && y.tagName === "SELECT") { let h = ""; for (let i = 1924; i <= 2023; i++) h += '<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>'; y.innerHTML = h; }
+    if (y && y.tagName === "SELECT") { let h = ""; for (let i = BIRTH_YEAR_MIN; i <= BIRTH_YEAR_MAX; i++) h += '<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>'; y.innerHTML = h; }
     if (m && m.tagName === "SELECT") { let h = ""; for (let i = 1; i <= 12; i++) h += '<option value="'+i+'">'+i+'</option>'; m.innerHTML = h; }
     if (d && d.tagName === "SELECT") { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
   }

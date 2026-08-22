@@ -10,7 +10,7 @@
   }
   var base = document.currentScript && document.currentScript.src;
   if (!base) return;
-  var url = base.replace(/thanks-booking-slots\.js.*$/, "thanks-booking-bootstrap.js?v=11");
+  var url = base.replace(/thanks-booking-slots\.js.*$/, "thanks-booking-bootstrap.js?v=12");
   var s = document.createElement("script");
   s.src = url;
   s.async = false;

@@ -17,8 +17,23 @@ window.BOOKING_FETCH_DAYS = 7;
 /** サンクスでは静的JSONのみ（bootstrap と同様） */
 window.BOOKING_SLOTS_SKIP_GAS_REFRESH = true;
 
-/** CDN配信の空き枠JSON（deploy / 5分sync で更新） */
-window.BOOKING_SLOTS_STATIC_URL = "../assets/data/booking-slots.json";
+/**
+ * 空き枠JSONのURLは、ページからの相対（"../assets/data/..."）では解決できない。
+ * このスクリプトを読むページの深さがバラバラだから（/thanks-v2/ は深さ1、
+ * /nenshu-shindan/thanks/ は深さ2）。実際、深さ2の nenshu 系サンクスとLPからは
+ * ずっと 404 を引いていて、静的JSONを飛ばしてGASへ落ちていた（2026-08-22 QA で検出）。
+ * 自分自身の src から解決すれば、どの深さから読まれても当たる。
+ */
+window.BOOKING_SLOTS_STATIC_URL = (function () {
+  try {
+    var s = document.currentScript || document.querySelector('script[src*="thanks-booking-"]');
+    if (s && s.src) {
+      var u = s.src.replace(/js\/thanks-booking-[a-z-]+\.js(\?.*)?$/, "data/booking-slots.json");
+      if (u !== s.src) return u;
+    }
+  } catch (e) { /* no-op */ }
+  return "../assets/data/booking-slots.json";
+})();
 
 /** 空き枠キャッシュ（sessionStorage + localStorage） */
 window.BOOKING_SLOTS_CACHE_KEY = "dk_booking_slots_cache";

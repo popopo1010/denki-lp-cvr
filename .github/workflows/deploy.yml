@@ -55,6 +55,15 @@ jobs:
       - name: Check local refs (相対参照404の再発防止・srcset含む)
         run: node scripts/check-local-refs.mjs
 
+      - name: Check form invariants (スクロール/自己修復/クマ移動/ミラーの再発防止)
+        run: node scripts/check-form-invariants.mjs
+
+      - name: Check input attrs (数字キーボード・自動入力の取りこぼし防止)
+        run: node scripts/check-input-attrs.mjs
+
+      - name: Check asset versions (?v= 上げ忘れ・不揃いの検出)
+        run: node scripts/check-asset-versions.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js
@@ -323,7 +332,7 @@ jobs:
           verify_denki_lp() {
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
-            echo "$denki_lp" | grep -q 'app.js?v20260718' || return 1
+            echo "$denki_lp" | grep -q 'app.js?v20260822a' || return 1
             echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260819a' || return 1
             echo "$denki_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
@@ -341,7 +350,7 @@ jobs:
             echo "$css" | grep -q 'is-step-active' || return 1
             echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260819a' || return 1
             echo "$sekou_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
-            echo "$sekou_lp" | grep -q 'app.js?v20260718' || return 1
+            echo "$sekou_lp" | grep -q 'app.js?v20260822a' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
             echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260701c' || return 1
             echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1

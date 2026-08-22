@@ -99,15 +99,11 @@
   }
 
   // ========== フォームトラッキング ==========
-  function initFormTracking() {
-    document.querySelectorAll(".js-step-button").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (btn.dataset.pageTo && window.dataLayer) {
-          window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
-        }
-      });
-    });
-  }
+  // initFormTracking は削除（2026-08-22 QA）。
+  // app.js の trackStep が showPage 時に form_step を1回だけ（同一ステップは重複排除して）
+  // 送っているのに、ここでもクリックで push していたため、app.js系LPのファネルが
+  // 二重計上になっていた（さらに「戻る」クリックも1ステップとして数えていた）。
+  // ステップ計測は app.js / app-v2.js を正とする。
 
   // ========== フローティングCTA ==========
   function initFloatingCta() {
@@ -183,7 +179,6 @@
 
     initNotifications();
     initExitIntent();
-    initFormTracking();
     initFloatingCta();
     initCountUp();
   });

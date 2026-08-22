@@ -56,6 +56,7 @@
     remove(name) { Cookie.set(name, "", -1); }
   };
 
+  const CVR_BOOST_VER = "20260822a"; // assets/js/cvr-boost.js のキャッシュキー（中身を変えたら必ず上げる）
   const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
   const NENSHU_THANKS_V1_PATH = "/denki-lp-cvr/nenshu-shindan/thanks/";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
@@ -85,7 +86,16 @@
     return THANKS_V2_PATH + buildThanksQuery();
   }
 
+  // 予約カレンダーを使うサンクスは nenshu-shindan 系だけ。thanks-v2 は 2026-06-23 の
+  // LINE一本化でカレンダーを撤去済み（thanks-v2/index.html に booking 参照は0件）。
+  // それ以外のLPで予約枠JSON(約54KB)とbootstrapを先読みするのは純粋な無駄で、
+  // step06到達〜送信という一番詰まってほしくない瞬間に回線を奪う（2026-08-22 QA）。
+  function thanksUsesBooking() {
+    return location.pathname.indexOf("/nenshu-shindan") !== -1;
+  }
+
   function prewarmThanksBookingSlots() {
+    if (!thanksUsesBooking()) return;
     const el =
       document.currentScript ||
       document.querySelector('script[src*="app.js"]');
@@ -104,7 +114,7 @@
       return;
     }
     if (!el || !el.src) return;
-    const bootSrc = el.src.replace(/app\.js(\?.*)?$/, "thanks-booking-bootstrap.js?v=11");
+    const bootSrc = el.src.replace(/app\.js(\?.*)?$/, "thanks-booking-bootstrap.js?v=12");
     if (document.querySelector('script[data-dk-booking-bootstrap]')) return;
     const s = document.createElement("script");
     s.src = bootSrc;
@@ -780,9 +790,16 @@
     updateBtn();
   }
 
+  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
+  // それまで app.js/dk_lp は 1924〜2010、app-v2.js だけ 1924〜2023 で、
+  // v2系のLPだけ「2023年生まれ（3歳）」が通ってZohoへ流れていた。
+  // さらに legacy select の選択肢は 2023 まで作られており、自分の検証と矛盾していた。
+  const BIRTH_YEAR_MIN = 1924;
+  const BIRTH_YEAR_MAX = 2010;
+
   function isValidBirthYear(value) {
     const year = parseInt(String(value || "").trim(), 10);
-    return year >= 1924 && year <= 2010;
+    return year >= BIRTH_YEAR_MIN && year <= BIRTH_YEAR_MAX;
   }
 
   // ========== Name inputs ==========
@@ -825,7 +842,7 @@
             if (errText) {
               const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
               errText.textContent = namesOk
-                ? "生まれ年（西暦）は1924〜2010で入力してください"
+                ? `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`
                 : "お名前を入力してください";
             }
           } else {
@@ -1108,7 +1125,7 @@
     const d = document.getElementById("bday-day");
     if (!y || y.tagName === "INPUT") return;
     let h = "";
-    for (let i = 1924; i <= 2023; i++) h += '<option value="' + i + '"' + (i === 1990 ? " selected" : "") + ">" + i + "</option>";
+    for (let i = BIRTH_YEAR_MIN; i <= BIRTH_YEAR_MAX; i++) h += '<option value="' + i + '"' + (i === 1990 ? " selected" : "") + ">" + i + "</option>";
     y.innerHTML = h;
     if (m) { h = ""; for (let i = 1; i <= 12; i++) h += '<option value="' + i + '">' + i + "</option>"; m.innerHTML = h; }
     if (d) { h = ""; for (let i = 1; i <= 31; i++) h += '<option value="' + i + '">' + i + "</option>"; d.innerHTML = h; }
@@ -1301,7 +1318,11 @@
       const ref = document.currentScript || document.querySelector('script[src*="app.js"]');
       if (!ref || !ref.src) return;
       const s = document.createElement("script");
-      s.src = ref.src.replace(/app\.js(\?.*)?$/, "cvr-boost.js$1");
+      // cvr-boost.js のキャッシュキーは app.js の ?v を流用しない。流用すると cvr-boost.js だけを
+      // 直しても URL が変わらず、immutable キャッシュから古い実装が配られ続ける
+      // （「?v= を上げたのに効かない」と同型の事故。2026-08-22 QA）。
+      // この定数は scripts/check-asset-versions.mjs が中身のハッシュと突き合わせて監視する。
+      s.src = ref.src.replace(/app\.js(\?.*)?$/, "cvr-boost.js?v=" + CVR_BOOST_VER);
       s.async = true;
       document.head.appendChild(s);
     }
