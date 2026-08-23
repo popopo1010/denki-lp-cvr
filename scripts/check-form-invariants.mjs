@@ -163,9 +163,13 @@ for (const [canonical, mirrors] of MIRRORS) {
   for (const p of IMPLS) {
     const src = read(p);
     const min = src.match(/BIRTH_YEAR_MIN\s*=\s*(\d{4})/);
-    const max = src.match(/BIRTH_YEAR_MAX\s*=\s*(\d{4})/);
-    check(`${p}: 生まれ年の範囲が定数で1箇所に定義されている`, !!(min && max));
-    if (min && max) ranges.set(p, `${min[1]}-${max[1]}`);
+    // 下限は「16歳以上」という年齢ルール。西暦の直書きは年が変わるたびに1歳ずつ
+    // 厳しくなって黙って腐るので、年齢からの導出であることまで固定する（2026-08-23）。
+    const age = src.match(/MIN_AGE\s*=\s*(\d{1,2})/);
+    const max = src.match(/BIRTH_YEAR_MAX\s*=\s*new Date\(\)\.getFullYear\(\)\s*-\s*MIN_AGE/);
+    check(`${p}: 生まれ年の範囲が定数で1箇所に定義されている`, !!(min && age && max));
+    check(`${p}: 生まれ年の下限を西暦直書きしない（年齢から導出）`, !/BIRTH_YEAR_MAX\s*=\s*\d{4}/.test(src));
+    if (min && age) ranges.set(p, `${min[1]}-(今年-${age[1]}歳)`);
     // 定数を迂回した直書きが残っていないか
     check(`${p}: 生まれ年の範囲を直書きしていない`,
       !/(?:<|>)=?\s*20(?:1[1-9]|2\d)\b/.test(src.replace(/\/\/[^\n]*/g, "")));

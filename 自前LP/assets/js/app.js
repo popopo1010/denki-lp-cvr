@@ -790,12 +790,13 @@
     updateBtn();
   }
 
-  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
-  // それまで app.js/dk_lp は 1924〜2010、app-v2.js だけ 1924〜2023 で、
-  // v2系のLPだけ「2023年生まれ（3歳）」が通ってZohoへ流れていた。
-  // さらに legacy select の選択肢は 2023 まで作られており、自分の検証と矛盾していた。
+  // 生まれ年の受付範囲は全実装で1つに揃える。下限は「16歳以上」という年齢ルールなので、
+  // 西暦を直書きすると年が変わるたびに条件が1歳ずつ厳しくなって黙って腐る
+  // （2026時点で2010固定＝16歳以上。2030年には20歳未満お断りになってしまう）。
+  // 年齢から毎回導出して、ルールの意味と実装を一致させる（2026-08-23）。
+  const MIN_AGE = 16;
   const BIRTH_YEAR_MIN = 1924;
-  const BIRTH_YEAR_MAX = 2010;
+  const BIRTH_YEAR_MAX = new Date().getFullYear() - MIN_AGE;
 
   function isValidBirthYear(value) {
     const year = parseInt(String(value || "").trim(), 10);

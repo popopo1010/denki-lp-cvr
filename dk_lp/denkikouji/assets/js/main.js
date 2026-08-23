@@ -258,12 +258,22 @@
     icon.style.opacity = "1";
   }
 
-  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
-  // それまで app.js/dk_lp は 1924〜2010、app-v2.js だけ 1924〜2023 で、
-  // v2系のLPだけ「2023年生まれ（3歳）」が通ってZohoへ流れていた。
-  // さらに legacy select の選択肢は 2023 まで作られており、自分の検証と矛盾していた。
+  // 生まれ年の受付範囲は全実装で1つに揃える。下限は「16歳以上」という年齢ルールなので、
+  // 西暦を直書きすると年が変わるたびに条件が1歳ずつ厳しくなって黙って腐る
+  // （2026時点で2010固定＝16歳以上。2030年には20歳未満お断りになってしまう）。
+  // 年齢から毎回導出して、ルールの意味と実装を一致させる（2026-08-23）。
+  const MIN_AGE = 16;
   const BIRTH_YEAR_MIN = 1924;
-  const BIRTH_YEAR_MAX = 2010;
+  const BIRTH_YEAR_MAX = new Date().getFullYear() - MIN_AGE;
+
+  // 携帯番号のみ受け付ける（060/070/080/090 始まりの11桁）。
+  // 本番 app.js と同じ規則に揃える（2026-08-23）。従来ここだけ 10〜11桁の数字なら
+  // 何でも通しており、固定電話が混ざると折り返しの運用が崩れる。
+  const TEL_PREFIX_ERROR = "090・080・070・060から始まる携帯番号を入力してください";
+
+  function isValidTel(value) {
+    return /^0[6789]0[0-9]{8}$/.test(String(value || "").trim());
+  }
 
   function moveIconById(id) {
     if (!id || id === "#") return;
@@ -760,7 +770,7 @@
             // 入力中にもCTAの有効/無効を更新する（本番app.jsと同じ挙動）。
             // blur だけで判定していたため、番号を打ち終えてもボタンが無効のままに見えていた。
             // タイピング中はエラー表示を出さない（1文字ごとに出没するとレイアウトが跳ねる）。
-            const okNow = /^[0-9]{10,11}$/.test(item.value);
+            const okNow = isValidTel(item.value);
             if (states[i] !== okNow) { states[i] = okNow; updateBtn(); }
             if (okNow) arr[i].classList.add(SKIP); else arr[i].classList.remove(SKIP);
           });
@@ -775,8 +785,8 @@
           if (errBox) errBox.style.display = "none";
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
-        if (item.name === "your-tel" && item.value && !/^[0-9]{10,11}$/.test(item.value)) {
-          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
+        if (item.name === "your-tel" && item.value && !isValidTel(item.value)) {
+          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = TEL_PREFIX_ERROR; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
         if (states.every(Boolean)) moveIconById("#" + nextBtn.id);
@@ -874,7 +884,7 @@
       const tel = (form.querySelector('input[name="your-tel"]') || {}).value || "";
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
-      if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
+      if (!isValidTel(tel) || !last.trim() || !first.trim()) return;
       sentOnce = true;
       try {
         const fd = new FormData(form);
