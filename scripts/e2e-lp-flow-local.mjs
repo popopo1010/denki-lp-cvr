@@ -347,11 +347,20 @@ async function runEarlyClick(browser, devices, lp) {
   // 外部リソース(WPテーマCSS/画像)の中断をわざと遅らせると、その間 window load は来ない。
   // goto の waitUntil だけに頼るとローカル配信が速すぎて load 後にクリックしてしまい、
   // 判定が「デッドクリック」と「検証できていない」の間で揺れる（2026-08-23 に実測）。
+  // 画像の応答を4秒遅らせて window load を保留させる。画像はパースもスクリプト実行も
+  // 止めないので「DOMは出来ている・loadはまだ」という窓を作れる。
+  // 当初は外部リクエストの中断を遅らせていたが、主力LP(denkikouji/sekoukanri)は
+  // theme-snapshot.css を使う自己完結型で外部リクエストが無く、効かなかった
+  // （2026-08-23: 本番コードでの検証中に「load後で検証できていない」として顕在化）。
   await page.route("**/*", async (route) => {
-    const u = route.request().url();
-    if (u.startsWith(BASE)) return route.continue();
-    await new Promise((r) => setTimeout(r, 4000));
-    return route.abort().catch(() => {});
+    const req = route.request();
+    const u = req.url();
+    if (req.resourceType() === "image") {
+      await new Promise((r) => setTimeout(r, 4000));
+      return u.startsWith(BASE) ? route.continue().catch(() => {}) : route.abort().catch(() => {});
+    }
+    if (!u.startsWith(BASE)) return route.abort().catch(() => {});
+    return route.continue();
   });
   await page.goto(BASE + lp, { waitUntil: "domcontentloaded" }).catch(() => {});
   await page.waitForFunction(() => document.readyState !== "loading", null, { timeout: 15000 }).catch(() => {});
