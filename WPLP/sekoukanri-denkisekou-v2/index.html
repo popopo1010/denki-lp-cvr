@@ -53,11 +53,16 @@
 html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-top:120px}
 /* LINEの上部バーは実測~83ptで44pxでは足りない。入力ステップ(step04-06)は96pxでバーの下から開始（2026-07-08 / 2026-08-22 取りこぼしLPへ適用） */
 html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}
+/* 選択ステップ(step01-03)も上部バーに潜らせない。cvr-boost*.css が持っている標準規則だが、
+   WPLP/自前LP は別系統のCSS(style.css / フォーク版cvr-boost.css)を読むため入っておらず、
+   20本だけ余白が無かった（2026-08-23 の全体整合チェックで発覚）。
+   UA検知しないのは SFSafariViewController がUA上Safariと区別できないため（正本と同じ）。 */
+@media (max-width:767px){body.lp-form-step .js-page-body{padding-top:calc(env(safe-area-inset-top, 0px) + 44px)!important}}
 </style>
     <link rel="stylesheet" href="https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/css/style.css?date=20241014">
     <link rel="stylesheet" href="../assets/css/cvr-boost-v2.css?v20260819a">
     <script>window.__LP_ID="sekoukanri-denkisekou-v2";</script>
-    <script src="../assets/js/app-v2.js?v20260823c" defer></script>
+    <script src="../assets/js/app-v2.js?v20260823d" defer></script>
 </head>
 
 <body class="wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">

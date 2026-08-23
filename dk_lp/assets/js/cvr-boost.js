@@ -92,15 +92,11 @@
     }
   }
 
-  function initFormTracking() {
-    document.querySelectorAll(".js-step-button").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (btn.dataset.pageTo && window.dataLayer) {
-          window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
-        }
-      });
-    });
-  }
+  // initFormTracking は削除（2026-08-22 QA）。
+  // app.js の trackStep が showPage 時に form_step を1回だけ（同一ステップは重複排除して）
+  // 送っているのに、ここでもクリックで push していたため、app.js系LPのファネルが
+  // 二重計上になっていた（さらに「戻る」クリックも1ステップとして数えていた）。
+  // ステップ計測は app.js / app-v2.js を正とする。
 
   function initCountUp() {
     var els = document.querySelectorAll(".cvr-social-proof__number");
@@ -131,13 +127,23 @@
   function run() {
     initNotifications();
     initExitIntent();
-    initFormTracking();
     initCountUp();
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     var h4 = document.getElementById("hidden4");
-    if (h4) h4.value = getParam("utm_term") || "";
+    if (h4) {
+      // 流入URLの検索KW（utm_term > keyword > kw）を拾い、URLから消えても
+      // sessionStorage に保持する（app.js / app-v2.js と挙動を統一）
+      var term = getParam("utm_term") || getParam("keyword") || getParam("kw") || "";
+      try {
+        if (term) sessionStorage.setItem("dk_utm_term", term);
+        else term = sessionStorage.getItem("dk_utm_term") || "";
+      } catch (e) {}
+      // 既に値が入っている場合（app.js initSearchKeyword 等が先にセット）は
+      // 空文字で上書きしない。検索KWを拾えたときだけ反映する。
+      if (term && !h4.value) h4.value = term.slice(0, 200);
+    }
 
     if (typeof requestIdleCallback === "function") {
       requestIdleCallback(run, { timeout: 2500 });
