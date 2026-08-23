@@ -1068,9 +1068,14 @@
 
     function sendToMirrors() {
       if (sentOnce) return;
-      // 必須項目（電話番号11桁・姓・名）が埋まっていなければ送信しない。
-      // form内の type="submit" がネイティブsubmitイベントを発火させても、
-      // 未入力のゴミデータがZapier/GASに飛ばないように最終ガード。
+      // 未入力のゴミデータがZapier/GASに飛ばないための最終ガード。
+      // ここは**わざとUIの検証より緩い**（10〜11桁の数字なら通す）。
+      // UIの検証は携帯のみ（isValidTel = /^0[6789]0[0-9]{8}$/）で、
+      // その条件を満たさないと送信ボタンが押せないので、通常フローでは差は出ない。
+      // 差が出るのは自動入力やネイティブsubmit等でUIのゲートを迂回した場合だけで、
+      // そこで厳しくすると「送ったつもりが握りつぶされたリード」になる。
+      // 取りこぼすより拾って後段で弾くほうがマシなので、意図的に緩いままにしている
+      // （2026-08-23 の全体整合チェックで、UIと違うことを明記）。
       const tel = (form.querySelector('input[name="your-tel"]') || {}).value || "";
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";

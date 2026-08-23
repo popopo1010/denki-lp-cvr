@@ -75,6 +75,12 @@ for (const [asset, byVer] of [...versions].sort()) {
 // ── JS内にハードコードされたキャッシュキーも同じ台帳で見る ──
 const JS_PINNED = [
   { file: "assets/js/app.js", asset: "assets/js/cvr-boost.js", re: /CVR_BOOST_VER\s*=\s*"([^"]+)"/ },
+  // ミラーの app.js は自分と同じディレクトリの cvr-boost.js を注入するので、
+  // それぞれのコピーも同じキャッシュキーで配られる。HTMLからの参照が無い＝
+  // ?v= の目が届かず、dk_lp のコピーが古いまま残っていた（2026-08-23 発覚）。
+  { file: "assets/js/app.js", asset: "WPLP/assets/js/cvr-boost.js", re: /CVR_BOOST_VER\s*=\s*"([^"]+)"/ },
+  { file: "assets/js/app.js", asset: "自前LP/assets/js/cvr-boost.js", re: /CVR_BOOST_VER\s*=\s*"([^"]+)"/ },
+  { file: "assets/js/app.js", asset: "dk_lp/assets/js/cvr-boost.js", re: /CVR_BOOST_VER\s*=\s*"([^"]+)"/ },
   { file: "assets/js/app.js", asset: "assets/js/thanks-booking-bootstrap.js", re: /thanks-booking-bootstrap\.js\?v=([A-Za-z0-9._-]+)/ },
   { file: "assets/js/app-v2.js", asset: "assets/js/thanks-booking-bootstrap.js", re: /thanks-booking-bootstrap\.js\?v=([A-Za-z0-9._-]+)/ }
 ];

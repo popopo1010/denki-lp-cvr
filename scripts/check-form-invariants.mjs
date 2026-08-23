@@ -14,7 +14,7 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { join, resolve, dirname } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
@@ -39,7 +39,11 @@ const MIRRORS = [
   ["assets/js/app.js", ["WPLP/assets/js/app.js", "自前LP/assets/js/app.js", "dk_lp/assets/js/app.js"]],
   ["assets/js/app-v2.js", ["WPLP/assets/js/app-v2.js", "自前LP/assets/js/app-v2.js"]],
   // app.js が無条件に注入するので、ミラーに無いと全ページで404を1本取りに行く（2026-08-22 QA）
-  ["assets/js/cvr-boost.js", ["WPLP/assets/js/cvr-boost.js", "自前LP/assets/js/cvr-boost.js"]]
+  // dk_lp/assets/js/app.js は正本と同一なので、同じ相対パスで
+  // dk_lp/assets/js/cvr-boost.js を注入する。ここが取り残されると、
+  // 本番の dk_lp/sekokanri だけ古い cvr-boost.js が配られる（2026-08-23 に実際に発生）。
+  ["assets/js/cvr-boost.js", ["WPLP/assets/js/cvr-boost.js", "自前LP/assets/js/cvr-boost.js",
+                              "dk_lp/assets/js/cvr-boost.js", "dk_lp/sekokanri/assets/js/cvr-boost.js"]]
 ];
 
 // ───────────────────────────────────────────────────────────
@@ -194,12 +198,28 @@ for (const [canonical, mirrors] of MIRRORS) {
 //     app.js系LPのファネルが二重計上になっていた（2026-08-22 QA）。
 // ───────────────────────────────────────────────────────────
 {
-  const pushers = ["assets/js/app.js", "assets/js/app-v2.js", "assets/js/cvr-boost.js",
-                   "dk_lp/denkikouji/assets/js/cvr-boost.js"]
-    .filter((p) => existsSync(join(ROOT, p)))
-    .filter((p) => /event:\s*"form_step"/.test(read(p)));
-  check(`form_step を push する実装が重複していない（${pushers.join(", ") || "なし"}）`,
-    !(pushers.includes("assets/js/app.js") && pushers.includes("assets/js/cvr-boost.js")));
+  // ファイル名を並べて見張ると、並べ忘れたコピーがそのまま生き残る。
+  // 実際 dk_lp/assets/js/cvr-boost.js（dk_lp/sekokanri が本番で読む）は
+  // このリストに入っておらず、削除したはずの initFormTracking が残っていた
+  // ＝二重計上が続いていた（2026-08-23 の全体整合チェックで発覚）。
+  // ルールは「form_step を push してよいのは app.js / app-v2.js だけ」なので、
+  // リポジトリ内の cvr-boost.js を**全部**見つけて、どれも push しないことを確かめる。
+  const boosts = [];
+  const findBoosts = (dir) => {
+    for (const name of readdirSync(dir)) {
+      if (name === ".git" || name === "node_modules") continue;
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) findBoosts(p);
+      else if (name === "cvr-boost.js") boosts.push(p.slice(ROOT.length).replace(/^\//, ""));
+    }
+  };
+  findBoosts(ROOT);
+  const pushers = boosts.filter((p) => /event:\s*"form_step"/.test(read(p)));
+  check(`form_step を push する cvr-boost.js が無い（${boosts.length}本走査）`,
+    pushers.length === 0, pushers.join(", "));
+  check("form_step を push するのは app.js / app-v2.js だけ",
+    /event:\s*"form_step"/.test(read("assets/js/app.js")) &&
+    /event:\s*"form_step"/.test(read("assets/js/app-v2.js")));
 }
 
 // ───────────────────────────────────────────────────────────
@@ -241,6 +261,33 @@ for (const [canonical, mirrors] of MIRRORS) {
   }
   check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:96px)がある`,
     missing.length === 0, missing.slice(0, 5).join(", "));
+
+  // 入力ステップ(96px)だけでなく、選択ステップ(step01-03)の余白も全LPに要る。
+  // 96pxの方だけ全数チェックしていたため、WPLP/自前LP の20本が
+  // 「入力ステップは余白あり・選択ステップは余白なし」という半端な状態で残っていた
+  // （別系統のCSSを読んでいて cvr-boost*.css の標準規則が届かない。2026-08-23 発覚）。
+  // HTML内の critical CSS か、そのLPが読み込むローカルCSSのどちらかにあればよい。
+  const cssCache = new Map();
+  const cssHas = (htmlPath, html, needle) => {
+    if (html.includes(needle)) return true;
+    for (const m of html.matchAll(/href="((?!https?:)[^"]+\.css)(\?[^"]*)?"/g)) {
+      const abs = resolve(dirname(htmlPath), m[1]);
+      if (!cssCache.has(abs)) {
+        cssCache.set(abs, existsSync(abs) ? readFileSync(abs, "utf8") : "");
+      }
+      if (cssCache.get(abs).includes(needle)) return true;
+    }
+    return false;
+  };
+  const noFormPad = [];
+  for (const p of walk(ROOT)) {
+    if (!p.endsWith("index.html")) continue; // steps-lazy.html は断片（自分でCSSを読まない）
+    const html = readFileSync(p, "utf8");
+    if (!html.includes('name="your-tel"')) continue;
+    if (!cssHas(p, html, "lp-form-step .js-page-body")) noFormPad.push(p.slice(ROOT.length));
+  }
+  check("全フォームLPが選択ステップ(lp-form-step)の上部余白を持つ",
+    noFormPad.length === 0, noFormPad.slice(0, 5).join(", "));
 
   // ステップの初期非表示をテーマCSS任せにしない（テーマが遅い/届かないと全ステップが縦積みで出る）
   const noHide = [];
