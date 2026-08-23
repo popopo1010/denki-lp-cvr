@@ -80,6 +80,15 @@ for (const p of IMPLS) {
 
   // in-app 判定（UA）自体
   check(`${p}: アプリ内ブラウザ検知(UA)がある`, /Instagram|FBAN|Line\\?\//.test(src));
+
+  // ⑤ CSSだけあってクラスが付かない、を防ぐ。
+  // 全フォームLPの critical CSS に `html.dk-inapp body.lp-input-step …{padding-top:96px}` を
+  // 置いてあるが（上の全数チェック）、それを効かせる body クラスを付けるのは各実装の showPage。
+  // v2実装とdk_lp実装には付与が無く、28本のLPでバー対策が一度も効いていなかった（2026-08-23発覚）。
+  // CSS側の番人と対で、必ず両方あることを確かめる。
+  check(`${p}: 入力ステップに body.lp-input-step を付ける`,
+    /classList\.toggle\(\s*\n?\s*"lp-input-step"/.test(src) &&
+    /#step04/.test(src) && /#step05/.test(src) && /#step06/.test(src));
 }
 
 // ② ③ ステップ切替時のスクロールは「scroll-behavior を一時的に auto」＋「reflow強制後に scrollTo」

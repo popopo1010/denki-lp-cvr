@@ -233,6 +233,15 @@
     }
 
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+    // 入力ステップ(step04-06)の目印。アプリ内ブラウザ(LINE/Instagram)の上部バーは
+    // 実測~83ptあり、フォームステップ共通の padding-top:44px では STEP表示が潜る。
+    // 各LPのcritical CSSに `html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}`
+    // を置いてあるが、**このクラスを付ける側がv2実装に無く、28本のLPで一度も効いていなかった**
+    // （2026-07-08にCSSだけ入れて、クラス付与はapp.jsにしか入れなかった。2026-08-23に全数E2Eで発覚）。
+    document.body.classList.toggle(
+      "lp-input-step",
+      pageId === "#step04" || pageId === "#step05" || pageId === "#step06"
+    );
 
     if (pageId === "#step06" || pageId === "#step-last") {
       prewarmThanksBookingSlots();

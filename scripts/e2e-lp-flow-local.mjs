@@ -115,8 +115,22 @@ const probe = () => ({
     const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
     const cur = vis[vis.length - 1];
     if (!cur) return null;
-    const head = cur.querySelector(".c-step, .c-title01, .meta-fv__title");
+    // 非表示の見出しを拾わない。LPによっては .c-step を display:none にして
+    // タイトルだけ出す構成があり、隠れた要素の矩形は 0 を返すため
+    // 「上端が0px＝バーに潜っている」という誤検知になる（2026-08-23 に全50本で発覚）。
+    const head = [...cur.querySelectorAll(".c-step, .c-title01, .meta-fv__title")]
+      .find((h) => h.offsetParent !== null || getComputedStyle(h).position === "fixed");
     return head ? Math.round(head.getBoundingClientRect().top) : null;
+  })(),
+  // 見出し要素を持たない構成のために「そのステップの中身の上端」も測る。
+  // バーに潜るかどうかは見出しの有無に関係なく効くので、こちらを保険にする。
+  contentTop: (() => {
+    const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
+    const cur = vis[vis.length - 1];
+    if (!cur) return null;
+    const first = [...cur.children].find((c) => c.offsetParent !== null);
+    const t = (first || cur).getBoundingClientRect();
+    return t.height === 0 && t.top === 0 ? null : Math.round(t.top);
   })(),
   opacity: (() => {
     const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
@@ -291,6 +305,39 @@ async function runLp(browser, devices, lp) {
   if (submit.skip) pass(`${lp} 送信ボタン有効`, submit.why);
   else submit.ok ? pass(`${lp} 送信ボタン有効`) : fail(`${lp} 送信ボタン有効`, submit.why);
 
+  // 7b) 携帯以外の番号を弾くか（固定電話03 / IP電話050）。
+  // 電話番号は唯一の連絡手段なので、固定電話が通ると商談が作れないリードが生まれる。
+  // 4実装とも isValidTel(/^0[6789]0[0-9]{8}$/) を持つが、正規表現の緩め直しは
+  // レビューで気づきにくいのでここで実際に入力して確かめる。
+  // 有効な番号のあと（＝上の送信ボタン検査のあと）に無効な番号で終える順にして、
+  // 妥当な番号を入れたまま自動送信に流れる経路を踏まない。
+  if (!submit.skip) {
+    const telGate = await page.evaluate(async () => {
+      const input = document.querySelector('input[name="your-tel"]');
+      const btn = document.getElementById("step-last-button") || document.querySelector(".c-submit-button");
+      if (!input || !btn) return { skip: true, why: "電話入力/送信CTAが無い構成" };
+      const type = (v) => {
+        input.value = v;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("blur", { bubbles: true }));
+      };
+      const wait = () => new Promise((r) => setTimeout(r, 120));
+      const bad = [];
+      for (const v of ["0312345678", "05011112222"]) {
+        type(v);
+        await wait();
+        if (!btn.classList.contains("is-disable")) bad.push(v);
+      }
+      type("");
+      await wait();
+      return { bad };
+    });
+    if (telGate.skip) pass(`${lp} 携帯以外の番号を弾く`, telGate.why);
+    else telGate.bad.length === 0
+      ? pass(`${lp} 携帯以外の番号を弾く`)
+      : fail(`${lp} 携帯以外の番号を弾く`, `通ってしまう: ${telGate.bad.join(", ")}`);
+  }
+
   // 8) 予約枠の先読みは「予約カレンダーが残っている nenshu-shindan 系」だけ
   if (!lp.includes("nenshu-shindan")) {
     bookingReqs.length === 0
@@ -393,17 +440,22 @@ async function runInAppBar(browser, devices, lp) {
 
   // 入力ステップ(step04-06)まで進めて、STEP表示がバーの下に来ているかを見る
   let worst = null;
+  let reachedInput = false;
   for (let i = 0; i < 22; i++) {
     const { acted, after } = await advanceOnce(page);
     if (acted === "stuck" || acted === "no-step") break;
     const isInput = ["step04", "step05", "step06"].includes(after.step);
-    if (isInput && after.headTop !== null && (worst === null || after.headTop < worst.top)) {
-      worst = { step: after.step, top: after.headTop };
+    if (isInput) reachedInput = true;
+    // 見出しが無い構成（nenshu-shindan系は .c-step を隠している）では中身の上端で測る
+    const top = after.headTop !== null ? after.headTop : after.contentTop;
+    if (isInput && top !== null && (worst === null || top < worst.top)) {
+      worst = { step: after.step, top };
     }
     if (after.step === "step06") break;
   }
   if (!worst) {
-    fail(`${lp} 入力ステップの上部がバーに潜らない`, "入力ステップまで到達できなかった");
+    fail(`${lp} 入力ステップの上部がバーに潜らない`,
+      reachedInput ? "入力ステップの上端が測れなかった（中身が空？）" : "入力ステップまで到達できなかった");
   } else if (worst.top >= INAPP_BAR) {
     pass(`${lp} 入力ステップの上部がバーに潜らない`, `最小 headTop=${worst.top}px (${worst.step}) ≧ バー${INAPP_BAR}px`);
   } else {
