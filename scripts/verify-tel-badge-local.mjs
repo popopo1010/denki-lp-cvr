@@ -1,14 +1,36 @@
 #!/usr/bin/env node
 /**
- * step06 携帯プレフィックス検証 + 満足度バッジのローカル検証
+ * step06 携帯プレフィックス検証 + 満足度バッジのローカル検証（手動ツール）
+ *
  * Usage: node scripts/verify-tel-badge-local.mjs
- * 前提: python3 -m http.server 8080 をリポジトリ直下で起動済み
- *       playwright はローカル node_modules かグローバルから解決
+ *   サーバは自前で起動する（LP_E2E_BASE を渡せば既存サーバを使う）。
+ *
+ * CIには入れていない。理由: このスクリプトはバッジの色・文字サイズ・
+ * 「利用者の94%が満足と回答 / 34,513人が利用中」という**具体的な数値コピー**まで
+ * 固定しており、正当なコピー変更のたびにCIが赤くなるため。
+ * 電話番号の入力検証（03/050を弾く）という機能面は
+ * scripts/e2e-lp-flow-local.mjs の「携帯以外の番号を弾く」でCIが見ている。
+ * こちらは見た目を目視前に数値で確かめたいときに手で叩く。
  */
+import { spawn } from "node:child_process";
 const pw = await import("playwright").catch(() => import("/opt/node22/lib/node_modules/playwright/index.mjs"));
 const { chromium, devices } = pw;
 
-const BASE = process.env.LP_E2E_BASE || "http://localhost:8080";
+let serverProc = null;
+let BASE = process.env.LP_E2E_BASE || "";
+if (!BASE) {
+  const port = 8979;
+  BASE = `http://127.0.0.1:${port}`;
+  serverProc = spawn("python3", ["-m", "http.server", String(port), "--bind", "127.0.0.1"], {
+    cwd: new URL("..", import.meta.url).pathname,
+    stdio: "ignore"
+  });
+  process.on("exit", () => serverProc && serverProc.kill());
+  // 起動待ち（listen するまで数十ms）
+  for (let i = 0; i < 50; i++) {
+    try { await fetch(`${BASE}/denkikouji/`); break; } catch { await new Promise((r) => setTimeout(r, 100)); }
+  }
+}
 const results = [];
 const pass = (n, d) => { results.push(true); console.log(`✓ ${n}${d ? `: ${d}` : ""}`); };
 const fail = (n, d) => { results.push(false); console.error(`✗ ${n}${d ? `: ${d}` : ""}`); };
@@ -19,7 +41,9 @@ async function main() {
   await page.goto(`${BASE}/denkikouji/`, { waitUntil: "domcontentloaded" });
 
   // 実コードパス（委譲クリック → ensureLazySteps → showPage）で step06 へ遷移
-  await page.waitForFunction(() => document.querySelector(".wpcf7-form")?.dataset.stepDelegated === "1");
+  // 初期化完了の目印。app.js は初期化済みグループに data-lp-inited を立てる
+  // （2026-08-22 に判定本体は WeakSet へ移したが、この目印は互換で残している）。
+  await page.waitForFunction(() => !!document.querySelector('.js-form-group[data-lp-inited="1"]'));
   await page.evaluate(() => {
     const first = document.getElementById("step-first");
     const btn = document.createElement("button");
@@ -97,18 +121,24 @@ async function main() {
       ? pass("バッジ描画", `${badge.bg} / ${badge.radius}`)
       : fail("バッジ描画", JSON.stringify(badge));
     badge.strongSize === "16px" && badge.strongColor === "rgb(255, 89, 102)"
-      ? pass("94%強調", `${badge.strongSize} ${badge.strongColor}`)
-      : fail("94%強調", `${badge.strongSize} ${badge.strongColor}`);
+      ? pass("満足度の数値が強調される", `${badge.strongSize} ${badge.strongColor}`)
+      : fail("満足度の数値が強調される", `${badge.strongSize} ${badge.strongColor}`);
     badge.centered ? pass("バッジ中央寄せ") : fail("バッジ中央寄せ", "左右非対称");
-    badge.text.includes("利用者の94%が満足と回答") && badge.text.includes("34,513人が利用中")
-      ? pass("文言据え置き", badge.text)
-      : fail("文言変化", badge.text);
+    // 数値そのものは固定しない。満足度・利用者数は「事実確認が必要な情報」で、
+    // オーナー確認のうえで変わる（実際 94% → 96.4% に変わっていて、
+    // 2026-08-23 まで固定値を書いたこのスクリプトだけが古いまま落ちていた）。
+    // ここでは「構造が残っているか」を見て、実数は目視できるよう出力する。
+    /満足/.test(badge.text) && /利用中/.test(badge.text)
+      ? pass("バッジ文言の構造", badge.text)
+      : fail("バッジ文言の構造", badge.text);
+    console.log(`  ※ 表示中の実数（要事実確認）: ${badge.text}`);
   }
 
   // 6. step06 スクリーンショット
   await page.screenshot({ path: "/tmp/step06-badge.png", fullPage: false });
 
   await browser.close();
+  if (serverProc) serverProc.kill();
   const failed = results.filter((r) => !r).length;
   console.log(`\n--- ${results.length - failed}/${results.length} passed ---`);
   process.exit(failed ? 1 : 0);

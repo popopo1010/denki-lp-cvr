@@ -163,12 +163,13 @@
   // ========== Icon system (DOM移動方式) ==========
   let icon = null;
 
-  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
-  // それまで app.js/dk_lp は 1924〜2010、app-v2.js だけ 1924〜2023 で、
-  // v2系のLPだけ「2023年生まれ（3歳）」が通ってZohoへ流れていた。
-  // さらに legacy select の選択肢は 2023 まで作られており、自分の検証と矛盾していた。
+  // 生まれ年の受付範囲は全実装で1つに揃える。下限は「16歳以上」という年齢ルールなので、
+  // 西暦を直書きすると年が変わるたびに条件が1歳ずつ厳しくなって黙って腐る
+  // （2026時点で2010固定＝16歳以上。2030年には20歳未満お断りになってしまう）。
+  // 年齢から毎回導出して、ルールの意味と実装を一致させる（2026-08-23）。
+  const MIN_AGE = 16;
   const BIRTH_YEAR_MIN = 1924;
-  const BIRTH_YEAR_MAX = 2010;
+  const BIRTH_YEAR_MAX = new Date().getFullYear() - MIN_AGE;
 
   function moveIcon(targetEl, scroll) {
     if (!icon || !targetEl) return;
@@ -196,9 +197,30 @@
   // load時のscrollTo(0,0)をスキップする。終着状態(opacity:1/transform)は必ず明示する
   // （2026-07-08 FV非表示インシデント: WPテーマCSSの .js-page-body{opacity:0} を
   //   旧アニメ終着インラインが偶然打ち消していた。app.jsと同一パターン）。
+  // ステップ計測は app.js と同一定義に揃える（2026-08-23）。
+  // 従来の v2 は .js-step-button のクリックで push しており、
+  //   ・「戻る」も1ステップとして数える
+  //   ・同じステップへ複数回入ると重複して数える
+  //   ・クリックを経由しない遷移（自動遷移など）を取りこぼす
+  // ため、v1と数字を並べても意味が違っていた。到達時に1回だけ送る形に統一する。
+  let lastTrackedStep = null;
+
+  function trackStep(pageId) {
+    if (pageId === lastTrackedStep) return;
+    lastTrackedStep = pageId;
+    const stepName = pageId.replace(/^#/, "");
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: "form_step", step_name: stepName });
+    // ClarityのExport APIはステップ別ファネルを返さないため、到達ステップをタグ付けする
+    if (window.clarity) {
+      try { window.clarity("set", "lp_step", stepName); } catch (e) { /* no-op */ }
+    }
+  }
+
   function showPage(pageId, skipAnim) {
     const page = document.querySelector(pageId);
     if (!page) return;
+    trackStep(pageId);
 
     // step-firstからスタートしたkumaを各ステップで使い回す。
     // 各stepにkuma要素は無いので、見つかった時だけ更新（無ければ前回のicon参照を保持）。
@@ -211,6 +233,15 @@
     }
 
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+    // 入力ステップ(step04-06)の目印。アプリ内ブラウザ(LINE/Instagram)の上部バーは
+    // 実測~83ptあり、フォームステップ共通の padding-top:44px では STEP表示が潜る。
+    // 各LPのcritical CSSに `html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}`
+    // を置いてあるが、**このクラスを付ける側がv2実装に無く、28本のLPで一度も効いていなかった**
+    // （2026-07-08にCSSだけ入れて、クラス付与はapp.jsにしか入れなかった。2026-08-23に全数E2Eで発覚）。
+    document.body.classList.toggle(
+      "lp-input-step",
+      pageId === "#step04" || pageId === "#step05" || pageId === "#step06"
+    );
 
     if (pageId === "#step06" || pageId === "#step-last") {
       prewarmThanksBookingSlots();
@@ -720,7 +751,9 @@
           if (bdayYear) {
             setTimeout(() => {
               bdayYear.scrollIntoView({ behavior: "smooth", block: "nearest" }); // center禁止(上部が隠れる 2026-07-05)
-              bdayYear.focus();
+              // preventScroll必須（犯人クラス④）。直前の scrollIntoView をブラウザが上書きしうる
+              // （2026-08-23 QA で素の focus() を発見し統一）
+              try { bdayYear.focus({ preventScroll: true }); } catch (e) { bdayYear.focus(); }
               bdayYear.classList.add("js-pulse-highlight");
               setTimeout(() => bdayYear.classList.remove("js-pulse-highlight"), 2400);
             }, 200);
@@ -775,7 +808,10 @@
       if (!namesAllFilled()) return;
       if (!(bdayYearInput && isYearInput) || bdayYearInput.value) return;
       didAutoAdvanceYear = true;
-      try { bdayYearInput.focus({ preventScroll: false }); } catch (e) { bdayYearInput.focus(); }
+      // ここは preventScroll:false と書かれており、ブラウザ主導スクロールを明示的に許可していた。
+      // CLAUDE.md の犯人クラス④に真正面から反するため true に統一（2026-08-23 QA）。
+      // なお step05 で上部が隠れる症状の原因は別（入力完了時にCTAへ誘導するスクロール＝仕様）
+      try { bdayYearInput.focus({ preventScroll: true }); } catch (e) { bdayYearInput.focus(); }
     }
     if (firstNameInput) firstNameInput.addEventListener("blur", maybeAdvanceToYear);
 
@@ -870,7 +906,7 @@
       });
 
       nextBtn.addEventListener("click", () => {
-        setTimeout(() => { item.focus(); item.blur(); }, 250);
+        setTimeout(() => { try { item.focus({ preventScroll: true }); } catch (e) { item.focus(); } item.blur(); }, 250);
       });
     });
 
@@ -1218,18 +1254,9 @@
 
   // ========== フォームトラッキング ==========
   function initFormTracking() {
-    // ボタン個別バインドはフォームDOM差し替えで計測が死ぬため、documentへの委譲に変更（2026-08-19）
-    document.addEventListener("click", function (e) {
-      var btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
-      if (!btn || !btn.dataset.pageTo) return;
-      if (window.dataLayer) {
-        window.dataLayer.push({ event: "form_step", step_name: btn.dataset.pageTo });
-      }
-      // ClarityのExport APIはステップ別ファネルを返さないため、到達ステップをタグ付けする
-      if (window.clarity) {
-        try { window.clarity("set", "lp_step", btn.dataset.pageTo); } catch (err) { /* no-op */ }
-      }
-    });
+    // form_step は showPage の trackStep（到達時に1回・重複排除）が送る。
+    // ここでクリック起点にも送ると、app.js系で起きていたのと同じ二重計上になる。
+    // 計測の入口を1つに保つため、この関数は意図的に何もしない。
   }
 
   // ========== 数値カウントアップ ==========

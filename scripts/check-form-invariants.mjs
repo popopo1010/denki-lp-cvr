@@ -30,7 +30,8 @@ function check(name, ok, detail) {
 const IMPLS = [
   "assets/js/app.js",
   "assets/js/app-v2.js",
-  "dk_lp/denkikouji/assets/js/main.js"
+  "dk_lp/denkikouji/assets/js/main.js",
+  "dk_lp/sekokanri/assets/js/main.js"
 ].filter((p) => existsSync(join(ROOT, p)));
 
 /** ミラーは正本とバイト一致していること（片方だけ直す事故の検出） */
@@ -52,10 +53,23 @@ for (const p of IMPLS) {
   check(`${p}: scrollIntoView に block:"center" を使わない`, centers.length === 0,
     `${centers.length}件: ${centers[0] || ""}`);
 
-  // ④ focus() は preventScroll 付き（ブラウザ主導スクロールを起こさない）
-  const focuses = (src.match(/\.focus\(\s*\)/g) || []).length;
-  const focusPreventScroll = /\.focus\(\s*\{\s*preventScroll:\s*true\s*\}\s*\)/.test(src);
-  check(`${p}: 自動フォーカスは preventScroll 付き`, focusPreventScroll || focuses === 0);
+  // ④ focus() は必ず preventScroll 付き。
+  //    直前に scrollIntoView({block:"nearest"}) で位置を決めていても、preventScroll なしの
+  //    focus() がブラウザ主導スクロールでそれを上書きし、STEP表示を画面外へ押し出す
+  //    （2026-08-23 QA で step05 の症状として実測。app-v2 には preventScroll:false の明示すらあった）。
+  //    素の .focus() が許されるのは try{focus({preventScroll:true})}catch の代替パスだけ。
+  const lines = src.split("\n");
+  const bareFocus = lines.filter((line, i) => {
+    if (!/\.focus\(\s*\)/.test(line)) return false;
+    // try{ focus({preventScroll:true}) } catch(e){ focus() } の代替パスは許容（複数行の書き方も見る）
+    const window = lines.slice(Math.max(0, i - 3), i + 1).join("\n");
+    return !/catch/.test(window);
+  });
+  check(`${p}: focus() は必ず preventScroll 付き`, bareFocus.length === 0,
+    bareFocus.slice(0, 2).map((l) => l.trim()).join(" / "));
+  // コメント中の言及は除いて判定する（対策の経緯をコメントに残せるように）
+  check(`${p}: preventScroll:false を書かない`,
+    !/preventScroll:\s*false/.test(src.replace(/\/\/[^\n]*/g, "")));
 
   // ⑤(a) アプリ内ブラウザではステップ到達時に自動フォーカスしない
   check(`${p}: html.dk-inapp では autofocus しない`,
@@ -66,6 +80,15 @@ for (const p of IMPLS) {
 
   // in-app 判定（UA）自体
   check(`${p}: アプリ内ブラウザ検知(UA)がある`, /Instagram|FBAN|Line\\?\//.test(src));
+
+  // ⑤ CSSだけあってクラスが付かない、を防ぐ。
+  // 全フォームLPの critical CSS に `html.dk-inapp body.lp-input-step …{padding-top:96px}` を
+  // 置いてあるが（上の全数チェック）、それを効かせる body クラスを付けるのは各実装の showPage。
+  // v2実装とdk_lp実装には付与が無く、28本のLPでバー対策が一度も効いていなかった（2026-08-23発覚）。
+  // CSS側の番人と対で、必ず両方あることを確かめる。
+  check(`${p}: 入力ステップに body.lp-input-step を付ける`,
+    /classList\.toggle\(\s*\n?\s*"lp-input-step"/.test(src) &&
+    /#step04/.test(src) && /#step05/.test(src) && /#step06/.test(src));
 }
 
 // ② ③ ステップ切替時のスクロールは「scroll-behavior を一時的に auto」＋「reflow強制後に scrollTo」
@@ -78,7 +101,7 @@ for (const p of ["assets/js/app.js", "assets/js/app-v2.js"]) {
 // ───────────────────────────────────────────────────────────
 // 2. 「選択/入力しても次へ進めない」（2026-07-10 フォームが死ぬ 4クラス）
 // ───────────────────────────────────────────────────────────
-for (const p of ["assets/js/app.js", "assets/js/app-v2.js"]) {
+for (const p of IMPLS) {
   const src = read(p);
 
   // ① 初期化済み判定は DOM属性でなく WeakSet（DOM差し替えを見抜く）
@@ -94,11 +117,14 @@ for (const p of ["assets/js/app.js", "assets/js/app-v2.js"]) {
 }
 
 // ①/④ ステップ遷移のクリック委譲は document に張る（form差し替えに耐える）
-{
-  const src = read("assets/js/app.js");
-  check("assets/js/app.js: クリック委譲は document", /document\.addEventListener\(\s*"click"/.test(src));
-  check("assets/js/app.js: 委譲は DOMContentLoaded で張る（load前クリック対策）",
+for (const p of IMPLS) {
+  const src = read(p);
+  if (!/handleStepClick/.test(src)) continue;
+  check(`${p}: クリック委譲は document`, /document\.addEventListener\(\s*"click"/.test(src));
+  check(`${p}: 委譲は DOMContentLoaded で張る（load前クリック対策）`,
     /DOMContentLoaded[\s\S]{0,400}bindGlobalDelegation\(\)/.test(src));
+  check(`${p}: ボタン個別バインドに戻していない`,
+    !/querySelectorAll\("\.js-step-button"\)[\s\S]{0,80}addEventListener\("click", handleStepClick\)/.test(src));
 }
 
 // ───────────────────────────────────────────────────────────
@@ -146,9 +172,13 @@ for (const [canonical, mirrors] of MIRRORS) {
   for (const p of IMPLS) {
     const src = read(p);
     const min = src.match(/BIRTH_YEAR_MIN\s*=\s*(\d{4})/);
-    const max = src.match(/BIRTH_YEAR_MAX\s*=\s*(\d{4})/);
-    check(`${p}: 生まれ年の範囲が定数で1箇所に定義されている`, !!(min && max));
-    if (min && max) ranges.set(p, `${min[1]}-${max[1]}`);
+    // 下限は「16歳以上」という年齢ルール。西暦の直書きは年が変わるたびに1歳ずつ
+    // 厳しくなって黙って腐るので、年齢からの導出であることまで固定する（2026-08-23）。
+    const age = src.match(/MIN_AGE\s*=\s*(\d{1,2})/);
+    const max = src.match(/BIRTH_YEAR_MAX\s*=\s*new Date\(\)\.getFullYear\(\)\s*-\s*MIN_AGE/);
+    check(`${p}: 生まれ年の範囲が定数で1箇所に定義されている`, !!(min && age && max));
+    check(`${p}: 生まれ年の下限を西暦直書きしない（年齢から導出）`, !/BIRTH_YEAR_MAX\s*=\s*\d{4}/.test(src));
+    if (min && age) ranges.set(p, `${min[1]}-(今年-${age[1]}歳)`);
     // 定数を迂回した直書きが残っていないか
     check(`${p}: 生まれ年の範囲を直書きしていない`,
       !/(?:<|>)=?\s*20(?:1[1-9]|2\d)\b/.test(src.replace(/\/\/[^\n]*/g, "")));
@@ -223,6 +253,17 @@ for (const [canonical, mirrors] of MIRRORS) {
   }
   check(`全フォームLPがステップの初期非表示を自前のcritical CSSで持っている`,
     noHide.length === 0, noHide.slice(0, 5).join(", "));
+
+  // GTMは全フォームLPで遅延読み込み（同期スニペットはFVをブロックする）。
+  // 主要LPだけ遅延・ミラーやMeta LPは同期、という取り残されが実際に28本あった（2026-08-23）。
+  const syncGtm = [];
+  for (const p of walk(ROOT)) {
+    const html = readFileSync(p, "utf8");
+    if (!html.includes('name="your-tel"')) continue;
+    if (!/GTM-[A-Z0-9]+/.test(html)) continue;
+    if (!/requestIdleCallback\(loadGTM/.test(html)) syncGtm.push(p.slice(ROOT.length));
+  }
+  check(`全フォームLPがGTMを遅延読み込みしている`, syncGtm.length === 0, syncGtm.slice(0, 5).join(", "));
 
   // HTML側（クマのタップ等）にも block:"center" を残さない。中央寄せは上部を押し出す。
   for (const p of htmlFiles) {

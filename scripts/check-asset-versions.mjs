@@ -110,6 +110,28 @@ for (const [asset, byVer] of [...versions].sort()) {
   }
 }
 
+// ── B2. HTMLから参照されるローカルJS/CSSは必ず ?v= を持つ ────
+// .htaccess が js/css を immutable(1年) で配るので、版が無いファイルは
+// 中身を変えても永遠に古いものが配られる（2026-08-23 に長期キャッシュを有効化）。
+{
+  const NOVER = /(?:href|src)="((?!https?:)[^"]+\.(?:js|css))"/g;
+  const bare = [];
+  for (const html of walk(ROOT)) {
+    const src = readFileSync(html, "utf8");
+    for (const m of src.matchAll(NOVER)) {
+      const abs = resolve(dirname(html), m[1]);
+      if (!abs.startsWith(ROOT) || !existsSync(abs)) continue;
+      bare.push(`${relative(ROOT, html)} → ${m[1]}`);
+    }
+  }
+  if (bare.length) {
+    errors.push(
+      `?v= の無いローカルJS/CSS参照がある（.htaccess が js/css を immutable で配るため、` +
+      `中身を変えても届かなくなる）:\n` + bare.slice(0, 10).map((b) => "    " + b).join("\n")
+    );
+  }
+}
+
 // ── C. deploy.yml の期待値 vs リポジトリのHTML ───────────────
 const deployPath = join(ROOT, ".github/workflows/deploy.yml");
 if (existsSync(deployPath)) {

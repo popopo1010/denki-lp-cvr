@@ -44,6 +44,10 @@ if [[ "${RUN_E2E:-}" == "1" ]]; then
   echo ""
   echo "== E2E (Playwright) =="
   node scripts/e2e-thanks-v2-release.mjs
+  echo ""
+  echo "== LPフォーム ローカルE2E（本番不要・主要LP） =="
+  node scripts/e2e-lp-flow-local.mjs \
+    --lp /denkikouji/ /sekoukanri/ /denkikouji-v2/ /sekoukanri-v2/ /sekoukanri-kentiku-v2/
 fi
 
 echo ""

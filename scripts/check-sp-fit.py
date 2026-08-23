@@ -3,8 +3,13 @@
 各LPを SP viewport で開き、#step-first（FV）と #step01（資格選択）の
 実測高さを取得して、viewport に収まるかを表で出す。
 
+これは合否を出すゲートではなく「高さを測って表で見る」診断ツール。
+CIには入れていない（Python版playwrightが要る／数値は見て判断するもの）。
+1画面収まりを崩しそうなFV・step01のレイアウト変更をしたときに手で叩く。
+
 使い方:
-  source .venv-pw/bin/activate
+  python3 -m venv .venv-pw && source .venv-pw/bin/activate
+  pip install playwright && playwright install chromium
   python scripts/check-sp-fit.py
 """
 

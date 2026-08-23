@@ -258,12 +258,22 @@
     icon.style.opacity = "1";
   }
 
-  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
-  // それまで app.js/dk_lp は 1924〜2010、app-v2.js だけ 1924〜2023 で、
-  // v2系のLPだけ「2023年生まれ（3歳）」が通ってZohoへ流れていた。
-  // さらに legacy select の選択肢は 2023 まで作られており、自分の検証と矛盾していた。
+  // 生まれ年の受付範囲は全実装で1つに揃える。下限は「16歳以上」という年齢ルールなので、
+  // 西暦を直書きすると年が変わるたびに条件が1歳ずつ厳しくなって黙って腐る
+  // （2026時点で2010固定＝16歳以上。2030年には20歳未満お断りになってしまう）。
+  // 年齢から毎回導出して、ルールの意味と実装を一致させる（2026-08-23）。
+  const MIN_AGE = 16;
   const BIRTH_YEAR_MIN = 1924;
-  const BIRTH_YEAR_MAX = 2010;
+  const BIRTH_YEAR_MAX = new Date().getFullYear() - MIN_AGE;
+
+  // 携帯番号のみ受け付ける（060/070/080/090 始まりの11桁）。
+  // 本番 app.js と同じ規則に揃える（2026-08-23）。従来ここだけ 10〜11桁の数字なら
+  // 何でも通しており、固定電話が混ざると折り返しの運用が崩れる。
+  const TEL_PREFIX_ERROR = "090・080・070・060から始まる携帯番号を入力してください";
+
+  function isValidTel(value) {
+    return /^0[6789]0[0-9]{8}$/.test(String(value || "").trim());
+  }
 
   function moveIconById(id) {
     if (!id || id === "#") return;
@@ -325,6 +335,15 @@
       document.querySelectorAll(".is-hidden").forEach((el) => el.classList.remove("is-hidden"));
     }
     document.body.classList.toggle("lp-form-step", pageId !== "#step-first");
+    // 入力ステップ(step04-06)の目印。アプリ内ブラウザ(LINE/Instagram)の上部バーは
+    // 実測~83ptあり、フォームステップ共通の padding-top:44px では STEP表示が潜る。
+    // 各LPのcritical CSSに `html.dk-inapp body.lp-input-step .js-page-body{padding-top:96px!important}`
+    // を置いてあるが、**このクラスを付ける側がv2実装に無く、28本のLPで一度も効いていなかった**
+    // （2026-07-08にCSSだけ入れて、クラス付与はapp.jsにしか入れなかった。2026-08-23に全数E2Eで発覚）。
+    document.body.classList.toggle(
+      "lp-input-step",
+      pageId === "#step04" || pageId === "#step05" || pageId === "#step06"
+    );
     updateProgress(pageId);
 
     stopBounce();
@@ -385,6 +404,7 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+    if (!pageTo || !cur) return; // 委譲経由では対象外の要素も届くのでガードする
 
     clearStepTimers();
 
@@ -756,6 +776,12 @@
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
             else if (len >= 10) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (10 - len) + "桁以上"; }
+            // 入力中にもCTAの有効/無効を更新する（本番app.jsと同じ挙動）。
+            // blur だけで判定していたため、番号を打ち終えてもボタンが無効のままに見えていた。
+            // タイピング中はエラー表示を出さない（1文字ごとに出没するとレイアウトが跳ねる）。
+            const okNow = isValidTel(item.value);
+            if (states[i] !== okNow) { states[i] = okNow; updateBtn(); }
+            if (okNow) arr[i].classList.add(SKIP); else arr[i].classList.remove(SKIP);
           });
         }
       }
@@ -768,8 +794,8 @@
           if (errBox) errBox.style.display = "none";
           if (item.value) { states[i] = true; arr[i].classList.add(SKIP); }
         }
-        if (item.name === "your-tel" && item.value && !/^[0-9]{10,11}$/.test(item.value)) {
-          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = "半角数字で入力してください"; }
+        if (item.name === "your-tel" && item.value && !isValidTel(item.value)) {
+          if (errBox) { errBox.style.display = "block"; if (errText) errText.textContent = TEL_PREFIX_ERROR; }
           states[i] = false; arr[i].classList.remove(SKIP);
         }
         if (states.every(Boolean)) moveIconById("#" + nextBtn.id);
@@ -778,7 +804,7 @@
       });
 
       nextBtn.addEventListener("click", () => {
-        setTimeout(() => { item.focus(); item.blur(); }, 250);
+        setTimeout(() => { try { item.focus({ preventScroll: true }); } catch (e) { item.focus(); } item.blur(); }, 250);
       });
     });
 
@@ -867,7 +893,7 @@
       const tel = (form.querySelector('input[name="your-tel"]') || {}).value || "";
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
-      if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
+      if (!isValidTel(tel) || !last.trim() || !first.trim()) return;
       sentOnce = true;
       try {
         const fd = new FormData(form);
@@ -890,22 +916,65 @@
     form.addEventListener("submit", sendToMirrors, { capture: true });
   }
 
+  // ========== フォームの自己修復（本番 app.js から移植 2026-08-23）==========
+  // 外部スクリプト（最適化ツール等）が初期化後のフォームDOMを差し替えると、
+  // ボタンへ直接張ったリスナーが全部消え、data属性だけ残った「死んだフォーム」になる。
+  // オーナー再三報告の「選択しても進めない」はこれ（app.js 2026-07-10 / app-v2.js 2026-08-19 で対策済み）。
+  // ここは参照実装なので、WP直貼りLPへコピーされたときに弱点ごと持っていかれないよう同じ形にする。
+  const initedGroups = typeof WeakSet === "function" ? new WeakSet() : null;
+
+  function isGroupInited(group) {
+    return initedGroups ? initedGroups.has(group) : group.dataset.lpInited === "1";
+  }
+
+  function initFormGroup(group) {
+    if (!group || isGroupInited(group)) return;
+    if (initedGroups) initedGroups.add(group);
+    group.dataset.lpInited = "1";
+    initRadioButtons(group);
+    initRadioButtons02(group);
+    initCheckboxButtons(group);
+    initZipCode(group);
+    initNameInputs(group);
+    initRequiredItems(group);
+  }
+
+  // ステップ遷移の委譲は form ではなく document に張る（form ごと差し替えられても生き残る）。
+  let globalDelegationBound = false;
+  function bindGlobalDelegation() {
+    if (globalDelegationBound) return;
+    globalDelegationBound = true;
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
+      if (btn) handleStepClick({ currentTarget: btn });
+    });
+
+    // 未初期化グループ内の操作を capture で検知して即座に張り直す。
+    // capture 中に張ったリスナーには、この操作イベント自体もターゲット到達時に届く。
+    ["click", "change", "input", "focusin"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        const group = e.target && e.target.closest ? e.target.closest(".js-form-group") : null;
+        if (!group || isGroupInited(group)) return;
+        const pref = document.getElementById("pref");
+        if (pref && pref.options.length <= 1) initPrefSelect();
+        initFormGroup(group);
+        preventEnter();
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "lp_error", error_type: "form_group_reinit", step_name: group.id || "" });
+      }, true);
+    });
+  }
+
   // ========== Init ==========
   function initForm() {
     const groups = document.querySelectorAll(".js-form-group");
     if (!groups.length) return;
 
-    document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
+    bindGlobalDelegation();
 
     queueMicrotask(() => {
-      groups.forEach(g => {
-        initRadioButtons(g);
-        initRadioButtons02(g);
-        initCheckboxButtons(g);
-        initZipCode(g);
-        initNameInputs(g);
-        initRequiredItems(g);
-      });
+      groups.forEach(initFormGroup);
       initCookieName();
       initFormMirrors();
       preventEnter();
@@ -913,6 +982,8 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    // load前（画像やGTM待ち中）のクリックが無反応になる窓を無くすため、ここで委譲を張る
+    if (!document.body.classList.contains("p-pageThanks")) bindGlobalDelegation();
     initPrefSelect();
     updateProgress("#step-first");
     if (document.body.classList.contains("p-pageThanks")) {

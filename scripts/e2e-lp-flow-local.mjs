@@ -11,9 +11,12 @@
  *   6. 遅延ステップ(steps-lazy.html)の取得に失敗しても次のクリックで復旧する
  *   7. window load 前のクリックでも進む（デッドクリック）
  *   8. 予約枠JSON(54KB)を予約を使わないLPで読まない（2026-08-22 QA）
+ *   9. アプリ内ブラウザ(LINE UA)で入力ステップのSTEP表示が上部バーに潜らない（2026-08-23）
  *
- * 注意: ローカルにはWPテーマCSS(WAF 403)が無いため、見た目の崩れはここでは検出できない。
- * 表示に関わる変更は STG のスマホ実機確認が必須（CLAUDE.md）。ここが見るのは「動作」。
+ * テーマCSSは assets/css/theme-snapshot.css を本番URLの代わりに返すので、
+ * 「テーマCSSが当たった状態」での挙動は検証できる。ただしスナップショットは週次取得なので
+ * 本物と一致している保証は取り込み時点まで。アプリ内ブラウザの上部バーもアプリ側の実装で
+ * CSSからは見えない。**表示に関わる変更の STG 実機確認は今までどおり必須**（CLAUDE.md）。
  *
  * 使い方: node scripts/e2e-lp-flow-local.mjs [--lp /denkikouji/ ...]
  */
@@ -72,11 +75,32 @@ function startServer() {
   }));
 }
 
-/** 外部ホスト（WPテーマ/GTM/住所API等）はローカルから到達できないので中断する */
+/**
+ * 外部ホスト（GTM/住所API等）はローカルから到達できないので中断する。
+ * ただし本番WPテーマCSSだけは、リポジトリが持つスナップショット
+ * （assets/css/theme-snapshot.css。Snapshot WP theme CSS ワークフローが毎週取得）を返す。
+ *
+ * これをしないと v2 / meta-lp / WPLP 系はテーマCSS抜きで描画され、
+ * CLAUDE.md が繰り返し警告している「テーマCSSに侵食されて本番だけ崩れる」系の
+ * 問題がローカルでは一切見えない。スナップショットは本物と同一内容なので、
+ * 少なくとも「テーマCSSが当たった状態」での挙動は検証できるようになる。
+ */
+const THEME_CSS_RE = /wp-content\/themes\/[^/]+\/assets\/css\/style\.css/;
+let themeSnapshot = null;
+
+async function serveThemeSnapshot(route) {
+  if (themeSnapshot === null) {
+    themeSnapshot = await readFile(join(ROOT, "assets/css/theme-snapshot.css"), "utf8").catch(() => "");
+  }
+  if (!themeSnapshot) return route.abort().catch(() => {});
+  return route.fulfill({ status: 200, contentType: "text/css; charset=utf-8", body: themeSnapshot }).catch(() => {});
+}
+
 async function blockExternal(page) {
   await page.route("**/*", (route) => {
     const u = route.request().url();
     if (u.startsWith(BASE)) return route.continue();
+    if (THEME_CSS_RE.test(u)) return serveThemeSnapshot(route);
     return route.abort();
   });
 }
@@ -91,8 +115,22 @@ const probe = () => ({
     const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
     const cur = vis[vis.length - 1];
     if (!cur) return null;
-    const head = cur.querySelector(".c-step, .c-title01, .meta-fv__title");
+    // 非表示の見出しを拾わない。LPによっては .c-step を display:none にして
+    // タイトルだけ出す構成があり、隠れた要素の矩形は 0 を返すため
+    // 「上端が0px＝バーに潜っている」という誤検知になる（2026-08-23 に全50本で発覚）。
+    const head = [...cur.querySelectorAll(".c-step, .c-title01, .meta-fv__title")]
+      .find((h) => h.offsetParent !== null || getComputedStyle(h).position === "fixed");
     return head ? Math.round(head.getBoundingClientRect().top) : null;
+  })(),
+  // 見出し要素を持たない構成のために「そのステップの中身の上端」も測る。
+  // バーに潜るかどうかは見出しの有無に関係なく効くので、こちらを保険にする。
+  contentTop: (() => {
+    const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
+    const cur = vis[vis.length - 1];
+    if (!cur) return null;
+    const first = [...cur.children].find((c) => c.offsetParent !== null);
+    const t = (first || cur).getBoundingClientRect();
+    return t.height === 0 && t.top === 0 ? null : Math.round(t.top);
   })(),
   opacity: (() => {
     const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
@@ -221,11 +259,16 @@ async function runLp(browser, devices, lp) {
   let headHidden = null;
   let kumaLost = null;
   for (let i = 0; i < 22; i++) {
-    const { acted, after } = await advanceOnce(page);
+    const { acted, before, after } = await advanceOnce(page);
     if (acted === "stuck" || acted === "no-step") break;
     if (after.step && after.step !== seen[seen.length - 1]) seen.push(after.step);
-    if (after.headTop !== null && after.headTop < 0 && headHidden === null) {
-      headHidden = `${after.step} headTop=${after.headTop}`;
+    // 見るのは「ステップに到達した瞬間」に上部が見えているか。
+    // 入力が全部埋まった後にCTAへスクロールして上部が出るのは、クマをCTAへ誘導する
+    // 仕様どおりの動き（CLAUDE.md はこのスクロールを block:"nearest" で行うと定めている）。
+    // 到達時と混同すると、正しい挙動を不具合として報告してしまう（2026-08-23 に実測して切り分け）。
+    const arrived = after.step && after.step !== before.step;
+    if (arrived && after.headTop !== null && after.headTop < 0 && headHidden === null) {
+      headHidden = `${after.step} 到達時 headTop=${after.headTop}`;
     }
     // 選択した直後は、クマが現在ステップ内（＝次のCTA側）に居るべき
     if (acted.startsWith("choice") && after.kumaStepId !== after.step && after.kumaStepId !== "none" && kumaLost === null) {
@@ -234,7 +277,7 @@ async function runLp(browser, devices, lp) {
     if (after.step === "step06" || after.step === "step-last") break;
   }
   seen.length ? pass(`${lp} ステップ遷移`, seen.join(" → ")) : fail(`${lp} ステップ遷移`, "1歩も進まない");
-  headHidden ? fail(`${lp} 上部見出しが隠れない`, headHidden) : pass(`${lp} 上部見出しが隠れない`);
+  headHidden ? fail(`${lp} ステップ到達時に上部見出しが見える`, headHidden) : pass(`${lp} ステップ到達時に上部見出しが見える`);
   kumaLost ? fail(`${lp} クマが次のCTAへ移動`, kumaLost) : pass(`${lp} クマが次のCTAへ移動`);
 
   const reached = await page.evaluate(probe);
@@ -261,6 +304,39 @@ async function runLp(browser, devices, lp) {
   });
   if (submit.skip) pass(`${lp} 送信ボタン有効`, submit.why);
   else submit.ok ? pass(`${lp} 送信ボタン有効`) : fail(`${lp} 送信ボタン有効`, submit.why);
+
+  // 7b) 携帯以外の番号を弾くか（固定電話03 / IP電話050）。
+  // 電話番号は唯一の連絡手段なので、固定電話が通ると商談が作れないリードが生まれる。
+  // 4実装とも isValidTel(/^0[6789]0[0-9]{8}$/) を持つが、正規表現の緩め直しは
+  // レビューで気づきにくいのでここで実際に入力して確かめる。
+  // 有効な番号のあと（＝上の送信ボタン検査のあと）に無効な番号で終える順にして、
+  // 妥当な番号を入れたまま自動送信に流れる経路を踏まない。
+  if (!submit.skip) {
+    const telGate = await page.evaluate(async () => {
+      const input = document.querySelector('input[name="your-tel"]');
+      const btn = document.getElementById("step-last-button") || document.querySelector(".c-submit-button");
+      if (!input || !btn) return { skip: true, why: "電話入力/送信CTAが無い構成" };
+      const type = (v) => {
+        input.value = v;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("blur", { bubbles: true }));
+      };
+      const wait = () => new Promise((r) => setTimeout(r, 120));
+      const bad = [];
+      for (const v of ["0312345678", "05011112222"]) {
+        type(v);
+        await wait();
+        if (!btn.classList.contains("is-disable")) bad.push(v);
+      }
+      type("");
+      await wait();
+      return { bad };
+    });
+    if (telGate.skip) pass(`${lp} 携帯以外の番号を弾く`, telGate.why);
+    else telGate.bad.length === 0
+      ? pass(`${lp} 携帯以外の番号を弾く`)
+      : fail(`${lp} 携帯以外の番号を弾く`, `通ってしまう: ${telGate.bad.join(", ")}`);
+  }
 
   // 8) 予約枠の先読みは「予約カレンダーが残っている nenshu-shindan 系」だけ
   if (!lp.includes("nenshu-shindan")) {
@@ -311,6 +387,7 @@ async function runLazyRecovery(browser, devices, lp) {
   let aborted = 0;
   await page.route("**/*", (route) => {
     const u = route.request().url();
+    if (THEME_CSS_RE.test(u)) return serveThemeSnapshot(route);
     if (!u.startsWith(BASE)) return route.abort();
     if (u.includes("steps-lazy.html") && aborted < 1) { aborted++; return route.abort(); }
     return route.continue();
@@ -334,12 +411,83 @@ async function runLazyRecovery(browser, devices, lp) {
   await ctx.close();
 }
 
+/**
+ * 9) アプリ内ブラウザ（LINE/Instagram）の上部バーにSTEP表示が潜らないか
+ *
+ * オーナーから最も多く報告されている症状。実機の完全な代わりにはならない
+ * （バーの実装はアプリ側で、CSSからは見えない）が、
+ *   ・UAで html.dk-inapp が付くか
+ *   ・入力ステップで padding-top:96px が効き、STEP表示がバー高さより下に来るか
+ * という「こちら側の配線」は自動で踏める。ここが落ちたら実機を見るまでもなく壊れている。
+ * バー高さはLINE実測~83ptを採用（CLAUDE.md）。
+ */
+const INAPP_BAR = 83;
+
+async function runInAppBar(browser, devices, lp) {
+  const ctx = await browser.newContext({
+    ...devices["iPhone 13"],
+    locale: "ja-JP",
+    // LINEアプリ内ブラウザのUA（app.js / app-v2.js / dk_lp main.js が /Line\// で検知する）
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Line/14.2.0"
+  });
+  const page = await ctx.newPage();
+  await blockExternal(page);
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+
+  const flagged = await page.evaluate(() => document.documentElement.classList.contains("dk-inapp"));
+  flagged ? pass(`${lp} アプリ内ブラウザを検知(html.dk-inapp)`) : fail(`${lp} アプリ内ブラウザを検知(html.dk-inapp)`, "UA検知が効いていない");
+
+  // 入力ステップ(step04-06)まで進めて、STEP表示がバーの下に来ているかを見る
+  let worst = null;
+  let reachedInput = false;
+  for (let i = 0; i < 22; i++) {
+    const { acted, after } = await advanceOnce(page);
+    if (acted === "stuck" || acted === "no-step") break;
+    const isInput = ["step04", "step05", "step06"].includes(after.step);
+    if (isInput) reachedInput = true;
+    // 見出しが無い構成（nenshu-shindan系は .c-step を隠している）では中身の上端で測る
+    const top = after.headTop !== null ? after.headTop : after.contentTop;
+    if (isInput && top !== null && (worst === null || top < worst.top)) {
+      worst = { step: after.step, top };
+    }
+    if (after.step === "step06") break;
+  }
+  if (!worst) {
+    fail(`${lp} 入力ステップの上部がバーに潜らない`,
+      reachedInput ? "入力ステップの上端が測れなかった（中身が空？）" : "入力ステップまで到達できなかった");
+  } else if (worst.top >= INAPP_BAR) {
+    pass(`${lp} 入力ステップの上部がバーに潜らない`, `最小 headTop=${worst.top}px (${worst.step}) ≧ バー${INAPP_BAR}px`);
+  } else {
+    fail(`${lp} 入力ステップの上部がバーに潜らない`, `${worst.step} で headTop=${worst.top}px < バー${INAPP_BAR}px`);
+  }
+  await ctx.close();
+}
+
 /** 7) window load 前のクリックでも進む（デッドクリック） */
 async function runEarlyClick(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
   const page = await ctx.newPage();
-  await blockExternal(page);
-  await page.goto(BASE + lp, { waitUntil: "domcontentloaded" });
+  // 「DOMContentLoaded 済み・load 未了」の窓を確実に作る。
+  // ページの資源に頼る方法（外部リクエストや画像の遅延）は、LPによって
+  // 外部参照が無かったりFV画像が遅延読み込みだったりで空振りした（2026-08-23 に実測）。
+  // DOM構築が終わった時点で「絶対に応答しない画像」を自分で挿し込む。
+  // ドキュメント内の画像は load を待たせるので、確実に window load を保留できる。
+  const HOLD = "/__e2e_hold__.png";
+  await page.route(`**${HOLD}*`, () => { /* 応答も中断もしない＝ぶら下げたまま */ });
+  await page.addInitScript((hold) => {
+    document.addEventListener("DOMContentLoaded", () => {
+      const img = document.createElement("img");
+      img.src = hold;
+      img.alt = "";
+      img.style.cssText = "position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none";
+      document.body.appendChild(img);
+    });
+  }, HOLD);
+  await page.goto(BASE + lp, { waitUntil: "domcontentloaded" }).catch(() => {});
+  await page.waitForFunction(() => document.readyState !== "loading", null, { timeout: 15000 }).catch(() => {});
+  await page.waitForSelector("#step-first .js-radio-button, #step-first .p-firstButton, #step-first .meta-fv__cta", { timeout: 10000 }).catch(() => {});
+  const state = await page.evaluate(() => document.readyState);
   const clicked = await page.evaluate(() => {
     const b = document.querySelector("#step-first .js-radio-button, #step-first .p-firstButton, #step-first .meta-fv__cta");
     if (!b) return false;
@@ -349,8 +497,9 @@ async function runEarlyClick(browser, devices, lp) {
   await page.waitForTimeout(1500);
   const after = await page.evaluate(probe);
   if (!clicked) fail(`${lp} load前クリック`, "FVボタンが無い");
-  else if (after.step && after.step !== "step-first") pass(`${lp} load前クリック`, `→ ${after.step}`);
-  else fail(`${lp} load前クリック`, "step-firstのまま（デッドクリック）");
+  else if (state === "complete") fail(`${lp} load前クリック`, "load後になってしまい検証できていない");
+  else if (after.step && after.step !== "step-first") pass(`${lp} load前クリック`, `→ ${after.step} (readyState=${state})`);
+  else fail(`${lp} load前クリック`, `step-firstのまま（デッドクリック / readyState=${state}）`);
   await ctx.close();
 }
 
@@ -383,6 +532,7 @@ async function main() {
     await runSelfHeal(browser, devices, lps[0]);
     await runLazyRecovery(browser, devices, lps[0]);
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
+    for (const lp of lps) await runInAppBar(browser, devices, lp);
   } finally {
     await browser.close();
     server.close();

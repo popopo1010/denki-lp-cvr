@@ -25,3 +25,27 @@ jobs:
             echo "STATUS ${code:-ERR} $u"
           done
           echo "done (always green: 判定はログのSTATUS行で行う)"
+
+      - name: プライバシーポリシー導線の到達確認（同意文のリンク先が生きているか）
+        run: |
+          # LPの同意文は 171箇所が /privacypolicy（WPルート）、5箇所が
+          # /denki-lp-cvr/privacypolicy/（このリポジトリ側）を指している。
+          # 個人情報の同意導線なので、両方が実際に開けることを本番で確かめる。
+          # ローカル/サンドボックスからは本番へ到達できないため、ランナーから叩くしかない。
+          set +e
+          UA="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+          ng=0
+          for u in \
+            "https://denkilp.builders-job.com/privacypolicy" \
+            "https://denkilp.builders-job.com/privacypolicy/" \
+            "https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/"; do
+            out=$(curl -sL -o /dev/null -w "%{http_code} (最終URL: %{url_effective})" -A "$UA" --max-time 30 "$u")
+            code=${out%% *}
+            echo "PP ${out} <- $u"
+            case "$code" in 200) ;; *) ng=$((ng+1));; esac
+          done
+          if [ "$ng" -gt 0 ]; then
+            echo "::warning::プライバシーポリシーのリンク先に200以外があります（上のPP行を確認）"
+          else
+            echo "プライバシーポリシー導線: すべて200"
+          fi
