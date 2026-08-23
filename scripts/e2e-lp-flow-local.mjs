@@ -221,11 +221,16 @@ async function runLp(browser, devices, lp) {
   let headHidden = null;
   let kumaLost = null;
   for (let i = 0; i < 22; i++) {
-    const { acted, after } = await advanceOnce(page);
+    const { acted, before, after } = await advanceOnce(page);
     if (acted === "stuck" || acted === "no-step") break;
     if (after.step && after.step !== seen[seen.length - 1]) seen.push(after.step);
-    if (after.headTop !== null && after.headTop < 0 && headHidden === null) {
-      headHidden = `${after.step} headTop=${after.headTop}`;
+    // 見るのは「ステップに到達した瞬間」に上部が見えているか。
+    // 入力が全部埋まった後にCTAへスクロールして上部が出るのは、クマをCTAへ誘導する
+    // 仕様どおりの動き（CLAUDE.md はこのスクロールを block:"nearest" で行うと定めている）。
+    // 到達時と混同すると、正しい挙動を不具合として報告してしまう（2026-08-23 に実測して切り分け）。
+    const arrived = after.step && after.step !== before.step;
+    if (arrived && after.headTop !== null && after.headTop < 0 && headHidden === null) {
+      headHidden = `${after.step} 到達時 headTop=${after.headTop}`;
     }
     // 選択した直後は、クマが現在ステップ内（＝次のCTA側）に居るべき
     if (acted.startsWith("choice") && after.kumaStepId !== after.step && after.kumaStepId !== "none" && kumaLost === null) {
@@ -234,7 +239,7 @@ async function runLp(browser, devices, lp) {
     if (after.step === "step06" || after.step === "step-last") break;
   }
   seen.length ? pass(`${lp} ステップ遷移`, seen.join(" → ")) : fail(`${lp} ステップ遷移`, "1歩も進まない");
-  headHidden ? fail(`${lp} 上部見出しが隠れない`, headHidden) : pass(`${lp} 上部見出しが隠れない`);
+  headHidden ? fail(`${lp} ステップ到達時に上部見出しが見える`, headHidden) : pass(`${lp} ステップ到達時に上部見出しが見える`);
   kumaLost ? fail(`${lp} クマが次のCTAへ移動`, kumaLost) : pass(`${lp} クマが次のCTAへ移動`);
 
   const reached = await page.evaluate(probe);

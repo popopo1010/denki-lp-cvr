@@ -385,6 +385,7 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+    if (!pageTo || !cur) return; // 委譲経由では対象外の要素も届くのでガードする
 
     clearStepTimers();
 
@@ -756,6 +757,12 @@
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
             else if (len >= 10) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (10 - len) + "桁以上"; }
+            // 入力中にもCTAの有効/無効を更新する（本番app.jsと同じ挙動）。
+            // blur だけで判定していたため、番号を打ち終えてもボタンが無効のままに見えていた。
+            // タイピング中はエラー表示を出さない（1文字ごとに出没するとレイアウトが跳ねる）。
+            const okNow = /^[0-9]{10,11}$/.test(item.value);
+            if (states[i] !== okNow) { states[i] = okNow; updateBtn(); }
+            if (okNow) arr[i].classList.add(SKIP); else arr[i].classList.remove(SKIP);
           });
         }
       }
@@ -778,7 +785,7 @@
       });
 
       nextBtn.addEventListener("click", () => {
-        setTimeout(() => { item.focus(); item.blur(); }, 250);
+        setTimeout(() => { try { item.focus({ preventScroll: true }); } catch (e) { item.focus(); } item.blur(); }, 250);
       });
     });
 
@@ -890,22 +897,65 @@
     form.addEventListener("submit", sendToMirrors, { capture: true });
   }
 
+  // ========== フォームの自己修復（本番 app.js から移植 2026-08-23）==========
+  // 外部スクリプト（最適化ツール等）が初期化後のフォームDOMを差し替えると、
+  // ボタンへ直接張ったリスナーが全部消え、data属性だけ残った「死んだフォーム」になる。
+  // オーナー再三報告の「選択しても進めない」はこれ（app.js 2026-07-10 / app-v2.js 2026-08-19 で対策済み）。
+  // ここは参照実装なので、WP直貼りLPへコピーされたときに弱点ごと持っていかれないよう同じ形にする。
+  const initedGroups = typeof WeakSet === "function" ? new WeakSet() : null;
+
+  function isGroupInited(group) {
+    return initedGroups ? initedGroups.has(group) : group.dataset.lpInited === "1";
+  }
+
+  function initFormGroup(group) {
+    if (!group || isGroupInited(group)) return;
+    if (initedGroups) initedGroups.add(group);
+    group.dataset.lpInited = "1";
+    initRadioButtons(group);
+    initRadioButtons02(group);
+    initCheckboxButtons(group);
+    initZipCode(group);
+    initNameInputs(group);
+    initRequiredItems(group);
+  }
+
+  // ステップ遷移の委譲は form ではなく document に張る（form ごと差し替えられても生き残る）。
+  let globalDelegationBound = false;
+  function bindGlobalDelegation() {
+    if (globalDelegationBound) return;
+    globalDelegationBound = true;
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
+      if (btn) handleStepClick({ currentTarget: btn });
+    });
+
+    // 未初期化グループ内の操作を capture で検知して即座に張り直す。
+    // capture 中に張ったリスナーには、この操作イベント自体もターゲット到達時に届く。
+    ["click", "change", "input", "focusin"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        const group = e.target && e.target.closest ? e.target.closest(".js-form-group") : null;
+        if (!group || isGroupInited(group)) return;
+        const pref = document.getElementById("pref");
+        if (pref && pref.options.length <= 1) initPrefSelect();
+        initFormGroup(group);
+        preventEnter();
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "lp_error", error_type: "form_group_reinit", step_name: group.id || "" });
+      }, true);
+    });
+  }
+
   // ========== Init ==========
   function initForm() {
     const groups = document.querySelectorAll(".js-form-group");
     if (!groups.length) return;
 
-    document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
+    bindGlobalDelegation();
 
     queueMicrotask(() => {
-      groups.forEach(g => {
-        initRadioButtons(g);
-        initRadioButtons02(g);
-        initCheckboxButtons(g);
-        initZipCode(g);
-        initNameInputs(g);
-        initRequiredItems(g);
-      });
+      groups.forEach(initFormGroup);
       initCookieName();
       initFormMirrors();
       preventEnter();
@@ -913,6 +963,8 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    // load前（画像やGTM待ち中）のクリックが無反応になる窓を無くすため、ここで委譲を張る
+    if (!document.body.classList.contains("p-pageThanks")) bindGlobalDelegation();
     initPrefSelect();
     updateProgress("#step-first");
     if (document.body.classList.contains("p-pageThanks")) {

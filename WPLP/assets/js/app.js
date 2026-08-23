@@ -890,7 +890,10 @@
             !(firstNameInput.value || "").trim() &&
             document.activeElement === lastNameInput
           ) {
-            firstNameInput.focus();
+            // preventScroll必須（犯人クラス④）。付けないとブラウザが入力欄まで独自にスクロールし、
+            // 直前に block:"nearest" で決めた位置を上書きしうる。素の focus() が残っていたので統一した
+            // （2026-08-23 QA。step05で上部が隠れる件の原因はこれではなく、入力完了時のCTA誘導だった）
+            try { firstNameInput.focus({ preventScroll: true }); } catch (e) { firstNameInput.focus(); }
           }
         }, 700);
       });
@@ -906,7 +909,7 @@
             if (bdayYear) {
               setTimeout(() => {
                 bdayYear.scrollIntoView({ behavior: "smooth", block: "nearest" }); // center禁止(上部が隠れる 2026-07-05)
-                bdayYear.focus();
+                try { bdayYear.focus({ preventScroll: true }); } catch (e) { bdayYear.focus(); }
               }, 200);
             }
           }
@@ -1013,7 +1016,9 @@
       });
 
       nextBtn.addEventListener("click", () => {
-        setTimeout(() => { item.focus(); item.blur(); }, 250);
+        // focus+blur は blur側のバリデーションを走らせるための操作。preventScrollを付けないと
+        // ここでも画面が飛ぶ（2026-08-23 QA）
+        setTimeout(() => { try { item.focus({ preventScroll: true }); } catch (e) { item.focus(); } item.blur(); }, 250);
       });
     });
 

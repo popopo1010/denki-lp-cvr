@@ -30,7 +30,8 @@ function check(name, ok, detail) {
 const IMPLS = [
   "assets/js/app.js",
   "assets/js/app-v2.js",
-  "dk_lp/denkikouji/assets/js/main.js"
+  "dk_lp/denkikouji/assets/js/main.js",
+  "dk_lp/sekokanri/assets/js/main.js"
 ].filter((p) => existsSync(join(ROOT, p)));
 
 /** ミラーは正本とバイト一致していること（片方だけ直す事故の検出） */
@@ -52,10 +53,23 @@ for (const p of IMPLS) {
   check(`${p}: scrollIntoView に block:"center" を使わない`, centers.length === 0,
     `${centers.length}件: ${centers[0] || ""}`);
 
-  // ④ focus() は preventScroll 付き（ブラウザ主導スクロールを起こさない）
-  const focuses = (src.match(/\.focus\(\s*\)/g) || []).length;
-  const focusPreventScroll = /\.focus\(\s*\{\s*preventScroll:\s*true\s*\}\s*\)/.test(src);
-  check(`${p}: 自動フォーカスは preventScroll 付き`, focusPreventScroll || focuses === 0);
+  // ④ focus() は必ず preventScroll 付き。
+  //    直前に scrollIntoView({block:"nearest"}) で位置を決めていても、preventScroll なしの
+  //    focus() がブラウザ主導スクロールでそれを上書きし、STEP表示を画面外へ押し出す
+  //    （2026-08-23 QA で step05 の症状として実測。app-v2 には preventScroll:false の明示すらあった）。
+  //    素の .focus() が許されるのは try{focus({preventScroll:true})}catch の代替パスだけ。
+  const lines = src.split("\n");
+  const bareFocus = lines.filter((line, i) => {
+    if (!/\.focus\(\s*\)/.test(line)) return false;
+    // try{ focus({preventScroll:true}) } catch(e){ focus() } の代替パスは許容（複数行の書き方も見る）
+    const window = lines.slice(Math.max(0, i - 3), i + 1).join("\n");
+    return !/catch/.test(window);
+  });
+  check(`${p}: focus() は必ず preventScroll 付き`, bareFocus.length === 0,
+    bareFocus.slice(0, 2).map((l) => l.trim()).join(" / "));
+  // コメント中の言及は除いて判定する（対策の経緯をコメントに残せるように）
+  check(`${p}: preventScroll:false を書かない`,
+    !/preventScroll:\s*false/.test(src.replace(/\/\/[^\n]*/g, "")));
 
   // ⑤(a) アプリ内ブラウザではステップ到達時に自動フォーカスしない
   check(`${p}: html.dk-inapp では autofocus しない`,
@@ -78,7 +92,7 @@ for (const p of ["assets/js/app.js", "assets/js/app-v2.js"]) {
 // ───────────────────────────────────────────────────────────
 // 2. 「選択/入力しても次へ進めない」（2026-07-10 フォームが死ぬ 4クラス）
 // ───────────────────────────────────────────────────────────
-for (const p of ["assets/js/app.js", "assets/js/app-v2.js"]) {
+for (const p of IMPLS) {
   const src = read(p);
 
   // ① 初期化済み判定は DOM属性でなく WeakSet（DOM差し替えを見抜く）
@@ -94,11 +108,14 @@ for (const p of ["assets/js/app.js", "assets/js/app-v2.js"]) {
 }
 
 // ①/④ ステップ遷移のクリック委譲は document に張る（form差し替えに耐える）
-{
-  const src = read("assets/js/app.js");
-  check("assets/js/app.js: クリック委譲は document", /document\.addEventListener\(\s*"click"/.test(src));
-  check("assets/js/app.js: 委譲は DOMContentLoaded で張る（load前クリック対策）",
+for (const p of IMPLS) {
+  const src = read(p);
+  if (!/handleStepClick/.test(src)) continue;
+  check(`${p}: クリック委譲は document`, /document\.addEventListener\(\s*"click"/.test(src));
+  check(`${p}: 委譲は DOMContentLoaded で張る（load前クリック対策）`,
     /DOMContentLoaded[\s\S]{0,400}bindGlobalDelegation\(\)/.test(src));
+  check(`${p}: ボタン個別バインドに戻していない`,
+    !/querySelectorAll\("\.js-step-button"\)[\s\S]{0,80}addEventListener\("click", handleStepClick\)/.test(src));
 }
 
 // ───────────────────────────────────────────────────────────

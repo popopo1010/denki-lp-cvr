@@ -1,6 +1,43 @@
 (() => {
   "use strict";
 
+  // アプリ内ブラウザ（Instagram/LINE/Facebook等）検知。半透明バーが上部に被さり
+  // 最上部のSTEP表示が隠れて見えるため、CSS側(html.dk-inapp)で余白を確保する（2026-07-05）。
+  try {
+    if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|Messenger/i.test(navigator.userAgent)) {
+      document.documentElement.classList.add("dk-inapp");
+    }
+  } catch (e) { /* no-op */ }
+
+  // アプリ内ブラウザ: ユーザーが入力欄をタップしてキーボードが開くと、ブラウザが入力欄を
+  // 可視ビューポート最上部へスクロールし、STEP表示・タイトルが上部バーの裏に隠れる
+  // （2026-07-08 再々発。autofocus廃止では「ユーザー自身のタップ」は防げない）。
+  // フォーカス確定後、入力欄がキーボード上に見えることを保証できる場合のみ、
+  // ステップ上部が見える位置までスクロールを戻す。CSS側のscroll-margin-topとセット。
+  (function () {
+    var BAR = 96; // アプリ内上部バー相当（LINE実測~83pt+余裕。2026-07-08）
+    document.addEventListener("focusin", function (e) {
+      if (!document.documentElement.classList.contains("dk-inapp")) return;
+      var t = e.target;
+      if (!t || !t.matches || !t.matches('input[type="tel"], input[type="text"]')) return;
+      var group = t.closest(".js-form-group");
+      if (!group) return;
+      setTimeout(function () {
+        var head = group.querySelector(".c-step, .c-title01") || group;
+        var hr = head.getBoundingClientRect();
+        if (hr.top >= BAR) return; // 隠れていない
+        var delta = hr.top - BAR; // 負値: この分だけ戻す
+        var vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight * 0.55;
+        var ir = t.getBoundingClientRect();
+        if (ir.bottom - delta < vvh - 8) {
+          window.scrollBy({ top: delta, left: 0, behavior: "auto" });
+        }
+      }, 300);
+    }, true);
+  })();
+
+
+
   // ========== Cookie ==========
   const Cookie = {
     set(name, value, days) {
@@ -53,7 +90,14 @@
     return Cookie.get("user-name") || storageGet("dk_lp_user_name") || "";
   }
 
+  // 予約カレンダーを使うサンクスは nenshu-shindan 系だけ（thanks-v2 は 2026-06-23 の
+  // LINE一本化で撤去済み）。使わないLPで予約枠JSON(約54KB)を先読みしない。
+  function thanksUsesBooking() {
+    return location.pathname.indexOf("/nenshu-shindan") !== -1;
+  }
+
   function prewarmThanksBookingSlots() {
+    if (!thanksUsesBooking()) return;
     const slotsUrl = CVR_ASSETS_BASE + "/data/booking-slots.json";
     if (!document.querySelector("link[data-dk-booking-slots-preload]")) {
       const preload = document.createElement("link");
@@ -213,6 +257,10 @@
     icon.style.opacity = "1";
   }
 
+  // 生まれ年の受付範囲は全実装で1つに揃える（2026-08-22 QA）。
+  const BIRTH_YEAR_MIN = 1924;
+  const BIRTH_YEAR_MAX = 2010;
+
   function moveIconById(id) {
     if (!id || id === "#") return;
     const el = document.querySelector(id);
@@ -279,7 +327,11 @@
         setTimeout(() => {
           startBounce();
           const autoFocus = page.querySelector('input[type="tel"]:not([type="hidden"]), input[type="text"]:not([type="hidden"])');
-          if (autoFocus && !autoFocus.value) autoFocus.focus();
+          // アプリ内ブラウザ(LINE/Instagram)では自動フォーカスしない：キーボードが開く瞬間に
+          // ブラウザが入力欄を可視ビューポート最上部へ運び、STEP表示がバーの裏に隠れる（2026-07-08）。
+          if (autoFocus && !autoFocus.value && !document.documentElement.classList.contains("dk-inapp")) {
+            try { autoFocus.focus({ preventScroll: true }); } catch (e) { autoFocus.focus(); }
+          }
         }, 320);
       });
     });
@@ -289,6 +341,7 @@
     const btn = e.currentTarget;
     const pageTo = btn.dataset.pageTo;
     const cur = btn.closest(".js-form-group");
+    if (!pageTo || !cur) return; // 委譲経由では対象外の要素も届くのでガードする
 
     document.querySelectorAll(".cvr-live-notification, .cvr-social-proof, .cvr-trust-bar").forEach((el) => {
       el.classList.add("is-hidden");
@@ -617,6 +670,12 @@
             if (len === 0) { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし"; }
             else if (len >= 10) { telNotice.style.display = "none"; }
             else { telNotice.style.display = "block"; telNotice.textContent = "ハイフンなし あと" + (10 - len) + "桁以上"; }
+            // 入力中にもCTAの有効/無効を更新する（本番app.jsと同じ挙動）。
+            // blur だけで判定していたため、番号を打ち終えてもボタンが無効のままに見えていた。
+            // タイピング中はエラー表示を出さない（1文字ごとに出没するとレイアウトが跳ねる）。
+            const okNow = /^[0-9]{10,11}$/.test(item.value);
+            if (states[i] !== okNow) { states[i] = okNow; updateBtn(); }
+            if (okNow) arr[i].classList.add(SKIP); else arr[i].classList.remove(SKIP);
           });
         }
       }
@@ -639,7 +698,7 @@
       });
 
       nextBtn.addEventListener("click", () => {
-        setTimeout(() => { item.focus(); item.blur(); }, 250);
+        setTimeout(() => { try { item.focus({ preventScroll: true }); } catch (e) { item.focus(); } item.blur(); }, 250);
       });
     });
 
@@ -701,7 +760,7 @@
     const y = document.getElementById("bday-year");
     const m = document.getElementById("bday-month");
     const d = document.getElementById("bday-day");
-    if (y) { let h = ""; for (let i = 1924; i <= 2023; i++) h += '<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>'; y.innerHTML = h; }
+    if (y) { let h = ""; for (let i = BIRTH_YEAR_MIN; i <= BIRTH_YEAR_MAX; i++) h += '<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>'; y.innerHTML = h; }
     if (m) { let h = ""; for (let i = 1; i <= 12; i++) h += '<option value="'+i+'">'+i+'</option>'; m.innerHTML = h; }
     if (d) { let h = ""; for (let i = 1; i <= 31; i++) h += '<option value="'+i+'">'+i+'</option>'; d.innerHTML = h; }
   }
@@ -760,22 +819,65 @@
     form.addEventListener("submit", sendToMirrors, { capture: true });
   }
 
+  // ========== フォームの自己修復（本番 app.js から移植 2026-08-23）==========
+  // 外部スクリプト（最適化ツール等）が初期化後のフォームDOMを差し替えると、
+  // ボタンへ直接張ったリスナーが全部消え、data属性だけ残った「死んだフォーム」になる。
+  // オーナー再三報告の「選択しても進めない」はこれ（app.js 2026-07-10 / app-v2.js 2026-08-19 で対策済み）。
+  // ここは参照実装なので、WP直貼りLPへコピーされたときに弱点ごと持っていかれないよう同じ形にする。
+  const initedGroups = typeof WeakSet === "function" ? new WeakSet() : null;
+
+  function isGroupInited(group) {
+    return initedGroups ? initedGroups.has(group) : group.dataset.lpInited === "1";
+  }
+
+  function initFormGroup(group) {
+    if (!group || isGroupInited(group)) return;
+    if (initedGroups) initedGroups.add(group);
+    group.dataset.lpInited = "1";
+    initRadioButtons(group);
+    initRadioButtons02(group);
+    initCheckboxButtons(group);
+    initZipCode(group);
+    initNameInputs(group);
+    initRequiredItems(group);
+  }
+
+  // ステップ遷移の委譲は form ではなく document に張る（form ごと差し替えられても生き残る）。
+  let globalDelegationBound = false;
+  function bindGlobalDelegation() {
+    if (globalDelegationBound) return;
+    globalDelegationBound = true;
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
+      if (btn) handleStepClick({ currentTarget: btn });
+    });
+
+    // 未初期化グループ内の操作を capture で検知して即座に張り直す。
+    // capture 中に張ったリスナーには、この操作イベント自体もターゲット到達時に届く。
+    ["click", "change", "input", "focusin"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        const group = e.target && e.target.closest ? e.target.closest(".js-form-group") : null;
+        if (!group || isGroupInited(group)) return;
+        const pref = document.getElementById("pref");
+        if (pref && pref.options.length <= 1) initPrefSelect();
+        initFormGroup(group);
+        preventEnter();
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "lp_error", error_type: "form_group_reinit", step_name: group.id || "" });
+      }, true);
+    });
+  }
+
   // ========== Init ==========
   function initForm() {
     const groups = document.querySelectorAll(".js-form-group");
     if (!groups.length) return;
 
-    document.querySelectorAll(".js-step-button").forEach(b => b.addEventListener("click", handleStepClick));
+    bindGlobalDelegation();
 
     queueMicrotask(() => {
-      groups.forEach(g => {
-        initRadioButtons(g);
-        initRadioButtons02(g);
-        initCheckboxButtons(g);
-        initZipCode(g);
-        initNameInputs(g);
-        initRequiredItems(g);
-      });
+      groups.forEach(initFormGroup);
       initCookieName();
       initFormMirrors();
       preventEnter();
@@ -783,6 +885,8 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    // load前（画像やGTM待ち中）のクリックが無反応になる窓を無くすため、ここで委譲を張る
+    if (!document.body.classList.contains("p-pageThanks")) bindGlobalDelegation();
     initPrefSelect();
     initBirthday();
     if (document.body.classList.contains("p-pageThanks")) {

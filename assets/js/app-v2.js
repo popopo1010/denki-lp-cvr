@@ -720,7 +720,9 @@
           if (bdayYear) {
             setTimeout(() => {
               bdayYear.scrollIntoView({ behavior: "smooth", block: "nearest" }); // center禁止(上部が隠れる 2026-07-05)
-              bdayYear.focus();
+              // preventScroll必須（犯人クラス④）。直前の scrollIntoView をブラウザが上書きしうる
+              // （2026-08-23 QA で素の focus() を発見し統一）
+              try { bdayYear.focus({ preventScroll: true }); } catch (e) { bdayYear.focus(); }
               bdayYear.classList.add("js-pulse-highlight");
               setTimeout(() => bdayYear.classList.remove("js-pulse-highlight"), 2400);
             }, 200);
@@ -775,7 +777,10 @@
       if (!namesAllFilled()) return;
       if (!(bdayYearInput && isYearInput) || bdayYearInput.value) return;
       didAutoAdvanceYear = true;
-      try { bdayYearInput.focus({ preventScroll: false }); } catch (e) { bdayYearInput.focus(); }
+      // ここは preventScroll:false と書かれており、ブラウザ主導スクロールを明示的に許可していた。
+      // CLAUDE.md の犯人クラス④に真正面から反するため true に統一（2026-08-23 QA）。
+      // なお step05 で上部が隠れる症状の原因は別（入力完了時にCTAへ誘導するスクロール＝仕様）
+      try { bdayYearInput.focus({ preventScroll: true }); } catch (e) { bdayYearInput.focus(); }
     }
     if (firstNameInput) firstNameInput.addEventListener("blur", maybeAdvanceToYear);
 
@@ -870,7 +875,7 @@
       });
 
       nextBtn.addEventListener("click", () => {
-        setTimeout(() => { item.focus(); item.blur(); }, 250);
+        setTimeout(() => { try { item.focus({ preventScroll: true }); } catch (e) { item.focus(); } item.blur(); }, 250);
       });
     });
 
