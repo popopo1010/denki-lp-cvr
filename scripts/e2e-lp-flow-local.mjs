@@ -343,8 +343,20 @@ async function runLazyRecovery(browser, devices, lp) {
 async function runEarlyClick(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
   const page = await ctx.newPage();
-  await blockExternal(page);
-  await page.goto(BASE + lp, { waitUntil: "domcontentloaded" });
+  // 「DOMContentLoaded 済み・load 未了」の窓を確実に作る。
+  // 外部リソース(WPテーマCSS/画像)の中断をわざと遅らせると、その間 window load は来ない。
+  // goto の waitUntil だけに頼るとローカル配信が速すぎて load 後にクリックしてしまい、
+  // 判定が「デッドクリック」と「検証できていない」の間で揺れる（2026-08-23 に実測）。
+  await page.route("**/*", async (route) => {
+    const u = route.request().url();
+    if (u.startsWith(BASE)) return route.continue();
+    await new Promise((r) => setTimeout(r, 4000));
+    return route.abort().catch(() => {});
+  });
+  await page.goto(BASE + lp, { waitUntil: "domcontentloaded" }).catch(() => {});
+  await page.waitForFunction(() => document.readyState !== "loading", null, { timeout: 15000 }).catch(() => {});
+  await page.waitForSelector("#step-first .js-radio-button, #step-first .p-firstButton, #step-first .meta-fv__cta", { timeout: 10000 }).catch(() => {});
+  const state = await page.evaluate(() => document.readyState);
   const clicked = await page.evaluate(() => {
     const b = document.querySelector("#step-first .js-radio-button, #step-first .p-firstButton, #step-first .meta-fv__cta");
     if (!b) return false;
@@ -354,8 +366,9 @@ async function runEarlyClick(browser, devices, lp) {
   await page.waitForTimeout(1500);
   const after = await page.evaluate(probe);
   if (!clicked) fail(`${lp} load前クリック`, "FVボタンが無い");
-  else if (after.step && after.step !== "step-first") pass(`${lp} load前クリック`, `→ ${after.step}`);
-  else fail(`${lp} load前クリック`, "step-firstのまま（デッドクリック）");
+  else if (state === "complete") fail(`${lp} load前クリック`, "load後になってしまい検証できていない");
+  else if (after.step && after.step !== "step-first") pass(`${lp} load前クリック`, `→ ${after.step} (readyState=${state})`);
+  else fail(`${lp} load前クリック`, `step-firstのまま（デッドクリック / readyState=${state}）`);
   await ctx.close();
 }
 
