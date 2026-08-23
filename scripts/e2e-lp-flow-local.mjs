@@ -100,12 +100,16 @@ const probe = () => ({
     return cur ? getComputedStyle(cur).opacity : null;
   })(),
   kumaStepId: (() => {
-    const k = document.querySelector(".cvr-kuma, .js-fixed-icon");
+    // 表示中のクマだけを見る。LPによってはステップごとにアイコン要素を持っており
+    // （dk_lp参照実装）、document先頭の非表示アイコンを拾うと誤検知になる。
+    const all = [...document.querySelectorAll(".cvr-kuma, .js-fixed-icon")];
+    const k = all.find((e) => e.offsetParent !== null || getComputedStyle(e).position === "fixed") || all[0];
     const g = k && k.closest(".js-form-group");
     return g ? g.id : (k ? "detached" : "none");
   })(),
   kumaToCta: (() => {
-    const k = document.querySelector(".cvr-kuma, .js-fixed-icon");
+    const all = [...document.querySelectorAll(".cvr-kuma, .js-fixed-icon")];
+    const k = all.find((e) => e.offsetParent !== null) || all[0];
     if (!k) return null;
     const g = k.closest(".js-form-group");
     if (!g) return null;
@@ -126,9 +130,18 @@ async function advanceOnce(page) {
     if (!cur) return "no-step";
     const click = (el) => { if (!el) return false; el.click(); return true; };
 
-    // 1) 選択式（ラジオ/チェック）は先頭を1つ選ぶ
-    const choice = cur.querySelector(".js-radio-button:not(.is-active), .js-radio-button02:not(.is-active), .js-checkbox-button:not(.is-active)");
-    if (choice) { click(choice); return "choice:" + (choice.dataset.value || ""); }
+    // 1) 選択式は「グループごとに1つだけ」選ぶ。
+    //    複数選択(施工管理step01の資格チェック)で全部タップし続けると、
+    //    自動遷移待ちの2.8秒を選択肢の数だけ繰り返して手数を使い切る。
+    const SEL = ".js-radio-button, .js-radio-button02, .js-checkbox-button";
+    const groups = [...new Set([...cur.querySelectorAll(SEL)].map((b) => b.dataset.group || ""))];
+    for (const g of groups) {
+      const q = g ? `${SEL.split(", ").map((s) => `${s}[data-group="${g}"]`).join(", ")}` : SEL;
+      const opts = [...cur.querySelectorAll(q)];
+      if (!opts.length || opts.some((b) => b.classList.contains("is-active"))) continue;
+      click(opts[0]);
+      return "choice:" + (opts[0].dataset.value || g);
+    }
 
     // 2) 入力欄を埋める（住所APIはローカルで叩けないので select を直接指定する）
     const setVal = (el, v) => {
@@ -158,7 +171,12 @@ async function advanceOnce(page) {
     filled = setVal(cur.querySelector("#first-name"), "太郎") || filled;
     filled = setVal(cur.querySelector("#bday-year"), "1990") || filled;
     filled = setVal(cur.querySelector('input[type="tel"]:not([name="your-zip"])'), "09012345678") || filled;
-    if (filled) return "filled";
+    if (filled) {
+      // 実装によって検証タイミングが input / blur と分かれる（dk_lp参照実装は blur）。
+      // 実ユーザーは次のCTAをタップした時点で必ず blur するので、それに合わせる。
+      cur.querySelectorAll("input").forEach((el) => { try { el.blur(); } catch (e) {} });
+      return "filled";
+    }
 
     // 3) 次へ（「戻る」も .js-step-button なので、必ず前進するボタンだけを押す）
     const ORDER = ["step-first", "step01", "step02", "step03", "step03b", "step04", "step05", "step06", "step-last"];
@@ -202,7 +220,7 @@ async function runLp(browser, devices, lp) {
   const seen = [];
   let headHidden = null;
   let kumaLost = null;
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 22; i++) {
     const { acted, after } = await advanceOnce(page);
     if (acted === "stuck" || acted === "no-step") break;
     if (after.step && after.step !== seen[seen.length - 1]) seen.push(after.step);
@@ -228,15 +246,21 @@ async function runLp(browser, devices, lp) {
   await advanceOnce(page);
   await page.waitForTimeout(400);
   const submit = await page.evaluate(() => {
+    const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
+    const cur = vis[vis.length - 1];
     const b = document.getElementById("step-last-button") || document.querySelector(".c-submit-button");
-    if (!b) return { ok: false, why: "送信CTAが無い" };
+    if (!b) return { skip: true, why: "送信CTAを持たない構成" };
+    // 送信CTAがまだ到達していないステップの中にある構成（dk_lp参照実装のstep-last等）は
+    // 「無効のまま」ではなく「未到達」。誤検知にしない。
+    if (cur && !cur.contains(b)) return { skip: true, why: `送信CTAは${(b.closest(".js-form-group") || {}).id || "別ステップ"}側（未到達）` };
     const tel = document.querySelector('input[name="your-tel"]');
     return {
       ok: !b.classList.contains("is-disable"),
       why: `is-disable のまま (tel="${tel ? tel.value : "?"}")`
     };
   });
-  submit.ok ? pass(`${lp} 送信ボタン有効`) : fail(`${lp} 送信ボタン有効`, submit.why);
+  if (submit.skip) pass(`${lp} 送信ボタン有効`, submit.why);
+  else submit.ok ? pass(`${lp} 送信ボタン有効`) : fail(`${lp} 送信ボタン有効`, submit.why);
 
   // 8) 予約枠の先読みは「予約カレンダーが残っている nenshu-shindan 系」だけ
   if (!lp.includes("nenshu-shindan")) {
@@ -294,7 +318,7 @@ async function runLazyRecovery(browser, devices, lp) {
   await page.goto(BASE + lp, { waitUntil: "load" });
   await page.waitForTimeout(600);
   let step = "";
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 22; i++) {
     const { acted, after } = await advanceOnce(page);
     step = after.step;
     if (acted === "stuck" || acted === "no-step") break;

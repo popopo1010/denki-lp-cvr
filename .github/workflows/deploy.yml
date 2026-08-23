@@ -112,7 +112,15 @@ jobs:
             dk_lp/denkikouji/assets/js/main.js \
             dk_lp/denkikouji/assets/js/cvr-boost.js \
             dk_lp/sekokanri/assets/js/main.js \
-            dk_lp/sekokanri/assets/js/cvr-boost.js; do
+            dk_lp/sekokanri/assets/js/cvr-boost.js \
+            assets/js/cvr-boost.js \
+            WPLP/assets/js/cvr-boost.js \
+            自前LP/assets/js/cvr-boost.js \
+            nenshu-shindan/salary-data.js \
+            nenshu-shindan/license-icons.js \
+            nenshu-shindan-v2/salary-data.js \
+            nenshu-shindan-v2/license-icons.js \
+            ad-cr/cr-ad.js; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
           for f in \
@@ -132,7 +140,11 @@ jobs:
             dk_lp/assets/css/cvr-boost-denkikouji.css \
             dk_lp/assets/css/cvr-boost-sekoukanri.css \
             dk_lp/denkikouji/assets/css/cvr-boost.css \
-            dk_lp/sekokanri/assets/css/cvr-boost.css; do
+            dk_lp/sekokanri/assets/css/cvr-boost.css \
+            assets/css/meta-short-lp.css \
+            nenshu-shindan/nenshu-shindan.css \
+            nenshu-shindan-v2/nenshu-shindan.css \
+            ad-cr/cr-ad.css; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
           HTML_MIN="npx -y --package=html-minifier-terser@7.2.0 -- html-minifier-terser"
