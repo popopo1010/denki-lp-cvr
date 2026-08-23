@@ -94,9 +94,9 @@ jobs:
 
   e2e:
     name: LPフォームのローカルE2E（実ブラウザ）
-    # 実ブラウザは時間がかかるので、PR（とworkflow_dispatch）でだけ回す。
-    # 作業ブランチへの push では静的チェック＋生成物ドリフトまで。
-    if: github.event_name != 'push'
+    # 主要LPは「push のたび」に実ブラウザで通す。PRなら全50本。
+    # 当初 push では丸ごと skip していたが、PRを作らずブランチへ push する運用だと
+    # 実ブラウザ検証が一度も回らないという穴になっていた（2026-08-23 に発覚）。
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -110,4 +110,16 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: フォーム通し・自己修復・遅延ステップ復旧・load前クリック
-        run: node scripts/e2e-lp-flow-local.mjs
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # 広告の着地になる主要LPだけ（数分）。壊れたら即わかる
+            node scripts/e2e-lp-flow-local.mjs --lp \
+              /denkikouji/ /sekoukanri/ /denkikouji-v2/ /sekoukanri-v2/ /sekoukanri-kentiku-v2/
+          else
+            # PRではフォームを持つLPを全部通す
+            LPS=$(grep -rl 'name="your-tel"' --include=index.html . \
+                  | sed 's|^\./||; s|/index.html$||; s|^|/|; s|$|/|' | sort)
+            echo "$LPS" | tr '\n' ' '
+            node scripts/e2e-lp-flow-local.mjs --lp $LPS
+          fi
