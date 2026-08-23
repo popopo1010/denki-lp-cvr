@@ -11,9 +11,12 @@
  *   6. 遅延ステップ(steps-lazy.html)の取得に失敗しても次のクリックで復旧する
  *   7. window load 前のクリックでも進む（デッドクリック）
  *   8. 予約枠JSON(54KB)を予約を使わないLPで読まない（2026-08-22 QA）
+ *   9. アプリ内ブラウザ(LINE UA)で入力ステップのSTEP表示が上部バーに潜らない（2026-08-23）
  *
- * 注意: ローカルにはWPテーマCSS(WAF 403)が無いため、見た目の崩れはここでは検出できない。
- * 表示に関わる変更は STG のスマホ実機確認が必須（CLAUDE.md）。ここが見るのは「動作」。
+ * テーマCSSは assets/css/theme-snapshot.css を本番URLの代わりに返すので、
+ * 「テーマCSSが当たった状態」での挙動は検証できる。ただしスナップショットは週次取得なので
+ * 本物と一致している保証は取り込み時点まで。アプリ内ブラウザの上部バーもアプリ側の実装で
+ * CSSからは見えない。**表示に関わる変更の STG 実機確認は今までどおり必須**（CLAUDE.md）。
  *
  * 使い方: node scripts/e2e-lp-flow-local.mjs [--lp /denkikouji/ ...]
  */
@@ -72,11 +75,32 @@ function startServer() {
   }));
 }
 
-/** 外部ホスト（WPテーマ/GTM/住所API等）はローカルから到達できないので中断する */
+/**
+ * 外部ホスト（GTM/住所API等）はローカルから到達できないので中断する。
+ * ただし本番WPテーマCSSだけは、リポジトリが持つスナップショット
+ * （assets/css/theme-snapshot.css。Snapshot WP theme CSS ワークフローが毎週取得）を返す。
+ *
+ * これをしないと v2 / meta-lp / WPLP 系はテーマCSS抜きで描画され、
+ * CLAUDE.md が繰り返し警告している「テーマCSSに侵食されて本番だけ崩れる」系の
+ * 問題がローカルでは一切見えない。スナップショットは本物と同一内容なので、
+ * 少なくとも「テーマCSSが当たった状態」での挙動は検証できるようになる。
+ */
+const THEME_CSS_RE = /wp-content\/themes\/[^/]+\/assets\/css\/style\.css/;
+let themeSnapshot = null;
+
+async function serveThemeSnapshot(route) {
+  if (themeSnapshot === null) {
+    themeSnapshot = await readFile(join(ROOT, "assets/css/theme-snapshot.css"), "utf8").catch(() => "");
+  }
+  if (!themeSnapshot) return route.abort().catch(() => {});
+  return route.fulfill({ status: 200, contentType: "text/css; charset=utf-8", body: themeSnapshot }).catch(() => {});
+}
+
 async function blockExternal(page) {
   await page.route("**/*", (route) => {
     const u = route.request().url();
     if (u.startsWith(BASE)) return route.continue();
+    if (THEME_CSS_RE.test(u)) return serveThemeSnapshot(route);
     return route.abort();
   });
 }
@@ -316,6 +340,7 @@ async function runLazyRecovery(browser, devices, lp) {
   let aborted = 0;
   await page.route("**/*", (route) => {
     const u = route.request().url();
+    if (THEME_CSS_RE.test(u)) return serveThemeSnapshot(route);
     if (!u.startsWith(BASE)) return route.abort();
     if (u.includes("steps-lazy.html") && aborted < 1) { aborted++; return route.abort(); }
     return route.continue();
@@ -335,6 +360,54 @@ async function runLazyRecovery(browser, devices, lp) {
     pass(`${lp} 遅延ステップ取得失敗から復旧`, "遅延ステップ無し（対象外）");
   } else {
     fail(`${lp} 遅延ステップ取得失敗から復旧`, `止まった: ${step}`);
+  }
+  await ctx.close();
+}
+
+/**
+ * 9) アプリ内ブラウザ（LINE/Instagram）の上部バーにSTEP表示が潜らないか
+ *
+ * オーナーから最も多く報告されている症状。実機の完全な代わりにはならない
+ * （バーの実装はアプリ側で、CSSからは見えない）が、
+ *   ・UAで html.dk-inapp が付くか
+ *   ・入力ステップで padding-top:96px が効き、STEP表示がバー高さより下に来るか
+ * という「こちら側の配線」は自動で踏める。ここが落ちたら実機を見るまでもなく壊れている。
+ * バー高さはLINE実測~83ptを採用（CLAUDE.md）。
+ */
+const INAPP_BAR = 83;
+
+async function runInAppBar(browser, devices, lp) {
+  const ctx = await browser.newContext({
+    ...devices["iPhone 13"],
+    locale: "ja-JP",
+    // LINEアプリ内ブラウザのUA（app.js / app-v2.js / dk_lp main.js が /Line\// で検知する）
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Line/14.2.0"
+  });
+  const page = await ctx.newPage();
+  await blockExternal(page);
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+
+  const flagged = await page.evaluate(() => document.documentElement.classList.contains("dk-inapp"));
+  flagged ? pass(`${lp} アプリ内ブラウザを検知(html.dk-inapp)`) : fail(`${lp} アプリ内ブラウザを検知(html.dk-inapp)`, "UA検知が効いていない");
+
+  // 入力ステップ(step04-06)まで進めて、STEP表示がバーの下に来ているかを見る
+  let worst = null;
+  for (let i = 0; i < 22; i++) {
+    const { acted, after } = await advanceOnce(page);
+    if (acted === "stuck" || acted === "no-step") break;
+    const isInput = ["step04", "step05", "step06"].includes(after.step);
+    if (isInput && after.headTop !== null && (worst === null || after.headTop < worst.top)) {
+      worst = { step: after.step, top: after.headTop };
+    }
+    if (after.step === "step06") break;
+  }
+  if (!worst) {
+    fail(`${lp} 入力ステップの上部がバーに潜らない`, "入力ステップまで到達できなかった");
+  } else if (worst.top >= INAPP_BAR) {
+    pass(`${lp} 入力ステップの上部がバーに潜らない`, `最小 headTop=${worst.top}px (${worst.step}) ≧ バー${INAPP_BAR}px`);
+  } else {
+    fail(`${lp} 入力ステップの上部がバーに潜らない`, `${worst.step} で headTop=${worst.top}px < バー${INAPP_BAR}px`);
   }
   await ctx.close();
 }
@@ -359,6 +432,7 @@ async function runEarlyClick(browser, devices, lp) {
       await new Promise((r) => setTimeout(r, 4000));
       return u.startsWith(BASE) ? route.continue().catch(() => {}) : route.abort().catch(() => {});
     }
+    if (THEME_CSS_RE.test(u)) return serveThemeSnapshot(route);
     if (!u.startsWith(BASE)) return route.abort().catch(() => {});
     return route.continue();
   });
@@ -410,6 +484,7 @@ async function main() {
     await runSelfHeal(browser, devices, lps[0]);
     await runLazyRecovery(browser, devices, lps[0]);
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
+    for (const lp of lps) await runInAppBar(browser, devices, lp);
   } finally {
     await browser.close();
     server.close();

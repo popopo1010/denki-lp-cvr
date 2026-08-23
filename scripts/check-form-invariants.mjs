@@ -245,6 +245,17 @@ for (const [canonical, mirrors] of MIRRORS) {
   check(`全フォームLPがステップの初期非表示を自前のcritical CSSで持っている`,
     noHide.length === 0, noHide.slice(0, 5).join(", "));
 
+  // GTMは全フォームLPで遅延読み込み（同期スニペットはFVをブロックする）。
+  // 主要LPだけ遅延・ミラーやMeta LPは同期、という取り残されが実際に28本あった（2026-08-23）。
+  const syncGtm = [];
+  for (const p of walk(ROOT)) {
+    const html = readFileSync(p, "utf8");
+    if (!html.includes('name="your-tel"')) continue;
+    if (!/GTM-[A-Z0-9]+/.test(html)) continue;
+    if (!/requestIdleCallback\(loadGTM/.test(html)) syncGtm.push(p.slice(ROOT.length));
+  }
+  check(`全フォームLPがGTMを遅延読み込みしている`, syncGtm.length === 0, syncGtm.slice(0, 5).join(", "));
+
   // HTML側（クマのタップ等）にも block:"center" を残さない。中央寄せは上部を押し出す。
   for (const p of htmlFiles) {
     if (/scrollIntoView\(\{[^}]*block:\s*['"]center['"]/.test(readFileSync(p, "utf8"))) {
