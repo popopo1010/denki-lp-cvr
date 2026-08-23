@@ -8,6 +8,26 @@
   </FilesMatch>
 </IfModule>
 
+# JS/CSS は ?v= で版管理しているので長期キャッシュしてよい（2026-08-23）
+# 背景: これまでアセットのキャッシュ指定が一切無く、ブラウザのヒューリスティック
+# キャッシュ任せだった。「?v= を上げたのに効かない」事故が起きる一方で再訪時の高速化は
+# 得られない、という一番損な状態。HTMLは上の no-cache で必ず再検証されるので、
+# 新しい ?v= は即座に行き渡る。
+#
+# 前提（崩すと古いJS/CSSが1年配られ続ける）:
+#   ・HTMLから参照されるローカルJS/CSSは必ず ?v= を持つ
+#   ・中身を変えたら ?v= を上げる
+# この2点は scripts/check-asset-versions.mjs が CI で機械的に止める。
+#
+# 画像とJSONは対象外。画像はデプロイ時に optimize-images.mjs が再圧縮して
+# バイト列が変わり、booking-slots.json は定期同期で中身が変わるため
+# （どちらも ?v= を持たないので immutable にすると凍る）。
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
 # テキスト系の圧縮配信（2026-08-19 軽量化）
 # HTML/CSS/JS/JSON/SVG を gzip（対応していれば brotli）で転送し、転送量を50〜70%削減する。
 # 画像（webp/jpg/png）は圧縮済みフォーマットのため対象外。IfModuleガード付きで未対応環境でも無害。

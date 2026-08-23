@@ -417,25 +417,21 @@ async function runEarlyClick(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
   const page = await ctx.newPage();
   // 「DOMContentLoaded 済み・load 未了」の窓を確実に作る。
-  // 外部リソース(WPテーマCSS/画像)の中断をわざと遅らせると、その間 window load は来ない。
-  // goto の waitUntil だけに頼るとローカル配信が速すぎて load 後にクリックしてしまい、
-  // 判定が「デッドクリック」と「検証できていない」の間で揺れる（2026-08-23 に実測）。
-  // 画像の応答を4秒遅らせて window load を保留させる。画像はパースもスクリプト実行も
-  // 止めないので「DOMは出来ている・loadはまだ」という窓を作れる。
-  // 当初は外部リクエストの中断を遅らせていたが、主力LP(denkikouji/sekoukanri)は
-  // theme-snapshot.css を使う自己完結型で外部リクエストが無く、効かなかった
-  // （2026-08-23: 本番コードでの検証中に「load後で検証できていない」として顕在化）。
-  await page.route("**/*", async (route) => {
-    const req = route.request();
-    const u = req.url();
-    if (req.resourceType() === "image") {
-      await new Promise((r) => setTimeout(r, 4000));
-      return u.startsWith(BASE) ? route.continue().catch(() => {}) : route.abort().catch(() => {});
-    }
-    if (THEME_CSS_RE.test(u)) return serveThemeSnapshot(route);
-    if (!u.startsWith(BASE)) return route.abort().catch(() => {});
-    return route.continue();
-  });
+  // ページの資源に頼る方法（外部リクエストや画像の遅延）は、LPによって
+  // 外部参照が無かったりFV画像が遅延読み込みだったりで空振りした（2026-08-23 に実測）。
+  // DOM構築が終わった時点で「絶対に応答しない画像」を自分で挿し込む。
+  // ドキュメント内の画像は load を待たせるので、確実に window load を保留できる。
+  const HOLD = "/__e2e_hold__.png";
+  await page.route(`**${HOLD}*`, () => { /* 応答も中断もしない＝ぶら下げたまま */ });
+  await page.addInitScript((hold) => {
+    document.addEventListener("DOMContentLoaded", () => {
+      const img = document.createElement("img");
+      img.src = hold;
+      img.alt = "";
+      img.style.cssText = "position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none";
+      document.body.appendChild(img);
+    });
+  }, HOLD);
   await page.goto(BASE + lp, { waitUntil: "domcontentloaded" }).catch(() => {});
   await page.waitForFunction(() => document.readyState !== "loading", null, { timeout: 15000 }).catch(() => {});
   await page.waitForSelector("#step-first .js-radio-button, #step-first .p-firstButton, #step-first .meta-fv__cta", { timeout: 10000 }).catch(() => {});
