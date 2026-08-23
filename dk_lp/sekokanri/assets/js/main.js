@@ -70,7 +70,7 @@
     }
     if (document.querySelector("script[data-dk-booking-bootstrap]")) return;
     const s = document.createElement("script");
-    s.src = CVR_ASSETS_BASE + "/js/thanks-booking-bootstrap.js?v=11";
+    s.src = CVR_ASSETS_BASE + "/js/thanks-booking-bootstrap.js?v=12";
     s.async = true;
     s.setAttribute("data-dk-booking-bootstrap", "1");
     s.onload = function () {
