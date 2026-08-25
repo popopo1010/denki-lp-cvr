@@ -194,6 +194,20 @@ jobs:
           find thanks-v2/p WPLP/thanks-v2/p 自前LP/thanks-v2/p -name index.html 2>/dev/null | while read -r f; do
             minify_html "$f"
           done
+          # 広告着地ファミリー（meta-lp / nenshu-shindan / WPLP・自前LP の非v2 / v3〜v6）。
+          # 2026-08-25 まで minify 対象から漏れて生HTMLのまま配信されていた。
+          for f in \
+            denkikouji-v3/index.html denkikouji-v4/index.html \
+            denkikouji-v5/index.html denkikouji-v6/index.html \
+            WPLP/denkikouji/index.html WPLP/sekoukanri/index.html \
+            WPLP/sekoukanri-kentiku/index.html WPLP/sekoukanri-doboku/index.html WPLP/sekoukanri-denkisekou/index.html \
+            自前LP/denkikouji/index.html 自前LP/sekoukanri/index.html \
+            自前LP/sekoukanri-kentiku/index.html 自前LP/sekoukanri-doboku/index.html 自前LP/sekoukanri-denkisekou/index.html; do
+            minify_html "$f"
+          done
+          find meta-lp meta-lp-v2 nenshu-shindan nenshu-shindan-v2 -name index.html -not -path 'nenshu-shindan/thanks/*' 2>/dev/null | while read -r f; do
+            minify_html "$f"
+          done
           echo "--- minified sizes ---"
           ls -lh assets/js/app-v2.js assets/js/thanks-booking-bootstrap.js assets/css/thanks-page.css thanks-v2/index.html 2>/dev/null || true
 
