@@ -116,8 +116,6 @@ jobs:
             dk_lp/assets/js/app.js \
             dk_lp/denkikouji/assets/js/main.js \
             dk_lp/denkikouji/assets/js/cvr-boost.js \
-            dk_lp/sekokanri/assets/js/main.js \
-            dk_lp/sekokanri/assets/js/cvr-boost.js \
             assets/js/cvr-boost.js \
             WPLP/assets/js/cvr-boost.js \
             自前LP/assets/js/cvr-boost.js \
@@ -145,7 +143,6 @@ jobs:
             dk_lp/assets/css/cvr-boost-denkikouji.css \
             dk_lp/assets/css/cvr-boost-sekoukanri.css \
             dk_lp/denkikouji/assets/css/cvr-boost.css \
-            dk_lp/sekokanri/assets/css/cvr-boost.css \
             assets/css/meta-short-lp.css \
             nenshu-shindan/nenshu-shindan.css \
             nenshu-shindan-v2/nenshu-shindan.css \

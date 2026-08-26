@@ -61,7 +61,8 @@ const dkNeedles = [
   "prewarmThanksBookingSlots"
 ];
 mustInclude("dk_lp/denkikouji/assets/js/main.js", dkNeedles, "dk_lp denkikouji main.js");
-mustInclude("dk_lp/sekokanri/assets/js/main.js", dkNeedles, "dk_lp sekokanri main.js");
+// dk_lp/sekokanri/assets/js/main.js は未使用のため 2026-08-23 に削除
+// （同ディレクトリのHTMLは共有の assets/js/app.js を読む＝上の app.js のチェックが効く）
 
 for (const mirror of ["WPLP/assets/js/app-v2.js", "自前LP/assets/js/app-v2.js"]) {
   const a = read("assets/js/app-v2.js");
