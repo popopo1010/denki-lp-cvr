@@ -12,28 +12,66 @@
   // アプリ内ブラウザ: ユーザーが入力欄をタップしてキーボードが開くと、ブラウザが入力欄を
   // 可視ビューポート最上部へスクロールし、STEP表示・タイトルが上部バーの裏に隠れる
   // （2026-07-08 再々発。autofocus廃止では「ユーザー自身のタップ」は防げない）。
-  // フォーカス確定後、入力欄がキーボード上に見えることを保証できる場合のみ、
-  // ステップ上部が見える位置までスクロールを戻す。CSS側のscroll-margin-topとセット。
+  // 【2026-08-23 オーナー実機報告で再々々発】300ms後に1回だけ戻す実装だったが、
+  // iOSはキーボードのアニメーション完了時（〜1秒）に入力欄を最上部へ**もう一度**
+  // スクロールし直すため、一発の補正では負ける（キーボード高ビューポートで再現済み）。
+  // 対策: フォーカス保持中に限り 300/700/1200ms の3回再補正し、さらに
+  // visualViewport の縮み（キーボード確定）でも補正する。補正は毎回
+  // 「ステップ上部が隠れている」かつ「戻しても入力欄がキーボード上に残る」場合のみ
+  // 動く冪等な処理なので、既に見えていれば何もしない。CSS側のscroll-margin-topとセット。
   (function () {
     var BAR = 96; // アプリ内上部バー相当（LINE実測~83pt+余裕。2026-07-08）
+    function restoreHead(t) {
+      var group = t.closest(".js-form-group");
+      if (!group) return;
+      // **表示中の**見出しを選ぶ。`.c-step` を display:none にしてタイトルだけ出す構成
+      // （nenshu-shindan系など）で querySelector をそのまま使うと、隠れた要素の矩形 0 を
+      // 「上端が0px＝隠れている」と誤読し、delta=-BAR で**逆向きに**スクロールして
+      // かえって上部を沈めていた（2026-08-23 E2Eレース再現で発覚）。
+      var head = null, cands = group.querySelectorAll(".c-step, .c-title01");
+      for (var i = 0; i < cands.length; i++) {
+        if (cands[i].offsetParent !== null) { head = cands[i]; break; }
+      }
+      if (!head) head = group;
+      var hr = head.getBoundingClientRect();
+      if (hr.top >= BAR) return; // 隠れていない
+      var delta = hr.top - BAR; // 負値: この分だけ戻す
+      var vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight * 0.55;
+      var ir = t.getBoundingClientRect();
+      // 「入力欄がキーボード上に見える範囲で」戻す（CLAUDE.md の仕様どおり部分復元）。
+      // 全量戻す/戻さないの二択にすると、.c-step→入力欄の距離が長いレイアウト
+      // （v2系・dk_lp系のstep04）では常に「戻さない」を選んでしまい、
+      // ナッジが実質無効だった（2026-08-23 E2Eレース再現で発覚）。
+      var d = Math.max(delta, ir.bottom - (vvh - 8));
+      if (d < 0) {
+        window.scrollBy({ top: d, left: 0, behavior: "auto" });
+      }
+    }
+    function isNudgeTarget(el) {
+      return el && el.matches && el.matches('input[type="tel"], input[type="text"]');
+    }
     document.addEventListener("focusin", function (e) {
       if (!document.documentElement.classList.contains("dk-inapp")) return;
       var t = e.target;
-      if (!t || !t.matches || !t.matches('input[type="tel"], input[type="text"]')) return;
-      var group = t.closest(".js-form-group");
-      if (!group) return;
-      setTimeout(function () {
-        var head = group.querySelector(".c-step, .c-title01") || group;
-        var hr = head.getBoundingClientRect();
-        if (hr.top >= BAR) return; // 隠れていない
-        var delta = hr.top - BAR; // 負値: この分だけ戻す
-        var vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight * 0.55;
-        var ir = t.getBoundingClientRect();
-        if (ir.bottom - delta < vvh - 8) {
-          window.scrollBy({ top: delta, left: 0, behavior: "auto" });
-        }
-      }, 300);
+      if (!isNudgeTarget(t)) return;
+      [300, 700, 1200].forEach(function (ms) {
+        setTimeout(function () {
+          if (document.activeElement === t) restoreHead(t);
+        }, ms);
+      });
     }, true);
+    if (window.visualViewport) {
+      var vvTimer = null;
+      window.visualViewport.addEventListener("resize", function () {
+        if (!document.documentElement.classList.contains("dk-inapp")) return;
+        var ae = document.activeElement;
+        if (!isNudgeTarget(ae)) return;
+        clearTimeout(vvTimer);
+        vvTimer = setTimeout(function () {
+          if (document.activeElement === ae) restoreHead(ae);
+        }, 250);
+      });
+    }
   })();
 
 
