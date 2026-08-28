@@ -117,9 +117,12 @@ jobs:
             node scripts/e2e-lp-flow-local.mjs --lp \
               /denkikouji/ /sekoukanri/ /denkikouji-v2/ /sekoukanri-v2/ /sekoukanri-kentiku-v2/
           else
-            # PRではフォームを持つLPを全部通す
-            LPS=$(grep -rl 'name="your-tel"' --include=index.html . \
-                  | sed 's|^\./||; s|/index.html$||; s|^|/|; s|$|/|' | sort)
+            # PRではフォームを持つLPを全部通す。
+            # 入力欄が steps-lazy.html 側にあるLP（denkikouji / sekoukanri など主力を含む10本）は
+            # index.html に your-tel が無いため、この列挙から漏れていた（2026-08-23 発覚）。
+            # index.html と隣の steps-lazy.html の**どちらか**に your-tel があれば対象にする。
+            LPS=$(grep -rl 'name="your-tel"' --include=index.html --include=steps-lazy.html . \
+                  | sed 's|^\./||; s|/[^/]*\.html$||; s|^|/|; s|$|/|' | sort -u)
             echo "$LPS" | tr '\n' ' '
             node scripts/e2e-lp-flow-local.mjs --lp $LPS
           fi

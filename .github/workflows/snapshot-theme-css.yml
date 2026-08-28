@@ -3,7 +3,9 @@ name: Snapshot WP theme CSS
 # WPテーマ style.css はリポジトリ外にあり、ローカル/CI から取得できない（WAFが非ブラウザIPを403）。
 # 一方 GitHub Actions ランナーからは取得できる（deploy.yml の Verify deployment で実証済み）ため、
 # 本番の style.css を assets/css/theme-snapshot.css としてスナップショットし、差分があればPRを作る。
-# 目的: テーマCSSをリポジトリ管理下に置き、ローカル/Playwrightテストを本番と同じCSSで走らせる
+# 目的: テーマCSSをリポジトリ管理下に置き、ローカル/Playwrightテストを本番と同じCSSで走らせる。
+# 2026-08-23 以降、**全LPがこのスナップショットを読む**（本番URL直参照は廃止）。
+# つまりこのPRのマージが、テーマ変更をLPへ反映する唯一の経路であり、同時に見た目が変わる瞬間。
 # （2026-07-08 FV非表示インシデントの再発防止。経緯: docs/release-incidents.md）。
 
 on:
@@ -66,5 +68,5 @@ jobs:
           git push -f origin "$BR"
           gh pr create --base main --head "$BR" \
             --title "WPテーマCSSスナップショット更新" \
-            --body "本番の style.css との差分を検知しました。差分を確認してからマージしてください（マージ＝本番デプロイ起動。theme-snapshot.css の追加/更新のみならLP表示への影響はありません＝LPはまだ本番WPのstyle.cssを直接参照しています）。" \
+            --body "本番の style.css との差分を検知しました。**このPRのマージ＝全LPの見た目が変わる**ので、差分を必ず確認してください。2026-08-23 に全LPが本番URL直参照から theme-snapshot.css に切り替わったため、テーマ変更はこのPRを通してのみLPへ反映されます（以前の『LP表示への影響はありません』は無効）。マージ＝本番デプロイ起動。表示に関わるので STG実機確認を挟んでください。" \\
             || echo "PR already exists (updated by force-push)"

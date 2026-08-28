@@ -30,8 +30,9 @@ function check(name, ok, detail) {
 const IMPLS = [
   "assets/js/app.js",
   "assets/js/app-v2.js",
-  "dk_lp/denkikouji/assets/js/main.js",
-  "dk_lp/sekokanri/assets/js/main.js"
+  "dk_lp/denkikouji/assets/js/main.js"
+  // dk_lp/sekokanri/assets/js/main.js はどのHTMLからも読まれておらず 2026-08-23 に削除した
+  // （同ディレクトリのHTMLは共有の assets/js/app.js を読む）。
 ].filter((p) => existsSync(join(ROOT, p)));
 
 /** ミラーは正本とバイト一致していること（片方だけ直す事故の検出） */
@@ -43,7 +44,7 @@ const MIRRORS = [
   // dk_lp/assets/js/cvr-boost.js を注入する。ここが取り残されると、
   // 本番の dk_lp/sekokanri だけ古い cvr-boost.js が配られる（2026-08-23 に実際に発生）。
   ["assets/js/cvr-boost.js", ["WPLP/assets/js/cvr-boost.js", "自前LP/assets/js/cvr-boost.js",
-                              "dk_lp/assets/js/cvr-boost.js", "dk_lp/sekokanri/assets/js/cvr-boost.js"]]
+                              "dk_lp/assets/js/cvr-boost.js"]]
 ];
 
 // ───────────────────────────────────────────────────────────
@@ -238,6 +239,20 @@ for (const [canonical, mirrors] of MIRRORS) {
     }
     return out;
   };
+
+  /**
+   * そのページがフォームLPか。
+   * 入力欄は index.html に直接ある場合と、隣の steps-lazy.html から遅延で入る場合がある。
+   * 以前は index.html の your-tel だけで判定しており、**入力欄を遅延側に置いている
+   * denkikouji / sekoukanri（主力2本）を含む10本が、全数チェックからも全数E2Eからも
+   * 外れていた**（2026-08-23 発覚。幸いどれも条件は満たしていたが、見張られていなかった）。
+   * 「your-tel が index.html に無い＝フォームLPではない」は成り立たない。
+   */
+  const isFormLp = (indexPath) => {
+    if (readFileSync(indexPath, "utf8").includes('name="your-tel"')) return true;
+    const lazy = join(dirname(indexPath), "steps-lazy.html");
+    return existsSync(lazy) && readFileSync(lazy, "utf8").includes('name="your-tel"');
+  };
   const missing = [];
   const centerScrolls = [];
   let formPages = 0;
@@ -253,7 +268,7 @@ for (const [canonical, mirrors] of MIRRORS) {
   walkAll(ROOT);
   for (const p of walk(ROOT)) {
     const html = readFileSync(p, "utf8");
-    if (!html.includes('name="your-tel"')) continue;
+    if (!isFormLp(p)) continue;
     formPages++;
     if (!/html\.dk-inapp body\.lp-input-step \.js-page-body\{padding-top:96px!important\}/.test(html)) {
       missing.push(p.slice(ROOT.length));
@@ -281,9 +296,8 @@ for (const [canonical, mirrors] of MIRRORS) {
   };
   const noFormPad = [];
   for (const p of walk(ROOT)) {
-    if (!p.endsWith("index.html")) continue; // steps-lazy.html は断片（自分でCSSを読まない）
     const html = readFileSync(p, "utf8");
-    if (!html.includes('name="your-tel"')) continue;
+    if (!isFormLp(p)) continue;
     if (!cssHas(p, html, "lp-form-step .js-page-body")) noFormPad.push(p.slice(ROOT.length));
   }
   check("全フォームLPが選択ステップ(lp-form-step)の上部余白を持つ",
@@ -293,7 +307,7 @@ for (const [canonical, mirrors] of MIRRORS) {
   const noHide = [];
   for (const p of walk(ROOT)) {
     const html = readFileSync(p, "utf8");
-    if (!html.includes('name="your-tel"')) continue;
+    if (!isFormLp(p)) continue;
     if (!/js-form-group(:not\(#step-first\))?\{display:none\}|js-page-body\{display:none\}/.test(html)) {
       noHide.push(p.slice(ROOT.length));
     }
@@ -306,11 +320,33 @@ for (const [canonical, mirrors] of MIRRORS) {
   const syncGtm = [];
   for (const p of walk(ROOT)) {
     const html = readFileSync(p, "utf8");
-    if (!html.includes('name="your-tel"')) continue;
+    if (!isFormLp(p)) continue;
     if (!/GTM-[A-Z0-9]+/.test(html)) continue;
-    if (!/requestIdleCallback\(loadGTM/.test(html)) syncGtm.push(p.slice(ROOT.length));
+    // 関数名(loadGTM)で判定しない。**リポジトリ内で既にminifyされているLPがあり**
+    // （sekoukanri など5本）、`loadGTM` が `e` に潰れて「同期読み込み」と誤検知していた。
+    // 見るのは挙動: ①gtm.js を <script src> で直に読む同期タグが無いこと
+    //             ②アイドル時ロード（requestIdleCallback）の配線があること
+    const syncTag = /<script[^>]+src="https:\/\/www\.googletagmanager\.com\/gtm\.js/.test(html);
+    const idle = /requestIdleCallback/.test(html);
+    if (syncTag || !idle) syncGtm.push(p.slice(ROOT.length));
   }
   check(`全フォームLPがGTMを遅延読み込みしている`, syncGtm.length === 0, syncGtm.slice(0, 5).join(", "));
+
+  // WPテーマCSSは本番URLを直接読まず、リポジトリ管理下のスナップショットを読む（2026-08-23 統一）。
+  // 本番URLを直接読むと ①テーマ変更が無審査で全LPに即反映される（週次スナップショットPRが
+  // 唯一の警告で、最大7日遅れる） ②クロスオリジンのレンダーブロックCSSになる
+  // ③ローカル/CIからは WAF 403 で取得できずE2Eが本番と別のCSSで走る。
+  // 切替時点で snapshot は本番と**バイト同一**であることをランナー側で確認済み
+  // （Snapshot WP theme CSS run#9「No changes in theme CSS」）。
+  // theme-snapshot.css は url() を1つも持たないので、置き場所が変わっても解決先は変わらない。
+  const liveTheme = [];
+  for (const p of htmlFiles) {
+    if (/themes\/original-thema\/assets\/css\/style\.css/.test(readFileSync(p, "utf8"))) {
+      liveTheme.push(p.slice(ROOT.length));
+    }
+  }
+  check("本番WPテーマCSSを直接読むHTMLが無い（theme-snapshot.css に統一）",
+    liveTheme.length === 0, liveTheme.slice(0, 5).join(", "));
 
   // HTML側（クマのタップ等）にも block:"center" を残さない。中央寄せは上部を押し出す。
   for (const p of htmlFiles) {
