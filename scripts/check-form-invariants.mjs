@@ -83,6 +83,14 @@ for (const p of IMPLS) {
   // ⑤(c) focusin ナッジ（キーボードで押し上げられた上部を戻す）
   check(`${p}: focusin ナッジがある`, /addEventListener\(\s*["']focusin["']/.test(src));
 
+  // ⑤(c)' ナッジは1回きりでは駄目（2026-08-23 オーナー実機で再々々発）。
+  // iOSはキーボード確定時（〜1秒）に入力欄を最上部へもう一度スクロールし直すため、
+  // 300ms後1回の補正は必ず負ける。300/700/1200msの多段再補正と
+  // visualViewport resize での補正の両方が要る。ここが1回に戻されたらCIで止める。
+  check(`${p}: ナッジが多段補正(300/700/1200ms)である`, /\[300,\s*700,\s*1200\]/.test(src));
+  check(`${p}: visualViewport resize でも補正する`,
+    /visualViewport\.addEventListener\(\s*["']resize["']/.test(src));
+
   // in-app 判定（UA）自体
   check(`${p}: アプリ内ブラウザ検知(UA)がある`, /Instagram|FBAN|Line\\?\//.test(src));
 
