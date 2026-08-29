@@ -24,9 +24,22 @@
 
   var loaded = false;
 
-  function hide() {
+  // 出せないときはセクションごと消す（空カードを広告の着地に出さないため）。
+  // ただし黙って消すと本番で起きても誰も気づけないので、理由を dataLayer に残す。
+  // app.js の lp_error と同じ流儀で、GTM/GA4 から発生を監視できる。
+  function hide(reason) {
     root.hidden = true;
     root.style.minHeight = "0";
+    root.setAttribute("data-state", "error");
+    root.setAttribute("data-error", reason || "unknown");
+    try {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "lp_error",
+        lp_error: "job_cards_unavailable",
+        lp_error_detail: String(reason || "unknown"),
+      });
+    } catch (e) {}
   }
 
   function esc(s) {
@@ -63,7 +76,7 @@
     var jobs = (data && data.jobs ? data.jobs : []).filter(function (j) {
       return j && j.is_public !== false && j.title;
     });
-    if (!jobs.length) return hide();
+    if (!jobs.length) return hide("empty");
 
     var shown = jobs.slice(0, limit);
     var note = data.is_sample
@@ -82,9 +95,12 @@
     if (loaded) return;
     loaded = true;
     fetch(src, { credentials: "omit" })
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
+      .then(function (r) {
+        if (!r.ok) throw new Error("http_" + r.status);
+        return r.json();
+      })
       .then(render)
-      .catch(hide);
+      .catch(function (e) { hide(e && e.message ? e.message : "fetch_failed"); });
   }
 
   // ビューポートに近づいてから取りに行く。IOが無い環境では load 後に取る。

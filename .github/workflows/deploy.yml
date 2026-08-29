@@ -348,6 +348,17 @@ jobs:
             code=$(curl -sL -o /dev/null -w '%{http_code}' "${DEPLOY_URL_BASE}/${dir}/")
             [ "$code" = "200" ] || { echo "  ${code}  ${dir}/"; bad="${bad} ${dir}"; }
           done < /tmp/lpdirs.txt
+          # HTMLから読む資産（JS/JSON）が取れないと、ページは出るのに中身だけ
+          # 消える。求人カードがまさにこれ（取得失敗時はセクションごと隠す設計）。
+          echo "--- 求人カードの資産 ---"
+          for a in assets/js/lp-job-cards.js assets/data/lp-job-cards-denki.json; do
+            printf '  %s  %s\n' \
+              "$(curl -sL -o /dev/null -w '%{http_code} %{content_type}' "${DEPLOY_URL_BASE}/${a}")" "$a"
+          done
+          echo "--- 配信中HTMLに求人カードの記述があるか ---"
+          curl -sL "${DEPLOY_URL_BASE}/denkikouji-trust/" \
+            | grep -o 'data-lp-job-cards\|lp-job-cards\.js' | sort | uniq -c | sed 's/^/  /' || echo "  見つからない"
+
           if [ -n "$bad" ]; then
             echo "::warning::200で返らないLPがある:${bad}"
             echo "--- サーバ側の実体（先頭60件） ---"
