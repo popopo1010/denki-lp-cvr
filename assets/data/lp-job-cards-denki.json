@@ -1,0 +1,87 @@
+{
+  "_note": "本番の求人フィードに差し替えるまでの仮データ。thanks-v2 の求人プレビュー（手書きサンプル）が出典で、実在の求人ではない。差し替え時は is_sample を false にし、source を実際の出所にする。",
+  "generated_at": "2026-08-29",
+  "source": "thanks-v2 の求人プレビュー",
+  "is_sample": true,
+  "job_family": "denki",
+  "jobs": [
+    {
+      "id": "sample-001",
+      "title": "関東エリア 高待遇・電気工事",
+      "pref": "東京都",
+      "region": "関東",
+      "salary_min": 480,
+      "salary_max": 650,
+      "tags": [
+        "非公開",
+        "賞与2回"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sample-002",
+      "title": "商業施設 設備保守スタッフ",
+      "pref": "神奈川県",
+      "region": "関東",
+      "salary_min": 460,
+      "salary_max": 600,
+      "tags": [
+        "週休2日",
+        "残業少なめ"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sample-003",
+      "title": "再エネ現場 電気工事",
+      "pref": "大阪府",
+      "region": "近畿",
+      "salary_min": 500,
+      "salary_max": 680,
+      "tags": [
+        "非公開",
+        "現場手当"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sample-004",
+      "title": "プラント メンテナンス",
+      "pref": "愛知県",
+      "region": "中部",
+      "salary_min": 490,
+      "salary_max": 640,
+      "tags": [
+        "高単価",
+        "資格手当"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sample-005",
+      "title": "病院設備 電気工事",
+      "pref": "埼玉県",
+      "region": "関東",
+      "salary_min": 470,
+      "salary_max": 610,
+      "tags": [
+        "長期安定",
+        "土日休み"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sample-006",
+      "title": "データセンター協力 電気工事",
+      "pref": "千葉県",
+      "region": "関東",
+      "salary_min": 510,
+      "salary_max": 700,
+      "tags": [
+        "非公開",
+        "直行直帰"
+      ],
+      "is_public": true
+    }
+  ]
+}

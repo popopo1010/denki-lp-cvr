@@ -60,6 +60,8 @@ jobs:
 
       - name: Check input attrs (数字キーボード・自動入力の取りこぼし防止)
         run: node scripts/check-input-attrs.mjs
+      - name: FAQと構造化データの一致
+        run: node scripts/check-faq-schema.mjs
 
       - name: Check asset versions (?v= 上げ忘れ・不揃いの検出)
         run: node scripts/check-asset-versions.mjs
@@ -329,6 +331,45 @@ jobs:
             || { echo "::error::staging missing X-Robots-Tag noindex"; exit 1; }
           echo "staging OK: ${DEPLOY_URL_BASE}/denkikouji/ ほか"
 
+          # 固定2本だけを見ていると「新しく足したLPが配れていない」を見逃す。
+          # 2026-08-29: denkikouji-trust が実機で403だったのに、この検証は通っていた。
+          # 全LPの応答を一覧で出す。デプロイは止めない（配信されない想定の
+          # ディレクトリもあるため）が、非200が出たらサーバ側の実体を残す。
+          echo "--- 全LPのHTTP応答 ---"
+          bad=""
+          # core.quotePath=false を付けないと日本語ディレクトリ（自前LP）が
+          # \350\207\252... のエスケープ表記になり、URLとして成立せず全部404に見える。
+          git -c core.quotePath=false ls-files -- '*/index.html' \
+            | grep -vE '^(assets|docs|deploy|scripts|gas-recorder|v2-deploy)/' \
+            | grep -v 'thanks' \
+            | xargs -n1 dirname | sort -u > /tmp/lpdirs.txt
+          while IFS= read -r dir; do
+            # -L で301（末尾スラッシュ補正等）を追い、最終的な到達コードを見る
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "${DEPLOY_URL_BASE}/${dir}/")
+            [ "$code" = "200" ] || { echo "  ${code}  ${dir}/"; bad="${bad} ${dir}"; }
+          done < /tmp/lpdirs.txt
+          # HTMLから読む資産（JS/JSON）が取れないと、ページは出るのに中身だけ
+          # 消える。求人カードがまさにこれ（取得失敗時はセクションごと隠す設計）。
+          echo "--- 求人カードの資産 ---"
+          for a in assets/js/lp-job-cards.js assets/data/lp-job-cards-denki.json; do
+            printf '  %s  %s\n' \
+              "$(curl -sL -o /dev/null -w '%{http_code} %{content_type}' "${DEPLOY_URL_BASE}/${a}")" "$a"
+          done
+          echo "--- 配信中HTMLに求人カードの記述があるか ---"
+          curl -sL "${DEPLOY_URL_BASE}/denkikouji-trust/" \
+            | grep -o 'data-lp-job-cards\|lp-job-cards\.js' | sort | uniq -c | sed 's/^/  /' || echo "  見つからない"
+
+          if [ -n "$bad" ]; then
+            echo "::warning::200で返らないLPがある:${bad}"
+            echo "--- サーバ側の実体（先頭60件） ---"
+            ssh -p "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" \
+              -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60 \
+              "${XSERVER_USER}@${XSERVER_HOST}" \
+              "ls -la ${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}/ | head -60" || true
+          else
+            echo "  全LPが200"
+          fi
+
       - name: Verify deployment
         if: github.ref_name != 'staging'
         run: |
@@ -360,8 +401,8 @@ jobs:
           verify_denki_lp() {
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
-            echo "$denki_lp" | grep -q 'app.js?v20260829c' || return 1
-            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260829b' || return 1
+            echo "$denki_lp" | grep -q 'app.js?v20260829e' || return 1
+            echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260829d' || return 1
             echo "$denki_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
             app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
@@ -376,9 +417,9 @@ jobs:
             echo "$app_js" | grep -q 'is-step-active' || return 1
             css=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/cvr-boost-sekoukanri.css")
             echo "$css" | grep -q 'is-step-active' || return 1
-            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260829b' || return 1
+            echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260829d' || return 1
             echo "$sekou_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
-            echo "$sekou_lp" | grep -q 'app.js?v20260829c' || return 1
+            echo "$sekou_lp" | grep -q 'app.js?v20260829e' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
             echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260701c' || return 1
             echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1

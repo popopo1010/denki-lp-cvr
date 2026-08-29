@@ -182,7 +182,9 @@ const measure = () => {
     // step06 の同意文リンク（プライバシーポリシー・利用規約）だけは **意図的に 24px** で止める。
     // 送信CTAの真横にあるため、44pxまで広げると誤タップでLPから離脱する事故が増えCVRを下げる。
     // ここを 44px 基準のまま報告し続けると、直す気のない指摘が毎回並んで本物が埋もれる。
-    const consent = el.closest(".cvr-pp-text") !== null;
+    // 規約・ポリシー等の副次リンクは 24px で止める。送信CTAの近くで
+    // 44pxまで広げると誤タップ離脱が増えるため（cvr-about は運営者情報ブロック）。
+    const consent = el.closest(".cvr-pp-text, .cvr-about__links") !== null;
     const min = consent ? 24 : 44;
     if (tappable && (r.height < min || r.width < min)) {
       out.smallTap.push({ el: label(el), w: Math.round(r.width), h: Math.round(r.height), min });

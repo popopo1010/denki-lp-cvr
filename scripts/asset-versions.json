@@ -1,19 +1,19 @@
 {
   "WPLP/assets/css/cvr-boost-v2.css": {
-    "version": "20260829b",
-    "sha256": "182d329a3dcc1ec5"
+    "version": "20260829d",
+    "sha256": "bc6eb57a9bbfdd78"
   },
   "WPLP/assets/css/cvr-boost.css": {
-    "version": "20260829b",
-    "sha256": "8026e36c09caaef5"
+    "version": "20260829d",
+    "sha256": "8021ac37fb9d5be7"
   },
   "WPLP/assets/js/app-v2.js": {
-    "version": "20260829c",
-    "sha256": "4fc44831704e65d9"
+    "version": "20260829e",
+    "sha256": "8823d8bd58d18c07"
   },
   "WPLP/assets/js/app.js": {
-    "version": "20260829c",
-    "sha256": "1567208fc4c9ed55"
+    "version": "20260829e",
+    "sha256": "ac83e021213f9d5a"
   },
   "WPLP/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -32,20 +32,20 @@
     "sha256": "2dc6ac37b164abe1"
   },
   "assets/css/cvr-boost-denkikouji.css": {
-    "version": "20260829b",
-    "sha256": "d674b0780ed2446e"
+    "version": "20260829d",
+    "sha256": "a2a4044cab66c4fb"
   },
   "assets/css/cvr-boost-sekoukanri.css": {
-    "version": "20260829b",
-    "sha256": "f38fd03d6b17d05d"
+    "version": "20260829d",
+    "sha256": "155824efc30e9ff9"
   },
   "assets/css/cvr-boost-v2.css": {
-    "version": "20260829b",
-    "sha256": "4bd23d2448560a53"
+    "version": "20260829d",
+    "sha256": "bc6eb57a9bbfdd78"
   },
   "assets/css/cvr-boost.css": {
-    "version": "20260829b",
-    "sha256": "68fa7ca82c97b0d0"
+    "version": "20260829d",
+    "sha256": "8021ac37fb9d5be7"
   },
   "assets/css/denki-suite.css": {
     "version": "20260602",
@@ -68,12 +68,12 @@
     "sha256": "5e87015a08e9a2f7"
   },
   "assets/js/app-v2.js": {
-    "version": "20260829c",
-    "sha256": "4fc44831704e65d9"
+    "version": "20260829e",
+    "sha256": "8823d8bd58d18c07"
   },
   "assets/js/app.js": {
-    "version": "20260829c",
-    "sha256": "1567208fc4c9ed55"
+    "version": "20260829e",
+    "sha256": "ac83e021213f9d5a"
   },
   "assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -82,6 +82,10 @@
   "assets/js/denki-suite.js": {
     "version": "20260610",
     "sha256": "09382b74757ed963"
+  },
+  "assets/js/lp-job-cards.js": {
+    "version": "20260829b",
+    "sha256": "2218e3e21c69b336"
   },
   "assets/js/thanks-booking-bootstrap.js": {
     "version": "12",
@@ -111,6 +115,10 @@
     "version": "8",
     "sha256": "30e12c48bef9b34a"
   },
+  "denkikouji-trust/steps-lazy.html": {
+    "version": "20260712",
+    "sha256": "ba51970a23d862f5"
+  },
   "denkikouji-v3/steps-lazy.html": {
     "version": "20260701c",
     "sha256": "d588a42236c08163"
@@ -132,19 +140,19 @@
     "sha256": "ba51970a23d862f5"
   },
   "dk_lp/assets/css/cvr-boost-sekoukanri.css": {
-    "version": "20260829b",
+    "version": "20260829d",
     "sha256": "4637ef80cef09301"
   },
   "dk_lp/assets/js/app.js": {
-    "version": "20260829c",
-    "sha256": "1567208fc4c9ed55"
+    "version": "20260829e",
+    "sha256": "ac83e021213f9d5a"
   },
   "dk_lp/assets/js/cvr-boost.js": {
     "version": "20260823a",
     "sha256": "f97155b220e39781"
   },
   "dk_lp/denkikouji/assets/css/cvr-boost.css": {
-    "version": "20260829b",
+    "version": "20260829d",
     "sha256": "7ffe4400582cc032"
   },
   "dk_lp/denkikouji/assets/js/cvr-boost.js": {
@@ -152,8 +160,8 @@
     "sha256": "652c387eb157f624"
   },
   "dk_lp/denkikouji/assets/js/main.js": {
-    "version": "20260829c",
-    "sha256": "d0739228a52adba0"
+    "version": "20260829e",
+    "sha256": "ab211dc023b0ad0c"
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260701c",
@@ -196,20 +204,20 @@
     "sha256": "67985789f1cab262"
   },
   "自前LP/assets/css/style-v2.css": {
-    "version": "20260829b",
-    "sha256": "f27cad427997e2ff"
+    "version": "20260829d",
+    "sha256": "826fa95cfdfaa3e0"
   },
   "自前LP/assets/css/style.css": {
-    "version": "20260829b",
-    "sha256": "bc3238adb2562e5b"
+    "version": "20260829d",
+    "sha256": "04233f3ec2720dd1"
   },
   "自前LP/assets/js/app-v2.js": {
-    "version": "20260829c",
-    "sha256": "4fc44831704e65d9"
+    "version": "20260829e",
+    "sha256": "8823d8bd58d18c07"
   },
   "自前LP/assets/js/app.js": {
-    "version": "20260829c",
-    "sha256": "1567208fc4c9ed55"
+    "version": "20260829e",
+    "sha256": "ac83e021213f9d5a"
   },
   "自前LP/assets/js/cvr-boost.js": {
     "version": "20260823a",

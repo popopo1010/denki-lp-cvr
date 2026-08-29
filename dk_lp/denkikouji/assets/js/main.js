@@ -6,6 +6,11 @@
   try {
     if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|Messenger/i.test(navigator.userAgent)) {
       document.documentElement.classList.add("dk-inapp");
+      // 半透明バーをページに被せるのは iOS のアプリ内ブラウザだけ。Android の
+      // LINE等はバーが被らないので、余白を足すと純粋な無駄になる（2026-08-29 オーナー実機）。
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        document.documentElement.classList.add("dk-ios");
+      }
     }
   } catch (e) { /* no-op */ }
 
@@ -796,8 +801,10 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        // タイピング中(silent)はエラー表示を切り替えない。1文字ごとにエラーが出没すると
-        // レイアウトがジャンプし「入力がバグる」体感になる（2026-07-05 オーナー報告）
+        // この実装は未入力項目を全部列挙する方式で、touched（触れた項目）を持たない。
+        // 即時表示にすると1文字目から「姓・名・生まれ年」の赤帯が出続けるので、
+        // タイピング中は切り替えない（2026-08-29）。絶対配置でレイアウトは動かないため、
+        // 以前の「入力がバグる」体感は解消済み。
         if (errBox && !opts.silent) {
           errBox.style.display = "block";
           if (errText) {
