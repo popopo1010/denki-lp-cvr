@@ -819,7 +819,7 @@ body {
    ここは 24px 相当にとどめる。 */
 .footer-dark .div-block-96 { gap: 0 16px; }
 .footer-dark .link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
-.cvr-pp-text a { padding: 8px 2px; }
+.cvr-pp-text a { padding: 0 2px 14px; }
 
 /* 選択肢グリッドが画面幅を超えないようにする（2026-08-29）。
    grid の `1fr` は minmax(auto,1fr) で、auto の最小値はアイテムの min-content。

@@ -179,7 +179,7 @@ html{scroll-behavior:smooth}
 .cvr-tel-reassurance{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#777;line-height:1.4}
 .cvr-tel-reassurance svg{flex-shrink:0}
 .cvr-pp-text{text-align:center;font-size:11px;color:#767676;margin-top:6px;line-height:1.45}
-.cvr-pp-text a{color:#767676;text-decoration:underline;padding:8px 2px}
+.cvr-pp-text a{color:#767676;text-decoration:underline;padding:0 2px 14px}
 
 /* Kuma */
 .cvr-kuma-wrap{position:relative}
@@ -271,7 +271,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .cvr-tel-reassurance{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#777;line-height:1.4}
 .cvr-tel-reassurance svg{flex-shrink:0}
 .cvr-pp-text{text-align:center;font-size:11px;color:#767676;margin-top:6px;line-height:1.45}
-.cvr-pp-text a{color:#767676;text-decoration:underline;padding:8px 2px}
+.cvr-pp-text a{color:#767676;text-decoration:underline;padding:0 2px 14px}
 
 /* Kuma */
 .cvr-kuma{text-align:right;margin-top:-10px;margin-bottom:-10px;pointer-events:none}

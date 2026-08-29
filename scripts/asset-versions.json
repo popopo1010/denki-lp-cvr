@@ -1,11 +1,11 @@
 {
   "WPLP/assets/css/cvr-boost-v2.css": {
-    "version": "20260829a",
-    "sha256": "16e87dea8b6d3bdd"
+    "version": "20260829b",
+    "sha256": "182d329a3dcc1ec5"
   },
   "WPLP/assets/css/cvr-boost.css": {
-    "version": "20260829a",
-    "sha256": "e2eae15bf7752767"
+    "version": "20260829b",
+    "sha256": "8026e36c09caaef5"
   },
   "WPLP/assets/js/app-v2.js": {
     "version": "20260823i",
@@ -32,20 +32,20 @@
     "sha256": "2dc6ac37b164abe1"
   },
   "assets/css/cvr-boost-denkikouji.css": {
-    "version": "20260829a",
-    "sha256": "8839171e739cb5ea"
+    "version": "20260829b",
+    "sha256": "d674b0780ed2446e"
   },
   "assets/css/cvr-boost-sekoukanri.css": {
-    "version": "20260829a",
-    "sha256": "54f286bfe0abf69f"
+    "version": "20260829b",
+    "sha256": "f38fd03d6b17d05d"
   },
   "assets/css/cvr-boost-v2.css": {
-    "version": "20260829a",
-    "sha256": "5ad7d274d2b8c1ad"
+    "version": "20260829b",
+    "sha256": "4bd23d2448560a53"
   },
   "assets/css/cvr-boost.css": {
-    "version": "20260829a",
-    "sha256": "707e955187ec2c20"
+    "version": "20260829b",
+    "sha256": "68fa7ca82c97b0d0"
   },
   "assets/css/denki-suite.css": {
     "version": "20260602",
@@ -132,8 +132,8 @@
     "sha256": "ba51970a23d862f5"
   },
   "dk_lp/assets/css/cvr-boost-sekoukanri.css": {
-    "version": "20260829a",
-    "sha256": "994c57c01b510509"
+    "version": "20260829b",
+    "sha256": "4637ef80cef09301"
   },
   "dk_lp/assets/js/app.js": {
     "version": "20260823i",
@@ -144,8 +144,8 @@
     "sha256": "f97155b220e39781"
   },
   "dk_lp/denkikouji/assets/css/cvr-boost.css": {
-    "version": "20260829a",
-    "sha256": "e7d0e27810979a0d"
+    "version": "20260829b",
+    "sha256": "7ffe4400582cc032"
   },
   "dk_lp/denkikouji/assets/js/cvr-boost.js": {
     "version": "20260610b",
@@ -196,12 +196,12 @@
     "sha256": "67985789f1cab262"
   },
   "自前LP/assets/css/style-v2.css": {
-    "version": "20260829a",
-    "sha256": "5e83f62e18758bf6"
+    "version": "20260829b",
+    "sha256": "f27cad427997e2ff"
   },
   "自前LP/assets/css/style.css": {
-    "version": "20260829a",
-    "sha256": "33966aad5cca0a19"
+    "version": "20260829b",
+    "sha256": "bc3238adb2562e5b"
   },
   "自前LP/assets/js/app-v2.js": {
     "version": "20260823i",

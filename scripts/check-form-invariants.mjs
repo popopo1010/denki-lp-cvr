@@ -416,6 +416,13 @@ for (const [canonical, mirrors] of MIRRORS) {
   check(`フッターの規約リンクが44px（タップ領域）: ${LP_CSS.length}本`,
     noTap.length === 0, noTap.join(", "));
 
+  // 同意文リンクの当たり判定は**下方向にだけ**伸ばす。上下に伸ばすと、真上にある
+  // 送信CTAの下端を数px奪い、ボタンの端をタップした人がプライバシーポリシーへ飛ぶ
+  // （2026-08-29 実測: 自前LP系でCTA下端4pxがリンク側に取られていた）。
+  const noPp = cssMiss(/\.cvr-pp-text a\s*\{[^}]*padding:\s*0(px)? \d+px \d+px/);
+  check(`同意文リンクの当たり判定が下方向のみ（CTAを奪わない）: ${LP_CSS.length}本`,
+    noPp.length === 0, noPp.join(", "));
+
   // step06 の「戻る」は theme が height:48px を持つが、入力ステップ用の上書きが
   // height:auto + padding:8px にするため実測30pxまで縮む（2026-08-29 実測）。
   const noBack = cssMiss(/\.c-nextLinkButton\s*\{[^}]*(min-height:\s*44px|height:\s*48px)/);
