@@ -839,6 +839,10 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
+        // この実装は未入力項目を全部列挙する方式で、touched（触れた項目）を持たない。
+        // 即時表示にすると1文字目から「姓・名・生まれ年」の赤帯が出続けるので、
+        // タイピング中は切り替えない（2026-08-29）。絶対配置でレイアウトは動かないため、
+        // 以前の「入力がバグる」体感は解消済み。
         if (errBox && !opts.silent) {
           errBox.style.display = "block";
           if (errText) {

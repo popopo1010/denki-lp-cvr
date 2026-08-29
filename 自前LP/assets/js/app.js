@@ -898,7 +898,15 @@
     }
 
     function shouldShowErrors() {
-      return touched.size > 0;
+      if (touched.size === 0) return false;
+      // まだ触れていない項目のエラーは出さない。名前を打ち始めた瞬間に
+      // 「生まれ年を…」が出ると、入力が終わるまで赤帯が消えない体感になる
+      // （2026-08-29 オーナー実機動画）。触れた項目だけを案内する。
+      var namesFilled = Array.prototype.every.call(inputs, function (i) {
+        return !!(i.value || "").trim();
+      });
+      if (!namesFilled) return true;
+      return touched.has("bday-year");
     }
 
     function validate(opts) {
@@ -912,9 +920,13 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        // タイピング中(silent)はエラー表示を切り替えない。1文字ごとに
-        // エラーボックスが出没するとレイアウトが上下にジャンプし「入力がバグる」体感になる（2026-07-05 オーナー報告）
-        if (errBox && !opts.silent) {
+        // 2026-08-29: エラー欄を絶対配置にして占有高ゼロにしたので、出没しても
+        // レイアウトは1pxも動かない。よってタイピング中も即座に切り替えてよい
+        // （以前は通常フローにいて出るたび入力欄を+40px押し下げ、1文字ごとに
+        // 切り替えると「入力がバグる」体感になっていた。2026-07-05 オーナー報告）。
+        // 直った瞬間にエラーが消えるので、入力中ずっと赤帯が残る問題も解消する。
+        // スクロール抑制(moveIconById の !opts.silent)はそのまま残す。
+        if (errBox) {
           if (shouldShowErrors()) {
             errBox.style.display = "block";
             if (errText) {
