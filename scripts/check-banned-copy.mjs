@@ -24,10 +24,15 @@ const BANNED = [
   { pattern: /このあと：/, label: "返報文ラベル（このあと：）" },
   { pattern: /回答後：/, label: "返報文ラベル（回答後：）" },
   { pattern: /次の画面：/, label: "返報文ラベル（次の画面：）" },
+  // ラベル接頭辞は「この文言を消す」ではなく「マイクロコピーにラベルを付けない」がルール。
+  // 固定文言だけ並べていたので、新しく発明された「この回答で：」「次に届く求人：」
+  // 「診断結果：」「送信後：」が31〜48本のLPで生き残っていた（2026-08-29 発覚）。
+  // 以後は**構造で**止める: cvr-step-reward の本文が短いラベル＋「：」で始まっていたら不可。
+  { pattern: /class="cvr-step-reward"[^>]*>\s*[^<：\n]{1,14}：/, label: "返報文ラベル（cvr-step-reward が「◯◯：」で始まっている）" },
 ];
 
 // docs/ は事例記録のため対象外。HTML と 配信JS を対象にする。
-const files = execSync('git -c core.quotePath=false ls-files -z "*.html" "assets/js/*.js" "WPLP/assets/js/*.js" "自前LP/assets/js/*.js"', {
+const files = execSync('git -c core.quotePath=false ls-files -z "*.html" "assets/js/*.js" "WPLP/assets/js/*.js" "自前LP/assets/js/*.js" "dk_lp/**/*.js"', {
   cwd: ROOT, encoding: "utf-8",
 }).split("\0").filter((f) => f && !f.startsWith("docs/"));
 

@@ -452,15 +452,37 @@ function buildZohoDeal(params, meta) {
 }
 
 // 電話番号で既存の商談を探す。見つかればそのIDを返す（重複作成の防止）。
+/**
+ * 同じ電話番号の商談を探す。**ただし「直近」だけを重複とみなす。**
+ *
+ * 以前は「同じ番号の商談が1件でもあれば作らない」だったが、これだと
+ * **過去に登録した人が再登録しても新規リードとして上がってこない**。
+ * 実際 2026-08 のテストで、2025年の商談に紐づいた番号が新規に出ず、
+ * オーナーが「Slackにも来ない・Zohoにも増えない」と気づく事故になった。
+ * 再登録は営業にとって「今また動いている人」なので、必ず新しい商談として立てる。
+ *
+ * 一方で守りたいのは「1回の送信が二重に処理される」ケース（再送・リトライ）だけ。
+ * そこで **直近 ZOHO_DEDUP_HOURS 時間以内に作られた商談があるときだけ** 重複とみなす。
+ * 判定できないときは作る側に倒す（リードを落とすほうが、重複より損失が大きい）。
+ */
+var ZOHO_DEDUP_HOURS = 24;
+
 function findZohoDealByPhone(tel) {
   if (!tel) return "";
   var res = zohoFetch("/coql", {
     method: "post",
-    payload: { select_query: "select id from Deals where m_phone_number = '" + tel + "' limit 1" }
+    payload: {
+      select_query: "select id, Created_Time from Deals where m_phone_number = '" + tel +
+        "' order by Created_Time desc limit 1"
+    }
   });
   if (res.code !== 200) return "";
   var data = (res.body && res.body.data) || [];
-  return data.length > 0 ? String(data[0].id) : "";
+  if (!data.length) return "";
+  var created = new Date(data[0].Created_Time);
+  if (isNaN(created.getTime())) return "";
+  var hours = (Date.now() - created.getTime()) / 3600000;
+  return hours <= ZOHO_DEDUP_HOURS ? String(data[0].id) : "";
 }
 
 /**

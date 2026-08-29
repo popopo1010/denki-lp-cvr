@@ -63,6 +63,7 @@
 | `check-lazy-steps.mjs` / `check-local-refs.mjs` | 参照切れ |
 | `check-agency-share.mjs` | 代理店共有シートに個人情報が混ざらないこと |
 | `e2e-lp-flow-local.mjs` | 実ブラウザでフォームを最後まで通す＋DOM差し替え/遅延ステップ失敗/load前クリックからの復旧 |
+| `audit-mobile-ux.mjs` | **手動**。6機種×LP×全ステップの実測（横スクロール・タップ領域44px・入力欄16px・FV内CTA）。CIには入れない（遅い） |
 
 - 実行タイミング: 静的チェックは 作業ブランチ・PR = `.github/workflows/ci.yml`、`main`/`staging` = `deploy.yml`、手元一括 = `scripts/release-pre-check.sh` の3箇所で走る。**`e2e-lp-flow-local.mjs`（実ブラウザ）だけは `ci.yml` と手元のみ**——Playwrightの導入でデプロイが数分延びるため deploy には入れない。つまり**mainへ直接pushするとE2Eを通らない**ので、必ず作業ブランチ経由で出す。
 - **`?v=` を上げたら `node scripts/check-asset-versions.mjs --update` で `scripts/asset-versions.json` を更新する。**
@@ -95,7 +96,11 @@
 - 実装は `gas-recorder/zoho.js`。手順・項目対応・ハマりどころは `gas-recorder/Zoho連携セットアップ.md` を正とする。
 - **Stage は表示名と内部値がズレている**（`01_新規リード` の内部値は `求職者の見極め`）。
   **APIには表示名を渡す**と通る。内部値だと `MAPPING_MISMATCH`。Pipelineとの組み合わせ違いも同じエラー。
-- 作成前に**電話番号でCOQL検索**して重複を防ぐ。営業が手で作った商談とぶつけない。
+- 作成前に**電話番号でCOQL検索**して重複を防ぐ。ただし **直近24時間以内に作られた商談だけ**を重複とみなす
+  （`ZOHO_DEDUP_HOURS`）。**過去に登録した人の再登録は、必ず新しい商談として立てる**——
+  以前は「同じ番号が1件でもあれば作らない」だったため、2025年の商談に紐づいた番号で再登録しても
+  新規リードが上がらず、オーナーが「Slackにも来ない・Zohoにも増えない」と気づく事故になった
+  （2026-08-29 修正）。判定できないときは**作る側に倒す**（リードを落とすほうが重複より損失が大きい）。
 - OAuthスコープは商談の CREATE/READ/UPDATE ＋ `settings.fields.READ` ＋ `coql.READ` ＋ `org.READ`。
   Self Client は1アカウント1個だが、**同じClientから複数のリフレッシュトークンを発行でき、既存は無効化されない**。
   他システム（`xchange-kb` の各スクリプト、別GAS、Slack_notion連携）も同じClientのトークンを使っているので、
@@ -111,6 +116,29 @@
   2026-05以前のレコードを中心に**氏名・電話番号・郵便番号がそのまま入っている**（旧フロー由来）。
 - 取りこぼしは `backfillZohoDeals()`（`zoho_deal_id` が空の行が対象。1回80行）。
   項目の入れ直しは `resyncZohoDealFields()`（**ステージ・商談名・パイプラインは送らない**＝営業の運用を上書きしない）。
+
+## スマホUI/UXの守るべき数値（2026-08-29 実測監査で確定）
+
+- **入力欄（input / select）は 16px 以上**。iOS Safari は 16px 未満の入力欄にフォーカスすると
+  ページを拡大し、ユーザーは自力で戻せないまま横スクロール状態に取り残される。
+  テーマの `.c-select-box select` は 14px だが、`theme-snapshot.css` は本番テーマと
+  バイト同一に保つ必要があるので**触らず**、各 `cvr-boost*.css` / 自前LP CSS 側で上書きする。
+- **タップ領域は 44px（Apple HIG / Material）**。ただし **step06 の同意文リンク
+  （プライバシーポリシー・利用規約）は 24px（WCAG 2.5.8 の最低基準）にとどめる**。
+  送信CTAの真横にあるため、44pxまで広げると誤タップでLPから離脱する事故が増えCVRを下げる。
+  インライン要素の上下 padding は行送りを変えずに当たり判定だけ広げられる。
+- **横スクロールは「文書幅」で判定しない**。Chromium のモバイルエミュレーションは
+  読み込み中に一瞬でも内容が画面幅を超えると ICB を広げ、内容が収まっても元に戻さない。
+  その状態では `scrollWidth` も `innerWidth` も広がったままで、
+  **実際には1pxも動かないページを「横スクロールあり」と誤検知する**。
+  判定は必ず `scrollTo(vw*3, y)` して `scrollX` が動くかで行う。
+- **選択肢グリッドは `grid-template-columns` を書き換えない**。列数はLPごとに違う。
+  `1fr` は `minmax(auto,1fr)` で auto の最小値がアイテムの min-content なので、
+  長いラベルが列幅を押し広げる。直すのは**アイテム側**（`.c-button-grid>*{min-width:0}` ＋
+  `.c-button__text{overflow-wrap:anywhere}`）。
+  なお `white-space:nowrap` を当てている sekoukanri step01 には `overflow-wrap` は効かないため、
+  「2カラム×1行」の意匠は保たれる。
+- 経緯と誤検知の詳細は `docs/qa-2026-08-22.md` の 1q。
 
 ## LP作成・改善のリファレンス
 

@@ -13,10 +13,15 @@ html{scroll-behavior:smooth}
 
 /* Header */
 .l-header__container{padding:6px 8px;background:#4d4d4d;color:#fff;font-size:11px}
-.l-header__content{max-width:407px;margin:0 auto}
+.l-header__content{max-width:min(407px,100%);margin:0 auto}
 @media(min-width:768px){.l-header__content{text-align:center}}
-.l-header__title{display:inline-flex;align-items:center}
-.l-header__title span{margin-left:8px;font-weight:700;font-size:12px}
+.l-header__title{display:inline-flex;align-items:center;max-width:100%}
+/* inline-flex の子は既定で min-content 未満に縮まないため、長いサイト名が画面幅を超えて
+   横スクロール(375px端末で文書幅409px)を起こしていた。折り返しを許可して画面内に収める。 */
+.l-header__title span{margin-left:8px;font-weight:700;font-size:12px;min-width:0}
+/* スマホでは12pxだと1行に収まらず、カタカナの途中（電気工事バ/ンク）で折れて読みにくい。
+   テーマ系LPと同じ10pxにして1行に収める。 */
+@media(max-width:767px){.l-header__title span{font-size:10px}}
 .l-header__message{margin-top:4px}
 .l-header__message span{font-weight:700;font-size:12px}
 .l-header__message .emphasis-1{color:#90d7ff}
@@ -97,6 +102,8 @@ html{scroll-behavior:smooth}
 
 /* Button grid */
 .c-button-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:16px;gap:8px}
+.c-button-grid>*{min-width:0}
+.c-button__text{overflow-wrap:anywhere}
 .c-button{display:flex;flex-direction:column;align-items:center;padding:12px 8px 4px;border:2px solid #707070;border-radius:8px;box-shadow:2px 2px 0 #dadada;color:#333;transition:transform .15s,box-shadow .15s,border-color .15s,background .15s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 .c-button.is-active{border-color:#ff5966;background:#ff5966;box-shadow:none;color:#fff}
 .c-button:active{border-color:#ff5966;background:#ff5966;box-shadow:none;color:#fff;transform:scale(.97)}
@@ -133,7 +140,7 @@ html{scroll-behavior:smooth}
 /* Selects */
 .c-select-box{position:relative}
 .c-select-box::after{clip-path:polygon(0 0,50% 100%,100% 0);position:absolute;top:50%;right:24px;width:10px;height:5px;background:#ff5966;content:"";pointer-events:none}
-.c-select-box select{appearance:none;width:100%;height:56px;padding:0 24px;border-bottom:1px solid #dadada;outline:none;background:transparent;color:#707070;font-size:14px}
+.c-select-box select{appearance:none;width:100%;height:56px;padding:0 24px;border-bottom:1px solid #dadada;outline:none;background:transparent;color:#707070;font-size:16px}
 .c-select-box02{position:relative}
 .c-select-box02 select{appearance:none;width:100%;height:56px;padding:0 16px;border:1px solid #dadada;border-radius:10px;outline:none;background:transparent;color:#333;font-weight:700;font-size:16px;min-height:52px}
 
@@ -182,7 +189,7 @@ html{scroll-behavior:smooth}
 .cvr-tel-reassurance{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#777;line-height:1.4}
 .cvr-tel-reassurance svg{flex-shrink:0}
 .cvr-pp-text{text-align:center;font-size:9px;color:#767676;margin-top:6px;line-height:1.4}
-.cvr-pp-text a{color:#767676;text-decoration:underline}
+.cvr-pp-text a{color:#767676;text-decoration:underline;padding:6px 2px}
 
 /* Kuma */
 .cvr-kuma-wrap{position:relative}
@@ -230,8 +237,8 @@ html{scroll-behavior:smooth}
 .l-footer{}
 .l-footer__info{padding:16px 0 24px;background:#333;color:#fff;font-size:10px;text-align:center}
 .footer-dark{padding:16px}
-.footer-dark .div-block-96{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-bottom:12px}
-.footer-dark .link{font-size:11px;color:rgba(255,255,255,.7);text-decoration:underline}
+.footer-dark .div-block-96{display:flex;flex-wrap:wrap;justify-content:center;gap:0 16px;margin-bottom:12px}
+.footer-dark .link{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;font-size:11px;color:rgba(255,255,255,.7);text-decoration:underline}
 .footer-dark .copyright{font-size:10px;color:rgba(255,255,255,.5);margin-top:8px}
 
 /* Focus */
@@ -274,7 +281,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .cvr-tel-reassurance{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#777;line-height:1.4}
 .cvr-tel-reassurance svg{flex-shrink:0}
 .cvr-pp-text{text-align:center;font-size:9px;color:#767676;margin-top:6px;line-height:1.4}
-.cvr-pp-text a{color:#767676;text-decoration:underline}
+.cvr-pp-text a{color:#767676;text-decoration:underline;padding:6px 2px}
 
 /* Kuma */
 .cvr-kuma{text-align:right;margin-top:-10px;margin-bottom:-10px;pointer-events:none}
@@ -301,7 +308,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   body.lp-form-step .p-step01__button.c-button{padding:8px 6px;min-height:52px;justify-content:center;gap:4px}
   body.lp-form-step .p-step01__button .c-button__text{min-height:0;font-size:11px}
   body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__img{display:none}
-  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button{padding:8px 6px;min-height:38px;justify-content:center}
+  body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button{padding:8px 6px;min-height:44px;justify-content:center}
   body.lp-form-step .js-form-group:has(.c-section + .c-section) .c-button__text{min-height:0;font-size:11px}
 }
 

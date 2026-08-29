@@ -837,3 +837,31 @@ select:focus-visible {
      固定44pxでは不足するため動的に加算する（2026-07-05 実機で44px固定でも被り再発） */
   body.lp-form-step .js-page-body { padding-top: calc(env(safe-area-inset-top, 0px) + 44px) !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   入力欄の自動ズーム防止（2026-08-29 スマホUI実測監査）
+   iOS Safari は 16px 未満の入力欄にフォーカスするとページを拡大し、
+   ユーザーが自力で戻せないまま横スクロール状態に取り残される。
+   テーマの .c-select-box select は 14px だが theme-snapshot.css は
+   本番テーマとバイト同一に保つため触らず、ここで上書きする。
+   ───────────────────────────────────────────────────────────── */
+.c-select-box select { font-size: 16px; }
+
+/* タップ領域（WCAG 2.5.8=24px / Apple HIG=44px）。
+   フッターの規約リンクは行の高さが 13px しかなく押し分けられないので 44px に広げる。
+   step06 の同意文リンクは送信CTAの真横にあり、44px まで広げると誤タップ離脱が増える。
+   インライン要素の上下 padding は行送りを変えずに当たり判定だけ広げられるので、
+   ここは 24px 相当にとどめる。 */
+.footer-dark .div-block-96 { gap: 0 16px; }
+.footer-dark .link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
+.cvr-pp-text a { padding: 6px 2px; }
+
+/* 選択肢グリッドが画面幅を超えないようにする（2026-08-29）。
+   grid の `1fr` は minmax(auto,1fr) で、auto の最小値はアイテムの min-content。
+   「2級 建築施工管理技士」のような長いラベルがそのまま列幅を押し広げ、
+   360px幅の端末で 2列が入りきらず**ページごと横スクロール**していた
+   （実測: /sekoukanri-v2/ 文書幅 377px > 画面幅 360px）。
+   列数はLPごとに違うので grid-template-columns は書き換えず、
+   アイテム側の最小幅を 0 にして「縮める許可」だけ与える。 */
+.c-button-grid > * { min-width: 0; }
+.c-button__text { overflow-wrap: anywhere; }
