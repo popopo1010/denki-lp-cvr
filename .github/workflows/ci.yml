@@ -38,6 +38,8 @@ jobs:
 
       - name: 入力欄の属性（数字キーボード・自動入力）
         run: node scripts/check-input-attrs.mjs
+      - name: FAQと構造化データの一致
+        run: node scripts/check-faq-schema.mjs
 
       - name: キャッシュバスター ?v= の整合
         run: node scripts/check-asset-versions.mjs

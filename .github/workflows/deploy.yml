@@ -60,6 +60,8 @@ jobs:
 
       - name: Check input attrs (数字キーボード・自動入力の取りこぼし防止)
         run: node scripts/check-input-attrs.mjs
+      - name: FAQと構造化データの一致
+        run: node scripts/check-faq-schema.mjs
 
       - name: Check asset versions (?v= 上げ忘れ・不揃いの検出)
         run: node scripts/check-asset-versions.mjs

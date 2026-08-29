@@ -11,6 +11,7 @@ node scripts/check-lazy-steps.mjs
 node scripts/check-local-refs.mjs
 node scripts/check-form-invariants.mjs # 消えやすいフォーム配線（スクロール/自己修復/クマ移動）
 node scripts/check-input-attrs.mjs     # 入力欄の属性が全LPで揃っていること
+node scripts/check-faq-schema.mjs      # FAQ本文と構造化データが一致していること
 node scripts/check-asset-versions.mjs  # ?v= の上げ忘れ・不揃い
 node scripts/check-lp-guard.js         # LPガード（本番反映手順書に載っている）
 node scripts/check-agency-share.mjs   # 代理店共有シートに個人情報が出ないこと
