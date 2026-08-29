@@ -853,3 +853,20 @@ body {
   .p-step01 .p-step01__button { padding-top: 4px !important; padding-bottom: 4px !important; }
   .p-step01 .c-nextLink { margin-top: 4px !important; }
 }
+
+/* エラー表示でレイアウトが上下に動く問題（オーナー「入力がバグる」2026-07-05）を、
+   余白を増やさずに消す。従来はエラー欄が通常フローにいたため、出るたびに入力欄を
+   実測+40px押し下げていた。周囲の余白は合計20pxしかなく吸収できないので、
+   絶対配置にしてラベル行へ重ねる。占有高ゼロ＝出没しても1pxも動かない。
+   文言自体が項目名を含む（「お名前を入力してください」等）ので、
+   ラベルが一時的に隠れても意味は通る。タップは透過させる。 */
+.p-step06__formGroup > dd,
+.p-step07__formGroup > dd { position: relative; }
+.p-step06__formGroup > dd > .c-error-message,
+.p-step07__formGroup > dd > .c-error-message {
+  position: absolute;
+  bottom: 100%; left: 0; right: 0;
+  margin: 0 0 2px !important;
+  z-index: 3;
+  pointer-events: none;
+}
