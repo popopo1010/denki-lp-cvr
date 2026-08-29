@@ -306,6 +306,13 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool
         f'alt="{v["banner_alt"]}"',
     )
 
+    # 運営者情報の「対応職種」は工種ごとに変える（テンプレートは「施工管理」）。
+    # これが無いと再生成のたびに建築/土木/電気が「施工管理」へ戻る。
+    html = html.replace(
+        "<dt>対応職種</dt><dd>施工管理</dd>",
+        f'<dt>対応職種</dt><dd>{v["label"]}</dd>',
+    )
+
     if nenshu:
         html = html.replace(
             "<h1 class=\"ns-header-bar__title\">施工管理の年収診断サイト <span class=\"ns-badge\">業界初</span></h1>",

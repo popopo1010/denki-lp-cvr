@@ -43,7 +43,7 @@
     <link rel="canonical" href="https://denkilp.builders-job.com/denki-lp-cvr/dk_lp/denkikouji/" />
 
     <link rel="stylesheet" href="../../assets/css/theme-snapshot.css?v20260708a">
-    <link rel="stylesheet" href="./assets/css/cvr-boost.css?v=20260829b">
+    <link rel="stylesheet" href="./assets/css/cvr-boost.css?v=20260829c">
     <style>
 /* ステップは初期状態で隠す。テーマCSS任せだと、テーマCSSが遅い/届かないときに
    step01〜06 が全部縦に並んで出る（2026-08-22 QA でローカル再現）。#step-first(FV)には
@@ -58,6 +58,87 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
     <script>window.__LP_ID="denkikouji";</script>
     <script src="./assets/js/main.js?v=20260829d" defer></script>
     <script src="./assets/js/cvr-boost.js?v=20260610b" defer></script>
+<style id="cvr-about-css">
+.cvr-about{max-width:600px;margin:16px auto 0;padding:14px 16px;border:1px solid #e8e8e8;border-radius:10px;background:#fbfcfe}
+.cvr-about__title{font-size:14px;font-weight:700;color:#314c85;margin:0 0 10px;text-align:left}
+.cvr-about__list{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:13px;line-height:1.7}
+.cvr-about__list dt{color:#8c97ab;font-weight:400;margin:0}
+.cvr-about__list dd{color:#333;margin:0}
+.cvr-about__flow{display:flex;gap:6px;list-style:none;margin:12px 0 0;padding:0}
+.cvr-about__flow li{flex:1;background:#eef1f8;border-radius:6px;padding:7px 4px;text-align:center;font-size:11px;line-height:1.35;color:#46536b}
+.cvr-about__flow b{display:block;color:#314c85;font-size:11px}
+.cvr-about__links{display:flex;flex-wrap:wrap;gap:12px;list-style:none;margin:12px 0 0;padding:0;font-size:12px}
+.cvr-about__links a{color:#314c85;text-decoration:underline;display:inline-block;padding:6px 0;min-height:24px}
+.cvr-about__no{white-space:nowrap}
+.cvr-about__note{font-size:11px;color:#8c97ab;line-height:1.6;margin:10px 0 0}
+@media(max-width:767px){.cvr-about{margin-left:12px;margin-right:12px}.cvr-about__flow li{font-size:10px}}
+</style>
+<script type="application/ld+json" id="cvr-faq-schema">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "登録したあと、どう進みますか？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "LINEで受け取り、日程を決めて10分ほどのお電話。条件をうかがったうえで、非公開求人の全文をLINEにお届けします。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "本当に無料ですか？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "はい、求職者の方は完全無料でご利用いただけます。費用は一切かかりません。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "今の勤務先に知られませんか？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ご登録情報はプライバシーポリシーに基づき管理し、現在の勤務先へ提供することはありません。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "資格がなくても相談できますか？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "はい。資格の選択肢には「未経験」もあり、お持ちでない方もご登録いただけます。経験に合わせてご案内します。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "携帯番号は必ず必要ですか？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "折り返しのご連絡に使うため、携帯番号のみお願いしています。固定電話・IP電話はご登録いただけません。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "すぐに転職しなくても登録できますか？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "もちろんです。情報収集目的でのご登録も歓迎しています。良い求人が見つかったタイミングでご検討ください。"
+          }
+        }
+      ]
+    },
+    {
+      "@type": "Organization",
+      "name": "XCHANGE株式会社",
+      "url": "https://builders-job.com/company",
+      "identifier": "有料職業紹介事業許可番号 13-ユ-316946"
+    }
+  ]
+}
+</script>
 </head>
 
 <body class="wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
@@ -574,17 +655,47 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 <div class="cvr-faq">
     <h2 class="cvr-faq__title">よくある質問</h2>
     <details class="cvr-faq__item">
+        <summary>登録したあと、どう進みますか？</summary>
+        <p>LINEで受け取り、日程を決めて10分ほどのお電話。条件をうかがったうえで、非公開求人の全文をLINEにお届けします。</p>
+    </details>
+    <details class="cvr-faq__item">
         <summary>本当に無料ですか？</summary>
         <p>はい、求職者の方は完全無料でご利用いただけます。費用は一切かかりません。</p>
     </details>
     <details class="cvr-faq__item">
-        <summary>今の職場にバレませんか？</summary>
-        <p>ご登録情報は厳重に管理しており、現在の勤務先に公開されることは一切ありません。</p>
+        <summary>今の勤務先に知られませんか？</summary>
+        <p>ご登録情報はプライバシーポリシーに基づき管理し、現在の勤務先へ提供することはありません。</p>
+    </details>
+    <details class="cvr-faq__item">
+        <summary>資格がなくても相談できますか？</summary>
+        <p>はい。資格の選択肢には「未経験」もあり、お持ちでない方もご登録いただけます。経験に合わせてご案内します。</p>
+    </details>
+    <details class="cvr-faq__item">
+        <summary>携帯番号は必ず必要ですか？</summary>
+        <p>折り返しのご連絡に使うため、携帯番号のみお願いしています。固定電話・IP電話はご登録いただけません。</p>
     </details>
     <details class="cvr-faq__item">
         <summary>すぐに転職しなくても登録できますか？</summary>
         <p>もちろんです。情報収集目的でのご登録も歓迎しています。良い求人が見つかったタイミングでご検討ください。</p>
     </details>
+</div>
+
+<div class="cvr-about">
+    <h2 class="cvr-about__title">このサービスについて</h2>
+    <dl class="cvr-about__list">
+        <dt>運営</dt><dd>XCHANGE株式会社</dd>
+        <dt>許可番号</dt><dd>有料職業紹介事業 <span class="cvr-about__no">13-ユ-316946</span></dd>
+        <dt>対応職種</dt><dd>電気工事士・電気施工管理</dd>
+        <dt>費用</dt><dd>求職者は完全無料</dd>
+    </dl>
+    <ol class="cvr-about__flow"><li><b>1</b>ご登録</li><li><b>2</b>LINE登録</li><li><b>3</b>お電話</li><li><b>4</b>求人の全文</li></ol>
+    <ul class="cvr-about__links">
+        <li><a href="/terms" target="_blank" rel="noopener">利用規約</a></li>
+        <li><a href="/privacypolicy" target="_blank" rel="noopener">プライバシーポリシー</a></li>
+        <li><a href="https://builders-job.com/company" target="_blank" rel="noopener">運営会社</a></li>
+        <li><a href="/service" target="_blank" rel="noopener">サービスについて</a></li>
+    </ul>
+    <p class="cvr-about__note">ご登録情報は当社のプライバシーポリシーに基づき管理し、現在の勤務先へ提供することはありません。</p>
 </div>
 
                 </div><!-- /.c-container -->
