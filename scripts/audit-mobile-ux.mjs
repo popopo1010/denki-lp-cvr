@@ -222,7 +222,7 @@ async function run(browser, lp) {
     const ctx = await browser.newContext({
       viewport: { width: d.width, height: d.height },
       deviceScaleFactor: d.dpr, isMobile: true, hasTouch: true, locale: "ja-JP",
-      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+      userAgent: UA
     });
     const page = await ctx.newPage();
     await page.route("**/*", (route) => {
@@ -277,6 +277,16 @@ const LPS = lpIdx >= 0
 // 横スクロール・はみ出しは**一番狭い端末**で出る。全機種を回すと1LPあたり数分かかるので、
 // 変更の確認だけしたいときは --narrow で狭い2機種（375 / 360）に絞る。
 if (args.includes("--narrow")) DEVICES = DEVICES.slice(0, 2);
+// --inapp: LINEのアプリ内ブラウザとして測る。
+// 通常のSafari UAだけで測っていると html.dk-inapp の経路（上部バー対策の余白 96px、
+// autofocus抑止、キーボードのナッジ）を**一度も踏まない**。オーナーが実機で踏んでいる
+// 問題はすべてこちら側なので、監査もこの姿で回せるようにする（2026-08-29 盲点として発覚）。
+// アプリ内ブラウザは上下にバーが出るぶん表示領域が短いので、画面高もそれに合わせる。
+const INAPP = args.includes("--inapp");
+const UA = INAPP
+  ? "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 Line/14.5.0"
+  : "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+if (INAPP) DEVICES = DEVICES.map((d) => ({ ...d, height: d.height - 127, name: d.name + "×LINE" }));
 
 const pw = await import("playwright").catch(() => import("/opt/node22/lib/node_modules/playwright/index.mjs"));
 const server = await startServer();
