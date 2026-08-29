@@ -307,11 +307,14 @@ for (const [canonical, mirrors] of MIRRORS) {
     const html = readFileSync(p, "utf8");
     if (!isFormLp(p)) continue;
     formPages++;
-    if (!/html\.dk-inapp body\.lp-input-step \.js-page-body\{padding-top:96px!important\}/.test(html)) {
+    // 2026-08-29: 対象を lp-input-step → lp-form-step に広げた。入力ステップだけ96pxだと
+    // 選択ステップ(44px)との間で **ヘッダー下の余白が52px跳ねて見える**（オーナー実機報告）。
+    // アプリ内ブラウザでは全ステップ96pxに揃える。通常ブラウザは従来どおり44px。
+    if (!/html\.dk-inapp body\.lp-form-step \.js-page-body\{padding-top:96px!important\}/.test(html)) {
       missing.push(p.slice(ROOT.length));
     }
   }
-  check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:96px)がある`,
+  check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:96px・全ステップ共通)がある`,
     missing.length === 0, missing.slice(0, 5).join(", "));
 
   // 入力ステップ(96px)だけでなく、選択ステップ(step01-03)の余白も全LPに要る。
