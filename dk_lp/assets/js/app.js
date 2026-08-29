@@ -898,15 +898,11 @@
     }
 
     function shouldShowErrors() {
-      if (touched.size === 0) return false;
-      // まだ触れていない項目のエラーは出さない。名前を打ち始めた瞬間に
-      // 「生まれ年を…」が出ると、入力が終わるまで赤帯が消えない体感になる
-      // （2026-08-29 オーナー実機動画）。触れた項目だけを案内する。
-      var namesFilled = Array.prototype.every.call(inputs, function (i) {
-        return !!(i.value || "").trim();
-      });
-      if (!namesFilled) return true;
-      return touched.has("bday-year");
+      // 「触れた項目だけ案内する」を一度試したが、氏名だけ埋めて生まれ年が
+      // 空のとき CTA が押せないのに理由が出ない状態になった（2026-08-29 QAで発見）。
+      // 「押せないのに理由が分からない」は「次へ進めない」の再発と同じで最も重い。
+      // CTAを無効にしている間は必ず理由を出す、を優先してこの形に戻す。
+      return touched.size > 0;
     }
 
     function validate(opts) {
