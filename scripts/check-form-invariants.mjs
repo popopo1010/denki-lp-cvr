@@ -103,11 +103,22 @@ for (const p of IMPLS) {
 
   // ⑤(c)' ナッジは1回きりでは駄目（2026-08-23 オーナー実機で再々々発）。
   // iOSはキーボード確定時（〜1秒）に入力欄を最上部へもう一度スクロールし直すため、
-  // 300ms後1回の補正は必ず負ける。300/700/1200msの多段再補正と
-  // visualViewport resize での補正の両方が要る。ここが1回に戻されたらCIで止める。
-  check(`${p}: ナッジが多段補正(300/700/1200ms)である`, /\[300,\s*700,\s*1200\]/.test(src));
+  // 300ms後1回の補正は必ず負ける（iOSはキーボードのアニメーション完了時に
+  // もう一度スクロールし直す）。かといって 300/700/1200ms の固定3回にすると、
+  // ブラウザが動かしている**最中**にも割り込むため画面が上下に揺れる
+  // （2026-08-29 オーナー実機動画。1.5秒で23回位置が変わっていた）。
+  // 正解は「スクロールが止まってから1回だけ直す」。何度スクロールし直されても
+  // そのたび落ち着いてから直すので、多段補正の強さは保ったまま揺れだけが消える。
+  check(`${p}: ナッジがスクロール沈静後に補正する(SETTLE_MS)`,
+    /SETTLE_MS/.test(src) && /addEventListener\(\s*["']scroll["']/.test(src));
+  check(`${p}: 落ち着かなくても最後に1回直す(DEADLINE_MS)`, /DEADLINE_MS/.test(src));
   check(`${p}: visualViewport resize でも補正する`,
     /visualViewport\.addEventListener\(\s*["']resize["']/.test(src));
+  // behavior:"auto" は CSS の scroll-behavior を読む。全LPが html{scroll-behavior:smooth}
+  // を持つので、auto だと補正がアニメーションになり iOS の再スクロールに割り込まれて揺れる。
+  check(`${p}: 補正は instant（smoothに巻き込まれない）`,
+    /scrollBy\(\{[^}]*behavior:\s*["']instant["']/.test(src) &&
+    !/scrollBy\(\{[^}]*behavior:\s*["']auto["']/.test(src));
 
   // in-app 判定（UA）自体
   check(`${p}: アプリ内ブラウザ検知(UA)がある`, /Instagram|FBAN|Line\\?\//.test(src));
@@ -296,11 +307,14 @@ for (const [canonical, mirrors] of MIRRORS) {
     const html = readFileSync(p, "utf8");
     if (!isFormLp(p)) continue;
     formPages++;
-    if (!/html\.dk-inapp body\.lp-input-step \.js-page-body\{padding-top:96px!important\}/.test(html)) {
+    // 2026-08-29: 対象を lp-input-step → lp-form-step に広げた。入力ステップだけ96pxだと
+    // 選択ステップ(44px)との間で **ヘッダー下の余白が52px跳ねて見える**（オーナー実機報告）。
+    // アプリ内ブラウザでは全ステップ96pxに揃える。通常ブラウザは従来どおり44px。
+    if (!/html\.dk-inapp body\.lp-form-step \.js-page-body\{padding-top:96px!important\}/.test(html)) {
       missing.push(p.slice(ROOT.length));
     }
   }
-  check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:96px)がある`,
+  check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:96px・全ステップ共通)がある`,
     missing.length === 0, missing.slice(0, 5).join(", "));
 
   // 入力ステップ(96px)だけでなく、選択ステップ(step01-03)の余白も全LPに要る。

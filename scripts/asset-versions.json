@@ -8,12 +8,12 @@
     "sha256": "8026e36c09caaef5"
   },
   "WPLP/assets/js/app-v2.js": {
-    "version": "20260823i",
-    "sha256": "b66cf373769deaf3"
+    "version": "20260829c",
+    "sha256": "4fc44831704e65d9"
   },
   "WPLP/assets/js/app.js": {
-    "version": "20260823i",
-    "sha256": "e3aff0c0353aa8d9"
+    "version": "20260829c",
+    "sha256": "1567208fc4c9ed55"
   },
   "WPLP/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -68,12 +68,12 @@
     "sha256": "5e87015a08e9a2f7"
   },
   "assets/js/app-v2.js": {
-    "version": "20260823i",
-    "sha256": "b66cf373769deaf3"
+    "version": "20260829c",
+    "sha256": "4fc44831704e65d9"
   },
   "assets/js/app.js": {
-    "version": "20260823i",
-    "sha256": "e3aff0c0353aa8d9"
+    "version": "20260829c",
+    "sha256": "1567208fc4c9ed55"
   },
   "assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -136,8 +136,8 @@
     "sha256": "4637ef80cef09301"
   },
   "dk_lp/assets/js/app.js": {
-    "version": "20260823i",
-    "sha256": "e3aff0c0353aa8d9"
+    "version": "20260829c",
+    "sha256": "1567208fc4c9ed55"
   },
   "dk_lp/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -152,8 +152,8 @@
     "sha256": "652c387eb157f624"
   },
   "dk_lp/denkikouji/assets/js/main.js": {
-    "version": "20260823h",
-    "sha256": "0c7e9d1d1c95a59e"
+    "version": "20260829c",
+    "sha256": "d0739228a52adba0"
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260701c",
@@ -204,12 +204,12 @@
     "sha256": "bc3238adb2562e5b"
   },
   "自前LP/assets/js/app-v2.js": {
-    "version": "20260823i",
-    "sha256": "b66cf373769deaf3"
+    "version": "20260829c",
+    "sha256": "4fc44831704e65d9"
   },
   "自前LP/assets/js/app.js": {
-    "version": "20260823i",
-    "sha256": "e3aff0c0353aa8d9"
+    "version": "20260829c",
+    "sha256": "1567208fc4c9ed55"
   },
   "自前LP/assets/js/cvr-boost.js": {
     "version": "20260823a",
