@@ -337,13 +337,17 @@ jobs:
           # ディレクトリもあるため）が、非200が出たらサーバ側の実体を残す。
           echo "--- 全LPのHTTP応答 ---"
           bad=""
-          for dir in $(git ls-files -- '*/index.html' \
-                        | grep -vE '^(assets|docs|deploy|scripts|gas-recorder|v2-deploy)/' \
-                        | grep -v 'thanks' \
-                        | xargs -n1 dirname | sort -u); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "${DEPLOY_URL_BASE}/${dir}/")
+          # core.quotePath=false を付けないと日本語ディレクトリ（自前LP）が
+          # \350\207\252... のエスケープ表記になり、URLとして成立せず全部404に見える。
+          git -c core.quotePath=false ls-files -- '*/index.html' \
+            | grep -vE '^(assets|docs|deploy|scripts|gas-recorder|v2-deploy)/' \
+            | grep -v 'thanks' \
+            | xargs -n1 dirname | sort -u > /tmp/lpdirs.txt
+          while IFS= read -r dir; do
+            # -L で301（末尾スラッシュ補正等）を追い、最終的な到達コードを見る
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "${DEPLOY_URL_BASE}/${dir}/")
             [ "$code" = "200" ] || { echo "  ${code}  ${dir}/"; bad="${bad} ${dir}"; }
-          done
+          done < /tmp/lpdirs.txt
           if [ -n "$bad" ]; then
             echo "::warning::200で返らないLPがある:${bad}"
             echo "--- サーバ側の実体（先頭60件） ---"
