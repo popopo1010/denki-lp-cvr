@@ -83,9 +83,14 @@
       function fix() {
         if (done) return;
         if (document.activeElement !== t) { stop(); return; }
-        if (restoreHead(t)) fixes++;
-        // iOSと押し合いになって延々と動き続けるのを防ぐ
-        if (fixes >= MAX_FIX) stop();
+        if (restoreHead(t)) {
+          fixes++;
+          // iOSと補正が押し合いになって動き続けるのを防ぐ。ただし下の else で
+          // 「落ち着いた」たびに数え直すので、通常利用で打ち切られることはない。
+          if (fixes >= MAX_FIX) stop();
+        } else {
+          fixes = 0; // 直す必要が無かった＝安定した。回数の予算を戻す
+        }
       }
       function onMove() {
         if (done) return;
@@ -95,8 +100,10 @@
       window.addEventListener("scroll", onMove, true);
       if (window.visualViewport) window.visualViewport.addEventListener("resize", onMove);
       t.addEventListener("blur", stop);
-      // 一度もスクロールが起きない端末でも、最後に必ず1回は見る
-      deadline = setTimeout(function () { fix(); stop(); }, DEADLINE_MS);
+      // 一度もスクロールが起きない端末でも、最後に必ず1回は見る。
+      // ここで stop() してはいけない——フォーカス中はずっと見張り続ける必要がある
+      // （iOSはキーボードの開閉や予測変換バーの出入りで、数秒後にもスクロールし直す）。
+      deadline = setTimeout(fix, DEADLINE_MS);
       onMove();
     }, true);
   })();
