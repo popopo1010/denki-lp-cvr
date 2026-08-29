@@ -331,6 +331,30 @@ jobs:
             || { echo "::error::staging missing X-Robots-Tag noindex"; exit 1; }
           echo "staging OK: ${DEPLOY_URL_BASE}/denkikouji/ ほか"
 
+          # 固定2本だけを見ていると「新しく足したLPが配れていない」を見逃す。
+          # 2026-08-29: denkikouji-trust が実機で403だったのに、この検証は通っていた。
+          # 全LPの応答を一覧で出す。デプロイは止めない（配信されない想定の
+          # ディレクトリもあるため）が、非200が出たらサーバ側の実体を残す。
+          echo "--- 全LPのHTTP応答 ---"
+          bad=""
+          for dir in $(git ls-files -- '*/index.html' \
+                        | grep -vE '^(assets|docs|deploy|scripts|gas-recorder|v2-deploy)/' \
+                        | grep -v 'thanks' \
+                        | xargs -n1 dirname | sort -u); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "${DEPLOY_URL_BASE}/${dir}/")
+            [ "$code" = "200" ] || { echo "  ${code}  ${dir}/"; bad="${bad} ${dir}"; }
+          done
+          if [ -n "$bad" ]; then
+            echo "::warning::200で返らないLPがある:${bad}"
+            echo "--- サーバ側の実体（先頭60件） ---"
+            ssh -p "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" \
+              -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60 \
+              "${XSERVER_USER}@${XSERVER_HOST}" \
+              "ls -la ${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}/ | head -60" || true
+          else
+            echo "  全LPが200"
+          fi
+
       - name: Verify deployment
         if: github.ref_name != 'staging'
         run: |
