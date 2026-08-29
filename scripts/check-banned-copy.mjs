@@ -24,12 +24,25 @@ const BANNED = [
   { pattern: /このあと：/, label: "返報文ラベル（このあと：）" },
   { pattern: /回答後：/, label: "返報文ラベル（回答後：）" },
   { pattern: /次の画面：/, label: "返報文ラベル（次の画面：）" },
+  // ラベル接頭辞は「この文言を消す」ではなく「マイクロコピーにラベルを付けない」がルール。
+  // 固定文言だけ並べていたので、新しく発明された「この回答で：」「次に届く求人：」
+  // 「診断結果：」「送信後：」が31〜48本のLPで生き残っていた（2026-08-29 発覚）。
+  // 以後は**構造で**止める: cvr-step-reward の本文が短いラベル＋「：」で始まっていたら不可。
+  { pattern: /class="cvr-step-reward"[^>]*>\s*[^<：\n]{1,14}：/, label: "返報文ラベル（cvr-step-reward が「◯◯：」で始まっている）" },
+  // 生成スクリプト側は cvr-step-reward という**構造を持たない**（文字列としてだけ持つ）。
+  // 上の構造パターンだけでは生成器の汚染を素通りするので、返報文の**形**でも見る:
+  // 「短いラベル＋：」で始まり <strong> を含む文字列リテラル。
+  { pattern: /["'`][^"'`<\n]{1,14}：[^"'`\n]{0,80}<strong>/, label: "返報文ラベル（「◯◯：…<strong>」の文字列）" },
 ];
 
-// docs/ は事例記録のため対象外。HTML と 配信JS を対象にする。
-const files = execSync('git -c core.quotePath=false ls-files -z "*.html" "assets/js/*.js" "WPLP/assets/js/*.js" "自前LP/assets/js/*.js"', {
+// docs/ は事例記録のため対象外。HTML と 配信JS に加えて、**LPを生成する側**も対象にする。
+// HTMLだけ直しても、生成スクリプトに旧コピーが残っていれば次の再生成で丸ごと戻る
+// （2026-08-29: generate-sekoukanri-variants.py に「次に届く求人：」「診断結果：」が残っており、
+//  CIの「生成物のドリフトなし」で12本が巻き戻っていた。sync-lp-comparison-copy.mjs は
+//  置換**後**の文字列に「次の画面：」等の禁止ラベルを持っていて、走らせると15本に注入していた）。
+const files = execSync('git -c core.quotePath=false ls-files -z "*.html" "assets/js/*.js" "WPLP/assets/js/*.js" "自前LP/assets/js/*.js" "dk_lp/**/*.js" "scripts/*.mjs" "scripts/*.py"', {
   cwd: ROOT, encoding: "utf-8",
-}).split("\0").filter((f) => f && !f.startsWith("docs/"));
+}).split("\0").filter((f) => f && !f.startsWith("docs/") && f !== "scripts/check-banned-copy.mjs");
 
 let bad = 0;
 for (const f of files) {

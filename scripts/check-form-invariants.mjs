@@ -382,6 +382,52 @@ for (const [canonical, mirrors] of MIRRORS) {
   }
   check(`HTML(${htmlFiles.length}本)に block:"center" のスクロールが無い`,
     centerScrolls.length === 0, centerScrolls.slice(0, 5).join(", "));
+
+  // ── スマホUI/UXの数値（2026-08-29 実測監査。docs/qa-2026-08-22.md 1q） ──
+  // LPが読むCSSは家族ごとに別ファイルで、片方だけ直すと半分のLPに届かない。
+  // 「LPが実際に読む側のCSS」を全部列挙して、同じ規則が入っているか見る。
+  const LP_CSS = [
+    "assets/css/cvr-boost.css", "assets/css/cvr-boost-v2.css",
+    "assets/css/cvr-boost-denkikouji.css", "assets/css/cvr-boost-sekoukanri.css",
+    "WPLP/assets/css/cvr-boost.css", "WPLP/assets/css/cvr-boost-v2.css",
+    "dk_lp/assets/css/cvr-boost-denkikouji.css", "dk_lp/assets/css/cvr-boost-sekoukanri.css",
+    "dk_lp/denkikouji/assets/css/cvr-boost.css",
+    "自前LP/assets/css/style.css", "自前LP/assets/css/style-v2.css"
+  ];
+  const cssMiss = (re) => LP_CSS.filter((f) => {
+    const abs = join(ROOT, f);
+    return !existsSync(abs) || !re.test(readFileSync(abs, "utf8"));
+  });
+
+  // iOSは16px未満の入力欄にフォーカスするとページを拡大し、ユーザーは自力で戻せない。
+  // テーマの .c-select-box select は 14px なので、各家族のCSSで上書きし続ける必要がある。
+  const noZoom = cssMiss(/\.c-select-box\s+select\s*\{[^}]*font-size:\s*(1[6-9]|[2-9]\d)px/);
+  check(`入力欄が16px以上（iOSの自動ズーム防止）: LPが読むCSS ${LP_CSS.length}本`,
+    noZoom.length === 0, noZoom.join(", "));
+
+  // 選択肢グリッドは列数を書き換えず、アイテム側に「縮める許可」を与えて画面内に収める。
+  const noShrink = cssMiss(/\.c-button-grid\s*>\s*\*\s*\{[^}]*min-width:\s*0/);
+  check(`選択肢グリッドが画面幅を超えない（.c-button-grid>*{min-width:0}）: ${LP_CSS.length}本`,
+    noShrink.length === 0, noShrink.join(", "));
+
+  // フッターの規約リンクは 44px。step06 の同意文リンクは**あえて24px相当**にとどめる
+  // （送信CTAの真横なので、広げると誤タップ離脱が増えCVRを下げる）。
+  const noTap = cssMiss(/\.footer-dark\s+\.link\s*\{[^}]*min-height:\s*44px/);
+  check(`フッターの規約リンクが44px（タップ領域）: ${LP_CSS.length}本`,
+    noTap.length === 0, noTap.join(", "));
+
+  // 同意文リンクの当たり判定は**下方向にだけ**伸ばす。上下に伸ばすと、真上にある
+  // 送信CTAの下端を数px奪い、ボタンの端をタップした人がプライバシーポリシーへ飛ぶ
+  // （2026-08-29 実測: 自前LP系でCTA下端4pxがリンク側に取られていた）。
+  const noPp = cssMiss(/\.cvr-pp-text a\s*\{[^}]*padding:\s*0(px)? \d+px \d+px/);
+  check(`同意文リンクの当たり判定が下方向のみ（CTAを奪わない）: ${LP_CSS.length}本`,
+    noPp.length === 0, noPp.join(", "));
+
+  // step06 の「戻る」は theme が height:48px を持つが、入力ステップ用の上書きが
+  // height:auto + padding:8px にするため実測30pxまで縮む（2026-08-29 実測）。
+  const noBack = cssMiss(/\.c-nextLinkButton\s*\{[^}]*(min-height:\s*44px|height:\s*48px)/);
+  check(`step06の「戻る」が44px以上: ${LP_CSS.length}本`,
+    noBack.length === 0, noBack.join(", "));
 }
 
 // ───────────────────────────────────────────────────────────

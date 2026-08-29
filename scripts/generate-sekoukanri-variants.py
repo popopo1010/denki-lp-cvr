@@ -36,7 +36,7 @@ VARIANTS = [
         "banner_alt": "建築施工管理専門,あなたの資格から建築現場のオススメ求人を無料で紹介",
         "step01_title": "お持ちの建築施工管理の資格は？",
         "step01_reason": "建築1級・2級に合った求人をご紹介します（電気工事士のみの方も選択可）",
-        "step01_reward": "次に届く求人：<strong>建築施工管理の1級・2級</strong>に特化したマッチリスト（あと3ステップ）",
+        "step01_reward": "次は<strong>建築施工管理の1級・2級</strong>に特化したマッチリストをお見せします（あと3ステップ）",
         "quals": ["1級建築施工管理技士", "2級建築施工管理技士", *ELECTRICIAN, *OTHER],
         "testimonials_title": "建築施工管理の利用者の声",
         "testimonials_lead": "1級・2級ごとに、建築現場向けの求人をご案内しています",
@@ -58,7 +58,7 @@ VARIANTS = [
         "banner_alt": "土木施工管理専門,あなたの資格から土木・インフラのオススメ求人を無料で紹介",
         "step01_title": "お持ちの土木施工管理の資格は？",
         "step01_reason": "土木1級・2級に合った求人をご紹介します（電気工事士のみの方も選択可）",
-        "step01_reward": "次に届く求人：<strong>土木施工管理の1級・2級</strong>に特化したマッチリスト（あと3ステップ）",
+        "step01_reward": "次は<strong>土木施工管理の1級・2級</strong>に特化したマッチリストをお見せします（あと3ステップ）",
         "quals": ["1級土木施工管理技士", "2級土木施工管理技士", *ELECTRICIAN, *OTHER],
         "testimonials_title": "土木施工管理の利用者の声",
         "testimonials_lead": "1級・2級ごとに、土木・インフラ向けの求人をご案内しています",
@@ -80,7 +80,7 @@ VARIANTS = [
         "banner_alt": "電気施工管理専門,あなたの資格から設備・電気施工のオススメ求人を無料で紹介",
         "step01_title": "お持ちの電気施工管理・関連資格は？",
         "step01_reason": "電気施工管理1級・2級に合った求人をご紹介します（電気工事士のみの方も選択可）",
-        "step01_reward": "次に届く求人：<strong>電気施工管理の1級・2級</strong>に特化したマッチリスト（あと3ステップ）",
+        "step01_reward": "次は<strong>電気施工管理の1級・2級</strong>に特化したマッチリストをお見せします（あと3ステップ）",
         "quals": [
             "1級電気施工管理技士",
             "2級電気施工管理技士",
@@ -137,7 +137,7 @@ def enrich_nenshu(v: dict) -> dict:
     v["ns_fv_title"] = f"その年収、相場より安いかも。<br>{v['label']}専門の年収診断"
     v["salary_card"] = "    <div class=\"ns-salary-data__cards\">\n" + "\n".join(cards) + "\n    </div>"
     v["step01_reason"] = f"{v['label']}1級・2級の年収相場診断のため（電気工事士のみの方も選択可）"
-    v["step01_reward"] = f"診断結果：<strong>{v['label']}の1級・2級</strong>の年収相場を表示（あと3ステップ）"
+    v["step01_reward"] = f"診断が終わると<strong>{v['label']}の1級・2級</strong>の年収相場を確認できます（あと3ステップ）"
     return v
 
 
