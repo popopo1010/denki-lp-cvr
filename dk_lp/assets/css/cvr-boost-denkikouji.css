@@ -964,7 +964,7 @@ body {
    ここは 24px 相当にとどめる。 */
 .footer-dark .div-block-96 { gap: 0 16px; }
 .footer-dark .link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
-.cvr-pp-text a { padding: 6px 2px; }
+.cvr-pp-text a { padding: 8px 2px; }
 
 /* 選択肢グリッドが画面幅を超えないようにする（2026-08-29）。
    grid の `1fr` は minmax(auto,1fr) で、auto の最小値はアイテムの min-content。
@@ -975,3 +975,5 @@ body {
    アイテム側の最小幅を 0 にして「縮める許可」だけ与える。 */
 .c-button-grid > * { min-width: 0; }
 .c-button__text { overflow-wrap: anywhere; }
+/* step06 の「戻る」は height:auto + padding:8px で30px しかなく押しにくい。44pxを確保する。 */
+.c-nextLinkButton { min-height: 44px; }

@@ -415,6 +415,12 @@ for (const [canonical, mirrors] of MIRRORS) {
   const noTap = cssMiss(/\.footer-dark\s+\.link\s*\{[^}]*min-height:\s*44px/);
   check(`フッターの規約リンクが44px（タップ領域）: ${LP_CSS.length}本`,
     noTap.length === 0, noTap.join(", "));
+
+  // step06 の「戻る」は theme が height:48px を持つが、入力ステップ用の上書きが
+  // height:auto + padding:8px にするため実測30pxまで縮む（2026-08-29 実測）。
+  const noBack = cssMiss(/\.c-nextLinkButton\s*\{[^}]*(min-height:\s*44px|height:\s*48px)/);
+  check(`step06の「戻る」が44px以上: ${LP_CSS.length}本`,
+    noBack.length === 0, noBack.join(", "));
 }
 
 // ───────────────────────────────────────────────────────────

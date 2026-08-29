@@ -183,8 +183,11 @@ const measure = () => {
       out.smallTap.push({ el: label(el), w: Math.round(r.width), h: Math.round(r.height) });
     }
 
-    // ③ 入力欄の文字サイズ（16px未満はiOSで自動ズーム）
-    if (el.matches('input:not([type="hidden"]), select, textarea')) {
+    // ③ 入力欄の文字サイズ（16px未満はiOSで自動ズーム）。
+    //    自動ズームが起きるのは**文字を打つ欄**だけ。ボタン化した input（送信CTAに重ねた
+    //    input[type=button] は文字を隠すため font-size:0）を混ぜると、直しようのない
+    //    指摘が毎回出て本物の指摘が埋もれる。
+    if (el.matches('input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="image"]):not([type="checkbox"]):not([type="radio"]), select, textarea')) {
       const fs = parseFloat(s.fontSize);
       if (fs < 16) out.smallFont.push({ el: label(el), fontSize: fs });
     }
