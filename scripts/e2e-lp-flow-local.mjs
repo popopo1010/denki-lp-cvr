@@ -96,9 +96,17 @@ async function serveThemeSnapshot(route) {
   return route.fulfill({ status: 200, contentType: "text/css; charset=utf-8", body: themeSnapshot }).catch(() => {});
 }
 
-async function blockExternal(page) {
+/**
+ * 外部への実通信は全て遮断する。ただし送信ミラー(Zapier/GAS)だけは
+ * 「到達しようとしたか」を数える。実送信は絶対にしない（本番へテストが飛ぶため）。
+ */
+async function blockExternal(page, mirrorHits) {
   await page.route("**/*", (route) => {
     const u = route.request().url();
+    if (mirrorHits) {
+      if (u.includes("hooks.zapier.com")) { mirrorHits.zapier++; return route.abort(); }
+      if (u.includes("script.google.com")) { mirrorHits.gas++; return route.abort(); }
+    }
     if (u.startsWith(BASE)) return route.continue();
     if (THEME_CSS_RE.test(u)) return serveThemeSnapshot(route);
     return route.abort();
@@ -245,7 +253,8 @@ async function runLp(browser, devices, lp) {
   page.on("pageerror", (e) => pageErrors.push(String(e.message)));
   page.on("response", (r) => { if (r.url().startsWith(BASE) && r.status() >= 400) localMisses.push(r.url()); });
   page.on("request", (r) => { if (/booking-slots\.json|thanks-booking-bootstrap/.test(r.url())) bookingReqs.push(r.url()); });
-  await blockExternal(page);
+  const mirrorHits = { zapier: 0, gas: 0 };
+  await blockExternal(page, mirrorHits);
   await page.goto(BASE + lp, { waitUntil: "load" });
   await page.waitForTimeout(600);
 
@@ -336,6 +345,30 @@ async function runLp(browser, devices, lp) {
     else telGate.bad.length === 0
       ? pass(`${lp} 携帯以外の番号を弾く`)
       : fail(`${lp} 携帯以外の番号を弾く`, `通ってしまう: ${telGate.bad.join(", ")}`);
+  }
+
+  // 7c) 送信データが本当にZapier/GASへ出ていくか（リードが消える事故の直接検査）。
+  // 実際の送信先へは page.route で到達させず、発生したかだけを数える。
+  // form要素にsubmitリスナーを張っていた頃は、外部スクリプトのDOM差し替え後に
+  // ステップ遷移だけ生きて送信がゼロになっていた（2026-08-23 実測で発見）。
+  if (!submit.skip) {
+    const posted = await page.evaluate(async () => {
+      const form = document.querySelector(".wpcf7-form");
+      if (!form) return { skip: true, why: "フォームが無い構成" };
+      const set = (n, v) => {
+        const el = form.querySelector(`[name="${n}"]`);
+        if (el) { el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("blur", { bubbles: true })); }
+      };
+      set("your-last-name", "検証"); set("your-first-name", "一郎"); set("your-tel", "09055512345");
+      await new Promise((r) => setTimeout(r, 250));
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((r) => setTimeout(r, 500));
+      return {};
+    });
+    if (posted.skip) pass(`${lp} 送信データがZapier/GASへ出る`, posted.why);
+    else (mirrorHits.zapier > 0 && mirrorHits.gas > 0)
+      ? pass(`${lp} 送信データがZapier/GASへ出る`, `Zapier=${mirrorHits.zapier} GAS=${mirrorHits.gas}`)
+      : fail(`${lp} 送信データがZapier/GASへ出る`, `Zapier=${mirrorHits.zapier} GAS=${mirrorHits.gas}（リードが消える）`);
   }
 
   // 8) 予約枠の先読みは「予約カレンダーが残っている nenshu-shindan 系」だけ

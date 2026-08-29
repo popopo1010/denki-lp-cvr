@@ -80,6 +80,17 @@ for (const p of IMPLS) {
   check(`${p}: html.dk-inapp では autofocus しない`,
     /dk-inapp/.test(src) && /classList\.contains\("dk-inapp"\)/.test(src));
 
+  // 送信ミラー(Zapier/GAS)は form 要素ではなく document に張る。
+  // form要素に張ると、外部スクリプトがフォームDOMを差し替えた瞬間にリスナーごと消え、
+  // **ステップ遷移は自己修復で生きているのに送信だけ無言で失われる**
+  // （2026-08-23 実ブラウザで再現: 差し替え後 Zapier=0 / GAS=0 ＝リードが丸ごと消える）。
+  // 「1回だけ送る」もフォーム単位(WeakSet)で持つ。差し替え後の新フォームは別物。
+  check(`${p}: 送信ミラーを document 委譲で張る`,
+    !/form\.addEventListener\(\s*["']submit["']/.test(src) &&
+    /document\.addEventListener\(\s*["']submit["']/.test(src));
+  check(`${p}: 送信済み判定をフォーム単位(WeakSet)で持つ`,
+    /sentForms\s*=\s*new WeakSet\(\)/.test(src) && !/let\s+sentOnce/.test(src));
+
   // ⑤(c) focusin ナッジ（キーボードで押し上げられた上部を戻す）
   check(`${p}: focusin ナッジがある`, /addEventListener\(\s*["']focusin["']/.test(src));
 
