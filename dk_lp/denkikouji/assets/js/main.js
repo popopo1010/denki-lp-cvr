@@ -906,7 +906,10 @@
     // その要素に張った submit リスナーごと消え、ステップ遷移は自己修復で生きているのに
     // 送信だけが無言で失われる（2026-08-23 実ブラウザで再現）。document委譲に統一する。
     if (!document.querySelector(".wpcf7-form")) return;
-    const sentForms = new WeakSet();
+    // 送信は原則すべて通す（同一人物の再送信も別人の連続送信も届ける）。
+    // 止めるのは「1タップでsubmitが二重発火した」事故だけ。
+    const DEDUP_MS = 3000;
+    const sentAt = new Map();
     let clientIp = "";
 
     function fetchClientIp() {
@@ -929,12 +932,16 @@
     }
 
     function sendToMirrors(form) {
-      if (!form || sentForms.has(form)) return;
+      if (!form) return;
       const tel = (form.querySelector('input[name="your-tel"]') || {}).value || "";
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!isValidTel(tel) || !last.trim() || !first.trim()) return;
-      sentForms.add(form);
+      const sendKey = tel + "|" + last.trim() + "|" + first.trim();
+      const now = Date.now();
+      const prev = sentAt.get(sendKey);
+      if (prev && now - prev < DEDUP_MS) return;
+      sentAt.set(sendKey, now);
       try {
         const fd = new FormData(form);
         const params = new URLSearchParams();
@@ -949,7 +956,7 @@
         postTo(ZAPIER_URL, body);
         postTo(GAS_URL, body);
       } catch (e) {
-        sentForms.delete(form);
+        sentAt.delete(sendKey);
       }
     }
 

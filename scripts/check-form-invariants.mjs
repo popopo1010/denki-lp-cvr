@@ -88,8 +88,15 @@ for (const p of IMPLS) {
   check(`${p}: 送信ミラーを document 委譲で張る`,
     !/form\.addEventListener\(\s*["']submit["']/.test(src) &&
     /document\.addEventListener\(\s*["']submit["']/.test(src));
-  check(`${p}: 送信済み判定をフォーム単位(WeakSet)で持つ`,
-    /sentForms\s*=\s*new WeakSet\(\)/.test(src) && !/let\s+sentOnce/.test(src));
+  // 送信は原則すべて通す（同一人物の再送信も別人の連続送信も届ける。オーナー方針）。
+  // 「1ページ読み込みにつき1回」やフォーム単位で持つと、同じページからの
+  // 2件目以降が**無言で消える**（2026-08-23 実測。同一端末で3回テストして
+  // 1回しか届かず、ページを変えると復活する、という症状の原因だった）。
+  // 止めてよいのは「1タップでsubmitが二重発火した」事故だけ＝短い時間窓のみ。
+  check(`${p}: 再送信を止めない（短時間の二重発火のみ抑制）`,
+    /DEDUP_MS/.test(src) && /sentAt\s*=\s*new Map\(\)/.test(src) &&
+    /now - prev < DEDUP_MS/.test(src) &&
+    !/let\s+sentOnce/.test(src) && !/sentForms/.test(src) && !/sentKeys/.test(src));
 
   // ⑤(c) focusin ナッジ（キーボードで押し上げられた上部を戻す）
   check(`${p}: focusin ナッジがある`, /addEventListener\(\s*["']focusin["']/.test(src));

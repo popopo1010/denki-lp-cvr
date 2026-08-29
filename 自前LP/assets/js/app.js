@@ -1198,9 +1198,14 @@
     // 送信だけが無言で失われる**（2026-08-23 実ブラウザで再現: 差し替え後は
     // Zapier=0 / GAS=0）。ステップ遷移と同じく document 委譲に統一する。
     if (!document.querySelector(".wpcf7-form")) return;
-    // 「1回だけ送る」はフォーム単位で持つ。差し替え後の新しいフォームは別物として
-    // 1回送れる必要があるため、グローバルなbooleanにはしない。
-    const sentForms = new WeakSet();
+    // 送信は**原則すべて通す**。同一人物の再送信も、別人の連続送信も届けたい
+    // （オーナー方針 2026-08-23）。以前は「1ページ読み込みにつき1回」だったため、
+    // 同じページからの2件目以降が無言で消えていた（同一端末で3回テストして
+    // 1回しか届かず、ページを変えると復活する、という症状の原因）。
+    // ここで止めるのは「1タップで submit が二重発火した」事故だけ。
+    // まったく同じ内容が DEDUP_MS 以内に連続した場合のみ2件目を捨てる。
+    const DEDUP_MS = 3000;
+    const sentAt = new Map(); // 送信内容 -> 最後に送った時刻
     let clientIp = "";
 
     // IP取得は初期ロード後アイドル時に実行（送信前に確実に取得するため）
@@ -1224,7 +1229,7 @@
     }
 
     function sendToMirrors(form) {
-      if (!form || sentForms.has(form)) return;
+      if (!form) return;
       // 未入力のゴミデータがZapier/GASに飛ばないための最終ガード。
       // ここは**わざとUIの検証より緩い**（10〜11桁の数字なら通す）。
       // UIの検証は携帯のみ（isValidTel = /^0[6789]0[0-9]{8}$/）で、
@@ -1238,7 +1243,11 @@
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
       if (isTestLeadSubmission(tel, last, first)) return;
-      sentForms.add(form);
+      const sendKey = tel + "|" + last.trim() + "|" + first.trim();
+      const now = Date.now();
+      const prev = sentAt.get(sendKey);
+      if (prev && now - prev < DEDUP_MS) return; // 1タップの二重発火だけ捨てる
+      sentAt.set(sendKey, now);
       try {
         // 送信時点でも検索KWを再捕捉する最終保険。load/DOMContentLoaded 経路で
         // 取りこぼしても（utm_termが後付けされた・他スクリプトに上書きされた等）、
@@ -1260,7 +1269,7 @@
         const body = params.toString();
         postTo(ZAPIER_URL, body);
         postTo(GAS_URL, body);
-      } catch (e) { sentForms.delete(form); }
+      } catch (e) { sentAt.delete(sendKey); }
     }
 
     // required(電話番号)チェック通過後に dispatchEvent('submit') 経由で発火する。
