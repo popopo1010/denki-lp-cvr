@@ -179,8 +179,13 @@ const measure = () => {
 
     // ② タップ領域（実際に押すもの）
     const tappable = el.matches('a[href], button, input[type="button"], input[type="submit"], select, [role="button"], .js-step-button, .js-next-button, .js-radio-button, .js-checkbox-button');
-    if (tappable && (r.height < 44 || r.width < 44)) {
-      out.smallTap.push({ el: label(el), w: Math.round(r.width), h: Math.round(r.height) });
+    // step06 の同意文リンク（プライバシーポリシー・利用規約）だけは **意図的に 24px** で止める。
+    // 送信CTAの真横にあるため、44pxまで広げると誤タップでLPから離脱する事故が増えCVRを下げる。
+    // ここを 44px 基準のまま報告し続けると、直す気のない指摘が毎回並んで本物が埋もれる。
+    const consent = el.closest(".cvr-pp-text") !== null;
+    const min = consent ? 24 : 44;
+    if (tappable && (r.height < min || r.width < min)) {
+      out.smallTap.push({ el: label(el), w: Math.round(r.width), h: Math.round(r.height), min });
     }
 
     // ③ 入力欄の文字サイズ（16px未満はiOSで自動ズーム）。
@@ -235,7 +240,7 @@ async function run(browser, lp) {
     const record = (m, where) => {
       if (m.scrollableX > 1) note(lp, d.name, "横スクロール", `${where}: 指で横に ${m.scrollableX}px 動いてしまう（画面幅 ${d.width}px）`);
       for (const o of m.overflow) note(lp, d.name, "はみ出し", `${where}: ${o.el} (right=${o.right} > ${d.width})`);
-      for (const t of m.smallTap) note(lp, d.name, "タップ領域", `${where}: ${t.el} が ${t.w}×${t.h}px（44px未満）`);
+      for (const t of m.smallTap) note(lp, d.name, "タップ領域", `${where}: ${t.el} が ${t.w}×${t.h}px（${t.min}px未満）`);
       for (const f of m.smallFont) note(lp, d.name, "文字サイズ", `${where}: ${f.el} が ${f.fontSize}px（16px未満＝iOSで自動ズーム）`);
     };
     record(await page.evaluate(measure), "FV");
