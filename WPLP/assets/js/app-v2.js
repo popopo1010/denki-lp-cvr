@@ -6,6 +6,11 @@
   try {
     if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|Messenger/i.test(navigator.userAgent)) {
       document.documentElement.classList.add("dk-inapp");
+      // 半透明バーをページに被せるのは iOS のアプリ内ブラウザだけ。Android の
+      // LINE等はバーが被らないので、余白を足すと純粋な無駄になる（2026-08-29 オーナー実機）。
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        document.documentElement.classList.add("dk-ios");
+      }
     }
   } catch (e) { /* no-op */ }
 

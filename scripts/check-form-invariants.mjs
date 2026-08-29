@@ -122,6 +122,11 @@ for (const p of IMPLS) {
 
   // in-app 判定（UA）自体
   check(`${p}: アプリ内ブラウザ検知(UA)がある`, /Instagram|FBAN|Line\\?\//.test(src));
+  // 余白(64px)は html.dk-inapp.dk-ios にだけ効く。dk-ios を付ける配線が消えると
+  // iOSで余白ゼロになり、STEP表示がバーの裏に沈む症状が丸ごと戻る（CSSだけ見張っても
+  // 気づけない。lp-input-step で同じ見落としを踏んでいる）。
+  check(`${p}: iOS判定(dk-ios)を付けている`,
+    /classList\.add\("dk-ios"\)/.test(src) && /iPhone\|iPad\|iPod/.test(src));
 
   // ⑤ CSSだけあってクラスが付かない、を防ぐ。
   // 全フォームLPの critical CSS に `html.dk-inapp body.lp-form-step …{padding-top:64px}` を
@@ -310,14 +315,17 @@ for (const [canonical, mirrors] of MIRRORS) {
     // 2026-08-29: 対象を lp-input-step → lp-form-step に広げた。入力ステップだけ96pxだと
     // 選択ステップ(44px)との間で **ヘッダー下の余白が52px跳ねて見える**（オーナー実機報告）。
     // アプリ内ブラウザでは全ステップ64pxに揃える。通常ブラウザは従来どおり44px。
+    // 2026-08-29: 余白は iOS のアプリ内ブラウザ限定にした（html.dk-inapp.dk-ios）。
+    // 半透明バーをページに被せるのはiOSだけで、AndroidのLINE等はバーが被らない。
+    // Androidは無条件の44pxに戻る。オーナーのAndroid実機で余白が無駄と判明。
     // 2026-08-29: 96pxは余白が多すぎるとオーナー指摘。実測で先頭要素は
     // padding+36px の位置に来るので、64pxでも先頭は約100pxとなりLINEのバー(~83px)を
     // 十分に越える。44pxだと約80pxでバーに潜るため、そこまでは下げられない。
-    if (!/html\.dk-inapp body\.lp-form-step \.js-page-body\{padding-top:64px!important\}/.test(html)) {
+    if (!/html\.dk-inapp\.dk-ios body\.lp-form-step \.js-page-body\{padding-top:64px!important\}/.test(html)) {
       missing.push(p.slice(ROOT.length));
     }
   }
-  check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:64px・全ステップ共通)がある`,
+  check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:64px・iOSのみ・全ステップ共通)がある`,
     missing.length === 0, missing.slice(0, 5).join(", "));
 
   // 入力ステップ(96px)だけでなく、選択ステップ(step01-03)の余白も全LPに要る。
