@@ -21,6 +21,10 @@
   // 動く冪等な処理なので、既に見えていれば何もしない。CSS側のscroll-margin-topとセット。
   (function () {
     var BAR = 96; // アプリ内上部バー相当（LINE実測~83pt+余裕。2026-07-08）
+    var SETTLE_MS = 140;    // スクロールがこれだけ止まったら「ブラウザが動かし終えた」
+    var DEADLINE_MS = 1500; // 落ち着かなくても最後に1回は直す
+    var MIN_MOVE = 8;       // これ未満は動かさない（数pxの微揺れが目に付くため）
+    var MAX_FIX = 4;        // 同じフォーカス中の補正回数の上限
     function restoreHead(t) {
       var group = t.closest(".js-form-group");
       if (!group) return;
@@ -43,35 +47,58 @@
       // （v2系・dk_lp系のstep04）では常に「戻さない」を選んでしまい、
       // ナッジが実質無効だった（2026-08-23 E2Eレース再現で発覚）。
       var d = Math.max(delta, ir.bottom - (vvh - 8));
-      if (d < 0) {
-        window.scrollBy({ top: d, left: 0, behavior: "auto" });
+      // **instant** で動かす。behavior:"auto" は CSS の scroll-behavior を読むため、
+      // 全LPが持つ html{scroll-behavior:smooth} の下では補正がアニメーションになり、
+      // iOSの再スクロールに毎回割り込まれて画面がガクガク揺れる
+      // （2026-08-29 オーナー実機動画。1.5秒で23回位置が変わっていた）。
+      // MIN_MOVE 未満の微補正もしない（数pxの揺れが目に付くため）。
+      if (d < 0 && -d >= MIN_MOVE) {
+        window.scrollBy({ top: d, left: 0, behavior: "instant" });
+        return true;
       }
+      return false;
     }
     function isNudgeTarget(el) {
       return el && el.matches && el.matches('input[type="tel"], input[type="text"]');
     }
+    // 300/700/1200ms の固定3回で補正していたが、ブラウザが動かしている最中にも
+    // 割り込むため、画面が上下に揺れて見えた（2026-08-29 オーナー実機報告）。
+    // 「スクロールが SETTLE_MS 止まった＝ブラウザが動かし終えた」ときにだけ、
+    // 1回だけ直す。iOSが何度スクロールし直しても、そのたび**落ち着いてから**
+    // 1回直すので、多段補正の強さは保ったまま揺れだけが消える。
     document.addEventListener("focusin", function (e) {
       if (!document.documentElement.classList.contains("dk-inapp")) return;
       var t = e.target;
       if (!isNudgeTarget(t)) return;
-      [300, 700, 1200].forEach(function (ms) {
-        setTimeout(function () {
-          if (document.activeElement === t) restoreHead(t);
-        }, ms);
-      });
+      var settle = null, deadline = null, fixes = 0, done = false;
+      function stop() {
+        if (done) return;
+        done = true;
+        clearTimeout(settle);
+        clearTimeout(deadline);
+        window.removeEventListener("scroll", onMove, true);
+        if (window.visualViewport) window.visualViewport.removeEventListener("resize", onMove);
+        t.removeEventListener("blur", stop);
+      }
+      function fix() {
+        if (done) return;
+        if (document.activeElement !== t) { stop(); return; }
+        if (restoreHead(t)) fixes++;
+        // iOSと押し合いになって延々と動き続けるのを防ぐ
+        if (fixes >= MAX_FIX) stop();
+      }
+      function onMove() {
+        if (done) return;
+        clearTimeout(settle);
+        settle = setTimeout(fix, SETTLE_MS);
+      }
+      window.addEventListener("scroll", onMove, true);
+      if (window.visualViewport) window.visualViewport.addEventListener("resize", onMove);
+      t.addEventListener("blur", stop);
+      // 一度もスクロールが起きない端末でも、最後に必ず1回は見る
+      deadline = setTimeout(function () { fix(); stop(); }, DEADLINE_MS);
+      onMove();
     }, true);
-    if (window.visualViewport) {
-      var vvTimer = null;
-      window.visualViewport.addEventListener("resize", function () {
-        if (!document.documentElement.classList.contains("dk-inapp")) return;
-        var ae = document.activeElement;
-        if (!isNudgeTarget(ae)) return;
-        clearTimeout(vvTimer);
-        vvTimer = setTimeout(function () {
-          if (document.activeElement === ae) restoreHead(ae);
-        }, 250);
-      });
-    }
   })();
 
 
