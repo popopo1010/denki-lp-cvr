@@ -902,9 +902,11 @@
 
   // ========== Form mirror (Zapier + GAS / スプシ・Slack連携) ==========
   function initFormMirrors() {
-    const form = document.querySelector(".wpcf7-form");
-    if (!form) return;
-    let sentOnce = false;
+    // form要素を掴んで保持しない。外部スクリプトがフォームDOMを差し替えると
+    // その要素に張った submit リスナーごと消え、ステップ遷移は自己修復で生きているのに
+    // 送信だけが無言で失われる（2026-08-23 実ブラウザで再現）。document委譲に統一する。
+    if (!document.querySelector(".wpcf7-form")) return;
+    const sentForms = new WeakSet();
     let clientIp = "";
 
     function fetchClientIp() {
@@ -926,13 +928,13 @@
       if (!sent) fetch(url, { method: "POST", mode: "no-cors", keepalive: true, body }).catch(() => {});
     }
 
-    function sendToMirrors() {
-      if (sentOnce) return;
+    function sendToMirrors(form) {
+      if (!form || sentForms.has(form)) return;
       const tel = (form.querySelector('input[name="your-tel"]') || {}).value || "";
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!isValidTel(tel) || !last.trim() || !first.trim()) return;
-      sentOnce = true;
+      sentForms.add(form);
       try {
         const fd = new FormData(form);
         const params = new URLSearchParams();
@@ -947,11 +949,18 @@
         postTo(ZAPIER_URL, body);
         postTo(GAS_URL, body);
       } catch (e) {
-        sentOnce = false;
+        sentForms.delete(form);
       }
     }
 
-    form.addEventListener("submit", sendToMirrors, { capture: true });
+    // document のcapture段階で受けるので、フォームDOMが差し替わっても生き残る。
+    if (!document.__lpMirrorBound) {
+      document.__lpMirrorBound = true;
+      document.addEventListener("submit", (e) => {
+        const form = e.target && e.target.closest ? e.target.closest(".wpcf7-form") : null;
+        if (form) sendToMirrors(form);
+      }, true);
+    }
   }
 
   // ========== フォームの自己修復（本番 app.js から移植 2026-08-23）==========

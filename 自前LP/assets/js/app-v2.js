@@ -1079,9 +1079,14 @@
     const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
     // GAS Web App URL（デプロイ後にここへ貼る。空のままなら GAS送信は無効）
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
-    const form = document.querySelector(".wpcf7-form");
-    if (!form) return;
-    let sentOnce = false;
+    // form要素を掴んで保持しない。外部スクリプトがフォームDOMを差し替えると
+    // その要素に張った submit リスナーごと消え、**ステップ遷移は自己修復で生きているのに
+    // 送信だけが無言で失われる**（2026-08-23 実ブラウザで再現: 差し替え後は
+    // Zapier=0 / GAS=0）。ステップ遷移と同じく document 委譲に統一する。
+    if (!document.querySelector(".wpcf7-form")) return;
+    // 「1回だけ送る」はフォーム単位で持つ。差し替え後の新しいフォームは別物として
+    // 1回送れる必要があるため、グローバルなbooleanにはしない。
+    const sentForms = new WeakSet();
     let clientIp = "";
 
     // IP取得は初期ロード後アイドル時に実行（送信前に確実に取得するため）
@@ -1104,8 +1109,8 @@
       if (!sent) fetch(url, { method: "POST", mode: "no-cors", keepalive: true, body: body }).catch(() => {});
     }
 
-    function sendToMirrors() {
-      if (sentOnce) return;
+    function sendToMirrors(form) {
+      if (!form || sentForms.has(form)) return;
       // 未入力のゴミデータがZapier/GASに飛ばないための最終ガード。
       // ここは**わざとUIの検証より緩い**（10〜11桁の数字なら通す）。
       // UIの検証は携帯のみ（isValidTel = /^0[6789]0[0-9]{8}$/）で、
@@ -1119,7 +1124,7 @@
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
       if (isTestLeadSubmission(tel, last, first)) return;
-      sentOnce = true;
+      sentForms.add(form);
       try {
         const fd = new FormData(form);
         const params = new URLSearchParams();
@@ -1133,12 +1138,19 @@
         const body = params.toString();
         postTo(ZAPIER_URL, body);
         postTo(GAS_URL, body);
-      } catch (e) { sentOnce = false; }
+      } catch (e) { sentForms.delete(form); }
     }
 
     // required(電話番号)チェック通過後に dispatchEvent('submit') 経由で発火する。
     // submit ボタンの click capture には登録しない（未入力でゴミデータが飛ぶのを防ぐため）。
-    form.addEventListener("submit", sendToMirrors, { capture: true });
+    // document のcapture段階で受けるので、フォームDOMが差し替わっても生き残る。
+    if (!document.__lpMirrorBound) {
+      document.__lpMirrorBound = true;
+      document.addEventListener("submit", (e) => {
+        const form = e.target && e.target.closest ? e.target.closest(".wpcf7-form") : null;
+        if (form) sendToMirrors(form);
+      }, true);
+    }
   }
 
   // ========== Init ==========
