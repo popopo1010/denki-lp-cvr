@@ -172,6 +172,19 @@ html.dk-inapp body.lp-form-step .js-page-body{padding-top:96px!important}
   ]
 }
 </script>
+<style id="lp-job-cards-css">
+.lp-jobs{margin:18px 12px 0;text-align:left}
+.lp-jobs[hidden]{display:none!important}
+.lp-jobs__head{font-size:13px;font-weight:700;color:#314c85;margin:0 0 8px}
+.lp-jobs__list{display:grid;gap:8px}
+.lp-job{border:1px solid #e2e7f0;border-radius:9px;background:#fff;padding:9px 11px}
+.lp-job__title{font-size:13px;font-weight:700;color:#1b2330;margin:0 0 4px;line-height:1.45}
+.lp-job__meta{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12px;color:#5b6880;margin:0}
+.lp-job__pay{color:#314c85;font-weight:700;white-space:nowrap}
+.lp-job__tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 0}
+.lp-job__tag{font-size:11px;background:#eef1f8;color:#46536b;padding:2px 7px;border-radius:4px;line-height:1.5}
+.lp-jobs__note{font-size:11px;color:#8c97ab;margin:7px 0 0;line-height:1.5}
+</style>
 </head>
 
 <body class="wp-singular page-template-default page page-id-3134 wp-embed-responsive wp-theme-original-thema">
@@ -248,6 +261,14 @@ html.dk-inapp body.lp-form-step .js-page-body{padding-top:96px!important}
             <span>次の質問へ ></span>
         </button>
     </div>
+
+    <!-- FV直下の求人カード。CTAより下に置き、CTAを画面外へ押し出さない。
+         min-height はデータ到着で枠が動かないための予約（CLS対策）。 -->
+    <section class="lp-jobs" data-lp-job-cards data-src="../assets/data/lp-job-cards-denki.json?v=20260829a" data-limit="3" style="min-height:232px">
+        <p class="lp-jobs__head">いま掲載中の求人（抜粋）</p>
+        <div class="lp-jobs__list" data-lp-job-cards-list></div>
+        <p class="lp-jobs__note" data-lp-job-cards-note></p>
+    </section>
 </div>
 
 <div class="p-step01 js-page-body js-form-group" id="step01" data-auto-advance-ms="2800">
@@ -433,5 +454,6 @@ html.dk-inapp body.lp-form-step .js-page-body{padding-top:96px!important}
     </div>
 </footer>
 
+<script src="../assets/js/lp-job-cards.js?v=20260829a" defer></script>
 </body>
 </html>

@@ -83,6 +83,10 @@
     "version": "20260610",
     "sha256": "09382b74757ed963"
   },
+  "assets/js/lp-job-cards.js": {
+    "version": "20260829a",
+    "sha256": "91b3eb1c8a4109ae"
+  },
   "assets/js/thanks-booking-bootstrap.js": {
     "version": "12",
     "sha256": "a49f917e61324d9f"
@@ -110,6 +114,10 @@
   "assets/js/thanks-v2-shared.js": {
     "version": "8",
     "sha256": "30e12c48bef9b34a"
+  },
+  "denkikouji-trust/steps-lazy.html": {
+    "version": "20260712",
+    "sha256": "ba51970a23d862f5"
   },
   "denkikouji-v3/steps-lazy.html": {
     "version": "20260701c",
