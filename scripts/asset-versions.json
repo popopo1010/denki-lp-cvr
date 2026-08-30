@@ -84,8 +84,8 @@
     "sha256": "09382b74757ed963"
   },
   "assets/js/lp-job-cards.js": {
-    "version": "20260829b",
-    "sha256": "2218e3e21c69b336"
+    "version": "20260830a",
+    "sha256": "fd2ef38161398d07"
   },
   "assets/js/thanks-booking-bootstrap.js": {
     "version": "12",
@@ -140,8 +140,8 @@
     "sha256": "ba51970a23d862f5"
   },
   "dk_lp/assets/css/cvr-boost-sekoukanri.css": {
-    "version": "20260829d",
-    "sha256": "4637ef80cef09301"
+    "version": "20260829e",
+    "sha256": "664734656b8eb1af"
   },
   "dk_lp/assets/js/app.js": {
     "version": "20260829f",
@@ -152,8 +152,8 @@
     "sha256": "f97155b220e39781"
   },
   "dk_lp/denkikouji/assets/css/cvr-boost.css": {
-    "version": "20260829d",
-    "sha256": "7ffe4400582cc032"
+    "version": "20260829e",
+    "sha256": "51c6600d04699f94"
   },
   "dk_lp/denkikouji/assets/js/cvr-boost.js": {
     "version": "20260610b",

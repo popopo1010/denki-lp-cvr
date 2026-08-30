@@ -81,7 +81,8 @@
     var shown = jobs.slice(0, limit);
     var note = data.is_sample
       ? "掲載条件の一例です（実在の求人ではありません）"
-      : "掲載中の求人から抜粋" + (data.generated_at ? "（" + esc(data.generated_at) + " 時点）" : "");
+      : "掲載中の求人から抜粋" + (data.generated_at ? "（" + data.generated_at + " 時点）" : "");
+    // ↑ 注記は textContent で入れる（=そこでエスケープされる）ので esc() を重ねない
 
     root.querySelector("[data-lp-job-cards-list]").innerHTML =
       shown.map(card).join("");

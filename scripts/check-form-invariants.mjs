@@ -328,6 +328,34 @@ for (const [canonical, mirrors] of MIRRORS) {
   check(`全フォームLP(${formPages}本)にアプリ内ブラウザのバー対策(padding-top:64px・iOSのみ・全ステップ共通)がある`,
     missing.length === 0, missing.slice(0, 5).join(", "));
 
+  // エラー欄(#error-*)を持つLPは、読んでいるCSSのどれかにエラーの絶対配置
+  // （出没してもレイアウトが+40px動かないためのルール）が必要。
+  // 2026-08-30: 8本のcvr-boost系には入れたが、独自CSSを読む dk_lp が漏れていた。
+  // 「別系統のCSSを読むLPに規則が届かない」は 2026-08-23 の余白と同じ再発パターン。
+  {
+    const noOverlay = [];
+    for (const p of walk(ROOT)) {
+      if (!isFormLp(p)) continue;
+      const dir = dirname(p);
+      let combined = readFileSync(p, "utf8");
+      const lazy = join(dir, "steps-lazy.html");
+      try { combined += readFileSync(lazy, "utf8"); } catch (e) {}
+      if (!/id="error-/.test(combined)) continue;
+      const hrefs = [...combined.matchAll(/href="([^"]+\.css)[^"]*"/g)].map((m) => m[1]);
+      let ok = false;
+      for (const href of hrefs) {
+        if (/^https?:/.test(href)) continue;
+        try {
+          const css = readFileSync(join(dir, href.split("?")[0]), "utf8");
+          if (css.includes("> dd > .c-error-message")) { ok = true; break; }
+        } catch (e) { /* 参照切れは check-local-refs が見る */ }
+      }
+      if (!ok) noOverlay.push(p.slice(ROOT.length));
+    }
+    check("エラー欄を持つ全LPのCSSにエラーの絶対配置（レイアウト非移動）が届いている",
+      noOverlay.length === 0, noOverlay.slice(0, 5).join(", "));
+  }
+
   // 入力ステップ(96px)だけでなく、選択ステップ(step01-03)の余白も全LPに要る。
   // 64px(旧96px)の方だけ全数チェックしていたため、WPLP/自前LP の20本が
   // 「入力ステップは余白あり・選択ステップは余白なし」という半端な状態で残っていた
