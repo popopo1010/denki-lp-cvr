@@ -39,6 +39,38 @@
     window.LP_BOOKING_GAS_URL ||
     "https://script.google.com/macros/s/AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw/exec";
 
+  // thanks到達ピン（2026-08-30 リード消失盲点の対策）。
+  // フォーム送信のミラー(Zapier/GAS)が両方失敗すると、CV(広告の登録完了)だけ発火して
+  // リードがどこにも残らない——それを塞ぐ最後の網。qualified なthanks到達を
+  // 電話番号つきでGASへ1本送る。GAS側は送信行が見つかればthanks_reached_atを記録するだけ、
+  // 見つからなければ「送信消失の疑い」として救済行＋@channel警報を出す（handleThanksReached）。
+  // 送信は1セッション1回。テスト由来は _test を同送し、警報を鳴らさない。
+  var THANKS_PING_KEY = "dk_thanks_ping_v1";
+  dk.sendThanksReachedPing = function (qualified, testReason) {
+    if (!qualified) return; // 直開き等、送信を伴わない閲覧ではピンを打たない
+    try {
+      if (sessionStorage.getItem(THANKS_PING_KEY)) return;
+      sessionStorage.setItem(THANKS_PING_KEY, "1");
+    } catch (e) {
+      return; // storage不可の環境では重複判定できないため打たない（誤警報防止を優先）
+    }
+    try {
+      var params = new URLSearchParams();
+      params.set("_event", "thanks_reached");
+      params.set("your-tel", dk.getTel() || "");
+      params.set("_name", dk.getName() || "");
+      params.set("_lp", dk.getLpSlug() || "");
+      params.set("_page", location.href);
+      if (testReason) params.set("_test", testReason);
+      var body = params.toString();
+      var blob = new Blob([body], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+      var sent = navigator.sendBeacon && navigator.sendBeacon(dk.GAS_URL, blob);
+      if (!sent) {
+        fetch(dk.GAS_URL, { method: "POST", mode: "no-cors", keepalive: true, body: body }).catch(function () {});
+      }
+    } catch (e) { /* 計測の保険なので本体表示は止めない */ }
+  };
+
   dk.esc = function (s) {
     return String(s || "")
       .replace(/&/g, "&amp;")
@@ -263,6 +295,8 @@
         }
       } catch (e3) {}
     }
+    // CVの発火有無に関わらず、qualified な到達はGASへ報告する（送信消失の検知網）
+    dk.sendThanksReachedPing(qualified, testReason);
   };
 
   dk.fireThanksPageEvents();

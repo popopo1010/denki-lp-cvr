@@ -342,6 +342,32 @@
     location.href = buildThanksUrl();
   }
 
+  // thanks到達ピン（2026-08-30 リード消失盲点の対策。thanks-v2-shared.js と同一の考え方）。
+  // 送信ミラーが両方失敗するとCVだけ発火してリードが無痕跡になる——qualifiedな到達を
+  // 電話番号つきでGASへ報告し、送信行が無ければGAS側が救済行＋@channel警報を出す。
+  function sendThanksReachedPing(qualified, testReason) {
+    if (!qualified) return;
+    try {
+      if (sessionStorage.getItem("dk_thanks_ping_v1")) return;
+      sessionStorage.setItem("dk_thanks_ping_v1", "1");
+    } catch (e) {
+      return; // storage不可では重複判定できないため打たない（誤警報防止を優先）
+    }
+    try {
+      const params = new URLSearchParams();
+      params.set("_event", "thanks_reached");
+      params.set("your-tel", storageGet("_tel") || "");
+      params.set("_name", getDisplayName() || "");
+      params.set("_lp", storageGet("_lp") || LP_SLUG);
+      params.set("_page", location.href);
+      if (testReason) params.set("_test", testReason);
+      const body = params.toString();
+      const blob = new Blob([body], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+      const sent = navigator.sendBeacon && navigator.sendBeacon(GAS_URL, blob);
+      if (!sent) fetch(GAS_URL, { method: "POST", mode: "no-cors", keepalive: true, body }).catch(() => {});
+    } catch (e) { /* 計測の保険なので本体表示は止めない */ }
+  }
+
   function initThanksPageTracking() {
     const params = new URLSearchParams(location.search);
     const lpSlug = params.get("lp") || "unknown";
@@ -381,6 +407,8 @@
         conversion_source: "lp_form"
       });
     }
+    // CVの発火有無に関わらず、qualified な到達はGASへ報告する（送信消失の検知網）
+    sendThanksReachedPing(qualified, testReason);
 
     document.querySelectorAll('a[href*="line.me"]').forEach((link) => {
       link.addEventListener("click", () => {

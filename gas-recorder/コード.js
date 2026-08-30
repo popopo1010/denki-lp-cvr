@@ -78,6 +78,8 @@ const PREFERRED_COLUMNS = [
   "slack_thread_ts",
   "slack_channel_id",
   "slack_error",
+  "thanks_reached_at",
+  "_recovered",
   "calendar_event_id",
   "zoho_deal_id",
   "zoho_synced_at",
@@ -287,6 +289,9 @@ function doPost(e) {
     if (params["_event"] === "book_slot") {
       return handleBookSlot(params);
     }
+    if (params["_event"] === "thanks_reached") {
+      return handleThanksReached(params);
+    }
 
     // 通常のフォーム送信処理
     params["_received_at"] = toJst(new Date());
@@ -427,6 +432,82 @@ function handleEmailCapture(params) {
     sheet.appendRow(row);
     return jsonOk({ matched: false, appended: true });
   } catch (err) {
+    return jsonError(err);
+  }
+}
+
+/**
+ * thanks到達ピン（2026-08-30 リード消失盲点の対策）。
+ * LPのフォーム送信後、thanksページ（qualified）から電話番号つきで1本届く。
+ * 正常時: 電話番号で送信行が見つかる → thanks_reached_at を記録するだけ（到達の裏取り）。
+ * 異常時: 送信行が見つからない ＝ フォーム送信がZapier/GASの**両方に届かなかった疑い**
+ *（従来はCVだけ発火してどこにも痕跡が残らなかった）。救済行を残し、@channelで警報を出す。
+ * 誤警報対策: 送信ビーコンとピンはほぼ同時に飛ぶため、見つからない場合は8秒待って再検索する
+ *（クライアント側もピンは thanks 表示後＝送信の数秒後）。テスト（_test付き）は警報を鳴らさない。
+ */
+function handleThanksReached(params) {
+  try {
+    var tel = String(params["your-tel"] || "").trim();
+    var nowJst = toJst(new Date());
+    var sheet = getSheet();
+    var header = ensureHeader(sheet);
+
+    var row = tel ? findLatestRowByTelOrEmail(sheet, header, tel, "") : -1;
+    if (row === -1 && tel) {
+      Utilities.sleep(8000); // 送信ビーコンとの競合（ピンが先に着いた）を吸収
+      row = findLatestRowByTelOrEmail(sheet, header, tel, "");
+    }
+
+    if (row !== -1) {
+      var reachedCol = ensureColumn(sheet, header, "thanks_reached_at");
+      var cell = sheet.getRange(row, reachedCol + 1);
+      if (!String(cell.getValue() || "").trim()) cell.setValue(nowJst); // 初回到達時刻を保持
+      return jsonOk({ matched: true, row: row });
+    }
+
+    // 送信行が無い＝消失の疑い。届いた情報だけで救済行を残す。
+    if (params["_name"] && !params["your-last-name"]) params["your-last-name"] = params["_name"];
+    var testReason = detectTestSubmission(params);
+    if (testReason) params["_test"] = testReason;
+    params["_received_at"] = nowJst;
+    params["_recovered"] = "thanks_ping";
+    params["thanks_reached_at"] = nowJst;
+    ensureColumn(sheet, header, "_recovered");
+    ensureColumn(sheet, header, "thanks_reached_at");
+    var rowVals = [];
+    for (var j = 0; j < header.length; j++) {
+      rowVals.push((header[j] in params) ? params[header[j]] : "");
+    }
+    sheet.appendRow(rowVals);
+    var newRow = sheet.getLastRow();
+
+    var text;
+    if (testReason) {
+      text = ":test_tube: 【テスト送信】thanks到達のみ検知（送信本体なし・種別: " + testReason + "）\n" +
+        "●電話番号：" + tel + "\n●LP：" + (params["_lp"] || "");
+    } else {
+      text = "<!channel> :rotating_light: *送信消失の疑い（救済リード）*\n" +
+        "thanksページ到達を検知しましたが、フォーム送信本体がシートに届いていません。\n" +
+        "届いた情報だけで記録しました。**本物のリードとして架電してください。**\n" +
+        "●名前：" + (params["_name"] || "不明") + "\n" +
+        "●電話番号：" + (tel || "不明") + "\n" +
+        "●LP：" + (params["_lp"] || "不明") + "\n" +
+        "_資格・都道府県などの詳細は取得できていません（送信データが消失）_";
+    }
+    var slackRes = postSlackChatMessage({ text: text });
+    if (slackRes.ok && slackRes.ts) {
+      updateRowColumns(sheet, header, newRow, {
+        slack_thread_ts: String(slackRes.ts),
+        slack_channel_id: slackRes.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID")
+      });
+    } else {
+      var pingSlackErr = slackRes.error || slackRes.note || "notify failed";
+      updateRowColumns(sheet, header, newRow, { slack_error: String(pingSlackErr) });
+      reportErrorToSlack("thanks_ping_recovery (row " + newRow + ")", pingSlackErr);
+    }
+    return jsonOk({ matched: false, recovered: true, row: newRow });
+  } catch (err) {
+    reportErrorToSlack("handleThanksReached", err);
     return jsonError(err);
   }
 }
@@ -1041,6 +1122,8 @@ const COLUMNS_LEGEND = [
   ["_lp", "送信元LP識別子", "sekoukanri / denkikouji / sekoukanri-doboku / sekoukanri-kentiku / sekoukanri-denkisekou / *-meta / nenshu-shindan-* / thanks / nenshu-shindan-thanks など"],
   ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない"],
   ["slack_error", "Slack通知エラー", "新規リードのSlack通知が失敗した理由。空なら通知成功（slack_thread_ts が入る）"],
+  ["thanks_reached_at", "thanks到達確認", "thanksページ到達ピンの受信時刻。空でもLINE即遷移等はあり得るが、行全体で常に空が続く場合はピン配線の故障を疑う"],
+  ["_recovered", "救済行フラグ", "thanks_ping=フォーム送信本体が届かずthanks到達ピンだけ届いた救済行（送信消失の疑い）。名前・電話番号以外の項目は無い。@channel警報も出る"],
   ["your-tel", "電話番号", "ハイフンなし11桁。先頭0はスプシで欠落表示することがある"],
   ["your-last-name", "姓", ""],
   ["your-first-name", "名", ""],
