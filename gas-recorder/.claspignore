@@ -1,0 +1,9 @@
+# clasp push の対象を明示的なホワイトリストにする。
+# ここに無いファイル（セットアップ手順の .md、BOOKING_STAFF_JSON.example.json 等）を
+# 誤ってGASプロジェクトへ送らないための安全装置。
+**/**
+!コード.js
+!zoho.js
+!agency-share.js
+!booking-custom.js
+!appsscript.json
