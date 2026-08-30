@@ -36,18 +36,30 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
-      - name: clasp を導入（v2系に固定。v3はCLI/認証形式が異なる）
-        run: npm i -g @google/clasp@2.4.2
+      # v3 は旧v2形式の ~/.clasprc.json も読める後方互換実装
+      # （file_credential_store.js の hasLegacyLocalCredentials / hasLegacyGlobalCredentials）。
+      # v2.4.2 に固定すると v3 形式の Secret を読めず
+      # 「Error retrieving access token」で落ちる（2026-08-30 初回ランで実測）。
+      - name: clasp を導入（v3固定。CLIフラグは push -f / deploy -i -d でv2と同じ）
+        run: npm i -g @google/clasp@3.4.1
 
-      - name: 認証情報を配置（Secret CLASPRC_JSON）
+      - name: 認証情報を配置（Secret CLASPRC_JSON。v2/v3どちらの形式でも可）
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
-          if [ -z "${{ secrets.CLASPRC_JSON }}" ]; then
+          if [ -z "$CLASPRC_JSON" ]; then
             echo "::error::Secret CLASPRC_JSON が未登録です。gas-recorder/自動デプロイセットアップ.md の手順で登録してください。"
             exit 1
           fi
-          printf '%s' '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          node -e "
+            const c = JSON.parse(require('fs').readFileSync(process.env.HOME + '/.clasprc.json', 'utf8'));
+            const ok = (c.tokens && c.tokens.default) || (c.token && c.oauth2ClientSettings) || c.access_token;
+            if (!ok) { console.error('::error::CLASPRC_JSON の形式を認識できません。clasp login をやり直して ~/.clasprc.json の中身で Secret を更新してください。'); process.exit(1); }
+            console.log('credential format:', c.tokens ? 'v3' : 'v2');
+          "
 
       - name: 削除ガード（リモート専用ファイルが無いことを確認）
         run: |
