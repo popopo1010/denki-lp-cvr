@@ -344,7 +344,9 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool
 
     # FAQの工種別2問も同じ理由で差し替える（テンプレートは施工管理全般の文面）。
     # 表示と JSON-LD の両方を置換する。ズレると check-faq-schema が落ちる。
-    faq_pair = VARIANT_FAQ.get(key)
+    # キーは build_* 側と同じ流儀で slug から導出する（903ad8c で未定義の `key` を
+    # 参照して NameError になっていた。CIの生成物ドリフトチェックが検出）。
+    faq_pair = VARIANT_FAQ.get(v["slug"].replace("sekoukanri-", ""))
     if faq_pair:
         for old, new in zip(SEKOUKANRI_FAQ, faq_pair):
             html = html.replace(old[0], new[0]).replace(old[1], new[1])
