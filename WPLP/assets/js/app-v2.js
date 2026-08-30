@@ -149,6 +149,8 @@
   const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
   const NENSHU_THANKS_V1_PATH = "/denki-lp-cvr/nenshu-shindan/thanks/";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
+  // 送信時のテスト判定を thanks 側へ引き継ぐキー（thanks-v2-shared.js が読む）
+  const TEST_FLAG_KEY = "dk_lp_test_v1";
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
 
   function buildThanksQuery() {
@@ -225,10 +227,18 @@
         JSON.stringify({ ts: Date.now(), lp, href: location.href })
       );
     } catch (e) { /* private mode */ }
+    // マイクロCV(lead_form_submit)はテストでも流すが is_test を付ける。
+    // GTM側でCV系タグに「is_test != 1」の条件を足せるようにするため。
+    // 判定はミラーと同じ isTestLeadSubmission（URL由来）＋送信時フラグに集約する。
+    let isTest = 0;
+    try {
+      if (isTestLeadSubmission("", "", "") || sessionStorage.getItem(TEST_FLAG_KEY)) isTest = 1;
+    } catch (e) { /* noop */ }
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
       event: "lead_form_submit",
       lp_slug: lp,
+      is_test: isTest,
       page_location: location.href,
       page_path: location.pathname
     });
@@ -1105,17 +1115,40 @@
   }
 
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
+  // テスト送信の判定。戻り値は ""（本物のリード）か種別（"stg" / "param" / "pattern"）。
+  // テストは**握りつぶさず、印を付けて全部記録する**（2026-08-30 リード件数調査の教訓。
+  // 黙って捨てる／通知だけ消すと「届いていない」誤認とMetaの過大計上を生む）：
+  //  - シート: _test 列付きで必ず残す（GASへは送る）
+  //  - Slack: 【テスト送信】表記・@channelなしで通知（GAS側が _test を見る）
+  //  - Zoho: 商談を作らない（GAS側）
+  //  - thanks: lead_conversion（Meta/Google主CV）を発火させない
+  //    （STGのフォームも本番thanksへ遷移するため、STGテストがMetaの登録完了に計上されていた）
+  // 判定の3層: ①STGは無条件テスト ②本番で試すときは ?dk_test=1 を付ける（共通ルール）
+  // ③保険で「テスト」入りの名前・090/080/070-1234-5678。①②に当たらない本物っぽい入力の
+  // 本番テストは機械判定できないので、必ず ②のURLルールを守ること。
   function isTestLeadSubmission(tel, last, first) {
+    try {
+      if (location.pathname.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+      if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return "param";
+    } catch (e) { /* noop */ }
     const t = String(tel || "").trim();
     const ln = String(last || "").trim();
     const fn = String(first || "").trim();
-    if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return true;
-    if (ln === "テスト" && (fn === "太郎" || fn === "テスト")) return true;
-    if (/テスト/.test(ln + fn)) return true;
+    if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return "pattern";
+    if (/テスト/.test(ln + fn)) return "pattern";
+    return "";
+  }
+
+  // 判定結果を thanks 側とミラー送信で共有する。テストなら理由を保存、本物なら消す
+  // （前のテストの残骸で本物のCVを止めないため）。
+  function persistTestFlag(testReason) {
     try {
-      if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return true;
-    } catch (e) { /* noop */ }
-    return false;
+      if (testReason) {
+        sessionStorage.setItem(TEST_FLAG_KEY, JSON.stringify({ ts: Date.now(), reason: testReason }));
+      } else {
+        sessionStorage.removeItem(TEST_FLAG_KEY);
+      }
+    } catch (e) { /* private mode */ }
   }
 
   function initZapierMirror() {
@@ -1171,7 +1204,10 @@
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!/^[0-9]{10,11}$/.test(tel) || !last.trim() || !first.trim()) return;
-      if (isTestLeadSubmission(tel, last, first)) return;
+      // テストでも送信は止めない（シートに全部残す）。判定を _test として同送し、
+      // thanks 側がCVを発火させないようセッションにも引き継ぐ。
+      const testReason = isTestLeadSubmission(tel, last, first);
+      persistTestFlag(testReason);
       const sendKey = tel + "|" + last.trim() + "|" + first.trim();
       const now = Date.now();
       const prev = sentAt.get(sendKey);
@@ -1187,8 +1223,10 @@
         params.append("_lp", window.__LP_ID || "unknown");
         params.append("_ip", clientIp);
         params.append("_user_agent", navigator.userAgent || "");
+        if (testReason) params.append("_test", testReason);
         const body = params.toString();
-        postTo(ZAPIER_URL, body);
+        // Zapier（旧経路）にはテストを流さない（従来どおり）。GAS＝シートには全部残す。
+        if (!testReason) postTo(ZAPIER_URL, body);
         postTo(GAS_URL, body);
       } catch (e) { sentAt.delete(sendKey); }
     }

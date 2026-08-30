@@ -5,7 +5,35 @@
   "use strict";
 
   var LEAD_SESSION_KEY = "dk_lp_lead_v1";
+  // LP側（app.js / app-v2.js / dk_lp main.js）が送信時に立てるテストフラグ
+  var TEST_FLAG_KEY = "dk_lp_test_v1";
+  var TEST_FLAG_TTL_MS = 30 * 60 * 1000;
   var dk = (window.dkThanks = window.dkThanks || {});
+
+  // テスト送信の判定（2026-08-30）。テストのCVを Meta/Google に計上しないための要。
+  // 送信時フラグ＞送信元URL（LP側のミラーが死んでいても lead session の href で判定できる）
+  // ＞現在URL の順で見る。STGのフォームは本番thanksへ遷移するため、thanksのURLだけでは
+  // STGテストを判定できないことに注意（それが Meta 過大計上の原因だった）。
+  dk.detectTestLead = function () {
+    try {
+      var raw = sessionStorage.getItem(TEST_FLAG_KEY);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && d.reason && Date.now() - d.ts < TEST_FLAG_TTL_MS) return String(d.reason);
+      }
+    } catch (e) { /* noop */ }
+    try {
+      var raw2 = sessionStorage.getItem(LEAD_SESSION_KEY);
+      if (raw2) {
+        var d2 = JSON.parse(raw2);
+        var href = (d2 && d2.href) || "";
+        if (href.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+        if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(href)) return "param";
+      }
+    } catch (e) { /* noop */ }
+    if (location.pathname.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+    return "";
+  };
 
   dk.GAS_URL =
     window.LP_BOOKING_GAS_URL ||
@@ -203,9 +231,11 @@
     }
     var qualified = isQualified();
     var lpSlug = dk.getLpSlug() || "unknown";
+    var testReason = dk.detectTestLead();
     var base = {
       lp_slug: lpSlug,
       thanks_qualified: qualified,
+      is_test: testReason ? 1 : 0,
       page_location: location.href,
       page_path: location.pathname,
       page_type: "thanks-v2"
@@ -216,7 +246,15 @@
     dk.pushDL("thanks_provisional_registration", base);
     if (qualified) {
       try {
-        if (!sessionStorage.getItem(CONVERSION_FIRED_KEY)) {
+        if (testReason) {
+          // テスト送信は Meta/Google の主CV(lead_conversion)に乗せない。
+          // 計測デバッグ用に別イベントだけ流す（GTMのCVタグはこのイベントを見ない）。
+          dk.pushDL("lead_conversion_test", {
+            lp_slug: lpSlug,
+            conversion_source: "lp_form",
+            test_reason: testReason
+          });
+        } else if (!sessionStorage.getItem(CONVERSION_FIRED_KEY)) {
           sessionStorage.setItem(CONVERSION_FIRED_KEY, "1");
           dk.pushDL("lead_conversion", {
             lp_slug: lpSlug,
