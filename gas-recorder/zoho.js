@@ -277,6 +277,11 @@ function zohoIsSequentialTel(tel) {
 
 // 明らかなテスト送信（1111111111 / 09012345678 のような番号、氏名「ああ」「山田太郎」等）は Zoho に流さない
 function zohoIsTestSubmission(params) {
+  // LP側判定の同送値（stg / param / pattern）と、STGからの送信は無条件でテスト扱い（2026-08-30）。
+  // 本物っぽい名前・番号のSTGテストが商談として残っていた（8/29 の2件）のを塞ぐ。
+  if (String(params["_test"] || "").trim()) return true;
+  if (String(params["_page"] || "").indexOf("/denki-lp-cvr-stg/") !== -1) return true;
+
   var tel = zohoNormalizeTel(params["your-tel"]);
 
   var distinct = {};

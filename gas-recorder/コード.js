@@ -48,6 +48,7 @@ const TRACKING_PARAM_COLUMNS = [
 const PREFERRED_COLUMNS = [
   "_received_at",
   "_lp",
+  "_test",
   "your-tel",
   "your-last-name",
   "your-first-name",
@@ -76,6 +77,7 @@ const PREFERRED_COLUMNS = [
   "calendar_staff_name",
   "slack_thread_ts",
   "slack_channel_id",
+  "slack_error",
   "calendar_event_id",
   "zoho_deal_id",
   "zoho_synced_at",
@@ -293,6 +295,14 @@ function doPost(e) {
     // _page のクエリ文字列から広告・計測パラメーターを個別列に展開
     applyTrackingParams(params);
 
+    // テスト送信の判定（2026-08-30）。テストも**シートには必ず残す**（黙って捨てると
+    // 「届いていない」誤認を生む）。_test はLP側判定の同送値。LP側が古い場合に備えて
+    // サーバー側でも STGのURL・明らかなテストパターンを見て補完する。
+    // テストの扱い: シート=残す / Slack=【テスト送信】表記・@channelなし /
+    // Zoho=商談を作らない（zohoIsTestSubmission が _test と _page を見る）。
+    var testReason = detectTestSubmission(params);
+    if (testReason) params["_test"] = testReason;
+
     var by = params["your-birthday-year"];
     var bm = params["your-birthday-month"];
     var bd = params["your-birthday-day"];
@@ -330,6 +340,12 @@ function doPost(e) {
         slack_thread_ts: String(slackLead.ts),
         slack_channel_id: slackLead.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID")
       });
+    } else {
+      // Slack通知の失敗を必ず痕跡に残す（2026-08-30）。以前は ok:false でも黙って
+      // 続行していたため、通知が落ちた日に検知する手段がなかった。
+      var slackErr = slackLead.error || slackLead.note || "notify failed";
+      updateRowColumns(sheet, header, newRow, { slack_error: String(slackErr) });
+      reportErrorToSlack("slack_lead_notify (row " + newRow + ")", slackErr);
     }
 
     // Zoho CRM 商談の自動作成。失敗してもスプシ記録とSlack通知は止めない。
@@ -601,6 +617,24 @@ function postSlackChatMessage(options) {
   };
 }
 
+/**
+ * テスト送信の判定（2026-08-30）。空文字=本物のリード、非空=テスト種別。
+ * ①LP側判定の同送値 _test（stg / param / pattern）
+ * ②_page がSTG（/denki-lp-cvr-stg/）から来ている
+ * ③明らかなテストパターン（zoho.js の zohoIsTestSubmission と同じ基準）
+ * 本物っぽい入力での本番テストは機械判定できないため、運用ルールとして
+ * 「本番で試すときはURLに ?dk_test=1 を付ける」を守ること（CLAUDE.md）。
+ */
+function detectTestSubmission(params) {
+  var t = String(params["_test"] || "").trim();
+  if (t) return t;
+  if (String(params["_page"] || "").indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+  try {
+    if (typeof zohoIsTestSubmission === "function" && zohoIsTestSubmission(params)) return "pattern";
+  } catch (e) { /* noop */ }
+  return "";
+}
+
 function buildLeadSlackMessage(params) {
   var last = params["your-last-name"] || "";
   var first = params["your-first-name"] || "";
@@ -623,7 +657,13 @@ function buildLeadSlackMessage(params) {
   var experience = params["your-experience"] || "";
   var keyword    = params["your-term"] || "";
   var ip         = params["_ip"] || "";
-  var lines = ["<!channel> :inbox_tray: *新規リード（LP登録）*"];
+  // テスト送信は @channel を鳴らさず、テストだと一目で分かる見出しにする（2026-08-30）。
+  // 通知自体は出す（テストが届いた事実を運用が確認できるように。**消さないこと**——
+  // 通知を後から削除すると「リードが届いていない」誤認を生む）。
+  var testReason = String(params["_test"] || "").trim();
+  var lines = [testReason
+    ? ":test_tube: *【テスト送信】LP登録テスト（種別: " + testReason + "・Zoho登録なし）*"
+    : "<!channel> :inbox_tray: *新規リード（LP登録）*"];
   lines.push("●名前：" + name);
   lines.push("●電話番号：" + tel);
   lines.push("●都道府県：" + location);
@@ -999,6 +1039,8 @@ const COLUMNS_LEGEND = [
   ["カラム名", "意味", "備考"],
   ["_received_at", "GAS受信時刻", "サーバー側で記録した日本時間 (yyyy-MM-dd HH:mm:ss)"],
   ["_lp", "送信元LP識別子", "sekoukanri / denkikouji / sekoukanri-doboku / sekoukanri-kentiku / sekoukanri-denkisekou / *-meta / nenshu-shindan-* / thanks / nenshu-shindan-thanks など"],
+  ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない"],
+  ["slack_error", "Slack通知エラー", "新規リードのSlack通知が失敗した理由。空なら通知成功（slack_thread_ts が入る）"],
   ["your-tel", "電話番号", "ハイフンなし11桁。先頭0はスプシで欠落表示することがある"],
   ["your-last-name", "姓", ""],
   ["your-first-name", "名", ""],

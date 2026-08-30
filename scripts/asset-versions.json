@@ -8,12 +8,12 @@
     "sha256": "8021ac37fb9d5be7"
   },
   "WPLP/assets/js/app-v2.js": {
-    "version": "20260830a",
-    "sha256": "7ac769e81cd39711"
+    "version": "20260830b",
+    "sha256": "4f165441ec3f76af"
   },
   "WPLP/assets/js/app.js": {
-    "version": "20260830a",
-    "sha256": "3fdd374fc33cfccb"
+    "version": "20260830b",
+    "sha256": "5e16983dbbdd811d"
   },
   "WPLP/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -68,12 +68,12 @@
     "sha256": "5e87015a08e9a2f7"
   },
   "assets/js/app-v2.js": {
-    "version": "20260830a",
-    "sha256": "7ac769e81cd39711"
+    "version": "20260830b",
+    "sha256": "4f165441ec3f76af"
   },
   "assets/js/app.js": {
-    "version": "20260830a",
-    "sha256": "3fdd374fc33cfccb"
+    "version": "20260830b",
+    "sha256": "5e16983dbbdd811d"
   },
   "assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -112,8 +112,8 @@
     "sha256": "120d4bbd0be5c039"
   },
   "assets/js/thanks-v2-shared.js": {
-    "version": "8",
-    "sha256": "30e12c48bef9b34a"
+    "version": "9",
+    "sha256": "d375d7f1f8797719"
   },
   "denkikouji-trust/steps-lazy.html": {
     "version": "20260712",
@@ -144,8 +144,8 @@
     "sha256": "664734656b8eb1af"
   },
   "dk_lp/assets/js/app.js": {
-    "version": "20260830a",
-    "sha256": "3fdd374fc33cfccb"
+    "version": "20260830b",
+    "sha256": "5e16983dbbdd811d"
   },
   "dk_lp/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -160,8 +160,8 @@
     "sha256": "652c387eb157f624"
   },
   "dk_lp/denkikouji/assets/js/main.js": {
-    "version": "20260830a",
-    "sha256": "074a8d5032952e6a"
+    "version": "20260830b",
+    "sha256": "331a8eebbc2b7fbc"
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260701c",
@@ -212,12 +212,12 @@
     "sha256": "04233f3ec2720dd1"
   },
   "自前LP/assets/js/app-v2.js": {
-    "version": "20260830a",
-    "sha256": "7ac769e81cd39711"
+    "version": "20260830b",
+    "sha256": "4f165441ec3f76af"
   },
   "自前LP/assets/js/app.js": {
-    "version": "20260830a",
-    "sha256": "3fdd374fc33cfccb"
+    "version": "20260830b",
+    "sha256": "5e16983dbbdd811d"
   },
   "自前LP/assets/js/cvr-boost.js": {
     "version": "20260823a",
