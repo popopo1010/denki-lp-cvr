@@ -141,6 +141,8 @@
   const ZAPIER_URL = "https://hooks.zapier.com/hooks/catch/2795777/3sgrmvb/";
   const CVR_ASSETS_BASE = "https://denkilp.builders-job.com/denki-lp-cvr/assets";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
+  // 送信時のテスト判定を thanks 側へ引き継ぐキー（app.js / thanks-v2-shared.js と共通）
+  const TEST_FLAG_KEY = "dk_lp_test_v1";
   const LEAD_SESSION_TTL_MS = 30 * 60 * 1000;
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
 
@@ -155,6 +157,59 @@
 
   function storageGet(key) {
     try { return sessionStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  // テスト送信の判定。戻り値は ""（本物のリード）か種別（"stg" / "param" / "pattern"）。
+  // テストは**握りつぶさず、印を付けて全部記録する**（2026-08-30 リード件数調査の教訓）：
+  // シートには _test 列付きで残し、Slackは【テスト送信】表記、Zoho商談は作らず、
+  // thanks では lead_conversion（Meta/Google主CV）を発火させない。
+  // 判定の3層: ①STGは無条件テスト ②本番で試すときは ?dk_test=1（共通ルール）
+  // ③保険で「テスト」入りの名前・090/080/070-1234-5678。詳細は assets/js/app.js と同一。
+  function isTestLeadSubmission(tel, last, first) {
+    try {
+      if (location.pathname.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+      if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return "param";
+    } catch (e) { /* noop */ }
+    const t = String(tel || "").trim();
+    const ln = String(last || "").trim();
+    const fn = String(first || "").trim();
+    if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return "pattern";
+    if (/テスト/.test(ln + fn)) return "pattern";
+    return "";
+  }
+
+  // 判定結果を thanks 側と共有。テストなら理由を保存、本物なら消す
+  // （前のテストの残骸で本物のCVを止めないため）。
+  function persistTestFlag(testReason) {
+    try {
+      if (testReason) {
+        sessionStorage.setItem(TEST_FLAG_KEY, JSON.stringify({ ts: Date.now(), reason: testReason }));
+      } else {
+        sessionStorage.removeItem(TEST_FLAG_KEY);
+      }
+    } catch (e) { /* private mode */ }
+  }
+
+  // thanks 側でのテスト判定。送信時フラグ＞送信元URL（ミラーが死んでいても href で判定）＞現在URL。
+  function detectTestLead() {
+    try {
+      const raw = sessionStorage.getItem(TEST_FLAG_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.reason && Date.now() - d.ts < LEAD_SESSION_TTL_MS) return String(d.reason);
+      }
+    } catch (e) { /* noop */ }
+    try {
+      const raw2 = sessionStorage.getItem(LEAD_SESSION_KEY);
+      if (raw2) {
+        const d2 = JSON.parse(raw2);
+        const href = (d2 && d2.href) || "";
+        if (href.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+        if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(href)) return "param";
+      }
+    } catch (e) { /* noop */ }
+    if (location.pathname.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+    return "";
   }
 
   function getDisplayName() {
@@ -269,9 +324,17 @@
 
   function completeLeadSubmit() {
     persistThanksBridgeSession();
+    // マイクロCV(lead_form_submit)はテストでも流すが is_test を付ける
+    //（GTM側でCV系タグに「is_test != 1」の条件を足せるようにするため）。
+    // 判定はミラーと同じ isTestLeadSubmission（URL由来）＋送信時フラグに集約する。
+    let isTest = 0;
+    try {
+      if (isTestLeadSubmission("", "", "") || sessionStorage.getItem(TEST_FLAG_KEY)) isTest = 1;
+    } catch (e) { /* noop */ }
     pushDataLayer({
       event: "lead_form_submit",
       lp_slug: LP_SLUG,
+      is_test: isTest,
       page_location: location.href,
       page_path: location.pathname
     });
@@ -300,7 +363,17 @@
       page_path: location.pathname
     });
 
-    if (qualified && !storageGet("dk_lp_conversion_fired")) {
+    // テスト送信は Meta/Google の主CV(lead_conversion)に乗せない。
+    // 計測デバッグ用に別イベント(lead_conversion_test)だけ流す（CVタグはこのイベントを見ない）。
+    const testReason = detectTestLead();
+    if (qualified && testReason) {
+      pushDataLayer({
+        event: "lead_conversion_test",
+        lp_slug: lpSlug,
+        conversion_source: "lp_form",
+        test_reason: testReason
+      });
+    } else if (qualified && !storageGet("dk_lp_conversion_fired")) {
       storageSet("dk_lp_conversion_fired", "1");
       pushDataLayer({
         event: "lead_conversion",
@@ -978,6 +1051,10 @@
       const last = (form.querySelector('input[name="your-last-name"]') || {}).value || "";
       const first = (form.querySelector('input[name="your-first-name"]') || {}).value || "";
       if (!isValidTel(tel) || !last.trim() || !first.trim()) return;
+      // テストでも送信は止めない（シートに全部残す）。判定を _test として同送し、
+      // thanks 側がCVを発火させないようセッションにも引き継ぐ。
+      const testReason = isTestLeadSubmission(tel, last, first);
+      persistTestFlag(testReason);
       const sendKey = tel + "|" + last.trim() + "|" + first.trim();
       const now = Date.now();
       const prev = sentAt.get(sendKey);
@@ -993,8 +1070,10 @@
         params.append("_lp", LP_SLUG);
         params.append("_ip", clientIp);
         params.append("_user_agent", navigator.userAgent || "");
+        if (testReason) params.append("_test", testReason);
         const body = params.toString();
-        postTo(ZAPIER_URL, body);
+        // Zapier（旧経路）にはテストを流さない（従来どおり）。GAS＝シートには全部残す。
+        if (!testReason) postTo(ZAPIER_URL, body);
         postTo(GAS_URL, body);
       } catch (e) {
         sentAt.delete(sendKey);

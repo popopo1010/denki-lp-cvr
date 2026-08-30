@@ -484,6 +484,45 @@ for (const [canonical, mirrors] of MIRRORS) {
 }
 
 // ───────────────────────────────────────────────────────────
+// 9. テスト送信は「全部記録・数字に乗せない」（2026-08-30 リード件数調査）
+//    経緯: Meta「登録完了6件」に対しSlackの本物リードは2件。差分はSTG/本番テストの
+//    CV発火（STGフォームは本番thanksへ遷移する）と、テスト通知の手動削除だった。
+//    テストを黙って捨てる・通知だけ消す運用は「届いていない」誤認を生むため、
+//    ①テストもGAS（シート）には必ず送る ②Slackは【テスト送信】表記 ③Zoho商談なし
+//    ④lead_conversion（Meta/Google主CV）は発火させない、を配線で保証する。
+// ───────────────────────────────────────────────────────────
+for (const p of IMPLS) {
+  const src = read(p);
+  check(`${p}: テスト判定にSTG(/denki-lp-cvr-stg/)と?dk_test=1がある`,
+    /denki-lp-cvr-stg/.test(src) && /dk_test/.test(src));
+  check(`${p}: テストでもGASへ送る（_testを同送・Zapierのみ除外）`,
+    /params\.append\("_test", testReason\)/.test(src) &&
+    /if \(!testReason\) postTo\(ZAPIER_URL/.test(src) &&
+    !/if \(isTestLeadSubmission\([^)]*\)\) return;/.test(src));
+  check(`${p}: テストフラグをthanksへ引き継ぐ(dk_lp_test_v1)`,
+    /dk_lp_test_v1/.test(src) && /persistTestFlag\(testReason\)/.test(src));
+}
+for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/main.js"]) {
+  const src = read(p);
+  check(`${p}: テスト時は lead_conversion を発火させない(lead_conversion_test)`,
+    /lead_conversion_test/.test(src) && /dk_lp_test_v1/.test(src));
+  // STGのフォームは本番thanksへ遷移するため、thanksのURLだけでは判定できない。
+  // lead session の href（送信元URL）を見る配線が要（消えるとSTGテストがCV計上に戻る）。
+  check(`${p}: 送信元URL(href)からもSTG/dk_testを判定する`,
+    /href\.indexOf\("\/denki-lp-cvr-stg\/"\)/.test(src));
+}
+{
+  const gas = read("gas-recorder/コード.js");
+  check("gas-recorder/コード.js: テスト判定(detectTestSubmission)と【テスト送信】通知（@channelなし）",
+    /function detectTestSubmission/.test(gas) && /【テスト送信】/.test(gas));
+  check("gas-recorder/コード.js: Slack通知失敗を slack_error に記録して報告する",
+    /slack_error:\s*String\(slackErr\)/.test(gas) && /reportErrorToSlack\("slack_lead_notify/.test(gas));
+  const zoho = read("gas-recorder/zoho.js");
+  check("gas-recorder/zoho.js: _test/STG送信はZoho商談を作らない",
+    /params\["_test"\]/.test(zoho) && /denki-lp-cvr-stg/.test(zoho));
+}
+
+// ───────────────────────────────────────────────────────────
 for (const c of checks) console.log(`${c.ok ? "✓" : "✗"} ${c.name}`);
 console.log(`\n--- ${checks.length - failures.length}/${checks.length} passed ---`);
 if (failures.length) {
