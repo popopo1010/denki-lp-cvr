@@ -1,0 +1,77 @@
+# gas-recorder/ を Apps Script プロジェクトへ自動反映する。
+#
+# 背景（2026-08-30）: リポジトリの gas-recorder/ は正だが、GASエディタへの反映が
+# 手作業だったため「リポジトリは直っているのにGASが古い」というズレが起きていた
+# （テスト送信ゲート実装時に顕在化）。main の gas-recorder/ が変わったら
+# clasp で push し、既存Webアプリデプロイを新バージョンに更新する。
+#
+# 安全装置:
+#  - 既存デプロイの「新バージョン化」だけを行う（/exec のURLは変わらない。
+#    新規デプロイを作るとURLが変わり全LPのGAS_URLが死ぬ——絶対にしない）
+#  - push 前にリモートのファイル一覧を取得し、リポジトリに無いファイルが
+#    GAS側にある場合は中断する（clasp push はリモート専用ファイルを消すため）
+#  - .claspignore のホワイトリストで送るファイルを固定
+#
+# 必要な Secret: CLASPRC_JSON（`npm i -g @google/clasp@2.4.2 && clasp login` 後の
+# ~/.clasprc.json の中身）。手順は gas-recorder/自動デプロイセットアップ.md。
+name: Deploy GAS (gas-recorder)
+
+on:
+  push:
+    branches: [main]
+    paths: ["gas-recorder/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-gas
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # 既存Webアプリの deployment ID（LPのGAS_URL /macros/s/<この値>/exec と同一）
+      GAS_DEPLOYMENT_ID: AKfycbzC4fMEbOhaymimRwaLDJ34eKwSRyfYVVRMeNGl_cMjR8p7dC9cVw84YZJUvggkROiKRw
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: clasp を導入（v2系に固定。v3はCLI/認証形式が異なる）
+        run: npm i -g @google/clasp@2.4.2
+
+      - name: 認証情報を配置（Secret CLASPRC_JSON）
+        run: |
+          if [ -z "${{ secrets.CLASPRC_JSON }}" ]; then
+            echo "::error::Secret CLASPRC_JSON が未登録です。gas-recorder/自動デプロイセットアップ.md の手順で登録してください。"
+            exit 1
+          fi
+          printf '%s' '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
+
+      - name: 削除ガード（リモート専用ファイルが無いことを確認）
+        run: |
+          set -eu
+          SCRIPT_ID=$(node -p "JSON.parse(require('fs').readFileSync('gas-recorder/.clasp.json','utf8')).scriptId")
+          mkdir -p /tmp/gas-remote && cd /tmp/gas-remote
+          printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > .clasp.json
+          clasp pull >/dev/null
+          remote=$(ls *.js *.gs 2>/dev/null | sed 's/\.[^.]*$//' | sort -u)
+          local_files=$(cd "$GITHUB_WORKSPACE/gas-recorder" && ls *.js | sed 's/\.js$//' | sort -u)
+          missing=""
+          for f in $remote; do
+            echo "$local_files" | grep -qx "$f" || missing="$missing $f"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::GAS側にリポジトリに無いファイルがあります（pushすると削除されます）:$missing — 先にリポジトリへ取り込むか、GAS側から移動してください。"
+            exit 1
+          fi
+          echo "remote files:"; echo "$remote"
+
+      - name: push（コードをGASプロジェクトへ反映）
+        working-directory: gas-recorder
+        run: clasp push -f
+
+      - name: 既存Webアプリデプロイを新バージョン化（URL不変）
+        working-directory: gas-recorder
+        run: clasp deploy -i "$GAS_DEPLOYMENT_ID" -d "auto ${GITHUB_SHA::7}"
