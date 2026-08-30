@@ -1042,7 +1042,36 @@
 
     document.addEventListener("click", (e) => {
       const btn = e.target && e.target.closest ? e.target.closest(".js-step-button") : null;
-      if (btn) handleStepClick({ currentTarget: btn });
+      if (!btn) return;
+
+      // 無効表示(is-disable)のボタンでは進ませない。
+      // 2026-08-30 QAで発見: 見た目が押せないのにクリックで進んでいたため、
+      // step03(経験)・step04(都道府県)・step05(氏名/生まれ年) を素通りでき、
+      // 電話番号だけのリードが作れてしまっていた（マージ前の a8d58a9 でも同挙動）。
+      //
+      // 詰まらないことの根拠（実フローで全ステップ実測済み）:
+      //  ・step01 の CTA はそもそも is-disable が付かない（資格未選択でも進める設計）
+      //  ・step03/step04 は選択した瞬間に自動遷移するので、このボタンを押す必要がない
+      //  ・step05 は氏名と生まれ年が揃った時点で is-disable が外れる
+      //  ・step06 の送信ボタンは .js-step-button を持たずここを通らない（従来どおり）
+      // つまり「正しく入力したのに無効のまま」が起きるステップは存在しない。
+      // e2e-lp-flow-local.mjs の全LP通過がこの前提の番人になる。
+      if (btn.classList.contains(DISABLE)) {
+        // 理由を出せるステップ(#error-* を持つ)では、何が足りないかを表示する。
+        // 選択ステップは未選択であることが画面上で自明なので表示先は無い。
+        const grp = btn.closest ? btn.closest(".js-form-group") : null;
+        const box = grp ? grp.querySelector('[id^="error-"]') : null;
+        if (box) {
+          grp.querySelectorAll("input, select").forEach((el) => {
+            try {
+              el.dispatchEvent(new Event("input", { bubbles: true }));
+              el.dispatchEvent(new Event("blur", { bubbles: false }));
+            } catch (err) { /* no-op */ }
+          });
+        }
+        return;
+      }
+      handleStepClick({ currentTarget: btn });
     });
 
     // 未初期化グループ内の操作を capture で検知して即座に張り直す。

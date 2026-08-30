@@ -263,6 +263,52 @@ async function runLp(browser, devices, lp) {
   if (fv.step === "step-first" && fv.opacity === "1") pass(`${lp} FV表示`);
   else fail(`${lp} FV表示`, JSON.stringify(fv));
 
+  // 1b) 無効表示(is-disable)のCTAで先へ進めないこと。
+  // 2026-08-30 まで、見た目が押せないのにクリックで進んでいた。そのため
+  // 経験・都道府県・氏名・生まれ年を素通りして送信直前まで到達でき、
+  // 電話番号だけのリードが作れた。ここは「無効なCTAを押しても同じステップに
+  // 留まる」ことだけを見る（正しく入力すれば進めることは 2〜4 が保証する）。
+  // 何も入力していない状態で見るので、この検査自体は後続に副作用を残さない。
+  {
+    const skip = await page.evaluate(async () => {
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const visible = () => [...document.querySelectorAll(".js-form-group")]
+        .filter((e) => getComputedStyle(e).display !== "none")[0];
+      const grp0 = visible();
+      if (!grp0) return { skip: true, why: "表示中のステップが無い" };
+      // FVの「次へ」は非表示なので、2択を1つ選んで先頭ステップを抜ける。
+      // ここを飛ばすとループが即終了して検査が素通りになる（2026-08-30に踏んだ）。
+      if (grp0.id === "step-first") {
+        const first = grp0.querySelector(".js-radio-button");
+        if (!first) return { skip: true, why: "FVに選択肢が無い構成" };
+        first.click();
+        await wait(900);
+      }
+      // ステップ遷移は非同期（自動遷移・フェード）なので、クリックごとに待つ。
+      // 同期のまま読むと常に「進んでいない」に見えて検査が空振りする。
+      for (let i = 0; i < 8; i++) {
+        const cur = visible();
+        if (!cur) break;
+        const btn = [...cur.querySelectorAll(".js-next-button")]
+          .filter((b) => b.offsetParent !== null)[0];
+        if (!btn) break;
+        const wasDisabled = btn.classList.contains("is-disable");
+        const from = cur.id;
+        btn.click();
+        await wait(900);
+        const now = visible();
+        if (!now || now.id === from) break;          // 進まなかった＝正常
+        if (wasDisabled) return { bad: `${from}→${now.id}` };
+      }
+      return { ok: true };
+    });
+    if (skip.skip) pass(`${lp} 無効CTAでは進まない`, skip.why);
+    else if (skip.bad) fail(`${lp} 無効CTAでは進まない`, `無効なのに進む: ${skip.bad}`);
+    else pass(`${lp} 無効CTAでは進まない`);
+    await page.goto(BASE + lp, { waitUntil: "load" });
+    await page.waitForTimeout(600);
+  }
+
   // 2〜4) 最後まで進む。各遷移で上部見出しとクマを見る
   const seen = [];
   let headHidden = null;
