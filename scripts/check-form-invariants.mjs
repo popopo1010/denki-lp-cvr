@@ -510,6 +510,20 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
   // lead session の href（送信元URL）を見る配線が要（消えるとSTGテストがCV計上に戻る）。
   check(`${p}: 送信元URL(href)からもSTG/dk_testを判定する`,
     /href\.indexOf\("\/denki-lp-cvr-stg\/"\)/.test(src));
+  // thanks到達ピン（送信消失の検知網 2026-08-30）。ミラーが両方失敗すると
+  // CVだけ発火してリードが無痕跡になる——qualifiedな到達をGASへ報告する配線。
+  // 消えると「Metaには乗ったのにどこにも居ないリード」が再び検知不能になる。
+  check(`${p}: thanks到達ピンを送る(thanks_reached + 1セッション1回)`,
+    /_event",\s*"thanks_reached"/.test(src) && /dk_thanks_ping_v1/.test(src) &&
+    /sendThanksReachedPing\(qualified, testReason\)/.test(src));
+}
+{
+  const gas2 = read("gas-recorder/コード.js");
+  check("gas-recorder/コード.js: thanks_reached を受けて照合・救済する(handleThanksReached)",
+    /handleThanksReached/.test(gas2) &&
+    /params\["_event"\]\s*===\s*"thanks_reached"/.test(gas2) &&
+    /Utilities\.sleep\(8000\)/.test(gas2) && // 送信ビーコンとの競合を吸収してから消失と判定
+    /_recovered/.test(gas2) && /送信消失の疑い/.test(gas2));
 }
 {
   const gas = read("gas-recorder/コード.js");

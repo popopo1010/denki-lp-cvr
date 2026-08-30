@@ -446,7 +446,7 @@ jobs:
           echo "$html" | grep -q 'これから相談する方へ' || (echo "missing preview testimonials title" && exit 1)
           echo "$html" | grep -q 'thanks-job-preview.js?v=20' || (echo "missing job preview v=20" && exit 1)
           echo "$html" | grep -q 'job-preview-hero' || (echo "missing hero gift mount" && exit 1)
-          echo "$html" | grep -q 'thanks-v2-shared.js?v=9' || (echo "missing thanks-v2-shared v=9" && exit 1)
+          echo "$html" | grep -q 'thanks-v2-shared.js?v=10' || (echo "missing thanks-v2-shared v=10" && exit 1)
           echo "$html" | grep -q 'family=Noto+Sans+JP:wght@400;700' || (echo "missing noto 400+700 fonts" && exit 1)
           echo "$html" | grep -q 'thanks-booking-bootstrap.js' && (echo "booking bootstrap should be removed (LINE一本化)" && exit 1) || true
           echo "$html" | grep -q 'thanks-booking-custom.js' && (echo "booking custom should be removed (LINE一本化)" && exit 1) || true

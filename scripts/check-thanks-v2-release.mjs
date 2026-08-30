@@ -30,7 +30,7 @@ function exists(rel) {
 const html = read("thanks-v2/index.html");
 
 const requiredStrings = [
-  ["thanks-v2-shared.js?v=9", "shared v9 line click delegation + test-CV gate"],
+  ["thanks-v2-shared.js?v=10", "shared v10 line click + test-CV gate + thanks-ping"],
   ["thanks-page-context.js?v=27", "context v27 benefit-first hero"],
   ["thanks-page.css?v=57", "css v56 line-first hero CTA"],
   ["t-hero__eyebrow", "hero gift eyebrow"],

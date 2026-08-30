@@ -112,8 +112,8 @@
     "sha256": "120d4bbd0be5c039"
   },
   "assets/js/thanks-v2-shared.js": {
-    "version": "9",
-    "sha256": "d375d7f1f8797719"
+    "version": "10",
+    "sha256": "c211a55b9cd3aa57"
   },
   "denkikouji-trust/steps-lazy.html": {
     "version": "20260712",
@@ -160,8 +160,8 @@
     "sha256": "652c387eb157f624"
   },
   "dk_lp/denkikouji/assets/js/main.js": {
-    "version": "20260830b",
-    "sha256": "ce58acd050758277"
+    "version": "20260830c",
+    "sha256": "2d9e396d5637627b"
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260701c",
