@@ -229,11 +229,10 @@
     } catch (e) { /* private mode */ }
     // マイクロCV(lead_form_submit)はテストでも流すが is_test を付ける。
     // GTM側でCV系タグに「is_test != 1」の条件を足せるようにするため。
+    // 判定はミラーと同じ isTestLeadSubmission（URL由来）＋送信時フラグに集約する。
     let isTest = 0;
     try {
-      if (location.pathname.indexOf("/denki-lp-cvr-stg/") !== -1 ||
-          /[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search) ||
-          sessionStorage.getItem(TEST_FLAG_KEY)) isTest = 1;
+      if (isTestLeadSubmission("", "", "") || sessionStorage.getItem(TEST_FLAG_KEY)) isTest = 1;
     } catch (e) { /* noop */ }
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
