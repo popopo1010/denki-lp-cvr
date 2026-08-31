@@ -13,7 +13,10 @@ import { fileURLToPath } from "url";
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 /* 配信される画像ディレクトリすべてを対象にする（2026-08-19 拡大。従来は assets/img のみで
  * 自前LP/ad-cr の JPG/PNG が未圧縮のまま配信されていた）。docs/ はデプロイ対象外なので含めない。 */
-const DIRS = ["assets/img", "自前LP/assets/img", "ad-cr/assets"];
+const DIRS = ["assets/img", "自前LP/assets/img", "WPLP/assets/img", "ad-cr/assets"];
+/* WPLP/assets/img は 2026-08-31 に追加。WPテーマ配下から画像を引き上げた際、
+ * WPLPツリーの app-v2.js が自分の src から ../img を解決する都合で実体が要るようになった。
+ * ここに足さないと、そのツリーの画像だけ未圧縮のまま配信される。 */
 
 let sharp;
 try {
