@@ -12,7 +12,11 @@ const src = fs.readFileSync(path.join(ROOT, "thanks-v2/index.html"), "utf8");
 const mirrors = ["WPLP/thanks-v2/index.html", "自前LP/thanks-v2/index.html"];
 
 for (const rel of mirrors) {
-  const html = src.replace(/\.\.\/assets\//g, "../../assets/");
+  // service/ も assets/ と同じく1階層深くなる。これを忘れると
+  // 「サービスについて」の導線だけ再生成のたびに壊れる（2026-08-31）。
+  const html = src
+    .replace(/\.\.\/assets\//g, "../../assets/")
+    .replace(/\.\.\/service\//g, "../../service/");
   fs.writeFileSync(path.join(ROOT, rel), html, "utf8");
   console.log("synced", rel);
 }

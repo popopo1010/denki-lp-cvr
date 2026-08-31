@@ -342,6 +342,15 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool
         f'<dt>対応職種</dt><dd>{v["label"]}</dd>',
     )
 
+    # 「サービスについて」の導線も工種別ページに分かれている（テンプレートは
+    # service/sekoukanri/）。対応職種と同じ理由で、ここも差し替えないと
+    # 再生成のたびに建築/土木/電気の導線が施工管理ページへ戻る。
+    html = re.sub(
+        r'(href="(?:\.\./)+)service/[a-z-]+/"',
+        lambda m: f'{m.group(1)}service/{v["slug"]}/"',
+        html,
+    )
+
     # FAQの工種別2問も同じ理由で差し替える（テンプレートは施工管理全般の文面）。
     # 表示と JSON-LD の両方を置換する。ズレると check-faq-schema が落ちる。
     # キーは build_* 側と同じ流儀で slug から導出する（903ad8c で未定義の `key` を
