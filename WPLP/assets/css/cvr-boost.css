@@ -279,7 +279,14 @@ body.lp-form-step .cvr-floating-cta {
   text-align: center; font-size: 11px; color: #666;
   margin: 0 0 10px; line-height: 1.5; padding: 0 8px;
 }
-.cvr-lp-hub a { color: #314c85; font-weight: 700; text-decoration: underline; }
+/* 実測 66×12px でタップ下限を大きく割っていた。インライン要素の上下paddingは
+   行送りを変えずに当たり判定だけ広げられる。44pxではなく24px（WCAG 2.5.8の最低基準）に
+   とどめるのは、これがLPから離れる導線（他工種LPへの遷移）で、広げすぎると誤タップの
+   離脱が増えるため。step06の同意文リンクと同じ考え方に揃える。 */
+.cvr-lp-hub a {
+  color: #314c85; font-weight: 700; text-decoration: underline;
+  padding: 6px 2px;
+}
 
 /* ===== 進捗演出 ===== */
 .cvr-almost-done { text-align: center; margin: 16px 0 8px; }
@@ -730,9 +737,14 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) {
     gap: 3px;
   }
+  /* 30px まで潰すとタップ下限44px（Apple HIG / Material）を大きく割る。実測でも
+     iPhone SE で 169×30px になり、11個の選択肢すべてが誤タップしやすい状態だった。
+     他の3系統は 48〜56px を守り、代わりにCTAが画面外に出ることを許容している
+     （選択すると 2800ms の自動送りで進むためCTAを押す必要がない）。WPLPだけ方針から
+     外れていたので揃える。 */
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button.c-button {
-    min-height: 30px;
-    padding: 4px 3px;
+    min-height: 48px;
+    padding: 8px 6px;
   }
   body.lp-form-step #step01 .p-step01__buttonArea:has(.p-step01__button:nth-of-type(7)) .p-step01__button .c-button__text {
     font-size: 10px;
