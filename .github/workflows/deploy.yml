@@ -74,6 +74,9 @@ jobs:
       - name: Check agency share (代理店共有シートのPII混入検査)
         run: node scripts/check-agency-share.mjs
 
+      - name: Check company info (会社情報の一致・別会社テンプレ由来の値)
+        run: node scripts/check-company-info.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js
