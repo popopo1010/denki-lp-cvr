@@ -1,5 +1,5 @@
 {
-  "_note": "表示イメージ確認用の仮データ。実在の求人ではない。金額・条件は2026-08にWeb上の公開求人（マイナビ転職/doda/Indeed/工事士.com/求人ボックス 等）で確認した相場レンジをもとに作成した『掲載条件の一例』。実フィードに差し替えるときは is_sample を false にし、source を実際の出所にする。JobPosting構造化データはこのデータのままでは出さないこと（架空求人の構造化データはスパム扱いになる）。",
+  "_note": "表示イメージ確認用の仮データ。実在の求人ではない。職種・地域は2026-08にWeb上の公開求人（マイナビ転職/doda/Indeed/工事士.com/求人ボックス 等）で確認した実在の職種構成にもとづくが、年収は『相場より+50万円』に意図的に引き上げてある（オーナー指示 2026-08-31）。したがって相場の実測値ではなく訴求用の想定レンジ。実フィードに差し替えるときは is_sample を false にし、source を実際の出所にする。JobPosting構造化データはこのデータのままでは出さないこと（架空求人の構造化データはスパム扱いになる）。",
   "generated_at": "2026-08-31",
   "source": "公開求人サイトの相場調査（2026-08 時点）にもとづくサンプル",
   "is_sample": true,
@@ -10,8 +10,8 @@
       "title": "オフィスビル 電気設備施工管理（1級歓迎）",
       "pref": "東京都",
       "region": "関東",
-      "salary_min": 480,
-      "salary_max": 720,
+      "salary_min": 530,
+      "salary_max": 770,
       "tags": [
         "土日祝休み",
         "年休124日",
@@ -24,8 +24,8 @@
       "title": "工場・プラントの電気設備メンテナンス",
       "pref": "大阪府",
       "region": "近畿",
-      "salary_min": 460,
-      "salary_max": 660,
+      "salary_min": 510,
+      "salary_max": 710,
       "tags": [
         "高単価",
         "職長手当",
@@ -38,8 +38,8 @@
       "title": "太陽光・蓄電池の施工管理（再エネ）",
       "pref": "愛知県",
       "region": "中部",
-      "salary_min": 420,
-      "salary_max": 650,
+      "salary_min": 470,
+      "salary_max": 700,
       "tags": [
         "完全週休2日",
         "資格取得支援",
@@ -52,8 +52,8 @@
       "title": "通信・情報インフラの電気工事スタッフ",
       "pref": "福岡県",
       "region": "九州",
-      "salary_min": 400,
-      "salary_max": 580,
+      "salary_min": 450,
+      "salary_max": 630,
       "tags": [
         "非公開",
         "通勤手当",
@@ -66,8 +66,8 @@
       "title": "ビル・商業施設の電気工事",
       "pref": "北海道",
       "region": "北海道",
-      "salary_min": 370,
-      "salary_max": 560,
+      "salary_min": 420,
+      "salary_max": 610,
       "tags": [
         "年休128日",
         "残業少なめ",
@@ -80,8 +80,8 @@
       "title": "プラント電気設備の施工管理",
       "pref": "広島県",
       "region": "中国",
-      "salary_min": 450,
-      "salary_max": 640,
+      "salary_min": 500,
+      "salary_max": 690,
       "tags": [
         "賞与年2回",
         "資格手当"
@@ -93,8 +93,8 @@
       "title": "公共インフラの電気設備工事",
       "pref": "宮城県",
       "region": "東北",
-      "salary_min": 400,
-      "salary_max": 560,
+      "salary_min": 450,
+      "salary_max": 610,
       "tags": [
         "転勤なし",
         "資格取得支援"
@@ -106,8 +106,8 @@
       "title": "工場・プラントの電気工事",
       "pref": "香川県",
       "region": "四国",
-      "salary_min": 400,
-      "salary_max": 560,
+      "salary_min": 450,
+      "salary_max": 610,
       "tags": [
         "転勤なし",
         "賞与年2回"
@@ -119,8 +119,8 @@
       "title": "データセンター 電気設備の保守・管理",
       "pref": "千葉県",
       "region": "関東",
-      "salary_min": 550,
-      "salary_max": 780,
+      "salary_min": 600,
+      "salary_max": 830,
       "tags": [
         "非公開",
         "夜勤手当",
@@ -133,8 +133,8 @@
       "title": "ビル設備管理（電気主任技術者候補）",
       "pref": "大阪府",
       "region": "近畿",
-      "salary_min": 420,
-      "salary_max": 600,
+      "salary_min": 470,
+      "salary_max": 650,
       "tags": [
         "資格手当",
         "長期安定",
@@ -147,8 +147,8 @@
       "title": "電気設備工事の施工管理（1級・2級）",
       "pref": "愛知県",
       "region": "中部",
-      "salary_min": 535,
-      "salary_max": 715,
+      "salary_min": 585,
+      "salary_max": 765,
       "tags": [
         "非公開",
         "賞与年2回"
@@ -160,8 +160,8 @@
       "title": "通信設備工事（NTT系）20代で500万円可",
       "pref": "福岡県",
       "region": "九州",
-      "salary_min": 400,
-      "salary_max": 800,
+      "salary_min": 450,
+      "salary_max": 850,
       "tags": [
         "賞与年2回",
         "年休129日",
@@ -174,8 +174,8 @@
       "title": "設備系技術職（巡回メンテナンス）",
       "pref": "北海道",
       "region": "北海道",
-      "salary_min": 370,
-      "salary_max": 720,
+      "salary_min": 420,
+      "salary_max": 770,
       "tags": [
         "社宅あり",
         "マイカー通勤可"
@@ -187,8 +187,8 @@
       "title": "工場設備の電気保全",
       "pref": "岡山県",
       "region": "中国",
-      "salary_min": 420,
-      "salary_max": 580,
+      "salary_min": 470,
+      "salary_max": 630,
       "tags": [
         "土日休み",
         "転勤なし"
@@ -200,8 +200,8 @@
       "title": "太陽光・送変電の電気工事",
       "pref": "福島県",
       "region": "東北",
-      "salary_min": 420,
-      "salary_max": 600,
+      "salary_min": 470,
+      "salary_max": 650,
       "tags": [
         "出張手当",
         "高単価"
@@ -213,8 +213,8 @@
       "title": "ビル設備管理・電気保守",
       "pref": "愛媛県",
       "region": "四国",
-      "salary_min": 380,
-      "salary_max": 540,
+      "salary_min": 430,
+      "salary_max": 590,
       "tags": [
         "夜勤手当",
         "長期安定"
@@ -226,8 +226,8 @@
       "title": "商業施設・マンションの電気工事（第二種可）",
       "pref": "神奈川県",
       "region": "関東",
-      "salary_min": 400,
-      "salary_max": 560,
+      "salary_min": 450,
+      "salary_max": 610,
       "tags": [
         "残業少なめ",
         "直行直帰",
@@ -240,8 +240,8 @@
       "title": "病院・公共施設の電気設備工事（有資格者）",
       "pref": "兵庫県",
       "region": "近畿",
-      "salary_min": 450,
-      "salary_max": 600,
+      "salary_min": 500,
+      "salary_max": 650,
       "tags": [
         "土日休み",
         "家族手当"
@@ -253,8 +253,8 @@
       "title": "プラント電気計装工事",
       "pref": "静岡県",
       "region": "中部",
-      "salary_min": 460,
-      "salary_max": 640,
+      "salary_min": 510,
+      "salary_max": 690,
       "tags": [
         "高単価",
         "出張手当"
@@ -266,8 +266,8 @@
       "title": "半導体関連工場の電気工事",
       "pref": "熊本県",
       "region": "九州",
-      "salary_min": 450,
-      "salary_max": 650,
+      "salary_min": 500,
+      "salary_max": 700,
       "tags": [
         "高単価",
         "寮あり"
@@ -279,8 +279,8 @@
       "title": "大型物流倉庫の新築電気工事 現場代理人",
       "pref": "埼玉県",
       "region": "関東",
-      "salary_min": 500,
-      "salary_max": 700,
+      "salary_min": 550,
+      "salary_max": 750,
       "tags": [
         "非公開",
         "賞与年2回",
@@ -293,8 +293,8 @@
       "title": "商業施設の電気工事（第一種）",
       "pref": "京都府",
       "region": "近畿",
-      "salary_min": 440,
-      "salary_max": 620,
+      "salary_min": 490,
+      "salary_max": 670,
       "tags": [
         "転勤なし",
         "賞与年2回"
@@ -306,8 +306,8 @@
       "title": "工場新設の電気工事",
       "pref": "岐阜県",
       "region": "中部",
-      "salary_min": 420,
-      "salary_max": 580,
+      "salary_min": 470,
+      "salary_max": 630,
       "tags": [
         "転勤なし",
         "資格手当"
@@ -319,8 +319,8 @@
       "title": "再エネ発電所の電気工事",
       "pref": "鹿児島県",
       "region": "九州",
-      "salary_min": 420,
-      "salary_max": 580,
+      "salary_min": 470,
+      "salary_max": 630,
       "tags": [
         "現場手当",
         "直行直帰"
@@ -332,8 +332,8 @@
       "title": "内線工事（オフィス改修）第二種歓迎",
       "pref": "東京都",
       "region": "関東",
-      "salary_min": 380,
-      "salary_max": 520,
+      "salary_min": 430,
+      "salary_max": 570,
       "tags": [
         "未経験相談可",
         "資格取得支援"
@@ -345,8 +345,8 @@
       "title": "工場内 電気工事・設備保全",
       "pref": "滋賀県",
       "region": "近畿",
-      "salary_min": 430,
-      "salary_max": 590,
+      "salary_min": 480,
+      "salary_max": 640,
       "tags": [
         "寮あり",
         "マイカー通勤可"
@@ -358,8 +358,8 @@
       "title": "データセンター新設 電気工事",
       "pref": "三重県",
       "region": "中部",
-      "salary_min": 480,
-      "salary_max": 680,
+      "salary_min": 530,
+      "salary_max": 730,
       "tags": [
         "非公開",
         "現場手当"
@@ -371,8 +371,8 @@
       "title": "鉄道電気設備の保守（変電・信号）",
       "pref": "東京都",
       "region": "関東",
-      "salary_min": 450,
-      "salary_max": 650,
+      "salary_min": 500,
+      "salary_max": 700,
       "tags": [
         "夜勤手当",
         "インフラ",
@@ -385,8 +385,8 @@
       "title": "住宅・店舗の電気工事",
       "pref": "奈良県",
       "region": "近畿",
-      "salary_min": 360,
-      "salary_max": 500,
+      "salary_min": 410,
+      "salary_max": 550,
       "tags": [
         "未経験相談可",
         "資格取得支援"
@@ -398,8 +398,8 @@
       "title": "公共施設の電気設備工事",
       "pref": "長野県",
       "region": "中部",
-      "salary_min": 400,
-      "salary_max": 540,
+      "salary_min": 450,
+      "salary_max": 590,
       "tags": [
         "年休120日",
         "土日休み"
@@ -411,8 +411,8 @@
       "title": "空調設備の電気工事（業務用エアコン）",
       "pref": "神奈川県",
       "region": "関東",
-      "salary_min": 390,
-      "salary_max": 540,
+      "salary_min": 440,
+      "salary_max": 590,
       "tags": [
         "直行直帰",
         "完全週休2日"
@@ -424,8 +424,8 @@
       "title": "外線工事（配電線）",
       "pref": "新潟県",
       "region": "中部",
-      "salary_min": 430,
-      "salary_max": 600,
+      "salary_min": 480,
+      "salary_max": 650,
       "tags": [
         "インフラ",
         "資格取得支援"
@@ -437,8 +437,8 @@
       "title": "消防設備・防災設備の点検／工事",
       "pref": "千葉県",
       "region": "関東",
-      "salary_min": 400,
-      "salary_max": 560,
+      "salary_min": 450,
+      "salary_max": 610,
       "tags": [
         "資格手当",
         "転勤なし"
@@ -450,8 +450,8 @@
       "title": "半導体工場の電気設備工事",
       "pref": "茨城県",
       "region": "関東",
-      "salary_min": 470,
-      "salary_max": 660,
+      "salary_min": 520,
+      "salary_max": 710,
       "tags": [
         "高単価",
         "寮あり"
@@ -463,8 +463,8 @@
       "title": "工場設備の電気保全",
       "pref": "群馬県",
       "region": "関東",
-      "salary_min": 420,
-      "salary_max": 580,
+      "salary_min": 470,
+      "salary_max": 630,
       "tags": [
         "賞与年2回",
         "土日休み"
@@ -476,13 +476,14 @@
       "title": "太陽光発電所のO&M（保守）",
       "pref": "栃木県",
       "region": "関東",
-      "salary_min": 400,
-      "salary_max": 560,
+      "salary_min": 450,
+      "salary_max": 610,
       "tags": [
         "直行直帰",
         "社用車貸与"
       ],
       "is_public": true
     }
-  ]
+  ],
+  "salary_basis": "市場相場（全国平均480.8万・第一種554.9万・第二種479.0万・地域別相場）に対して +50万 の訴求レンジ"
 }
