@@ -4,7 +4,22 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-IMG_BASE = "../assets/img"  # WP依存を切りリポジトリ内から配る（生成先は1階層のLP）
+# 資格アイコンの置き場所。WP依存を切ってリポジトリ内から配る（2026-08-31 Phase 0）。
+# ツリーごとに相対の深さが違う（root=1階層、WPLP/nenshu-shindan=2階層、自前LP=自分のツリー）ため、
+# 固定値にすると再生成のたびに参照切れが生まれる。テンプレート自身が使っている
+# プレフィックスをそのまま引き継ぐことで、書き換えルールと二重管理にならない。
+IMG_BASE = "../assets/img"
+
+
+def img_base_of(template_html: str) -> str:
+    """テンプレートが実際に使っている assets/img への相対プレフィックスを読み取る。"""
+    found = set(re.findall(r"((?:\.\./)+)assets/img/", template_html))
+    if len(found) != 1:
+        raise RuntimeError(
+            "テンプレートの assets/img への相対プレフィックスが一意でない: %s"
+            % (sorted(found) or "参照なし")
+        )
+    return found.pop() + "assets/img"
 BASE_URL = "https://denkilp.builders-job.com/denki-lp-cvr"
 
 QUAL_IMG = {
@@ -423,8 +438,10 @@ TEMPLATES = {
 
 
 def main() -> None:
+    global IMG_BASE
     for prefix, (template_rel, grade_label) in TEMPLATES.items():
         template = (REPO / template_rel).read_text()
+        IMG_BASE = img_base_of(template)
         for v in VARIANTS:
             out_html = apply_variant(template, v, grade_label=grade_label, url_prefix=prefix)
             out_dir = REPO / prefix / v["slug"] if prefix else REPO / v["slug"]
@@ -439,6 +456,7 @@ def main() -> None:
                 print("wrote", out_dir.relative_to(REPO) / "steps-lazy.html")
 
     nenshu_tpl = (REPO / "nenshu-shindan/sekoukanri/index.html").read_text()
+    IMG_BASE = img_base_of(nenshu_tpl)
     for v in VARIANTS:
         nv = enrich_nenshu(v)
         nv["lp_id"] = nv["nenshu_lp_id"]

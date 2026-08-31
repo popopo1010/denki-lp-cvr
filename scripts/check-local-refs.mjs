@@ -49,3 +49,46 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`✓ 相対参照の解決OK（${files.length}ファイル / ${scanned}参照走査・srcset含む）`);
+
+// ===== WPテーマ配下への実行時参照が増えていないこと（2026-08-31 Phase 0）=====
+// LPは画像を wp-content/themes/original-thema/assets/ から取っていた。WordPress を
+// 畳んだ瞬間に全LPの画像が消える状態だったので、1,115参照をリポジトリ内へ移した。
+// ここは「戻り」を止めるラチェット。新しい参照を足すと落ちる。
+// 消すのではなく、実体をリポジトリに入れてから相対パスで参照すること。
+const WP_THEME = "denkilp.builders-job.com/wp-content/themes/original-thema/assets";
+
+// まだ実体を持っていない＝いまは残していい参照だけを明示する。
+// 受領できたら assets/ に置き、参照を相対パスへ直し、ここから消す。
+const ALLOWED = [
+  // og:image は絶対URLでなければ SNS のクローラが読めない。差し替えには実体が要る。
+  { pattern: "/ogp/ogp.jpg", where: null, why: "og:image。ogp.jpg の実体を未受領" },
+  { pattern: "/img/step04_icon01.png", where: "dk_lp/denkikouji/index.html", why: "実体を未受領" },
+  { pattern: "/img/step04_icon02.png", where: "dk_lp/denkikouji/index.html", why: "実体を未受領" },
+  { pattern: "/img/step04_icon03.png", where: "dk_lp/denkikouji/index.html", why: "実体を未受領" },
+  { pattern: "/img/step04_icon05.png", where: "dk_lp/denkikouji/index.html", why: "実体を未受領" }
+];
+
+const wpFiles = execSync('git -c core.quotePath=false ls-files -z -- "*.html" "*.js"', { encoding: "utf8" })
+  .split("\0")
+  .filter(Boolean)
+  // v2-deploy/ は WordPress の固定ページ本文に貼り付けるHTML。WP内で動くので絶対URLが正しい。
+  .filter((f) => !f.startsWith("v2-deploy/") && !f.startsWith("docs/") && !f.startsWith("dk_lp/docs/"));
+
+const wpViolations = [];
+for (const f of wpFiles) {
+  const src = readFileSync(f, "utf8");
+  if (!src.includes(WP_THEME)) continue;
+  for (const m of src.matchAll(new RegExp(WP_THEME.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^\"' )]*)", "g"))) {
+    const tail = m[1];
+    const allowed = ALLOWED.some((a) => a.pattern === tail && (a.where === null || a.where === f));
+    if (!allowed) wpViolations.push(`${f}: ${WP_THEME}${tail}`);
+  }
+}
+
+if (wpViolations.length) {
+  console.error(`✗ WPテーマ配下への参照が ${wpViolations.length} 件増えている（WordPress を止めると消える）:`);
+  for (const v of [...new Set(wpViolations)]) console.error("  - " + v);
+  console.error("  実体を assets/ に入れて相対パスで参照するか、実体待ちなら ALLOWED に理由付きで追加すること");
+  process.exit(1);
+}
+console.log(`✓ WPテーマ配下への参照は許可済み ${ALLOWED.length} 種のみ（実体の受領待ち）`);

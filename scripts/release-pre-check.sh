@@ -33,6 +33,17 @@ echo "== 4/6 thanks-v2 ミラー同期 =="
 node scripts/sync-thanks-v2-mirrors.mjs
 
 echo ""
+echo "== 生成後の参照再検査 =="
+# 生成スクリプトは静的チェックより後に走るので、生成物が参照切れを作っても
+# 上の check-local-refs は見ていない。実際に 2026-08-31、画像をリポジトリ内へ
+# 移した直後の generate-sekoukanri-variants.py が相対階層を1つ間違え、
+# variant 12本に 39件の404を作った（チェックは「生成前」に通っていた）。
+# 生成のあとにもう一度だけ参照を見る。
+node scripts/check-local-refs.mjs
+python3 scripts/generate-sekoukanri-variants.py > /dev/null
+node scripts/check-local-refs.mjs
+
+echo ""
 echo "== 5/6 予約枠 JSON =="
 # 予約バックエンドはLINE一本化後の残置（ページ未読込）。deploy.yml と同様に
 # GAS到達不可（プロキシ403等）でチェック全体を止めない（warning扱いで続行）
