@@ -370,9 +370,36 @@ jobs:
             echo "  全LPが200"
           fi
 
+          VERIFY_BASE="${DEPLOY_URL_BASE}"
+          # 非Web資産が本当に配信されていないかを出力側で確認する。
+          # 転送リストの検査（Deploy via rsync 内のドライラン）は「送る前」しか見ない。
+          # --delete で消えたことまで確かめないと、除外を足しても本番に残り続ける。
+          echo "--- 非Web資産が配信されていないこと ---"
+          for p in CLAUDE.md 本番反映手順書.md LP作成リファレンス.md \
+                   gas-recorder/zoho.js scripts/check-form-invariants.mjs v2-deploy/README.md; do
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "${VERIFY_BASE}/${p}")
+            if [ "$code" = "200" ]; then
+              echo "::error::本番に配信されている: ${p}（HTTP 200。rsyncの除外か--deleteが効いていない）"; exit 1
+            fi
+            printf '  %s  %s\n' "$code" "$p"
+          done
+
       - name: Verify deployment
         if: github.ref_name != 'staging'
         run: |
+          VERIFY_BASE="https://denkilp.builders-job.com/denki-lp-cvr"
+          # 非Web資産が本当に配信されていないかを出力側で確認する。
+          # 転送リストの検査（Deploy via rsync 内のドライラン）は「送る前」しか見ない。
+          # --delete で消えたことまで確かめないと、除外を足しても本番に残り続ける。
+          echo "--- 非Web資産が配信されていないこと ---"
+          for p in CLAUDE.md 本番反映手順書.md LP作成リファレンス.md \
+                   gas-recorder/zoho.js scripts/check-form-invariants.mjs v2-deploy/README.md; do
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "${VERIFY_BASE}/${p}")
+            if [ "$code" = "200" ]; then
+              echo "::error::本番に配信されている: ${p}（HTTP 200。rsyncの除外か--deleteが効いていない）"; exit 1
+            fi
+            printf '  %s  %s\n' "$code" "$p"
+          done
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/" | head -3
