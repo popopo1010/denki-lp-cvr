@@ -60,17 +60,38 @@
       return '<span class="lp-job__tag">' + esc(t) + "</span>";
     }).join("");
     var pay = salary(job);
+    // カードは button。白背景＋枠線＋角丸で「押せる見た目」なのに何も起きないと
+    // デッドタップになり、押した人ほど離脱する。押せる見た目のまま、押したら
+    // FVの選択肢「求人情報を閲覧したい」を実際にクリックしてフォームへ進める。
     return (
-      '<article class="lp-job">' +
-        '<p class="lp-job__title">' + esc(job.title) + "</p>" +
-        '<p class="lp-job__meta">' +
+      '<button type="button" class="lp-job" data-lp-job-cta>' +
+        '<span class="lp-job__title">' + esc(job.title) + "</span>" +
+        '<span class="lp-job__meta">' +
           '<span class="lp-job__pref">' + esc(job.pref || "") + "</span>" +
           (pay ? '<b class="lp-job__pay">' + esc(pay) + "</b>" : "") +
-        "</p>" +
-        (tags ? '<p class="lp-job__tags">' + tags + "</p>" : "") +
-      "</article>"
+        "</span>" +
+        (tags ? '<span class="lp-job__tags">' + tags + "</span>" : "") +
+        '<span class="lp-job__more">詳細を見る ›</span>' +
+      "</button>"
     );
   }
+
+  // カードのタップは FV の選択肢を「実際にクリックする」ことで進める。
+  // 遷移・クマ移動・計測はすべて既存ハンドラに任せる（ここで再実装しない）。
+  // 委譲なのでカードを何度描き直しても生き続ける。
+  root.addEventListener("click", function (e) {
+    var hit = e.target && e.target.closest && e.target.closest("[data-lp-job-cta]");
+    if (!hit) return;
+    var opt = document.querySelector(
+      '#step-first .js-radio-button[data-value="\u4eca\u306f\u60c5\u5831\u53ce\u96c6\u3057\u305f\u3044"]'
+    ) || document.querySelector("#step-first .js-radio-button:last-of-type");
+    if (!opt) return;
+    try {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: "lp_job_card_click" });
+    } catch (err) {}
+    opt.click();
+  });
 
   function render(data) {
     var jobs = (data && data.jobs ? data.jobs : []).filter(function (j) {
@@ -79,9 +100,11 @@
     if (!jobs.length) return hide("empty");
 
     var shown = jobs.slice(0, limit);
-    var note = data.is_sample
-      ? "掲載条件の一例です（実在の求人ではありません）"
-      : "掲載中の求人から抜粋" + (data.generated_at ? "（" + data.generated_at + " 時点）" : "");
+    // 注記はデータ側で上書きできる（note_text）。上書きが無いときだけ既定文。
+    var note = data.note_text ||
+      (data.is_sample
+        ? "掲載条件の一例です"
+        : "掲載中の求人から抜粋" + (data.generated_at ? "（" + data.generated_at + " 時点）" : ""));
     // ↑ 注記は textContent で入れる（=そこでエスケープされる）ので esc() を重ねない
 
     root.querySelector("[data-lp-job-cards-list]").innerHTML =
