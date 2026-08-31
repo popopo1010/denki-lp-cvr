@@ -692,19 +692,29 @@ async function pickSelfHealTargets(lps) {
     try {
       html = await readFile(new URL("." + lp + "index.html", new URL("../", import.meta.url)), "utf8");
     } catch { continue; }
-    // 読み込んでいるフォームJSのファイル名を実装の識別子にする
+    // 読み込んでいるフォームJSのファイル名を実装の識別子にする。
+    // ミラー（WPLP/自前LP）は canonical とバイト同一で check-lp-bridge-release が
+    // 一致を見張っているので、ツリーごとに回す必要はない。dk_lp だけは
+    // 独自実装を2本持つのでツリーで分ける。
     const impl = (html.match(/src="[^"]*\/((?:app-v2|app|main)\.js)/) || [])[1] || "unknown";
-    // 配信ツリー（ミラーは別ファイルなので実装として数える）。
-    // ルート直下のLPはツリー名を持たないので "root" にまとめる。
-    // ここを lp.split("/")[1] のままにすると1本ごとに別グループになり、
-    // 26本まで膨らんでCIが数分延びる。
-    const TREES = ["WPLP", "自前LP", "dk_lp", "meta-lp", "meta-lp-v2", "nenshu-shindan", "nenshu-shindan-v2"];
-    const seg = lp.split("/")[1] || "";
-    const key = impl + "|" + (TREES.includes(seg) ? seg : "root");
+    const key = impl === "main.js" ? "main.js|" + lp.split("/").slice(1, 3).join("/") : impl;
     if (!byImpl.has(key)) byImpl.set(key, lp);
   }
   const picked = new Set([...SELF_HEAL_ALWAYS.filter((l) => lps.includes(l)), ...byImpl.values()]);
   return [...picked];
+}
+
+/** steps-lazy.html を実際に持つLPだけに絞る（無いLPで回しても「対象外」を出すだけ） */
+async function filterHasLazySteps(lps) {
+  const { access } = await import("node:fs/promises");
+  const out = [];
+  for (const lp of lps) {
+    try {
+      await access(new URL("." + lp + "steps-lazy.html", new URL("../", import.meta.url)));
+      out.push(lp);
+    } catch { /* 遅延ステップを持たないLPは対象外 */ }
+  }
+  return out;
 }
 
 async function main() {
@@ -726,10 +736,12 @@ async function main() {
     // 自己修復は app.js / app-v2.js / dk_lp の各実装が別々に持っているので、
     // 「読んでいるフォームJSが違うLP」を1本ずつ選んで全実装をカバーする。
     // 全LPで回すとCIが数分延びるため、実装ごとの代表＋主力LPに絞る。
-    for (const lp of await pickSelfHealTargets(lps)) {
-      await runSelfHeal(browser, devices, lp);
-      await runLazyRecovery(browser, devices, lp);
-    }
+    const healTargets = await pickSelfHealTargets(lps);
+    for (const lp of healTargets) await runSelfHeal(browser, devices, lp);
+    // 遅延ステップ復旧は steps-lazy.html を持つLPだけが対象。持たないLPで回すと
+    // ページを開いてフォームを操作したうえで「対象外」と出すだけで、
+    // 1本あたり数十秒を捨てる（14本中10本が空振りしていた）。
+    for (const lp of await filterHasLazySteps(healTargets)) await runLazyRecovery(browser, devices, lp);
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
   } finally {
