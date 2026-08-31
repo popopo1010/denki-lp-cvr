@@ -54,6 +54,23 @@
 - **【コピー禁止】安心訴求に「営業」という語を使わない**：「しつこい営業なし」「営業電話なし」等の“営業”を含む打ち消し表現は、**「営業（電話）が来るのでは」と逆に錯覚させCVRを下げる**ためLPで使わない（オーナー指摘・再発あり）。安心は「押し売りなし／完全無料／転職しなくてOK／現在の職場に知られません」など**営業を連想させない言い回し**で表現する。過去に「営業電話」をdenkikoujiから一掃 → 2026-06-27 に「しつこい営業」をsekoukanri含む全LPフォーム/FVから一掃（`thanks-v2`系は別パイプラインのため未対応）。コピー変更時は **リポジトリ全体を `しつこい営業`/`営業` で grep**（全工種・v2/非v2・meta・WPLP・自前LP・`steps-lazy.html`・`v2-deploy/wp-html`・`dk_lp`）して取りこぼさない。経緯: `docs/release-incidents.md` 2026-06-27。2026-07-02 に thanks-v2系・年収診断系も一掃済みで**残存ゼロ**。以後は `scripts/check-banned-copy.mjs` が deploy / release-pre-check で自動ブロックする。
 - **【コピー禁止】返報文のラベル接頭辞「◯◯：」を使わない**：「このあと：」「回答後：」は #48 で全LPから削除したが、**固定文言の置換で対応したため別文言の「次の画面：」がv2系で生き残った**（2026-07-02 オーナー指摘）。ルールは“この文言を消す”ではなく“`cvr-step-reward` 等のマイクロコピーにラベル接頭辞を入れない”。新しいラベル文言を発明しても不可。`scripts/check-banned-copy.mjs` が既知パターンをブロックするが、**新規パターンを作ったら同スクリプトの BANNED に追加**すること。
 
+- **【2026-08-31】LPの画像はWPテーマ配下ではなくリポジトリ内から配る**：以前は全LPが実行時に
+  `denkilp.builders-job.com/wp-content/themes/original-thema/assets/img/` から画像を取っており、
+  **WordPress を止めた瞬間に全LPの画像が消える**状態だった。1,115参照をリポジトリ内の相対パスへ移した
+  （ルート `assets/img/` が正。WPLPツリーは自分の `WPLP/assets/img/`、自前LPは従来どおり `自前LP/assets/img/`）。
+  - `app-v2.js`（3ミラー）の資格アイコンは `document.currentScript` の src から `../img` を解決する。
+    読み込み元ページの深さ（1階層/2階層）に依存しないので**ミラーのバイト同一を保てる**。
+    ここを固定文字列に戻すと、どちらかの深さで必ず404になる。
+  - **生成スクリプトは相対階層を間違えやすい**。`generate-sekoukanri-variants.py` は
+    テンプレート自身が使っているプレフィックスを読み取る（`img_base_of`）。固定値に戻さないこと。
+    実際に固定値のままにして WPLP / nenshu-shindan の variant 12本に39件の404を作った。
+  - **静的チェックは生成スクリプトより後にも回す**。上記の39件は「生成前に通っていた」ので気づけなかった。
+    `release-pre-check.sh` は生成の後にもう一度 `check-local-refs` を回す。
+  - まだWPに残っている依存: og:image の `ogp.jpg`（62参照）と `dk_lp/denkikouji` の
+    `step04_icon0{1,2,3,5}.png`（4参照）。**実体をローカルに持っていないため**据え置き。
+    `v2-deploy/wp-html/` の5本は WordPress の固定ページに貼るHTMLなので絶対URLが正しい（対象外）。
+  - LPからの `/terms`（226本）・`/privacypolicy`（221本）はまだWPの固定ページを指している。
+
 ## 自動チェック（消えやすい配線の番人）
 
 上の【頻出バグ】は、CIで自動的に止める。**チェックを消す/緩めるのではなく、落ちた原因を直す。**
@@ -65,7 +82,7 @@
 | `check-form-invariants.mjs` | **「全フォームLP」= `index.html` **または**隣の `steps-lazy.html` に `your-tel` があるページ（60本）**——`index.html` だけで判定すると入力欄を遅延側に置く主力2本(denkikouji/sekoukanri)を含む10本が漏れる（2026-08-23発覚）。／ クマの**移動配線**、スクロール/フォーカス5クラス、フォーム自己修復4クラス、ミラー一致（cvr-boost.js含む）、アプリ内ブラウザ余白(96pxのCSS **と** それを効かせる `body.lp-input-step` 付与の両方)、**キーボードナッジの多段補正(300/700/1200ms＋visualViewport resize。1回きりに戻すとiOSの再スクロールに負ける)**、ステップの初期非表示、生まれ年範囲の一致、`form_step` の二重push禁止（リポジトリ内の cvr-boost.js を全数走査）、テーマCSSの出所、予約先読みの範囲 |
 | `check-input-attrs.mjs` | 入力欄の属性（数字キーボード・自動入力）が全LPで揃っていること |
 | `check-asset-versions.mjs` | `?v=` の上げ忘れ・不揃い（`--update` で台帳更新） |
-| `check-lazy-steps.mjs` / `check-local-refs.mjs` | 参照切れ |
+| `check-lazy-steps.mjs` / `check-local-refs.mjs` | 参照切れ／**WPテーマ配下への実行時参照が増えていないこと**（`check-local-refs.mjs` の後半。実体待ちの5種だけ理由付きで許可） |
 | `check-agency-share.mjs` | 代理店共有シートに個人情報が混ざらないこと |
 | `check-company-info.mjs` | 会社情報（会社名・代表者・所在地・許可番号・メール）が全ページで一致し、別会社テンプレ由来の旧値が残っていないこと |
 | `e2e-lp-flow-local.mjs` | 実ブラウザでフォームを最後まで通す＋DOM差し替え/遅延ステップ失敗/load前クリックからの復旧 |
