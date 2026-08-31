@@ -333,6 +333,33 @@ jobs:
             exit 1
           fi
 
+      - name: Remove non-web assets left on server
+        run: |
+          set -euo pipefail
+          # rsync の --delete は「除外したファイル」を消さない（除外＝保護扱い）。
+          # 除外リストに足しただけでは、既にアップロード済みのものはサーバに残り続ける
+          # （STG run #493 で「CLAUDE.md が HTTP 200」として実測済み）。
+          # かといって --delete-excluded は使えない: /thanks/ 等はサーバ側に
+          # 存在させたままの運用なので、一括で消すと旧リンクが壊れる。
+          # そこで「消してよいもの」だけを名指しで消す。
+          ssh -p "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" \
+            -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60 \
+            "${XSERVER_USER}@${XSERVER_HOST}" \
+            "TARGET='${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$TARGET"
+          # 消す前に「本当にLPの配信ディレクトリか」を確かめる。
+          # パスを取り違えたまま削除を走らせないための保険。
+          if [ ! -f denkikouji/index.html ] || [ ! -f assets/js/app.js ]; then
+            echo "配信ディレクトリに見えないので削除を中止する: $TARGET" >&2
+            exit 1
+          fi
+          rm -rf ./scripts ./gas-recorder ./v2-deploy ./deploy ./docs ./dk_lp/docs
+          rm -f ./serve.sh ./.env.example ./.gitignore ./package.json ./package-lock.json
+          find . -type f -name '*.md' -print -delete
+          echo "後始末おわり"
+          REMOTE
+
       - name: Apply WP legacy redirects (.htaccess)
         if: github.ref_name != 'staging'
         run: bash scripts/apply-wp-root-redirects.sh
