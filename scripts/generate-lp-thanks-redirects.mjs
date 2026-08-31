@@ -75,7 +75,18 @@ let written = 0;
 for (const { rel, lpId } of targets) {
   const thanksDir = path.join(ROOT, rel, "thanks");
   const thanksFile = path.join(thanksDir, "index.html");
-  if (isRedirectPage(thanksFile)) continue;
+  // 既に転送ページになっている場合でも、中身が現在の __LP_ID と食い違っていたら書き直す。
+  // 以前は無条件に continue していたため、LPの __LP_ID を変えても /thanks/ が
+  // 古い lp= を送り続けた（2026-08-31、denkikouji-trust を denkikouji から分離した際に発覚）。
+  // 内容が一致していれば書かないので、再生成しても差分は出ない。
+  if (isRedirectPage(thanksFile)) {
+    const want = buildRedirectHtml(lpId);
+    if (fs.readFileSync(thanksFile, "utf8") === want) continue;
+    fs.writeFileSync(thanksFile, want, "utf8");
+    console.log("updated", path.relative(ROOT, thanksFile), "→", lpId);
+    written++;
+    continue;
+  }
   if (fs.existsSync(thanksFile)) {
     const existing = fs.readFileSync(thanksFile, "utf8");
     if (existing.length > 800 && !existing.includes("location.replace")) {
