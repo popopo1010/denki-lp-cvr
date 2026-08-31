@@ -68,5 +68,5 @@ jobs:
           git push -f origin "$BR"
           gh pr create --base main --head "$BR" \
             --title "WPテーマCSSスナップショット更新" \
-            --body "本番の style.css との差分を検知しました。**このPRのマージ＝全LPの見た目が変わる**ので、差分を必ず確認してください。2026-08-23 に全LPが本番URL直参照から theme-snapshot.css に切り替わったため、テーマ変更はこのPRを通してのみLPへ反映されます（以前の『LP表示への影響はありません』は無効）。マージ＝本番デプロイ起動。表示に関わるので STG実機確認を挟んでください。" \\
+            --body "本番の style.css との差分を検知しました。**このPRのマージ＝全LPの見た目が変わる**ので、差分を必ず確認してください。2026-08-23 に全LPが本番URL直参照から theme-snapshot.css に切り替わったため、テーマ変更はこのPRを通してのみLPへ反映されます（以前の『LP表示への影響はありません』は無効）。マージ＝本番デプロイ起動。表示に関わるので STG実機確認を挟んでください。" \
             || echo "PR already exists (updated by force-push)"

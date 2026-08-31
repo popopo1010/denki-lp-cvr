@@ -65,6 +65,9 @@ jobs:
       - name: 代理店共有シートのPII混入検査
         run: node scripts/check-agency-share.mjs
 
+      - name: "ワークフローの run: をシェルとして構文検査"
+        run: node scripts/check-workflow-shell.mjs
+
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
     runs-on: ubuntu-latest

@@ -64,6 +64,7 @@
 | `check-input-attrs.mjs` | 入力欄の属性（数字キーボード・自動入力）が全LPで揃っていること |
 | `check-asset-versions.mjs` | `?v=` の上げ忘れ・不揃い（`--update` で台帳更新） |
 | `check-lazy-steps.mjs` / `check-local-refs.mjs` | 参照切れ |
+| `check-workflow-shell.mjs` | ワークフローの `run:` をシェルとして構文検査。行継続を `\\` と書くと「pushもPR作成も起きたのにワークフローは赤」になる（bashはそこまで実行してから落ちる）。クォートしていない `name:` に `": "` が入ってYAMLが壊れるのも見る |
 | `check-agency-share.mjs` | 代理店共有シートに個人情報が混ざらないこと |
 | `e2e-lp-flow-local.mjs` | 実ブラウザでフォームを最後まで通す＋DOM差し替え/遅延ステップ失敗/load前クリックからの復旧 |
 | `audit-mobile-ux.mjs` | **手動**。6機種×LP×全ステップの実測（横スクロール・タップ領域44px・入力欄16px・FV内CTA）。CIには入れない（遅い） |
