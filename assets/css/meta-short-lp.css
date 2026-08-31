@@ -123,3 +123,15 @@ body.meta-short-lp.ns-lp #step-first {
 body.meta-short-lp.ns-lp .ns-header-bar__sub {
   display: none;
 }
+
+/* アプリ内ブラウザ（LINE/Instagram）の上部バー対策の穴埋め（2026-08-31）。
+   共通の critical CSS は入力ステップの上余白を 64px にしているが、この値は
+   「先頭要素 ≒ 余白 + ヘッダー36px = 100px」を前提に決められている
+   （2026-08-29 に 96px から下げた経緯）。
+   このファイルは上の 103行目で入力ステップのヘッダーを display:none にするため、
+   その 36px が消えて先頭要素が 64px に来る = LINEのバー（実測83px）の裏に沈む。
+   ヘッダーを隠している側で、隠した分を埋め戻す。
+   実測: meta-lp / meta-lp-v2 の7本で headTop=64px → 100px。 */
+html.dk-inapp.dk-ios body.meta-short-lp.lp-form-step .js-page-body {
+  padding-top: 100px !important;
+}
