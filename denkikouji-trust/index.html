@@ -111,7 +111,10 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 .lp-jobs[hidden]{display:none!important}
 .lp-jobs__head{font-size:13px;font-weight:700;color:#314c85;margin:0 0 8px}
 .lp-jobs__list{display:grid;gap:8px}
-.lp-job{border:1px solid #e2e7f0;border-radius:9px;background:#fff;padding:9px 11px}
+.lp-job{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;border:1px solid #e2e7f0;border-radius:9px;background:#fff;padding:9px 11px;position:relative}
+.lp-job:active{background:#f7f9fd}
+.lp-job__title,.lp-job__tags,.lp-job__more{display:block}
+.lp-job__more{font-size:11px;color:#314c85;font-weight:700;margin-top:6px}
 .lp-job__title{font-size:13px;font-weight:700;color:#1b2330;margin:0 0 4px;line-height:1.45}
 .lp-job__meta{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12px;color:#5b6880;margin:0}
 .lp-job__pay{color:#314c85;font-weight:700;white-space:nowrap}
@@ -280,7 +283,7 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 
     <!-- FV直下の求人カード。CTAより下に置き、CTAを画面外へ押し出さない。
          min-height はデータ到着で枠が動かないための予約（CLS対策）。 -->
-    <section class="lp-jobs" data-lp-job-cards data-src="../assets/data/lp-job-cards-denki.json?v=20260831c" data-limit="6" style="min-height:588px">
+    <section class="lp-jobs" data-lp-job-cards data-src="../assets/data/lp-job-cards-denki.json?v=20260831d" data-limit="6" style="min-height:588px">
         <p class="lp-jobs__head">いま掲載中の求人（抜粋）</p>
         <div class="lp-jobs__list" data-lp-job-cards-list></div>
         <p class="lp-jobs__note" data-lp-job-cards-note></p>
@@ -473,11 +476,11 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
                 <a href="https://builders-job.com/company" target="_blank" class="link">運営会社</a>
                 <a href="/service" target="_blank" class="link">サービスについて</a>
             </div>
-            <div class="copyright">Copyright &copy; XCHANGE 有料職業紹介事業許可番号 13-ユ-316946</div>
+            <div class="copyright">Copyright &copy; XCHANGE株式会社 有料職業紹介事業許可番号 13-ユ-316946</div>
         </section>
     </div>
 </footer>
 
-<script src="../assets/js/lp-job-cards.js?v=20260830a" defer></script>
+<script src="../assets/js/lp-job-cards.js?v=20260831a" defer></script>
 </body>
 </html>
