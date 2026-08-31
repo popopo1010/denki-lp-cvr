@@ -440,6 +440,25 @@ jobs:
         if: github.ref_name != 'staging'
         run: |
           VERIFY_BASE="https://denkilp.builders-job.com/denki-lp-cvr"
+
+          # 広告費が乗っている主力LPと、フォームを動かす資産が配信されていること。
+          # 従来この検証は v2系と thanks-v2 しか見ておらず、/denkikouji/ /sekoukanri/
+          # と app.js が落ちても success になっていた（CVが止まっても気づけない）。
+          # 2026-08-31 に追加。
+          echo "--- 主力LPとフォーム資産 ---"
+          for p in denkikouji/ sekoukanri/ assets/js/app.js assets/js/app-v2.js \
+                   assets/css/theme-snapshot.css privacypolicy/ \
+                   service/denkikouji/ service/sekoukanri/; do
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "${VERIFY_BASE}/${p}")
+            [ "$code" = "200" ] || { echo "::error::本番で配信されていない: ${p} (HTTP ${code})"; exit 1; }
+            printf '  %s  %s\n' "$code" "$p"
+          done
+          # フォームが動くのに必要な配線がHTMLに残っていること（minify後の本番HTMLで確認）。
+          lp=$(curl -sL "${VERIFY_BASE}/denkikouji/")
+          echo "$lp" | grep -q 'app.js?v' || { echo "::error::denkikouji が app.js を読んでいない"; exit 1; }
+          echo "$lp" | grep -q 'name="your-tel"\|steps-lazy' || { echo "::error::denkikouji にフォームが無い"; exit 1; }
+          echo "  ✓ denkikouji: app.js とフォームの配線あり"
+
           # 非Web資産が本当に配信されていないかを出力側で確認する。
           # 転送リストの検査（Deploy via rsync 内のドライラン）は「送る前」しか見ない。
           # --delete で消えたことまで確かめないと、除外を足しても本番に残り続ける。

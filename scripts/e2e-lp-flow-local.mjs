@@ -677,6 +677,36 @@ async function loadPlaywright() {
   throw new Error("playwright が見つからない（npm i --no-save playwright を実行するか PLAYWRIGHT_MODULE_PATH を指定）");
 }
 
+/**
+ * 自己修復・遅延ステップ復旧を回すLPを選ぶ。
+ * 「そのページが読んでいるフォームJS」ごとに1本ずつ（= 実装を全部カバー）＋
+ * 広告の主力着地は必ず含める。全LPで回すと数分延びるための妥協だが、
+ * 実装単位で見れば漏れは無い。
+ */
+const SELF_HEAL_ALWAYS = ["/denkikouji/", "/sekoukanri/"];
+async function pickSelfHealTargets(lps) {
+  const { readFile } = await import("node:fs/promises");
+  const byImpl = new Map();
+  for (const lp of lps) {
+    let html = "";
+    try {
+      html = await readFile(new URL("." + lp + "index.html", new URL("../", import.meta.url)), "utf8");
+    } catch { continue; }
+    // 読み込んでいるフォームJSのファイル名を実装の識別子にする
+    const impl = (html.match(/src="[^"]*\/((?:app-v2|app|main)\.js)/) || [])[1] || "unknown";
+    // 配信ツリー（ミラーは別ファイルなので実装として数える）。
+    // ルート直下のLPはツリー名を持たないので "root" にまとめる。
+    // ここを lp.split("/")[1] のままにすると1本ごとに別グループになり、
+    // 26本まで膨らんでCIが数分延びる。
+    const TREES = ["WPLP", "自前LP", "dk_lp", "meta-lp", "meta-lp-v2", "nenshu-shindan", "nenshu-shindan-v2"];
+    const seg = lp.split("/")[1] || "";
+    const key = impl + "|" + (TREES.includes(seg) ? seg : "root");
+    if (!byImpl.has(key)) byImpl.set(key, lp);
+  }
+  const picked = new Set([...SELF_HEAL_ALWAYS.filter((l) => lps.includes(l)), ...byImpl.values()]);
+  return [...picked];
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const lps = args.includes("--lp") ? args.slice(args.indexOf("--lp") + 1) : DEFAULT_LPS;
@@ -687,8 +717,19 @@ async function main() {
   const browser = await chromium.launch(launch);
   try {
     for (const lp of lps) await runLp(browser, devices, lp);
-    await runSelfHeal(browser, devices, lps[0]);
-    await runLazyRecovery(browser, devices, lps[0]);
+    // 自己修復と遅延ステップ復旧は「送信が無言で消える」経路の検査で、
+    // このリポジトリで最も損失が大きいバグを見張っている
+    // （差し替え後 Zapier=0/GAS=0。シートにもSlackにもZohoにも痕跡が残らない）。
+    // 以前は lps[0] の1本だけで走っており、CIのLP一覧は sort 順なので
+    // 実際には /WPLP/denkikouji-v2/ しか検査されず、主力の /denkikouji/
+    // /sekoukanri/ は一度も通っていなかった（2026-08-31 発覚）。
+    // 自己修復は app.js / app-v2.js / dk_lp の各実装が別々に持っているので、
+    // 「読んでいるフォームJSが違うLP」を1本ずつ選んで全実装をカバーする。
+    // 全LPで回すとCIが数分延びるため、実装ごとの代表＋主力LPに絞る。
+    for (const lp of await pickSelfHealTargets(lps)) {
+      await runSelfHeal(browser, devices, lp);
+      await runLazyRecovery(browser, devices, lp);
+    }
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
   } finally {
