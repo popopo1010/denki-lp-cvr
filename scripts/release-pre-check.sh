@@ -57,10 +57,16 @@ if [[ "${RUN_E2E:-}" == "1" ]]; then
   echo ""
   echo "== E2E (Playwright) =="
   node scripts/e2e-thanks-v2-release.mjs
+  # LPは50本以上あるが、広告費が乗っていて壊れると即CVを失うのは一部だけ
+  # （Zoho商談の直近200件は denkikouji-v2 / denkikouji で占められている）。
+  # 全部まとめて回すとメインの異常に気づくのが最後尾になるので、2段階に分ける。
   echo ""
-  echo "== LPフォーム ローカルE2E（本番不要・主要LP） =="
-  node scripts/e2e-lp-flow-local.mjs \
-    --lp /denkikouji/ /sekoukanri/ /denkikouji-v2/ /sekoukanri-v2/ /sekoukanri-kentiku-v2/
+  echo "== LPフォーム ローカルE2E ①メイン（広告の着地） =="
+  node scripts/e2e-lp-flow-local.mjs --tier main
+
+  echo ""
+  echo "== LPフォーム ローカルE2E ②その他 =="
+  node scripts/e2e-lp-flow-local.mjs --tier rest
 fi
 
 echo ""

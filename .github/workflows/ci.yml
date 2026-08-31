@@ -114,20 +114,18 @@ jobs:
           npm i --no-save --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
 
-      - name: フォーム通し・自己修復・遅延ステップ復旧・load前クリック
+      # チェックは2段階。①広告の着地（メイン）→ ②その他。
+      # 壊れたときの損失が桁違いなので、まずメインだけを短時間で通す。
+      # 対象は scripts/lp-tiers.json（Zoho商談のLP別集計が出典）から解決するので、
+      # ミラーを増やしても列挙を書き換える必要はない。
+      - name: "①メイン（広告の着地）: フォーム通し・自己修復・遅延ステップ復旧・load前クリック"
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "push" ]; then
-            # 広告の着地になる主要LPだけ（数分）。壊れたら即わかる
-            node scripts/e2e-lp-flow-local.mjs --lp \
-              /denkikouji/ /sekoukanri/ /denkikouji-v2/ /sekoukanri-v2/ /sekoukanri-kentiku-v2/
-          else
-            # PRではフォームを持つLPを全部通す。
-            # 入力欄が steps-lazy.html 側にあるLP（denkikouji / sekoukanri など主力を含む10本）は
-            # index.html に your-tel が無いため、この列挙から漏れていた（2026-08-23 発覚）。
-            # index.html と隣の steps-lazy.html の**どちらか**に your-tel があれば対象にする。
-            LPS=$(grep -rl 'name="your-tel"' --include=index.html --include=steps-lazy.html . \
-                  | sed 's|^\./||; s|/[^/]*\.html$||; s|^|/|; s|$|/|' | sort -u)
-            echo "$LPS" | tr '\n' ' '
-            node scripts/e2e-lp-flow-local.mjs --lp $LPS
-          fi
+          node scripts/e2e-lp-flow-local.mjs --tier main
+
+      # ②はPRのときだけ。ブランチへのpushごとに50本超を回すとCIが長すぎる。
+      - name: "②その他のLP"
+        if: github.event_name != 'push'
+        run: |
+          set -euo pipefail
+          node scripts/e2e-lp-flow-local.mjs --tier rest

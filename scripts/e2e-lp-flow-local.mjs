@@ -19,11 +19,14 @@
  * CSSからは見えない。**表示に関わる変更の STG 実機確認は今までどおり必須**（CLAUDE.md）。
  *
  * 使い方: node scripts/e2e-lp-flow-local.mjs [--lp /denkikouji/ ...]
+ *         node scripts/e2e-lp-flow-local.mjs --tier main   # 広告の着地だけ
+ *         node scripts/e2e-lp-flow-local.mjs --tier rest   # それ以外
  */
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mainLps, restLps } from "./lp-tiers.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 // ポートは既定で自動採番（並行実行やCIでの取り合いを避ける）。固定したいときは E2E_PORT。
@@ -717,9 +720,26 @@ async function filterHasLazySteps(lps) {
   return out;
 }
 
+function resolveLps(args) {
+  if (args.includes("--lp")) return args.slice(args.indexOf("--lp") + 1);
+  // --tier main / --tier rest : 広告の着地とその他を分けて回す（scripts/lp-tiers.mjs）。
+  // 全部まとめて回すと、メインの異常に気づくのが最後尾になる。
+  const ti = args.indexOf("--tier");
+  if (ti >= 0) {
+    const tier = args[ti + 1];
+    if (tier !== "main" && tier !== "rest") {
+      throw new Error(`--tier は main か rest（受け取った値: ${tier}）`);
+    }
+    return tier === "main" ? mainLps() : restLps();
+  }
+  return DEFAULT_LPS;
+}
+
 async function main() {
   const args = process.argv.slice(2);
-  const lps = args.includes("--lp") ? args.slice(args.indexOf("--lp") + 1) : DEFAULT_LPS;
+  const lps = resolveLps(args);
+  if (lps.length === 0) throw new Error("対象のLPが0本。--tier の解決結果が空になっている");
+  console.log(`対象 ${lps.length}本: ${lps.join(" ")}\n`);
   const { chromium, devices } = await loadPlaywright();
   const server = await startServer();
   const launch = { headless: true };
