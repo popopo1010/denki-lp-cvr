@@ -18,6 +18,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
+      # 配信されていないことを確認する非Web資産（本番・STGの両Verifyで使う）。
+      # rsync の EXCLUDES に足したら、代表例をここにも足す
+      NON_WEB_PROBES: "CLAUDE.md 本番反映手順書.md LP作成リファレンス.md gas-recorder/zoho.js scripts/check-form-invariants.mjs v2-deploy/README.md"
       XSERVER_HOST: ${{ secrets.XSERVER_HOST }}
       XSERVER_PORT: ${{ secrets.XSERVER_PORT }}
       XSERVER_USER: ${{ secrets.XSERVER_USER }}
@@ -398,8 +401,7 @@ jobs:
           # 転送リストの検査（Deploy via rsync 内のドライラン）は「送る前」しか見ない。
           # --delete で消えたことまで確かめないと、除外を足しても本番に残り続ける。
           echo "--- 非Web資産が配信されていないこと ---"
-          for p in CLAUDE.md 本番反映手順書.md LP作成リファレンス.md \
-                   gas-recorder/zoho.js scripts/check-form-invariants.mjs v2-deploy/README.md; do
+          for p in ${NON_WEB_PROBES}; do
             code=$(curl -sL -o /dev/null -w '%{http_code}' "${VERIFY_BASE}/${p}")
             if [ "$code" = "200" ]; then
               echo "::error::本番に配信されている: ${p}（HTTP 200。rsyncの除外か--deleteが効いていない）"; exit 1
@@ -415,8 +417,7 @@ jobs:
           # 転送リストの検査（Deploy via rsync 内のドライラン）は「送る前」しか見ない。
           # --delete で消えたことまで確かめないと、除外を足しても本番に残り続ける。
           echo "--- 非Web資産が配信されていないこと ---"
-          for p in CLAUDE.md 本番反映手順書.md LP作成リファレンス.md \
-                   gas-recorder/zoho.js scripts/check-form-invariants.mjs v2-deploy/README.md; do
+          for p in ${NON_WEB_PROBES}; do
             code=$(curl -sL -o /dev/null -w '%{http_code}' "${VERIFY_BASE}/${p}")
             if [ "$code" = "200" ]; then
               echo "::error::本番に配信されている: ${p}（HTTP 200。rsyncの除外か--deleteが効いていない）"; exit 1
