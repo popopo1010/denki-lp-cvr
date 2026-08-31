@@ -277,22 +277,45 @@ jobs:
           else
             SSH_CHECK="-o StrictHostKeyChecking=accept-new"
           fi
+          # 配信しないもの。1箇所に集約し、下のドライラン検証と本番転送の両方で使う
+          # （2つに書き分けると必ずズレる）。非Web資産を置くと本番で誰でも取得できる
+          # ため除外する（2026-08-31。参照ゼロを確認済み: これらを指すHTMLリンクは0本、
+          # .md へのリンクも0本。deploy/ の htaccess 断片はランナー側から読んで
+          # SSHで流すのでサーバには不要）。
+          EXCLUDES=(
+            --exclude='.git' --exclude='.github' --exclude='.cursor'
+            --exclude='実装依頼書.md' --exclude='package.json' --exclude='package-lock.json'
+            --exclude='README.md' --exclude='docs/'
+            --exclude='*.md' --exclude='scripts/' --exclude='gas-recorder/'
+            --exclude='deploy/' --exclude='v2-deploy/' --exclude='serve.sh'
+            --exclude='.env.example' --exclude='.gitignore' --exclude='.netlify'
+            --exclude='/thanks/' --exclude='WPLP/thanks/'
+            --exclude='自前LP/thanks/' --exclude='nenshu-shindan/thanks/'
+          )
+
+          # 転送前に「何が行くか」をドライランで確認する。除外が効いていない、または
+          # 必要なファイルが落ちている状態でサーバに触らせない（--delete があるため、
+          # 間違ったリストで走らせると本番から消える）。
+          rsync -an --delete --out-format='%n' "${EXCLUDES[@]}" ./ /tmp/rsync-dryrun-dest/ > /tmp/rsync-list.txt
+          echo "転送対象 $(grep -c . /tmp/rsync-list.txt) 件"
+          for must_not in 'CLAUDE.md' '本番反映手順書' 'gas-recorder/' 'scripts/' 'v2-deploy/' '\.md$'; do
+            if grep -q "$must_not" /tmp/rsync-list.txt; then
+              echo "::error::除外できていない: ${must_not}（本番に非Web資産が出る）"; exit 1
+            fi
+          done
+          for must in '^denkikouji/index\.html$' '^sekoukanri/index\.html$' '^assets/js/app\.js$' \
+                      '^assets/css/theme-snapshot\.css$' '^privacypolicy/index\.html$' '^\.htaccess$'; do
+            if ! grep -qE "$must" /tmp/rsync-list.txt; then
+              echo "::error::転送対象から落ちている: ${must}（除外が広すぎる）"; exit 1
+            fi
+          done
+          echo "除外リスト検証OK"
+
           # XserverのSSHは一時的に接続不可になることがあるためリトライする
           # （2026-06-10 #236/#237 が connect timeout で連続失敗した教訓）
           deploy_ok=false
           for attempt in 1 2 3 4 5; do
-            if rsync -avz --delete \
-              --exclude='.git' \
-              --exclude='.github' \
-              --exclude='.cursor' \
-              --exclude='実装依頼書.md' \
-              --exclude='package.json' \
-              --exclude='README.md' \
-              --exclude='docs/' \
-              --exclude='/thanks/' \
-              --exclude='WPLP/thanks/' \
-              --exclude='自前LP/thanks/' \
-              --exclude='nenshu-shindan/thanks/' \
+            if rsync -avz --delete "${EXCLUDES[@]}" \
               -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
               ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}/"; then
               deploy_ok=true
