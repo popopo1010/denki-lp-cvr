@@ -20,6 +20,7 @@ concurrency:
 jobs:
   static:
     name: 静的チェック（禁止コピー・クマ・参照・?v=・フォーム配線）
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +71,7 @@ jobs:
 
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,6 +104,7 @@ jobs:
     # 主要LPは「push のたび」に実ブラウザで通す。PRなら全50本。
     # 当初 push では丸ごと skip していたが、PRを作らずブランチへ push する運用だと
     # 実ブラウザ検証が一度も回らないという穴になっていた（2026-08-23 に発覚）。
+    timeout-minutes: 75
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

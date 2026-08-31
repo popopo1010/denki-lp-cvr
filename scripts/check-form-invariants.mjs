@@ -537,6 +537,56 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
 }
 
 // ───────────────────────────────────────────────────────────
+// 計測の身元（window.__LP_ID）が別のLPと衝突していないこと
+//
+// 経緯（2026-08-31）: テストLP denkikouji-trust が __LP_ID="denkikouji" を名乗っており、
+// このページからの送信が本家 /denkikouji/ と区別できなかった。Zoho商談・シート・
+// Slack通知・GTMの lp_slug すべてで本家の数字に混ざる。数字が混ざったことは
+// あとから一覧で拾えないので、静的に止める。
+//
+// 判定: 同じ __LP_ID を名乗るページは「同じLPのミラー」でなければならない
+//       ＝ ディレクトリ名が揃っていること（root / WPLP / 自前LP / dk_lp の複製）。
+// meta-lp のように意図して別IDを持つページは、そもそも衝突しないので対象外。
+{
+  const skip = (p) =>
+    p.startsWith("v2-deploy/") || p.startsWith("docs/") ||
+    p.startsWith("dk_lp/docs/") || p.startsWith("node_modules/") || p.startsWith(".git/");
+
+  // ディレクトリ名は違うが同じLPの複製であることが分かっているもの（綴り違い）
+  const KNOWN_MIRROR_ALIAS = { sekokanri: "sekoukanri" };
+
+  const walk = (dir, out) => {
+    for (const name of readdirSync(join(ROOT, dir || "."))) {
+      if (name.startsWith(".")) continue;
+      const rel = dir ? `${dir}/${name}` : name;
+      if (skip(rel)) continue;
+      if (statSync(join(ROOT, rel)).isDirectory()) walk(rel, out);
+      else if (name === "index.html") out.push(rel);
+    }
+    return out;
+  };
+
+  const groups = new Map();
+  for (const f of walk("", [])) {
+    const m = read(f).match(/__LP_ID\s*=\s*"([^"]+)"/);
+    if (!m) continue;
+    if (!groups.has(m[1])) groups.set(m[1], []);
+    groups.get(m[1]).push(dirname(f));
+  }
+
+  const collisions = [];
+  for (const [lpId, dirs] of groups) {
+    const names = new Set(dirs.map((d) => {
+      const base = d.split("/").pop();
+      return KNOWN_MIRROR_ALIAS[base] || base;
+    }));
+    if (names.size > 1) collisions.push(`_lp=${lpId}: ${dirs.sort().join(", ")}`);
+  }
+  check("__LP_ID が別のLPと衝突していない（送信が本家の数字に混ざらない）",
+    collisions.length === 0, collisions.join(" / "));
+}
+
+// ───────────────────────────────────────────────────────────
 for (const c of checks) console.log(`${c.ok ? "✓" : "✗"} ${c.name}`);
 console.log(`\n--- ${checks.length - failures.length}/${checks.length} passed ---`);
 if (failures.length) {

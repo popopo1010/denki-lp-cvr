@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   deploy:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     env:
       # 配信されていないことを確認する非Web資産（本番・STGの両Verifyで使う）。
@@ -130,7 +131,6 @@ jobs:
             nenshu-shindan/salary-data.js \
             nenshu-shindan/license-icons.js \
             nenshu-shindan-v2/salary-data.js \
-            nenshu-shindan-v2/license-icons.js \
             ad-cr/cr-ad.js; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
