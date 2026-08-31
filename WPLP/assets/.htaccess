@@ -1,0 +1,13 @@
+# assets/ 配下の静的ファイルの長期キャッシュ。ルートの assets/.htaccess と同じ方針。
+# 背景（2026-08-31）: LPが読む画像をWPテーマ配下からリポジトリ内へ移した際、
+# ルート assets/ 以外のツリーにはキャッシュ指定が無く、広告の着地LPが再訪のたびに
+# 同じ画像を取り直していた。CSS/JS はリポジトリ直下の .htaccess が既に immutable。
+# 画像を内容差し替えする場合はファイル名を変えること（例: sekoukanri_hero-sp.webp）。
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|webp|jpe?g|png|gif|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.json$">
+    Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
