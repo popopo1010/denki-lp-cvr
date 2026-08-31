@@ -18,6 +18,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
+      # 配信されていないことを確認する非Web資産（本番・STGの両Verifyで使う）。
+      # rsync の EXCLUDES に足したら、代表例をここにも足す
+      NON_WEB_PROBES: "CLAUDE.md 本番反映手順書.md LP作成リファレンス.md gas-recorder/zoho.js scripts/check-form-invariants.mjs v2-deploy/README.md"
       XSERVER_HOST: ${{ secrets.XSERVER_HOST }}
       XSERVER_PORT: ${{ secrets.XSERVER_PORT }}
       XSERVER_USER: ${{ secrets.XSERVER_USER }}
@@ -277,22 +280,45 @@ jobs:
           else
             SSH_CHECK="-o StrictHostKeyChecking=accept-new"
           fi
+          # 配信しないもの。1箇所に集約し、下のドライラン検証と本番転送の両方で使う
+          # （2つに書き分けると必ずズレる）。非Web資産を置くと本番で誰でも取得できる
+          # ため除外する（2026-08-31。参照ゼロを確認済み: これらを指すHTMLリンクは0本、
+          # .md へのリンクも0本。deploy/ の htaccess 断片はランナー側から読んで
+          # SSHで流すのでサーバには不要）。
+          EXCLUDES=(
+            --exclude='.git' --exclude='.github' --exclude='.cursor'
+            --exclude='実装依頼書.md' --exclude='package.json' --exclude='package-lock.json'
+            --exclude='README.md' --exclude='docs/'
+            --exclude='*.md' --exclude='scripts/' --exclude='gas-recorder/'
+            --exclude='deploy/' --exclude='v2-deploy/' --exclude='serve.sh'
+            --exclude='.env.example' --exclude='.gitignore' --exclude='.netlify'
+            --exclude='/thanks/' --exclude='WPLP/thanks/'
+            --exclude='自前LP/thanks/' --exclude='nenshu-shindan/thanks/'
+          )
+
+          # 転送前に「何が行くか」をドライランで確認する。除外が効いていない、または
+          # 必要なファイルが落ちている状態でサーバに触らせない（--delete があるため、
+          # 間違ったリストで走らせると本番から消える）。
+          rsync -an --delete --out-format='%n' "${EXCLUDES[@]}" ./ /tmp/rsync-dryrun-dest/ > /tmp/rsync-list.txt
+          echo "転送対象 $(grep -c . /tmp/rsync-list.txt) 件"
+          for must_not in 'CLAUDE.md' '本番反映手順書' 'gas-recorder/' 'scripts/' 'v2-deploy/' '\.md$'; do
+            if grep -q "$must_not" /tmp/rsync-list.txt; then
+              echo "::error::除外できていない: ${must_not}（本番に非Web資産が出る）"; exit 1
+            fi
+          done
+          for must in '^denkikouji/index\.html$' '^sekoukanri/index\.html$' '^assets/js/app\.js$' \
+                      '^assets/css/theme-snapshot\.css$' '^privacypolicy/index\.html$' '^\.htaccess$'; do
+            if ! grep -qE "$must" /tmp/rsync-list.txt; then
+              echo "::error::転送対象から落ちている: ${must}（除外が広すぎる）"; exit 1
+            fi
+          done
+          echo "除外リスト検証OK"
+
           # XserverのSSHは一時的に接続不可になることがあるためリトライする
           # （2026-06-10 #236/#237 が connect timeout で連続失敗した教訓）
           deploy_ok=false
           for attempt in 1 2 3 4 5; do
-            if rsync -avz --delete \
-              --exclude='.git' \
-              --exclude='.github' \
-              --exclude='.cursor' \
-              --exclude='実装依頼書.md' \
-              --exclude='package.json' \
-              --exclude='README.md' \
-              --exclude='docs/' \
-              --exclude='/thanks/' \
-              --exclude='WPLP/thanks/' \
-              --exclude='自前LP/thanks/' \
-              --exclude='nenshu-shindan/thanks/' \
+            if rsync -avz --delete "${EXCLUDES[@]}" \
               -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
               ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}/"; then
               deploy_ok=true
@@ -306,6 +332,33 @@ jobs:
             echo "::error::rsync failed after 5 attempts (Xserver SSH unreachable?)"
             exit 1
           fi
+
+      - name: Remove non-web assets left on server
+        run: |
+          set -euo pipefail
+          # rsync の --delete は「除外したファイル」を消さない（除外＝保護扱い）。
+          # 除外リストに足しただけでは、既にアップロード済みのものはサーバに残り続ける
+          # （STG run #493 で「CLAUDE.md が HTTP 200」として実測済み）。
+          # かといって --delete-excluded は使えない: /thanks/ 等はサーバ側に
+          # 存在させたままの運用なので、一括で消すと旧リンクが壊れる。
+          # そこで「消してよいもの」だけを名指しで消す。
+          ssh -p "${XSERVER_PORT}" -i "${HOME}/.ssh/id_ed25519" \
+            -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60 \
+            "${XSERVER_USER}@${XSERVER_HOST}" \
+            "TARGET='${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$TARGET"
+          # 消す前に「本当にLPの配信ディレクトリか」を確かめる。
+          # パスを取り違えたまま削除を走らせないための保険。
+          if [ ! -f denkikouji/index.html ] || [ ! -f assets/js/app.js ]; then
+            echo "配信ディレクトリに見えないので削除を中止する: $TARGET" >&2
+            exit 1
+          fi
+          rm -rf ./scripts ./gas-recorder ./v2-deploy ./deploy ./docs ./dk_lp/docs
+          rm -f ./serve.sh ./.env.example ./.gitignore ./package.json ./package-lock.json
+          find . -type f -name '*.md' -print -delete
+          echo "後始末おわり"
+          REMOTE
 
       - name: Apply WP legacy redirects (.htaccess)
         if: github.ref_name != 'staging'
@@ -370,9 +423,34 @@ jobs:
             echo "  全LPが200"
           fi
 
+          VERIFY_BASE="${DEPLOY_URL_BASE}"
+          # 非Web資産が本当に配信されていないかを出力側で確認する。
+          # 転送リストの検査（Deploy via rsync 内のドライラン）は「送る前」しか見ない。
+          # --delete で消えたことまで確かめないと、除外を足しても本番に残り続ける。
+          echo "--- 非Web資産が配信されていないこと ---"
+          for p in ${NON_WEB_PROBES}; do
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "${VERIFY_BASE}/${p}")
+            if [ "$code" = "200" ]; then
+              echo "::error::本番に配信されている: ${p}（HTTP 200。rsyncの除外か--deleteが効いていない）"; exit 1
+            fi
+            printf '  %s  %s\n' "$code" "$p"
+          done
+
       - name: Verify deployment
         if: github.ref_name != 'staging'
         run: |
+          VERIFY_BASE="https://denkilp.builders-job.com/denki-lp-cvr"
+          # 非Web資産が本当に配信されていないかを出力側で確認する。
+          # 転送リストの検査（Deploy via rsync 内のドライラン）は「送る前」しか見ない。
+          # --delete で消えたことまで確かめないと、除外を足しても本番に残り続ける。
+          echo "--- 非Web資産が配信されていないこと ---"
+          for p in ${NON_WEB_PROBES}; do
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "${VERIFY_BASE}/${p}")
+            if [ "$code" = "200" ]; then
+              echo "::error::本番に配信されている: ${p}（HTTP 200。rsyncの除外か--deleteが効いていない）"; exit 1
+            fi
+            printf '  %s  %s\n' "$code" "$p"
+          done
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" | head -3
           curl -sI "https://denkilp.builders-job.com/denki-lp-cvr/sekoukanri-kentiku-v2/" | head -3
