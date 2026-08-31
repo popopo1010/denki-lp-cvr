@@ -517,7 +517,17 @@
   }
 
   // ========== License icons (step01・資格ごと) ==========
-  const THEME_IMG = "https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img";
+  // 画像はリポジトリ内（<tree>/assets/img/）から配る。WPテーマ配下を直接指すと
+  // WordPress を畳んだ瞬間に全LPの資格アイコンが消える（2026-08-31 WP依存の切り離し）。
+  // このJSは <tree>/assets/js/ に置かれるので、自分の src から ../img を解決する。
+  // ページ側の相対深さ（1階層/2階層）に依存しないのが要点。
+  const THEME_IMG = (() => {
+    try {
+      const s = document.currentScript || document.querySelector('script[src*="app-v2.js"]');
+      if (s && s.src) return new URL("../img", s.src).href;
+    } catch (e) { /* no-op */ }
+    return "../assets/img";
+  })();
   const LICENSE_ICON_SRC = {
     // 人物系アイコンを資格ごとに割当（全て同系統のイラストで統一感を保ちつつ差別化）
     kentiku: THEME_IMG + "/step03_icon02.png",      // 建築: 緑作業着 + 設計図

@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-IMG_BASE = "https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img"
+IMG_BASE = "../assets/img"  # WP依存を切りリポジトリ内から配る（生成先は1階層のLP）
 BASE_URL = "https://denkilp.builders-job.com/denki-lp-cvr"
 
 QUAL_IMG = {

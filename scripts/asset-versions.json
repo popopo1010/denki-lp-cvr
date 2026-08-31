@@ -8,8 +8,8 @@
     "sha256": "48a4690552073992"
   },
   "WPLP/assets/js/app-v2.js": {
-    "version": "20260830b",
-    "sha256": "bcb5ff0388032798"
+    "version": "20260831b",
+    "sha256": "5f8a80b4e510f525"
   },
   "WPLP/assets/js/app.js": {
     "version": "20260830b",
@@ -68,8 +68,8 @@
     "sha256": "5e87015a08e9a2f7"
   },
   "assets/js/app-v2.js": {
-    "version": "20260830b",
-    "sha256": "bcb5ff0388032798"
+    "version": "20260831b",
+    "sha256": "5f8a80b4e510f525"
   },
   "assets/js/app.js": {
     "version": "20260830b",
@@ -117,27 +117,27 @@
   },
   "denkikouji-trust/steps-lazy.html": {
     "version": "20260712",
-    "sha256": "ba51970a23d862f5"
+    "sha256": "d4636bf56f63c35b"
   },
   "denkikouji-v3/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "d588a42236c08163"
+    "sha256": "d4f403a64d75ce19"
   },
   "denkikouji-v4/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "d588a42236c08163"
+    "sha256": "d4f403a64d75ce19"
   },
   "denkikouji-v5/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "ba42c0007620db8d"
+    "sha256": "4123a3960f4ef1d7"
   },
   "denkikouji-v6/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "ba51970a23d862f5"
+    "sha256": "d4636bf56f63c35b"
   },
   "denkikouji/steps-lazy.html": {
     "version": "20260712",
-    "sha256": "ba51970a23d862f5"
+    "sha256": "d4636bf56f63c35b"
   },
   "dk_lp/assets/css/cvr-boost-sekoukanri.css": {
     "version": "20260829e",
@@ -165,7 +165,7 @@
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "f02bc931cf03948a"
+    "sha256": "fcad88b8c7faf91c"
   },
   "nenshu-shindan-v2/nenshu-shindan.css": {
     "version": "9",
@@ -176,8 +176,8 @@
     "sha256": "157e0ad443abcbd9"
   },
   "nenshu-shindan/license-icons.js": {
-    "version": "1",
-    "sha256": "206be62c163b9933"
+    "version": "2",
+    "sha256": "422e6ff3a766ae34"
   },
   "nenshu-shindan/nenshu-shindan.css": {
     "version": "9",
@@ -189,19 +189,19 @@
   },
   "sekoukanri-denkisekou/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "67985789f1cab262"
+    "sha256": "a67e35cfa838f864"
   },
   "sekoukanri-doboku/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "67985789f1cab262"
+    "sha256": "a67e35cfa838f864"
   },
   "sekoukanri-kentiku/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "67985789f1cab262"
+    "sha256": "a67e35cfa838f864"
   },
   "sekoukanri/steps-lazy.html": {
     "version": "20260701c",
-    "sha256": "67985789f1cab262"
+    "sha256": "a67e35cfa838f864"
   },
   "自前LP/assets/css/style-v2.css": {
     "version": "20260829d",
@@ -212,8 +212,8 @@
     "sha256": "04233f3ec2720dd1"
   },
   "自前LP/assets/js/app-v2.js": {
-    "version": "20260830b",
-    "sha256": "bcb5ff0388032798"
+    "version": "20260831b",
+    "sha256": "5f8a80b4e510f525"
   },
   "自前LP/assets/js/app.js": {
     "version": "20260830b",

@@ -2,7 +2,9 @@
  * @deprecated assets/js/app.js の initLicenseIcons() に統合済み。
  */
 (function () {
-  var THEME = "https://denkilp.builders-job.com/wp-content/themes/original-thema/assets/img";
+  // WP依存を切るためリポジトリ内のルート assets/img から配る（2026-08-31）。
+  // 読み込み元ページは nenshu-shindan{,-v2}/<lp>/ の2階層なので ../../ で届く。
+  var THEME = "../../assets/img";
   var LOCAL = "../../assets/icons";
 
   var ICON_SRC = {
