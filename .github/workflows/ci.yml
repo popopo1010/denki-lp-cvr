@@ -117,18 +117,19 @@ jobs:
           npm i --no-save --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
 
-      # チェックは2段階。①広告の着地（メイン）→ ②その他。
-      # 壊れたときの損失が桁違いなので、まずメインだけを短時間で通す。
-      # 対象は scripts/lp-tiers.json（Zoho商談のLP別集計が出典）から解決するので、
-      # ミラーを増やしても列挙を書き換える必要はない。
-      - name: "①メイン（広告の着地）: フォーム通し・自己修復・遅延ステップ復旧・load前クリック"
+      # チェックは2段階。①現役 → ②アーカイブ。
+      # 壊れたときの損失が桁違いなので、まず現役だけを短時間で通す。
+      # 仕分けは scripts/lp-tiers.json（Zoho商談のLP別集計とオーナー判断が出典）。
+      - name: "①現役LP: フォーム通し・自己修復・遅延ステップ復旧・load前クリック"
         run: |
           set -euo pipefail
-          node scripts/e2e-lp-flow-local.mjs --tier main
+          node scripts/e2e-lp-flow-local.mjs --tier active
 
-      # ②はPRのときだけ。ブランチへのpushごとに50本超を回すとCIが長すぎる。
-      - name: "②その他のLP"
+      # ②アーカイブはPRのときだけ。ブランチへのpushごとに50本回すとCIが長すぎる。
+      # ただし**外さない**——アーカイブも本番では生きており、古い広告やブックマークから
+      # 人が来る。フォームが壊れるとリードが無言で消える（痕跡がどこにも残らない）。
+      - name: "②アーカイブLP（本番では生きている）"
         if: github.event_name != 'push'
         run: |
           set -euo pipefail
-          node scripts/e2e-lp-flow-local.mjs --tier rest
+          node scripts/e2e-lp-flow-local.mjs --tier archive

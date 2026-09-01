@@ -88,6 +88,24 @@
     `v2-deploy/wp-html/` の5本は WordPress の固定ページに貼るHTMLなので絶対URLが正しい（対象外）。
   - LPからの `/terms`（226本）・`/privacypolicy`（221本）はまだWPの固定ページを指している。
 
+- **【2026-09-01 オーナー判断】LPを「現役11本」と「アーカイブ50本」に仕分けた**：Zoho商談の直近200件
+  （2026-07-19〜08-31）をLP別に集計すると、リードが来ているのは `denkikouji-v2`（93件）と
+  `denkikouji`（86件）だけで、他の `_lp` は1件も出てこなかった。WordPressの旧URLから転送されて
+  いるのも `denkikouji` / `denkikouji-v2` / `sekoukanri` の3本のみ。Meta広告も `meta-lp/` ではなく
+  `denkikouji-v2` に着地している。
+  - **現役11本**（改善とQAの対象）: `denkikouji` `denkikouji-v2` `denkikouji-trust` `sekoukanri`
+    `sekoukanri-v2` と施工管理の工種別6本（kentiku / doboku / denkisekou の ±v2）。
+    工種別はリード0件だが**出稿停止中で再開見込み**のため現役に置く。
+  - **アーカイブ50本**: WPLP / 自前LP / dk_lp のミラー22本、meta-lp・meta-lp-v2 14本、
+    年収診断 10本、denkikouji-v3〜v6・search など。
+  - **アーカイブは消していない。本番でも生きている。** 古い広告やブックマークから人が来る可能性が
+    あり、フォームが壊れると**リードが無言で消える**（シートにもSlackにもZohoにも痕跡が残らない）。
+    改善の対象からは外すが、**PR時のE2E（`--tier archive`）からは外さないこと**。
+  - 仕分けは `scripts/lp-tiers.json` の `active_lps`。**パスで持つ**——ミラーは本家と同じ
+    `window.__LP_ID` を名乗るので、`_lp` では現役とアーカイブを区別できない。
+  - 落とす判断をする場合は、先に Google広告・Meta広告の入稿URLを検索して生きていないことを
+    確認し、**削除ではなく noindex + 本家への301転送**から入る（生き残りの流入を取りこぼさない）。
+
 ## 自動チェック（消えやすい配線の番人）
 
 上の【頻出バグ】は、CIで自動的に止める。**チェックを消す/緩めるのではなく、落ちた原因を直す。**

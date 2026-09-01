@@ -19,14 +19,14 @@
  * CSSからは見えない。**表示に関わる変更の STG 実機確認は今までどおり必須**（CLAUDE.md）。
  *
  * 使い方: node scripts/e2e-lp-flow-local.mjs [--lp /denkikouji/ ...]
- *         node scripts/e2e-lp-flow-local.mjs --tier main   # 広告の着地だけ
- *         node scripts/e2e-lp-flow-local.mjs --tier rest   # それ以外
+ *         node scripts/e2e-lp-flow-local.mjs --tier active    # 現役11本だけ
+ *         node scripts/e2e-lp-flow-local.mjs --tier archive   # アーカイブ50本
  */
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { mainLps, restLps } from "./lp-tiers.mjs";
+import { activeLps, archiveLps } from "./lp-tiers.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 // ポートは既定で自動採番（並行実行やCIでの取り合いを避ける）。固定したいときは E2E_PORT。
@@ -722,15 +722,15 @@ async function filterHasLazySteps(lps) {
 
 function resolveLps(args) {
   if (args.includes("--lp")) return args.slice(args.indexOf("--lp") + 1);
-  // --tier main / --tier rest : 広告の着地とその他を分けて回す（scripts/lp-tiers.mjs）。
-  // 全部まとめて回すと、メインの異常に気づくのが最後尾になる。
+  // --tier active / --tier archive : 現役とアーカイブを分けて回す（scripts/lp-tiers.mjs）。
+  // 全部まとめて回すと、現役の異常に気づくのが最後尾になる。
+  // アーカイブも本番では生きているので、PRでは必ず回すこと。
   const ti = args.indexOf("--tier");
   if (ti >= 0) {
     const tier = args[ti + 1];
-    if (tier !== "main" && tier !== "rest") {
-      throw new Error(`--tier は main か rest（受け取った値: ${tier}）`);
-    }
-    return tier === "main" ? mainLps() : restLps();
+    if (tier === "active" || tier === "main") return activeLps();
+    if (tier === "archive" || tier === "rest") return archiveLps();
+    throw new Error(`--tier は active か archive（受け取った値: ${tier}）`);
   }
   return DEFAULT_LPS;
 }

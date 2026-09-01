@@ -61,12 +61,13 @@ if [[ "${RUN_E2E:-}" == "1" ]]; then
   # （Zoho商談の直近200件は denkikouji-v2 / denkikouji で占められている）。
   # 全部まとめて回すとメインの異常に気づくのが最後尾になるので、2段階に分ける。
   echo ""
-  echo "== LPフォーム ローカルE2E ①メイン（広告の着地） =="
-  node scripts/e2e-lp-flow-local.mjs --tier main
+  echo "== LPフォーム ローカルE2E ①現役11本 =="
+  node scripts/e2e-lp-flow-local.mjs --tier active
 
   echo ""
-  echo "== LPフォーム ローカルE2E ②その他 =="
-  node scripts/e2e-lp-flow-local.mjs --tier rest
+  # アーカイブも本番では生きている。古い広告やブックマークから人が来るので外さない。
+  echo "== LPフォーム ローカルE2E ②アーカイブ50本（本番では生きている） =="
+  node scripts/e2e-lp-flow-local.mjs --tier archive
 fi
 
 echo ""

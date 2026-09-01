@@ -1,22 +1,26 @@
 #!/usr/bin/env node
 /**
- * LPを「メイン（広告の着地）」と「その他」の2段階に分ける。
+ * LPを「現役」と「アーカイブ」の2段階に分ける。
  *
  * なぜ要るか:
- *   LPは50本以上あるが、広告費が乗っていて壊れると即CVを失うのは一部だけ。
- *   全部を等しく扱うと、メインの異常に気づくのが最後尾になる。
- *   先にメインだけ短時間で通し、緑になってから残りを回す。
+ *   LPは64本あるが、広告費が乗っていて壊れると即CVを失うのは一部だけ。
+ *   全部を等しく扱うと、現役の異常に気づくのが最後尾になる。
+ *   先に現役だけを短時間で通し、緑になってから残りを回す。
  *
  * どう決めているか:
- *   Zoho商談のLP別集計（scripts/lp-tiers.json の _出典）で実際にリードが来ている
- *   `_lp` の値を main_lp_ids に置く。ページの列挙は持たない——同じ `_lp` を名乗る
- *   ページは複数ある（root / WPLP / 自前LP / dk_lp のミラー）ので、
- *   各HTMLの window.__LP_ID を走査して拾う。ミラーを増やしても追随する。
+ *   scripts/lp-tiers.json の active_lps（パスの列挙）。
+ *   **_lp では区別できない**——ミラー（WPLP / 自前LP / dk_lp）は本家と同じ
+ *   window.__LP_ID を名乗るので、_lp で引くとミラーまで現役に入ってしまう。
+ *   仕分けの根拠は lp-tiers.json の _仕分けの経緯 を参照。
+ *
+ * アーカイブは消していない。本番でも生きている。
+ * 古い広告やブックマークから人が来るとフォームが壊れていてもリードが無言で消えるので、
+ * PR時のE2E（--tier archive）からは外さないこと。
  *
  * 使い方:
- *   node scripts/lp-tiers.mjs main   → メインのLPパスを1行ずつ
- *   node scripts/lp-tiers.mjs rest   → それ以外のフォームLPを1行ずつ
- *   node scripts/lp-tiers.mjs        → 両方を見出し付きで
+ *   node scripts/lp-tiers.mjs active    → 現役のLPパスを1行ずつ
+ *   node scripts/lp-tiers.mjs archive   → アーカイブのLPパスを1行ずつ
+ *   node scripts/lp-tiers.mjs           → 両方を見出し付きで
  */
 import { readFileSync, globSync } from "node:fs";
 import path from "node:path";
@@ -24,7 +28,6 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const CONF = JSON.parse(readFileSync(path.join(ROOT, "scripts/lp-tiers.json"), "utf8"));
-const MAIN_IDS = new Set(CONF.main_lp_ids);
 
 const skip = (f) =>
   f.startsWith("v2-deploy/") ||   // WordPress の固定ページに貼るHTML。単体では動かない
@@ -42,30 +45,33 @@ export function formLps() {
   return [...dirs].sort();
 }
 
-/** window.__LP_ID が main_lp_ids のいずれかであるページ（＝広告の着地とそのミラー）。 */
-export function mainLps() {
-  const out = new Set();
-  for (const f of globSync("**/index.html", { cwd: ROOT })) {
-    if (skip(f)) continue;
-    const m = readFileSync(path.join(ROOT, f), "utf8").match(/__LP_ID\s*=\s*"([^"]+)"/);
-    if (m && MAIN_IDS.has(m[1])) out.add("/" + path.dirname(f).replace(/^\.$/, "") + "/");
+export function activeLps() {
+  const all = new Set(formLps());
+  const missing = CONF.active_lps.filter((l) => !all.has(l));
+  if (missing.length) {
+    // 現役に挙げたLPが消えた/名前が変わったのに気づかず「対象が減っただけ」になるのを防ぐ
+    throw new Error(`lp-tiers.json の active_lps に、存在しないLPがある: ${missing.join(", ")}`);
   }
-  return [...out].sort();
+  return [...CONF.active_lps].sort();
 }
 
-export function restLps() {
-  const main = new Set(mainLps());
-  return formLps().filter((l) => !main.has(l));
+export function archiveLps() {
+  const active = new Set(CONF.active_lps);
+  return formLps().filter((l) => !active.has(l));
 }
+
+// 旧名（--tier main / rest）からの互換
+export const mainLps = activeLps;
+export const restLps = archiveLps;
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const which = process.argv[2];
-  if (which === "main") console.log(mainLps().join("\n"));
-  else if (which === "rest") console.log(restLps().join("\n"));
+  if (which === "active" || which === "main") console.log(activeLps().join("\n"));
+  else if (which === "archive" || which === "rest") console.log(archiveLps().join("\n"));
   else {
-    console.log(`== メイン（${CONF._出典}）==`);
-    console.log(mainLps().map((l) => "  " + l).join("\n"));
-    console.log(`\n== その他（${restLps().length}本）==`);
-    console.log(restLps().map((l) => "  " + l).join("\n"));
+    console.log(`== 現役 ${activeLps().length}本 ==`);
+    console.log(activeLps().map((l) => "  " + l).join("\n"));
+    console.log(`\n== アーカイブ ${archiveLps().length}本（本番では生きている。PR時のE2Eからは外さない）==`);
+    console.log(archiveLps().map((l) => "  " + l).join("\n"));
   }
 }
