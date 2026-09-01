@@ -452,6 +452,36 @@ console.log("7) チャネル絞り込み（Google広告だけ共有）");
   check("除外件数がログに出る", /チャネル絞り込み\[google\]で 2件を除外/.test(result), result);
 }
 
+console.log("7b) Meta を追加すると fb / ig / an をまとめて拾う");
+{
+  const { share, result } = runSync({
+    props: { AGENCY_SHARE_UTM_SOURCE: "google,meta" },
+    rows: (header) => [
+      makeRow(header, {}), // google
+      makeRow(header, { zoho_deal_id: "2001", "your-tel": "08055556666",
+        _page: "https://denkilp.builders-job.com/denkikouji-v2/?utm_source=fb&utm_medium=paid&utm_campaign=120248499798320789" }),
+      makeRow(header, { zoho_deal_id: "2002", "your-tel": "07033334444",
+        _page: "https://denkilp.builders-job.com/denkikouji-v2/?utm_source=ig&utm_medium=paid&utm_campaign=120248499798320789" }),
+      makeRow(header, { zoho_deal_id: "2003", "your-tel": "09088886666",
+        _page: "https://denkilp.builders-job.com/denkikouji-v2/?utm_source=an&utm_medium=paid" }),
+      // utm無し・fbclidだけ（Metaの自動タグ相当）
+      makeRow(header, { zoho_deal_id: "2004", "your-tel": "08033335555",
+        _page: "https://denkilp.builders-job.com/denkikouji/?fbclid=IwAR123" }),
+      // 自然流入は除外されたまま
+      makeRow(header, { zoho_deal_id: "2005", "your-tel": "07055558888",
+        _page: "https://denkilp.builders-job.com/denkikouji/" })
+    ],
+    stageRows: []
+  });
+  const body = share.getSheetByName("候補者ステージ").grid.slice(1);
+  const srcs = body.map((r) => r[5]);
+  check("google + fb/ig/an + fbclid の5件が残る", body.length === 5, `${body.length}件: ${JSON.stringify(srcs)}`);
+  check("fb が含まれる", srcs.includes("fb"));
+  check("ig が含まれる", srcs.includes("ig"));
+  check("an が含まれる", srcs.includes("an"));
+  check("自然流入は除外されたまま", /チャネル絞り込み\[google \/ meta\]で 1件を除外/.test(result), result);
+}
+
 console.log("8) キャンペーン別・KW別の到達率タブ");
 {
   const { share } = runSync({

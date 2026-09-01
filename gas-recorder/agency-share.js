@@ -65,37 +65,71 @@ var AGENCY_SHARE_INCLUDE_CLICK_IDS = false;
 var AGENCY_SHARE_CLICK_ID_COLUMNS = ["gclid", "gbraid", "wbraid", "yclid", "fbclid", "msclkid"];
 
 /**
+ * 媒体のまとめ書き。utm_source は媒体ごとに表記がぶれるため（Metaは fb / ig / an が混在）、
+ * "meta" や "google" と1語で書けば全部の表記を拾えるようにする。
+ * ここに無い表記が出てきたら追記する（追記しないと黙って共有対象から漏れる）。
+ */
+var AGENCY_SHARE_SOURCE_ALIASES = {
+  google: ["google", "googleads", "google-ads", "gads", "yahoo"],
+  meta: ["meta", "fb", "facebook", "ig", "instagram", "an"]
+};
+
+// 媒体ごとの広告クリックID。utm が付いていない自動タグ設定の流入を拾うために使う。
+var AGENCY_SHARE_CLICK_IDS = {
+  google: ["gclid", "gbraid", "wbraid"],
+  meta: ["fbclid"]
+};
+
+/**
  * 共有するチャネルの絞り込み。スクリプトプロパティ AGENCY_SHARE_UTM_SOURCE に
- * カンマ区切りで utm_source を書くと、その流入元の行だけを共有する。
+ * カンマ区切りで書くと、その流入元の行だけを共有する。
  * 空・未設定なら全チャネル（Google / Meta / 自然流入すべて）。
- *   例) "google"      … Google広告だけ。fb / ig（Meta）や自然流入は出さない
- *       "google,fb"   … GoogleとMeta
- *       （未設定）      … 全部
- * ※Google広告は自動タグ設定で utm_source が付かず gclid だけ付くことがあるため、
- *   "google" を指定したときは gclid/gbraid/wbraid を持つ行も対象に含める。
+ *   例) "google"        … Google広告だけ
+ *       "google,meta"   … GoogleとMeta（fb / ig / an をまとめて拾う）
+ *       （未設定）        … 全部（自然流入も含む）
+ * ※自動タグ設定で utm_source が付かず gclid / fbclid だけ付くことがあるため、
+ *   その媒体を指定したときはクリックIDを持つ行も対象に含める。
+ * 戻り値: { sources: [展開後のutm_source], groups: [google/meta …] } または null（絞り込みなし）
  */
 function agencyShareSourceFilter() {
   var raw = agencyShareProp("AGENCY_SHARE_UTM_SOURCE");
   if (!raw) return null;
-  var list = raw.split(",").map(function (s) { return String(s).trim().toLowerCase(); })
+  var tokens = raw.split(",").map(function (s) { return String(s).trim().toLowerCase(); })
     .filter(function (s) { return !!s; });
-  return list.length ? list : null;
+  if (!tokens.length) return null;
+
+  var sources = [], groups = [];
+  tokens.forEach(function (token) {
+    for (var group in AGENCY_SHARE_SOURCE_ALIASES) {
+      if (!AGENCY_SHARE_SOURCE_ALIASES.hasOwnProperty(group)) continue;
+      if (AGENCY_SHARE_SOURCE_ALIASES[group].indexOf(token) === -1) continue;
+      if (groups.indexOf(group) === -1) groups.push(group);
+      AGENCY_SHARE_SOURCE_ALIASES[group].forEach(function (alias) {
+        if (sources.indexOf(alias) === -1) sources.push(alias);
+      });
+    }
+    if (sources.indexOf(token) === -1) sources.push(token); // 別名表に無い指定もそのまま使う
+  });
+  return { sources: sources, groups: groups, label: tokens.join(" / ") };
 }
 
-// utm_source の個別列が空でも _page のURLから拾う（gclid列は2026-07に追加のため）
-function agencyShareHasGoogleClickId(params) {
-  var keys = ["gclid", "gbraid", "wbraid"];
-  for (var i = 0; i < keys.length; i++) {
-    if (String(params[keys[i]] == null ? "" : params[keys[i]]).trim()) return true;
+// utm_source の個別列が空でも _page のURLから拾う（クリックID列は2026-07に追加のため）
+function agencyShareHasClickId(params, groups) {
+  for (var g = 0; g < groups.length; g++) {
+    var keys = AGENCY_SHARE_CLICK_IDS[groups[g]] || [];
+    for (var i = 0; i < keys.length; i++) {
+      if (String(params[keys[i]] == null ? "" : params[keys[i]]).trim()) return true;
+      if (new RegExp("[?&]" + keys[i] + "=[^&\\s]").test(String(params["_page"] || ""))) return true;
+    }
   }
-  return /[?&](gclid|gbraid|wbraid)=[^&\s]/.test(String(params["_page"] || ""));
+  return false;
 }
 
 function agencyShareMatchesFilter(filter, track, params) {
   if (!filter) return true;
   var src = String(track.utm_source || "").trim().toLowerCase();
-  if (src) return filter.indexOf(src) !== -1;
-  return filter.indexOf("google") !== -1 && agencyShareHasGoogleClickId(params);
+  if (src) return filter.sources.indexOf(src) !== -1;
+  return agencyShareHasClickId(params, filter.groups);
 }
 
 var AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET = "キャンペーン別到達率";
@@ -481,7 +515,7 @@ function syncAgencyShareRun() {
   // 何を落としたかは必ず出す。黙って絞ると「全件出ている」と誤解される。
   var msg = "共有シート更新: " + rows.length + "件" +
             "（テスト送信 " + excludedTest + "件・電話番号なし " + excludedNoTel + "件を除外" +
-            (filter ? " / チャネル絞り込み[" + filter.join(",") + "]で " + excludedChannel + "件を除外" : "") +
+            (filter ? " / チャネル絞り込み[" + filter.label + "]で " + excludedChannel + "件を除外" : "") +
             " / 同一候補者の重複 " + duplicates + "件を統合" +
             " / ステージ取得 " + Object.keys(stages.map).length + "件）" +
             " 最終更新 " + toJst(new Date());
@@ -714,7 +748,7 @@ function setupAgencyShareLegend(ss, filter, writeErrors) {
     ["最終更新", toJst(new Date()), "1時間ごとに自動更新"],
     ["状態", writeErrors.length ? "一部のタブが更新できませんでした" : "正常",
      writeErrors.length ? "内容が古いまま: " + writeErrors.join(" / ") : "全タブを更新済み"],
-    ["対象チャネル", filter ? filter.join(" / ") + " のみ" : "全チャネル",
+    ["対象チャネル", filter ? filter.label + " のみ" : "全チャネル",
      filter ? "この流入元以外（他媒体・自然流入）は掲載していません" : "Google / Meta / 自然流入すべて"],
     ["", "", ""],
     ["カラム名", "意味", "備考"],
@@ -795,7 +829,7 @@ function diagnoseAgencyShare() {
   }
 
   var filter = agencyShareSourceFilter();
-  lines.push("対象チャネル: " + (filter ? filter.join(" / ") + " のみ（AGENCY_SHARE_UTM_SOURCE）" : "全チャネル"));
+  lines.push("対象チャネル: " + (filter ? filter.label + " のみ → " + filter.sources.join(",") : "全チャネル"));
   lines.push("Zoho連携: " + (typeof zohoEnabled === "function" && zohoEnabled() ? "有効" : "無効（ステージが取れません）"));
 
   var out = lines.join("\n");
