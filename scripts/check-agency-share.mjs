@@ -331,21 +331,22 @@ console.log("2) lead_id は同じ候補者で不変・別候補者で別値");
 
 console.log("3) 個人情報が混ざったら書き込みを中止する（安全網）");
 {
-  let threw = "";
-  try {
-    runSync({
-      // utm_campaign に電話番号が入っている異常データ
-      rows: (header) => [
-        makeRow(header, {
-          _page: "https://denkilp.builders-job.com/denkikouji/?utm_source=google&utm_campaign=" + PII.tel
-        })
-      ],
-      stageRows: [{ id: "1001", Stage: "01_新規リード", Modified_Time: "2026-07-25T14:30:00+09:00" }]
-    });
-  } catch (err) {
-    threw = String(err);
-  }
-  check("PII混入で例外を投げる", threw.includes("個人情報"), threw || "(例外なし)");
+  // 契約: 例外を外に投げない（トリガーが連続失敗で止まらない）が、
+  //       個人情報は1セルも書かず、中止したことを戻り値と凡例に残す。
+  const { share, result } = runSync({
+    // utm_campaign に電話番号が入っている異常データ
+    rows: (header) => [
+      makeRow(header, {
+        _page: "https://denkilp.builders-job.com/denkikouji/?utm_source=google&utm_campaign=" + PII.tel
+      })
+    ],
+    stageRows: [{ id: "1001", Stage: "01_新規リード", Modified_Time: "2026-07-25T14:30:00+09:00" }]
+  });
+  check("中止したことを戻り値で伝える", /更新を中止しました/.test(result), result);
+  check("個人情報の検知が理由として残る", /個人情報/.test(result), result);
+  const detail = share.getSheetByName("候補者ステージ");
+  check("明細に1行も書かれない", !detail || detail.grid.length <= 1,
+        detail ? String(detail.grid.length) : "(タブなし)");
 }
 
 console.log("4) 数字だけのPIIは部分一致で誤検知しない（MetaのキャンペーンID対策）");
@@ -592,6 +593,51 @@ console.log("11) 1タブが失敗しても他タブは更新し、どこが古�
   const legend = share.getSheetByName("凡例").grid;
   check("凡例に状態行がある", legend[1][0] === "状態", JSON.stringify(legend[1]));
   check("凡例が古いタブを名指しする", String(legend[1][2]).includes("キャンペーン別到達率"), JSON.stringify(legend[1]));
+}
+
+console.log("12) _test 列のテスト送信を除外する（2026-08-30〜の運用）");
+{
+  const { share, result } = runSync({
+    rows: (header) => [
+      makeRow(header, { zoho_deal_id: "7001" }),
+      // STGからの送信。氏名も番号も本物らしいので推測では捕まらない
+      makeRow(header, { zoho_deal_id: "", "your-tel": "08055556666", _test: "stg" }),
+      // 本番で ?dk_test=1 を付けたテスト
+      makeRow(header, { zoho_deal_id: "7002", "your-tel": "07033334444", _test: "param" })
+    ],
+    stageRows: [{ id: "7001", Stage: "08_逆オファーOK", Modified_Time: "2026-08-30T14:30:00+09:00" }]
+  });
+  const body = share.getSheetByName("候補者ステージ").grid.slice(1);
+  check("_test 付きは商談があっても除外", body.length === 1, `${body.length}件`);
+  check("除外件数に計上される", /テスト送信 2件/.test(result), result);
+}
+
+console.log("13) 全体が中止しても、止まっていることを凡例に残す");
+{
+  const props = {
+    ZOHO_CLIENT_ID: "id", ZOHO_CLIENT_SECRET: "secret", ZOHO_REFRESH_TOKEN: "token",
+    AGENCY_SHARE_SHEET_ID: "share-sheet", AGENCY_SHARE_SALT: "fixed-salt"
+  };
+  const source = new FakeSpreadsheet("1JwwkLThWTMMmi9p1CMGK8gAz-I5f9cmueGFFpplZwGc", ["form_submissions"]);
+  const share = new FakeSpreadsheet("share-sheet", []);
+  const ctx = buildContext({ props, spreadsheets: { [source.getId()]: source, "share-sheet": share } });
+  const header = evalIn(ctx, "PREFERRED_COLUMNS").slice();
+  const sheet = source.getSheetByName("form_submissions");
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  // utm_campaign に電話番号が入った異常データ = PII混入検知で全体中止になるケース
+  sheet.appendRow(makeRow(header, {
+    _page: "https://denkilp.builders-job.com/denkikouji/?utm_source=google&utm_campaign=" + PII.tel
+  }));
+  ctx.zohoFetch = () => ({ code: 200, body: { data: [] } });
+
+  const result = ctx.syncAgencyShare();
+  check("例外を投げずに中止メッセージを返す", /更新を中止しました/.test(result), result);
+  check("個人情報は書かれない",
+        !(share.getSheetByName("候補者ステージ") || { grid: [] }).grid.flat().map(String).join("").includes(PII.tel));
+  const legend = share.getSheetByName("凡例");
+  check("凡例に中止が残る",
+        !!legend && String(legend.grid[1][2]).includes("更新全体を中止"),
+        legend ? JSON.stringify(legend.grid[1]) : "(凡例なし)");
 }
 
 console.log("6) 未設定時は何もせず案内を返す");

@@ -279,8 +279,26 @@ function agencyShareGetOrCreateSheet(ss, name) {
 /**
  * 代理店共有シートを最新化する（毎回まるごと作り直す）。
  * トリガーからも、エディタからの手動実行からも呼べる。
+ *
+ * 途中で例外が出ても「止まっていること」をシート上に残す。無言で古いまま放置されると、
+ * 代理店が古い数字を見続ける（2026-08-15〜09-01 に更新が止まっていたのに誰も気づけなかった）。
  */
 function syncAgencyShare() {
+  try {
+    return syncAgencyShareRun();
+  } catch (err) {
+    var msg = "NG: 更新を中止しました（" + err + "）";
+    try {
+      var ss = openAgencyShareSpreadsheet();
+      if (ss) setupAgencyShareLegend(ss, agencyShareSourceFilter(), ["更新全体を中止: " + err]);
+    } catch (e2) { /* 凡例すら書けないなら諦める。ログとSlackには残る */ }
+    if (typeof reportErrorToSlack === "function") reportErrorToSlack("syncAgencyShare", String(err));
+    Logger.log(msg);
+    return msg;
+  }
+}
+
+function syncAgencyShareRun() {
   // どの理由で終わってもログに残す。無言で終わると
   // 「実行できたのにシートが更新されない」に見えて原因が分からない。
   function bail(msg) {
@@ -315,9 +333,17 @@ function syncAgencyShare() {
     var params = {};
     for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
 
+    // 2026-08-30〜: テスト送信はシートに残す運用になり、`_test` 列に理由(stg/param/pattern)が入る。
+    // STGや ?dk_test=1 からの「本物っぽい氏名・番号」のテストは下の推測ロジックでは捕まらないため、
+    // この列を最優先で見る。捕まえ損ねると候補者数が水増しされ、到達率と単価が実態より悪く出る。
+    if (String(params["_test"] || "").trim()) {
+      excludedTest++;
+      continue;
+    }
+
     var dealId = String(params["zoho_deal_id"] || "").trim();
 
-    // 商談IDがある行は実在の候補者。テスト判定で落とさない。
+    // 商談IDがある行は実在の候補者。推測によるテスト判定で落とさない。
     // （Zoho連携側が商談を作る前にテスト判定を通しているため、通過している時点で本物）
     // 未連携の行だけ、テスト送信・電話番号なし（thanksページのメール登録行など）を落とす。
     if (!dealId) {
