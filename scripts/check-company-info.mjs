@@ -17,12 +17,26 @@
  * 正の値を変えるときは、ここと各ページの両方を直すことになる。
  * それが面倒に見えるが、片方だけ直して気づかない方がはるかに高くつく。
  */
-import { readFileSync } from "node:fs";
-import { globSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
+// node:fs の globSync は Node 22 以降。CI / deploy は Node 20 で走るため使えない
+//（手元の Node 22 では通ってしまい、CIで初めて落ちる）。
+// 他の check スクリプト（check-asset-versions.mjs）と同じ再帰列挙に揃える。
+const SKIP_DIRS = new Set([".git", "node_modules", "docs", ".netlify", ".github"]);
+
+function walkHtml(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    if (SKIP_DIRS.has(name)) continue;
+    const p = path.join(dir, name);
+    if (statSync(p).isDirectory()) walkHtml(p, out);
+    else if (name.endsWith(".html")) out.push(p);
+  }
+  return out;
+}
 
 /** オーナー確認済み（2026-08-31）。ここが唯一の正。 */
 const TRUTH = {
@@ -46,9 +60,7 @@ const fails = [];
 const ok = (m) => { pass++; console.log("✓ " + m); };
 const ng = (m, d) => { fails.push(m + (d ? " — " + d : "")); console.log("✗ " + m + (d ? " — " + d : "")); };
 
-const files = globSync("**/*.html", { cwd: ROOT })
-  .filter((f) => !f.startsWith(".git/") && !f.startsWith("docs/") && !f.startsWith("dk_lp/docs/"))
-  .map((f) => path.join(ROOT, f));
+const files = walkHtml(ROOT);
 
 const infoPages = [];
 for (const f of files) {
