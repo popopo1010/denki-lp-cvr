@@ -193,6 +193,8 @@ jobs:
             densen-bank-v3/index.html \
             denki-koji-bank-v3/index.html \
             index.html denkikouji/index.html sekoukanri/index.html \
+            WPLP/denkikouji/index.html 自前LP/denkikouji/index.html \
+            denkikouji-trust/index.html \
             sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html; do
             minify_html "$f"
           done

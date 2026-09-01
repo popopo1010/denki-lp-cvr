@@ -65,9 +65,24 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
    UA検知しないのは SFSafariViewController がUA上Safariと区別できないため（正本と同じ）。 */
 @media (max-width:767px){body.lp-form-step .js-page-body{padding-top:calc(env(safe-area-inset-top, 0px) + 44px)!important}}
 @media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding:0 8px 0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:auto;padding-bottom:8px}}
-    </style>
+    
+/* 第一画面をCTAだけにする（2026-08-31）。
+   app.js が #step-first に min-height を、.cvr-micro-copy に margin-top:auto を
+   **インラインで**書くため、!important でないと上書きできない。
+   共有の app.js は触らない方針（CLAUDE.md）。
+   ・引き算 200px → 72px: 実測で箱の上端がこのLPでは約78px。200pxのままだと
+     箱の底が折返しより上に来て、次のセクション（体験談）が76〜90px覗いていた。
+   ・margin-top:auto をやめて上限付きに: 箱の底に貼り付けると大きい端末ほど
+     CTAとの間が開き、実測で最大383px。アプリ内ブラウザでは svh が実ビューポート
+     より大きく出るのでさらに広がり、2026-06-27 の「スカスカ」と同じ形になる。
+     余った空白は箱の下端に集まり、次のセクションを折返しの下へ押し出す。 */
+@media(max-width:767px){
+#step-first{min-height:calc(100vh - 72px)!important;min-height:calc(100svh - 72px)!important}
+#step-first .cvr-micro-copy{margin-top:clamp(12px,4vh,40px)!important}
+}
+</style>
     <link rel="stylesheet" href="../../assets/css/theme-snapshot.css?v20260708a">
-        <link rel="stylesheet" href="../assets/css/cvr-boost.css?v20260831a">
+        <link rel="stylesheet" href="../assets/css/cvr-boost.css?v20260831c">
     <script>window.__LP_ID="denkikouji";</script>
     <script src="../assets/js/app.js?v20260830b" defer></script>
 <style id="cvr-about-css">

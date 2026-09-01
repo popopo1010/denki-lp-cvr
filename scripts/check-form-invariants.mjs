@@ -537,6 +537,34 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
 }
 
 // ───────────────────────────────────────────────────────────
+// フォーム中にWPテーマのフッター（会社概要）を出さないこと
+//
+// 経緯（2026-08-31 オーナー報告）: 「2ページ目以降に会社概要がCTAの下に見える」。
+// 規則 body.lp-form-step .l-footer{display:none} は cvr-boost-denkikouji.css と
+// cvr-boost-v2.css の2系統にしか入っておらず、別系統のCSSを読む27本では
+// フォーム中もフッターが display:block だった（実ブラウザで確認）。
+// 2026-08-23 の「アプリ内ブラウザ余白の規則が別系統に届いていなかった」と同型で、
+// このリポジトリはCSSファミリーが5系統あるため、この手の規則は必ず全系統に入れる。
+// フッターが入力欄に被ると表示崩れが再発する（同症状3回・docs/release-incidents.md 2026-06-15）。
+{
+  const FAMILIES = [
+    "assets/css/cvr-boost.css",
+    "assets/css/cvr-boost-denkikouji.css",
+    "assets/css/cvr-boost-v2.css",
+    "WPLP/assets/css/cvr-boost.css",
+    "dk_lp/denkikouji/assets/css/cvr-boost.css",
+    "自前LP/assets/css/style.css",
+    "自前LP/assets/css/style-v2.css"
+  ];
+  const missing = FAMILIES.filter((f) => {
+    if (!existsSync(join(ROOT, f))) return false;   // 無いファイルは対象外
+    return !/body\.lp-(form|input)-step\s+\.l-footer[^{]*\{[^}]*display\s*:\s*none/.test(read(f));
+  });
+  check("フォーム中はフッター(.l-footer)を隠す規則が全CSS系統にある",
+    missing.length === 0, missing.join(", "));
+}
+
+// ───────────────────────────────────────────────────────────
 // 計測の身元（window.__LP_ID）が別のLPと衝突していないこと
 //
 // 経緯（2026-08-31）: テストLP denkikouji-trust が __LP_ID="denkikouji" を名乗っており、

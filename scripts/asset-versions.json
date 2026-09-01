@@ -4,8 +4,8 @@
     "sha256": "bc6eb57a9bbfdd78"
   },
   "WPLP/assets/css/cvr-boost.css": {
-    "version": "20260831a",
-    "sha256": "48a4690552073992"
+    "version": "20260831c",
+    "sha256": "0a19ab0aa6e67b0c"
   },
   "WPLP/assets/js/app-v2.js": {
     "version": "20260831b",
@@ -44,8 +44,8 @@
     "sha256": "bc6eb57a9bbfdd78"
   },
   "assets/css/cvr-boost.css": {
-    "version": "20260829d",
-    "sha256": "8021ac37fb9d5be7"
+    "version": "20260831c",
+    "sha256": "601c5cd5c2ba9191"
   },
   "assets/css/denki-suite.css": {
     "version": "20260602",
@@ -152,8 +152,8 @@
     "sha256": "f97155b220e39781"
   },
   "dk_lp/denkikouji/assets/css/cvr-boost.css": {
-    "version": "20260829e",
-    "sha256": "51c6600d04699f94"
+    "version": "20260831c",
+    "sha256": "a2c588cfb3dc4199"
   },
   "dk_lp/denkikouji/assets/js/cvr-boost.js": {
     "version": "20260610b",
@@ -204,12 +204,12 @@
     "sha256": "a67e35cfa838f864"
   },
   "自前LP/assets/css/style-v2.css": {
-    "version": "20260829d",
-    "sha256": "826fa95cfdfaa3e0"
+    "version": "20260831c",
+    "sha256": "0a7dc7ff0f0f4cf8"
   },
   "自前LP/assets/css/style.css": {
-    "version": "20260829d",
-    "sha256": "04233f3ec2720dd1"
+    "version": "20260831c",
+    "sha256": "46add1fd68699207"
   },
   "自前LP/assets/js/app-v2.js": {
     "version": "20260831b",
