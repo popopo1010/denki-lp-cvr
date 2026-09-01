@@ -640,6 +640,49 @@ console.log("13) 全体が中止しても、止まっていることを凡例に
         legend ? JSON.stringify(legend.grid[1]) : "(凡例なし)");
 }
 
+console.log("14) 広告費: 粒度違い(month/week)の二重計上を防ぐ");
+{
+  const props = {
+    ZOHO_CLIENT_ID: "id", ZOHO_CLIENT_SECRET: "secret", ZOHO_REFRESH_TOKEN: "token",
+    AGENCY_SHARE_SHEET_ID: "share-sheet", AGENCY_SHARE_SALT: "fixed-salt"
+  };
+  const source = new FakeSpreadsheet("1JwwkLThWTMMmi9p1CMGK8gAz-I5f9cmueGFFpplZwGc", ["form_submissions"]);
+  const share = new FakeSpreadsheet("share-sheet", []);
+  const cost = share.insertSheet("広告コスト入力");
+  // 本番と同じ形: 月次1行と、同じ月を分割した週次3行が混在。列も後ろに増えている。
+  cost.getRange(1, 1, 5, 8).setValues([
+    ["年月 (YYYY-MM)", "キャンペーン", "広告費(円)", "粒度", "広告グループ", "キーワード", "管理画面CV", "管理画面CPA"],
+    ["2026-07", "014_denki_top", 300000, "month", "", "", 30, 10000],
+    ["2026-07", "014_denki_top", 100000, "week", "", "", 10, 10000],
+    ["2026-07", "014_denki_top", 100000, "week", "", "", 10, 10000],
+    ["2026-07", "014_denki_top", 100000, "week", "", "", 10, 10000]
+  ]);
+  const ctx = buildContext({ props, spreadsheets: { [source.getId()]: source, "share-sheet": share } });
+  const header = evalIn(ctx, "PREFERRED_COLUMNS").slice();
+  const sheet = source.getSheetByName("form_submissions");
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  ["8001", "8002"].forEach((id, i) => sheet.appendRow(makeRow(header, {
+    zoho_deal_id: id, "your-tel": i ? "08055556666" : "09077778888", _received_at: "2026-07-05 10:00:00"
+  })));
+  ctx.zohoFetch = () => ({ code: 200, body: { data: [
+    { id: "8001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }
+  ] } });
+
+  const result = ctx.syncAgencyShare();
+  const m = share.getSheetByName("月別推移");
+  const head = m.grid[0];
+  const jul = m.grid.slice(1).find((r) => r[0] === "2026-07");
+  check("月次だけ採用され広告費は300,000", jul[head.indexOf("広告費(円)")] === 300000,
+        String(jul[head.indexOf("広告費(円)")]));
+  check("候補者単価 = 300000/2", jul[head.indexOf("候補者単価(円)")] === 150000, String(jul[head.indexOf("候補者単価(円)")]));
+  check("逆オファーOK単価 = 300000/1", jul[head.indexOf("逆オファーOK到達単価(円)")] === 300000,
+        String(jul[head.indexOf("逆オファーOK到達単価(円)")]));
+  check("除外した重複行数をログに出す", /粒度違いの重複 3行を除外/.test(result), result);
+  check("列が増えてもヘッダー名で読める",
+        share.getSheetByName("キャンペーン別到達率").grid.slice(1)
+          .some((r) => r[0] === "014_denki_top" && r[head.indexOf("広告費(円)")] === 300000));
+}
+
 console.log("6) 未設定時は何もせず案内を返す");
 {
   const ctx = buildContext({

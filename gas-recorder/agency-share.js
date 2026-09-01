@@ -485,6 +485,7 @@ function syncAgencyShareRun() {
             " / 同一候補者の重複 " + duplicates + "件を統合" +
             " / ステージ取得 " + Object.keys(stages.map).length + "件）" +
             " 最終更新 " + toJst(new Date());
+  if (costs.note) msg += " ※" + costs.note;
   if (writeErrors.length) {
     msg += " ※書き込み失敗タブ（内容が古いまま）: " + writeErrors.join(" / ");
     if (typeof reportErrorToSlack === "function") {
@@ -558,18 +559,24 @@ function writeAgencyShareSummary(ss, cols, rows) {
 
 /**
  * 広告費の手入力タブを読む。**このタブだけは sync が消さない**（人が入力する場所）。
- * 列: 年月(YYYY-MM) / キャンペーン(空欄=その月の全体) / 広告費(円)
- * Google Ads を直接繋ぐようになったら、このタブを自動更新に差し替えるだけで単価計算はそのまま動く。
+ *
+ * 想定する列（ヘッダー名で探す。見つからなければ 1〜3列目を 年月/キャンペーン/広告費 とみなす）:
+ *   年月(YYYY-MM) / キャンペーン(空欄=その月の全体) / 広告費(円) / 粒度(任意)
+ *
+ * **粒度列の扱いが重要**。広告管理画面からの貼り付けでは、同じ費用が月次(month)と週次(week)の
+ * 両方で入っていることがある。全行を素直に合計すると**二重計上**になり、単価が数倍に化ける
+ * （2026-09-01: month 8行 + week 302行が混在し、候補者単価が930,856円と表示された）。
+ * そこで**年月ごとに粒度を1つだけ採用**する（month > week > day > 粒度なし の優先順）。
  */
 function readAgencyShareCosts(ss) {
-  var out = { byMonth: {}, byCampaign: {}, total: 0, rows: 0 };
+  var out = { byMonth: {}, byCampaign: {}, total: 0, rows: 0, note: "" };
   var sheet = ss.getSheetByName(AGENCY_SHARE_COST_SHEET);
   if (!sheet) {
     sheet = ss.insertSheet(AGENCY_SHARE_COST_SHEET);
-    sheet.getRange(1, 1, 1, 3)
-      .setValues([["年月 (YYYY-MM)", "キャンペーン (空欄=その月の全キャンペーン)", "広告費(円)"]])
+    sheet.getRange(1, 1, 1, 4)
+      .setValues([["年月 (YYYY-MM)", "キャンペーン (空欄=その月の全キャンペーン)", "広告費(円)", "粒度"]])
       .setFontWeight("bold").setBackground("#fff3cd");
-    sheet.getRange(2, 1, 1, 3).setValues([["2026-07", "014_denki_top_of_page", ""]]);
+    sheet.getRange(2, 1, 1, 4).setValues([["2026-07", "014_denki_top_of_page", "", "month"]]);
     sheet.setColumnWidth(1, 140);
     sheet.setColumnWidth(2, 320);
     sheet.setColumnWidth(3, 120);
@@ -578,19 +585,56 @@ function readAgencyShareCosts(ss) {
   }
 
   var lastRow = sheet.getLastRow();
+  var lastCol = Math.max(3, sheet.getLastColumn());
   if (lastRow < 2) return out;
-  var values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
-  for (var i = 0; i < values.length; i++) {
-    var ym = values[i][0];
-    ym = (ym instanceof Date) ? toJst(ym).slice(0, 7) : String(ym == null ? "" : ym).trim().slice(0, 7);
-    var camp = String(values[i][1] == null ? "" : values[i][1]).trim();
-    var cost = Number(String(values[i][2] == null ? "" : values[i][2]).replace(/[^0-9.\-]/g, ""));
-    if (!cost || isNaN(cost)) continue;
-    out.rows++;
-    out.total += cost;
-    if (ym) out.byMonth[ym] = (out.byMonth[ym] || 0) + cost;
-    if (camp) out.byCampaign[camp] = (out.byCampaign[camp] || 0) + cost;
+
+  var all = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  var head = all[0].map(function (h) { return String(h == null ? "" : h).trim(); });
+  function col(keyword, fallback) {
+    for (var i = 0; i < head.length; i++) {
+      if (head[i].indexOf(keyword) !== -1) return i;
+    }
+    return fallback;
   }
+  var iYm = col("年月", 0), iCamp = col("キャンペーン", 1);
+  var iCost = col("広告費", 2), iGran = col("粒度", -1);
+
+  // いったん全行を読み、年月ごとに採用する粒度を決めてから集計する
+  var parsed = [];
+  var granByMonth = {};
+  var PRIORITY = ["month", "week", "day", ""];
+  for (var r = 1; r < all.length; r++) {
+    var ym = all[r][iYm];
+    ym = (ym instanceof Date) ? toJst(ym).slice(0, 7) : String(ym == null ? "" : ym).trim().slice(0, 7);
+    var cost = Number(String(all[r][iCost] == null ? "" : all[r][iCost]).replace(/[^0-9.\-]/g, ""));
+    if (!cost || isNaN(cost)) continue;
+    var gran = iGran >= 0 ? String(all[r][iGran] == null ? "" : all[r][iGran]).trim().toLowerCase() : "";
+    parsed.push({
+      ym: ym,
+      camp: String(all[r][iCamp] == null ? "" : all[r][iCamp]).trim(),
+      cost: cost,
+      gran: gran
+    });
+    var cur = granByMonth[ym];
+    if (cur === undefined || PRIORITY.indexOf(gran) < PRIORITY.indexOf(cur)) {
+      if (PRIORITY.indexOf(gran) !== -1) granByMonth[ym] = gran;
+    }
+  }
+
+  var skipped = 0;
+  for (var k = 0; k < parsed.length; k++) {
+    var row = parsed[k];
+    // 採用する粒度以外は捨てる（同じ費用の二重計上を防ぐ）
+    if (row.ym && granByMonth[row.ym] !== undefined && row.gran !== granByMonth[row.ym]) {
+      skipped++;
+      continue;
+    }
+    out.rows++;
+    out.total += row.cost;
+    if (row.ym) out.byMonth[row.ym] = (out.byMonth[row.ym] || 0) + row.cost;
+    if (row.camp) out.byCampaign[row.camp] = (out.byCampaign[row.camp] || 0) + row.cost;
+  }
+  if (skipped) out.note = "広告費: 粒度違いの重複 " + skipped + "行を除外";
   return out;
 }
 
