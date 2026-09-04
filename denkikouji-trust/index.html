@@ -60,7 +60,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Meiryo,sans-serif;col
 html.dk-inapp input[type="tel"],html.dk-inapp input[type="text"]{scroll-margin-top:120px}
 /* LINEの上部バーは実測~83ptで44pxでは足りない。入力ステップ(step04-06)は96pxでバーの下から開始（2026-07-08） */
 html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
-#step-first .cvr-micro-copy{margin-top:auto}
+#step-first .cvr-micro-copy{margin-top:52px!important}
 .cvr-hero-badge{display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 16px;margin:8px 0;background:linear-gradient(135deg,#ff5966,#ff8a65);border-radius:8px;color:#fff}
 .cvr-hero-badge__count{font-size:28px;font-weight:800;line-height:1}
 .p-firstButton{min-height:76px;width:100%}
@@ -69,7 +69,7 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 .cvr-progress__bar{height:100%;width:0;background:linear-gradient(90deg,#314c85,#5c6bc0);border-radius:999px}
 .c-text-box,.c-select-box02 select{min-height:52px;font-size:16px}
 .c-next-button,.c-submit-button{min-height:48px}
-@media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));padding-top:0;padding-bottom:0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:auto;padding-bottom:max(8px,env(safe-area-inset-bottom))}#step-first>picture{display:block;height:150px;overflow:hidden;border-radius:8px}#step-first>picture img{height:100%!important;max-height:150px!important;object-fit:cover;object-position:center 35%;width:100%;border-radius:8px}.p-firstButton__icon{display:none}.p-firstButton{min-height:76px}body.lp-form-step .c-next-button{min-height:48px}}
+@media(max-width:767px){.l-main{margin:0 auto;width:95%}.c-container{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));padding-top:0;padding-bottom:0}.l-header__container{padding:4px 8px}#step-first{flex-direction:column;min-height:calc(100vh - 200px);min-height:calc(100svh - 200px)}#step-first .cvr-micro-copy{margin-top:52px!important;padding-bottom:max(8px,env(safe-area-inset-bottom))}#step-first>picture{display:block;height:150px;overflow:hidden;border-radius:8px}#step-first>picture img{height:100%!important;max-height:150px!important;object-fit:cover;object-position:center 35%;width:100%;border-radius:8px}.p-firstButton__icon{display:none}.p-firstButton{min-height:76px}body.lp-form-step .c-next-button{min-height:48px}}
 /* FV 2択ボタンのCTA化（v2/sekoukanriと統一・dead click対策 2026-07-02） */
 #step-first>picture{opacity:.55;filter:grayscale(25%)}
 #step-first .c-title01{font-weight:800}
@@ -87,7 +87,7 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
          フェッチされ、低速回線ではCSS到着(~4s)時の再レイアウトがラボLCP再登録とCLS 0.168の
          原因になっていた（2026-08-19 STG計測で精査）。1回のレンダリングで確定させる -->
     <link rel="stylesheet" href="../assets/css/theme-snapshot.css?v20260708a">
-    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260904f">
+    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260904h">
     <script>window.__LP_ID="denkikouji";</script>
     <script src="../assets/js/app.js?v20260904a" defer></script>
 <meta name="robots" content="noindex,nofollow">
