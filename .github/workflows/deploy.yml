@@ -409,7 +409,7 @@ jobs:
           echo "--- 圧縮・キャッシュヘッダ（主力LPの読み込みチェーン） ---"
           for a in denkikouji/ assets/css/theme-lp.css?v20260904a assets/css/cvr-boost-denkikouji.css?v20260829d assets/js/app.js?v20260830b denkikouji/steps-lazy.html?v20260712; do
             printf '  %s\n    %s\n' "$a" \
-              "$(curl -sIL -H 'Accept-Encoding: gzip, br' "${DEPLOY_URL_BASE}/${a}" | grep -iE '^(content-encoding|cache-control|content-length):' | tr -d '\r' | tr '\n' ' ')"
+              "$(curl -sIL -H 'Accept-Encoding: gzip, br' "${DEPLOY_URL_BASE}/${a}" | grep -iE '^(content-encoding|cache-control|content-length|cf-cache-status|server):' | tr -d '\r' | tr '\n' ' ')"
           done
           echo "--- 求人カードの資産 ---
           for a in assets/js/lp-job-cards.js assets/data/lp-job-cards-denki.json; do
