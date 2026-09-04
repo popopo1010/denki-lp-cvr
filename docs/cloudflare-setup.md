@@ -42,6 +42,10 @@ HTML は origin の `no-cache` をそのまま尊重するので**エッジに�
 4. Speed → Optimization: **Rocket Loader OFF / Auto Minify 全OFF / Email Address Obfuscation OFF**。
    理由: これらは HTML/JS を書き換える。GTM の遅延読み込み、`app.js` の defer 順、フォームの自己修復
    （DOM差し替え検知）が壊れる。Brotli ON、HTTP/3 ON、0-RTT ON、Early Hints ON は可。
+   さらに Security の **Bot Fight Mode OFF**、**「I'm Under Attack」モード OFF**、Security Level は Medium 以下。
+   これらは Google / Meta の広告審査クローラー（AdsBot・facebookexternalhit 等）を JS チャレンジで弾き、
+   「LPに到達できない」＝広告不承認・品質スコア低下の原因になる。ドメイン・URL は変わらないので
+   品質スコアやピクセルの学習は引き継がれるが、クローラーを止めた瞬間にそれが崩れる。
 5. Caching → Configuration: Caching Level は Standard、Browser Cache TTL は **Respect Existing Headers**。
 6. Cache Rules に「**バイパス**」を1つ: ホスト `denkilp.builders-job.com` かつ
    パスが `/wp-admin*` `/wp-login.php` `/wp-json*` `/xmlrpc.php` `/denki-lp-cvr-stg/*` のいずれか、
@@ -108,6 +112,9 @@ HTML は origin の `no-cache` をそのまま尊重するので**エッジに�
 ---
 
 ## やらないこと・注意
+
+- **Xserver は残る**。Cloudflare 無料プランは前段の中継とキャッシュで、ファイルの置き場ではない。LP本体・WordPress・rsync デプロイは今までどおり Xserver。外せるのは段階3で LP を静的ホストへ移し、かつ WordPress をやめる/移す場合だけ。
+- **ドメイン・URL は1文字も変えない**。広告の品質スコア（Google）・ドメイン認証とピクセル学習（Meta）・検索評価は URL 単位で蓄積されており、変えるとゼロから。Cloudflare 方式は経路だけが変わるので蓄積は残る。
 
 - **ドメイン変更**（広告URL・計測・Cookie が全部動く）。
 - **Rocket Loader / Auto Minify / Email Obfuscation を ON**（上記のとおり JS 順序とフォームを壊す）。
