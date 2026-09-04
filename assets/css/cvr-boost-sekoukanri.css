@@ -1349,6 +1349,10 @@ body {
 .p-step01__button .q-grade { display: inline-block; margin-right: 4px; padding: 1px 7px; border-radius: 999px; background: #eef2fa; color: #314c85; font-size: .8em; font-weight: 800; vertical-align: 2px; }
 .p-step01__button.is-active { border-color: #314c85; background: #eef4ff; box-shadow: inset 0 0 0 1px #314c85, 0 2px 6px rgba(20,40,80,.12); }
 .p-step01__button.is-active .q-grade { background: #314c85; color: #fff; }
+/* 級・種別を色で区別する（2026-09-04 オーナー実機「1級と2級の色が同じで見づらい」）。
+   1級/第一種 = 琥珀、2級/第二種 = 青系（既定）。選択中はそれぞれ濃色にして、選択状態と級の両方が読めるようにする */
+.p-step01__button .q-grade--1 { background: #fff0c2; color: #7a4b00; }
+.p-step01__button.is-active .q-grade--1 { background: #b8860b; color: #fff; }
 
 /* step01: モバイルは2カラム×1行・1画面収まり（2026-07-02 オーナー指摘対応 v2）
    テーマはflexレイアウトのためgrid/flex両対応で強制。表示名は「技士」省略で1行を保証 */

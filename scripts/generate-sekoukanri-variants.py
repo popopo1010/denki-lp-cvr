@@ -241,7 +241,9 @@ def qual_label_grade(value: str) -> str:
             rest = value[len(p):]
             if rest.endswith("技士"):
                 rest = rest[:-2]
-            return f'<span class="q-grade">{p}</span>{rest}'
+            # 1級/第一種 と 2級/第二種 を色で分ける（2026-09-04 オーナー実機「1級と2級の色が同じで見づらい」）
+            tier = "1" if p in ("1級", "第一種") else "2"
+            return f'<span class="q-grade q-grade--{tier}">{p}</span>{rest}'
     return value
 
 
