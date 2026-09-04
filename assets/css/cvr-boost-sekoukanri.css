@@ -1004,7 +1004,10 @@ body.lp-form-step #step05 .c-next-button {
   .l-header__container { padding: 4px 8px; }
 
   /* FV: マイクロコピーをビューポート最下部へ (displayはJSのshowPageで制御) */
-  #step-first { flex-direction: column; min-height: calc(100vh - 200px); min-height: calc(100svh - 200px); }
+  /* FVの高さは「画面の高さ − ヘッダー(78〜94px)」。旧 200px だと初期画面の下端に体験談の見出しが
+     74〜90px 覗いていた（2026-09-04 オーナー実機・施工管理LP）。初期画面はFVだけにする。
+     app.js が inline で calc(100svh - 200px) を付けるため !important で上書き（共有 app.js は触らない） */
+  #step-first { flex-direction: column; min-height: calc(100vh - 100px) !important; min-height: calc(100svh - 100px) !important; }
   #step-first .cvr-micro-copy { margin-top: auto; padding-bottom: 8px; }
   #step-first .c-nextLink { visibility: hidden; height: 0; overflow: hidden; }
 
