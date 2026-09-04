@@ -51,12 +51,26 @@ jobs:
           fi
           echo "fetched ${size} bytes"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Regenerate theme-lp.css (主力LPが読む「使う分だけ」版)
+        run: |
+          set -euo pipefail
+          # 主力LP（denkikouji / sekoukanri 系）は theme-snapshot.css そのものではなく、
+          # そこから生成した assets/css/theme-lp.css を読む（2026-09-04 高速化）。
+          # スナップショットだけ更新して生成物が古いままだと、テーマ変更が主力LPに届かない
+          # （ci.yml の生成物ドリフト検査で止まる）。ここで一緒に再生成する。
+          npm i --no-save --no-audit --no-fund purgecss@7.0.2
+          node scripts/build-theme-lp-css.mjs
+
       - name: Create PR if changed
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git add assets/css/theme-snapshot.css
+          git add assets/css/theme-snapshot.css assets/css/theme-lp.css
           if git diff --cached --quiet; then
             echo "No changes in theme CSS"; exit 0
           fi
@@ -68,5 +82,5 @@ jobs:
           git push -f origin "$BR"
           gh pr create --base main --head "$BR" \
             --title "WPテーマCSSスナップショット更新" \
-            --body "本番の style.css との差分を検知しました。**このPRのマージ＝全LPの見た目が変わる**ので、差分を必ず確認してください。2026-08-23 に全LPが本番URL直参照から theme-snapshot.css に切り替わったため、テーマ変更はこのPRを通してのみLPへ反映されます（以前の『LP表示への影響はありません』は無効）。マージ＝本番デプロイ起動。表示に関わるので STG実機確認を挟んでください。" \\
+            --body "本番の style.css との差分を検知しました。**このPRのマージ＝全LPの見た目が変わる**ので、差分を必ず確認してください。2026-08-23 に全LPが本番URL直参照から theme-snapshot.css に切り替わったため、テーマ変更はこのPRを通してのみLPへ反映されます（以前の『LP表示への影響はありません』は無効）。マージ＝本番デプロイ起動。表示に関わるので STG実機確認を挟んでください。主力LPが読む theme-lp.css も同時に再生成しています（差分があれば theme-lp.css の ?v= を上げないと check-asset-versions が落ちます）。" \
             || echo "PR already exists (updated by force-push)"

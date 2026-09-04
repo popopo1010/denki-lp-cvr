@@ -39,7 +39,7 @@
         "電気施工管理 1級",
         "1級電気施工管理"
       ],
-      "lp_slugs": ["sekoukanri-denkisekou-v2", "sekoukanri-denkisekou"],
+      "lp_slugs": ["sekoukanri-denkisekou-v2", "sekoukanri-denkisekou", "denkisekou"],
       "featured_story": "nw",
       "story_order": ["nw", "kt", "mk", "yh", "sm"],
       "hidden_stories": ["ak", "ro", "tn"],

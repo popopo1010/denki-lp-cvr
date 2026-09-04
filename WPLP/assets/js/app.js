@@ -25,7 +25,10 @@
   // 「ステップ上部が隠れている」かつ「戻しても入力欄がキーボード上に残る」場合のみ
   // 動く冪等な処理なので、既に見えていれば何もしない。CSS側のscroll-margin-topとセット。
   (function () {
-    var BAR = 96; // アプリ内上部バー相当（LINE実測~83pt+余裕。2026-07-08）
+    // 上部バー相当。アプリ内ブラウザ（html.dk-inapp）は LINE実測~83pt+余裕で 96。
+    // それ以外（Safari本体・SFSafariViewController＝UAではSafariと区別できない）は 12 で、
+    // 「STEP表示が画面上端に沈む」だけを直す（2026-09-04 オーナー実機: STG step06 で沈んでいた）。
+    function BAR() { return document.documentElement.classList.contains("dk-inapp") ? 96 : 12; }
     var SETTLE_MS = 140;    // スクロールがこれだけ止まったら「ブラウザが動かし終えた」
     var DEADLINE_MS = 1500; // 落ち着かなくても最後に1回は直す
     var MIN_MOVE = 8;       // これ未満は動かさない（数pxの微揺れが目に付くため）
@@ -43,8 +46,8 @@
       }
       if (!head) head = group;
       var hr = head.getBoundingClientRect();
-      if (hr.top >= BAR) return; // 隠れていない
-      var delta = hr.top - BAR; // 負値: この分だけ戻す
+      if (hr.top >= BAR()) return; // 隠れていない
+      var delta = hr.top - BAR(); // 負値: この分だけ戻す
       var vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight * 0.55;
       var ir = t.getBoundingClientRect();
       // 「入力欄がキーボード上に見える範囲で」戻す（CLAUDE.md の仕様どおり部分復元）。
@@ -72,7 +75,10 @@
     // 1回だけ直す。iOSが何度スクロールし直しても、そのたび**落ち着いてから**
     // 1回直すので、多段補正の強さは保ったまま揺れだけが消える。
     document.addEventListener("focusin", function (e) {
-      if (!document.documentElement.classList.contains("dk-inapp")) return;
+      // dk-inapp 限定だったが、SFSafariViewController（Slack/X/メール等から開くブラウザ）は UA が
+      // Safari と同じで検知できず、キーボードでSTEP表示が上端に沈んだまま直らなかった
+      // （2026-09-04 オーナー実機・STG step06）。全ブラウザで動かす。BAR() が非アプリ内では 12 なので、
+      // 既に見えていれば何もしない冪等な処理のまま。
       var t = e.target;
       if (!isNudgeTarget(t)) return;
       var settle = null, deadline = null, fixes = 0, done = false;

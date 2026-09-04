@@ -45,7 +45,10 @@ const EXPECT = {
   ["meta app.js", meta.includes(EXPECT.app)],
   ["FV 全5ステップ", lp.includes("全5ステップ")],
   ["step01 あと4", lp.includes("あと4ステップ")],
-  ["step06 損失回避コピー", lazy.includes("いま見ないと損")],
+  // 2026-09-04 オーナー指示: step06 は「入力欄 → 安心文 → CTA → 満足度 → 同意文」だけ。
+  // 入力欄とCTAの間に焦り文（cvr-step-urgency）や枠つきバッジを挟むと sticky CTA の上で中空に浮いて見える（実機指摘2回）
+  ["step06 焦り文なし（入力欄とCTAの間に挟まない）", !/id="step06"[\s\S]*cvr-step-urgency/.test(lazy)],
+  ["step06 満足度はCTAの下", /id="step-last-button"[\s\S]*?<\/div>\s*<\/div>\s*<p class="cvr-cta-proof">/.test(lazy)],
   ["step06 満足度96.4%", lazy.includes("利用者の<strong>96.4%</strong>が満足と回答")],
   ["submit CTA 文言", lazy.includes("あなたに合う求人を見る")],
   ["thanks-v2 遷移", app.includes("thanks-v2")],

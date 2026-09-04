@@ -29,6 +29,7 @@ LPS = [
     "sekoukanri/index.html",
     "denkikouji/index.html",
     "sekoukanri-denkisekou/index.html",
+    "denkisekou/index.html",
     "sekoukanri-doboku/index.html",
     "sekoukanri-kentiku/index.html",
     "nenshu-shindan/sekoukanri/index.html",

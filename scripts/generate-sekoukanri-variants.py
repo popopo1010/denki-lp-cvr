@@ -18,6 +18,7 @@ QUAL_IMG = {
     "第二種電気工事士": "denkikouji",
     "1級管工事施工管理技士": "kankou",
     "2級管工事施工管理技士": "kankou",
+    "電気主任技術者": "denkishunin",
     "その他の資格": "other",
 }
 
@@ -44,6 +45,13 @@ VARIANT_FAQ = {
          "資格の質問で1級土木施工管理技士・2級土木施工管理技士を分けてうかがい、級に合わせてご案内します。"),
         ("電気工事士の資格しかなくても相談できますか？",
          "はい。土木施工管理の資格に加えて第一種・第二種電気工事士も選択肢にあり、どちらでもご登録いただけます。"),
+    ],
+    # 電気施工管理メインLP（denkisekou/・資格6択: 電気施工管理1級2級／電気工事士1種2種／電気主任技術者／その他）
+    "denkisekou-main": [
+        ("1級と2級で案内される求人は変わりますか？",
+         "資格の質問で1級電気施工管理技士・2級電気施工管理技士を分けてうかがい、級に合わせてご案内します。"),
+        ("電気工事士や電気主任技術者の資格でも相談できますか？",
+         "はい。電気施工管理に加えて第一種・第二種電気工事士、電気主任技術者も選択肢にあり、お持ちの資格に合わせてご案内します。"),
     ],
     "denkisekou": [
         ("1級と2級で案内される求人は変わりますか？",
@@ -127,6 +135,42 @@ VARIANTS = [
         ],
         "fv_note": "電気施工管理専門｜転職しなくても無料で相談OK",
     },
+    {
+        # 電気施工管理メインLP（2026-09-04 オーナー依頼）。施工管理ファミリーの template から生成するが
+        # 資格は電気系6択に絞る。WPLP/自前LP/年収診断は作らない（root_only）。
+        "slug": "denkisekou",
+        "lp_id": "denkisekou",
+        "label": "電気施工管理",
+        "root_only": True,
+        "service_slug": "sekoukanri-denkisekou",
+        "faq_key": "denkisekou-main",
+        # CTA下の求人カード（テンプレートは lp-job-cards-sekoukanri.json）。無い variant はブロックごと外す
+        "jobs_src": "lp-job-cards-denkisekou.json",
+        "title": "電気施工管理技士の求人・転職｜電気工事士・電気主任技術者も歓迎｜施工管理キャリア",
+        "description": "電気施工管理技士（1級・2級）の求人を専門紹介。第一種・第二種電気工事士、電気主任技術者の方も登録可。完全無料。",
+        "og_desc": "電気施工管理1級・2級の求人を専門紹介。電気工事士・電気主任技術者の非公開求人も。",
+        "header": "電気施工管理技士の求人募集・転職サイト | 施工管理キャリア",
+        "banner_alt": "電気施工管理専門,あなたの資格から設備・電気施工のオススメ求人を無料で紹介",
+        "step01_title": "お持ちの電気系の資格は？",
+        "step01_reason": "電気施工管理1級・2級に合った求人をご紹介します（電気工事士・電気主任技術者の方も選択可）",
+        "step01_reward": "次は<strong>電気施工管理の1級・2級</strong>に特化したマッチリストをお見せします（あと3ステップ）",
+        "quals": [
+            "1級電気施工管理技士",
+            "2級電気施工管理技士",
+            "第一種電気工事士",
+            "第二種電気工事士",
+            "電気主任技術者",
+            *OTHER,
+        ],
+        "testimonials_title": "電気施工管理の利用者の声",
+        "testimonials_lead": "1級・2級ごとに、設備・電気施工管理向けの求人をご案内しています",
+        "testimonials": [
+            ("S.N", "S.Nさん（36歳）", "1級電気施工管理技士", "電気施工管理に特化しているので、<strong>1級の監理経験を評価</strong>してくれる企業に出会え、年収120万円アップしました。"),
+            ("Y.M", "Y.Mさん（33歳）", "2級電気施工管理技士", "2級電気施工管理でも、設備系の<strong>非公開求人を多数紹介</strong>してもらい、ワークライフバランスと年収を両立できました。"),
+            ("S.M", "S.Mさん（28歳）", "第二種電気工事士", "電気工事士から施工管理へステップアップ。<strong>第二種＋2級施工管理</strong>のキャリアで年収アップできました。"),
+        ],
+        "fv_note": "電気施工管理専門｜転職しなくても無料で相談OK",
+    },
 ]
 
 NENSHU_SALARY = {
@@ -185,6 +229,7 @@ FORM_QUAL_IMG = {
     "2級管工事施工管理技士": "denkisekou",
     "第一種電気工事士": "denkikouji",
     "第二種電気工事士": "denkikouji",
+    "電気主任技術者": "denkishunin",
     "その他の資格": "other",
 }
 
@@ -198,7 +243,9 @@ def qual_label_grade(value: str) -> str:
             rest = value[len(p):]
             if rest.endswith("技士"):
                 rest = rest[:-2]
-            return f'<span class="q-grade">{p}</span>{rest}'
+            # 1級/第一種 と 2級/第二種 を色で分ける（2026-09-04 オーナー実機「1級と2級の色が同じで見づらい」）
+            tier = "1" if p in ("1級", "第一種") else "2"
+            return f'<span class="q-grade q-grade--{tier}">{p}</span>{rest}'
     return value
 
 
@@ -347,15 +394,26 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool
     # 再生成のたびに建築/土木/電気の導線が施工管理ページへ戻る。
     html = re.sub(
         r'(href="(?:\.\./)+)service/[a-z-]+/"',
-        lambda m: f'{m.group(1)}service/{v["slug"]}/"',
+        lambda m: f'{m.group(1)}service/{v.get("service_slug", v["slug"])}/"',
         html,
     )
+
+    # CTA下の求人カード（2026-09-04）。対象は denkikouji / sekoukanri / denkisekou の3本（オーナー指示）。
+    # jobs_src を持つ variant はデータを差し替え、持たない variant（建築・土木・WPLP/自前LP 配下）は
+    # セクションと lp-job-cards.js ごと外す。テンプレートに残したままだと再生成で全 variant に広がる。
+    jobs_block = re.compile(r"\n<!-- CTAより下・初期画面の外に置く求人カード.*?</section>\n", re.S)
+    jobs_script = re.compile(r'\n<script src="[^"]*lp-job-cards\.js[^"]*" defer></script>')
+    if v.get("jobs_src") and not nenshu and not url_prefix:
+        html = html.replace("lp-job-cards-sekoukanri.json", v["jobs_src"])
+    else:
+        html = jobs_block.sub("\n", html)
+        html = jobs_script.sub("", html)
 
     # FAQの工種別2問も同じ理由で差し替える（テンプレートは施工管理全般の文面）。
     # 表示と JSON-LD の両方を置換する。ズレると check-faq-schema が落ちる。
     # キーは build_* 側と同じ流儀で slug から導出する（903ad8c で未定義の `key` を
     # 参照して NameError になっていた。CIの生成物ドリフトチェックが検出）。
-    faq_pair = VARIANT_FAQ.get(v["slug"].replace("sekoukanri-", ""))
+    faq_pair = VARIANT_FAQ.get(v.get("faq_key", v["slug"].replace("sekoukanri-", "")))
     if faq_pair:
         for old, new in zip(SEKOUKANRI_FAQ, faq_pair):
             html = html.replace(old[0], new[0]).replace(old[1], new[1])
@@ -426,6 +484,8 @@ def main() -> None:
     for prefix, (template_rel, grade_label) in TEMPLATES.items():
         template = (REPO / template_rel).read_text()
         for v in VARIANTS:
+            if prefix and v.get("root_only"):
+                continue
             out_html = apply_variant(template, v, grade_label=grade_label, url_prefix=prefix)
             out_dir = REPO / prefix / v["slug"] if prefix else REPO / v["slug"]
             out_dir.mkdir(parents=True, exist_ok=True)
@@ -440,6 +500,8 @@ def main() -> None:
 
     nenshu_tpl = (REPO / "nenshu-shindan/sekoukanri/index.html").read_text()
     for v in VARIANTS:
+        if v.get("root_only"):
+            continue
         nv = enrich_nenshu(v)
         nv["lp_id"] = nv["nenshu_lp_id"]
         nv["title"] = nv["title"].replace("求人・転職", "年収診断").replace("施工管理キャリア", "年収診断")

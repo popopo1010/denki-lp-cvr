@@ -525,6 +525,48 @@ const NUDGE_KNOWN_RED = [
   "/nenshu-shindan-v2/sekoukanri-doboku/", "/nenshu-shindan-v2/sekoukanri-kentiku/"
 ];
 
+/** キーボードオープンの再スクロール（入力欄を最上部へ）を再現し、ナッジが上部を戻すかを測る。
+ *  runInAppBar（LINE UA・html.dk-inapp あり）と runSafariKeyboardRace（Safari UA・dk-inapp なし）で共用。 */
+async function keyboardRace(page) {
+  return page.evaluate(async () => {
+      const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
+      const cur = vis[vis.length - 1];
+      const input = cur && cur.querySelector('input[type="tel"], input[type="text"]');
+      if (!input || input.offsetParent === null) return { skip: true, why: "このステップに可視の入力欄なし" };
+      const headEl = [...cur.querySelectorAll(".c-step, .c-title01")].find((x) => x.offsetParent !== null) || cur;
+      // 見出しが入力欄より下にあるレイアウト（nenshu-shindan系のstep06など）では
+      // 「上部がバーに潜る」という測定自体が成立しない。誤検知にしない。
+      if (headEl.getBoundingClientRect().top >= input.getBoundingClientRect().top) {
+        return { skip: true, why: "見出しが入力欄より下（この指標が成立しない構成）" };
+      }
+      const headOf = () => Math.round(headEl.getBoundingClientRect().top);
+      // 「入力欄を最上部へ」の再現はページに下方向のスクロール余地が要る。step06 の下余白を詰めた
+      // （2026-09-04）ら文書が短くなり、押し下げが 73px で頭打ち＝見出しが 7px（BAR 12px − MIN_MOVE 8px の
+      // 不感帯）に残って「戻らない」と誤判定した上、ナッジを無効にしても同じ 7px になる＝退行を検知できなく
+      // なっていた。実機はキーボード分だけ必ず余地があるので、ここでも余白を足して再現条件を固定する。
+      const prevPad = document.body.style.paddingBottom;
+      document.body.style.paddingBottom = "800px";
+      const before = headOf();
+      input.focus({ preventScroll: true });
+      input.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 500));
+      // ブラウザ主導の「入力欄を可視ビューポート最上部へ」を再現。
+      // instant で動かす: 全LPの html{scroll-behavior:smooth} 下で scrollTo(0,y) はアニメーションになり、
+      // 直後に読む pushed が「押し下げ前」の値になって gained が負になる（2026-09-04 CI: sekoukanri-v2 が
+      // 入力欄の制約で 9px まで戻した正常動作を「戻らない」と誤判定した）。
+      window.scrollTo({ top: window.scrollY + input.getBoundingClientRect().top - 4, left: 0, behavior: "instant" });
+      const pushed = headOf();
+      await new Promise((r) => setTimeout(r, 1600));
+      const ir = input.getBoundingClientRect();
+      const vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      // 入力欄をキーボード上に残す制約に当たっているか（＝これ以上戻せない）
+      const clamped = Math.round(ir.bottom) >= Math.round(vvh - 8) - 16;
+      const result = { before, pushed, head: headOf(), clamped, gained: headOf() - pushed };
+      document.body.style.paddingBottom = prevPad;
+      return result;
+  });
+}
+
 async function runInAppBar(browser, devices, lp) {
   const ctx = await browser.newContext({
     ...devices["iPhone 13"],
@@ -571,32 +613,7 @@ async function runInAppBar(browser, devices, lp) {
   // 「入力欄を最上部へ」のブラウザ挙動を再現し、1.6秒後に上部が戻っているかを見る。
   if (reachedInput) {
     await page.setViewportSize({ width: 390, height: 360 });
-    const race = await page.evaluate(async () => {
-      const vis = [...document.querySelectorAll(".js-form-group")].filter((e) => getComputedStyle(e).display !== "none");
-      const cur = vis[vis.length - 1];
-      const input = cur && cur.querySelector('input[type="tel"], input[type="text"]');
-      if (!input || input.offsetParent === null) return { skip: true, why: "このステップに可視の入力欄なし" };
-      const headEl = [...cur.querySelectorAll(".c-step, .c-title01")].find((x) => x.offsetParent !== null) || cur;
-      // 見出しが入力欄より下にあるレイアウト（nenshu-shindan系のstep06など）では
-      // 「上部がバーに潜る」という測定自体が成立しない。誤検知にしない。
-      if (headEl.getBoundingClientRect().top >= input.getBoundingClientRect().top) {
-        return { skip: true, why: "見出しが入力欄より下（この指標が成立しない構成）" };
-      }
-      const headOf = () => Math.round(headEl.getBoundingClientRect().top);
-      const before = headOf();
-      input.focus({ preventScroll: true });
-      input.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
-      await new Promise((r) => setTimeout(r, 500));
-      // ブラウザ主導の「入力欄を可視ビューポート最上部へ」を再現
-      window.scrollTo(0, window.scrollY + input.getBoundingClientRect().top - 4);
-      const pushed = headOf();
-      await new Promise((r) => setTimeout(r, 1600));
-      const ir = input.getBoundingClientRect();
-      const vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-      // 入力欄をキーボード上に残す制約に当たっているか（＝これ以上戻せない）
-      const clamped = Math.round(ir.bottom) >= Math.round(vvh - 8) - 16;
-      return { before, pushed, head: headOf(), clamped, gained: headOf() - pushed };
-    });
+    const race = await keyboardRace(page);
     if (race.skip) pass(`${lp} キーボード再スクロールにナッジが勝つ`, race.why);
     else if (race.head >= INAPP_BAR)
       pass(`${lp} キーボード再スクロールにナッジが勝つ`, `復元後 headTop=${race.head}px`);
@@ -619,6 +636,41 @@ async function runInAppBar(browser, devices, lp) {
       fail(`${lp} キーボード再スクロールにナッジが勝つ`,
         `headTop=${race.pushed}→${race.head}px しか戻らない（clamped=${race.clamped}）`);
   }
+  await ctx.close();
+}
+
+
+/** 9c) dk-inapp が付かないブラウザ（Safari本体・SFSafariViewController）でもナッジが効くか。
+ *  2026-09-04 オーナー実機（STG step06）: ナッジが html.dk-inapp 限定だったため、UA が Safari と同じ
+ *  SFSafariViewController（Slack/X/メール等から開く）ではキーボードでSTEP表示が上端に沈んだまま直らなかった。
+ *  非アプリ内の BAR() は 12px なので、復元後の headTop が 12px 以上なら合格。 */
+async function runSafariKeyboardRace(browser, devices, lp) {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" }); // 素の Safari UA
+  const page = await ctx.newPage();
+  await blockExternal(page);
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  const flagged = await page.evaluate(() => document.documentElement.classList.contains("dk-inapp"));
+  if (flagged) { fail(`${lp} Safari UA で dk-inapp が付かない`, "素のSafari UAで dk-inapp が付いた"); await ctx.close(); return; }
+  let reachedInput = false;
+  for (let i = 0; i < 22; i++) {
+    const { acted, after } = await advanceOnce(page);
+    if (acted === "stuck" || acted === "no-step") break;
+    if (["step04", "step05", "step06"].includes(after.step)) reachedInput = true;
+    if (after.step === "step06") break;
+  }
+  if (!reachedInput) { fail(`${lp} Safari: キーボード再スクロールにナッジが勝つ`, "入力ステップまで到達できなかった"); await ctx.close(); return; }
+  await page.setViewportSize({ width: 390, height: 360 });
+  const race = await keyboardRace(page);
+  const SAFARI_BAR = 12;
+  if (race.skip) pass(`${lp} Safari: キーボード再スクロールにナッジが勝つ`, race.why);
+  else if (race.head >= SAFARI_BAR) pass(`${lp} Safari: キーボード再スクロールにナッジが勝つ`, `復元後 headTop=${race.head}px`);
+  else if (race.clamped && race.gained > 0)
+    pass(`${lp} Safari: キーボード再スクロールにナッジが勝つ`, `限界まで復元 headTop=${race.pushed}→${race.head}px（入力欄がキーボード上端に到達）`);
+  else if (NUDGE_KNOWN_RED.includes(lp))
+    pass(`${lp} Safari: キーボード再スクロールにナッジが勝つ`, `【既知の未解決】headTop=${race.pushed}→${race.head}px`);
+  else
+    fail(`${lp} Safari: キーボード再スクロールにナッジが勝つ`, `headTop=${race.pushed}→${race.head}px しか戻らない（dk-inapp 限定に戻っていないか）`);
   await ctx.close();
 }
 
@@ -691,6 +743,7 @@ async function main() {
     await runLazyRecovery(browser, devices, lps[0]);
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
+    for (const lp of lps) await runSafariKeyboardRace(browser, devices, lp);
   } finally {
     await browser.close();
     server.close();
