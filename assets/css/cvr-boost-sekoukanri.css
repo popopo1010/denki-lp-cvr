@@ -818,6 +818,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     position: static;
     background: none;
   }
+  /* テーマの .p-step06 .c-nextLink{margin:60px 0 120px} の下余白120pxを step06 では詰める。
+     CTAの下に置く満足度（.cvr-cta-proof）と同意文（.cvr-pp-text）が120px離れて浮いて見えていた
+     （2026-09-04 オーナー実機指摘「位置がきもい」。入力欄→CTA→満足度→同意文 を密に並べる） */
+  body.lp-input-step #step06 .c-nextLink { margin-bottom: 8px; }
   body.lp-input-step #step06 .c-nextLinkButton {
     flex: 0 0 auto;
     width: auto;
