@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "== 0 禁止コピー/ラベル =="
+python3 scripts/check-workflow-shell.py  # ワークフロー内シェルの構文（2026-09-04 STG #511 の再発防止）
 node scripts/check-banned-copy.mjs
 node scripts/check-kuma-anchor.mjs
 node scripts/check-lazy-steps.mjs

@@ -418,7 +418,7 @@ jobs:
             printf '  %s\n    %s\n' "$a" \
               "$(curl -sIL -H 'Accept-Encoding: gzip, br' "${DEPLOY_URL_BASE}/${a}" | grep -iE '^(content-encoding|cache-control|content-length|cf-cache-status|server):' | tr -d '\r' | tr '\n' ' ')"
           done
-          echo "--- 求人カードの資産 ---
+          echo "--- 求人カードの資産 ---"
           for a in assets/js/lp-job-cards.js assets/data/lp-job-cards-denki.json; do
             printf '  %s  %s\n' \
               "$(curl -sL -o /dev/null -w '%{http_code} %{content_type}' "${DEPLOY_URL_BASE}/${a}")" "$a"
