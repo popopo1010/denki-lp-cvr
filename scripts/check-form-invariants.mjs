@@ -115,6 +115,12 @@ for (const p of IMPLS) {
   check(`${p}: 落ち着かなくても最後に1回直す(DEADLINE_MS)`, /DEADLINE_MS/.test(src));
   check(`${p}: visualViewport resize でも補正する`,
     /visualViewport\.addEventListener\(\s*["']resize["']/.test(src));
+  // ⑤(c)'' ナッジを html.dk-inapp 限定にしない（2026-09-04 オーナー実機で再発）。
+  // SFSafariViewController（Slack/X/メール等から開くブラウザ）は UA が Safari と同じで検知できず、
+  // dk-inapp 限定だとキーボードでSTEP表示が上端に沈んだまま直らない。BAR() で切り替える。
+  check(`${p}: ナッジが dk-inapp 限定になっていない（全ブラウザで動く）`,
+    !/focusin["']\s*,\s*function[^{]*\{\s*if \(!document\.documentElement\.classList\.contains\(["']dk-inapp["']\)\) return;/.test(src)
+    && /function BAR\(\)/.test(src));
   // behavior:"auto" は CSS の scroll-behavior を読む。全LPが html{scroll-behavior:smooth}
   // を持つので、auto だと補正がアニメーションになり iOS の再スクロールに割り込まれて揺れる。
   check(`${p}: 補正は instant（smoothに巻き込まれない）`,

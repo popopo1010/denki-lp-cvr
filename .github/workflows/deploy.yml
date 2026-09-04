@@ -415,7 +415,7 @@ jobs:
           # 軽量化の前提（gzip/brotli・immutable）が本当に効いているかを毎回出す（2026-09-04）。
           # .htaccess の IfModule が効いていない環境だと、minify しても転送量は減らない。
           echo "--- 圧縮・キャッシュヘッダ（主力LPの読み込みチェーン） ---"
-          for a in denkikouji/ assets/css/theme-lp.css?v20260904a assets/css/cvr-boost-denkikouji.css?v20260904c assets/js/app.js?v20260830b denkikouji/steps-lazy.html?v20260712; do
+          for a in denkikouji/ assets/css/theme-lp.css?v20260904a assets/css/cvr-boost-denkikouji.css?v20260904c assets/js/app.js?v20260904a denkikouji/steps-lazy.html?v20260712; do
             printf '  %s\n    %s\n' "$a" \
               "$(curl -sIL -H 'Accept-Encoding: gzip, br' "${DEPLOY_URL_BASE}/${a}" | grep -iE '^(content-encoding|cache-control|content-length|cf-cache-status|server):' | tr -d '\r' | tr '\n' ' ')"
           done
@@ -495,7 +495,7 @@ jobs:
           verify_denki_lp() {
             local denki_lp app_js
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
-            echo "$denki_lp" | grep -q 'app.js?v20260830b' || return 1
+            echo "$denki_lp" | grep -q 'app.js?v20260904a' || return 1
             echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260904c' || return 1
             echo "$denki_lp" | grep -q 'theme-lp.css?v20260904a' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
@@ -513,7 +513,7 @@ jobs:
             echo "$css" | grep -q 'is-step-active' || return 1
             echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260904c' || return 1
             echo "$sekou_lp" | grep -q 'theme-lp.css?v20260904a' || return 1
-            echo "$sekou_lp" | grep -q 'app.js?v20260830b' || return 1
+            echo "$sekou_lp" | grep -q 'app.js?v20260904a' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
             echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260701c' || return 1
             echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1

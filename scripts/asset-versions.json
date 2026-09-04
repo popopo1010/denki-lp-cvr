@@ -8,12 +8,12 @@
     "sha256": "48a4690552073992"
   },
   "WPLP/assets/js/app-v2.js": {
-    "version": "20260830b",
-    "sha256": "bcb5ff0388032798"
+    "version": "20260904a",
+    "sha256": "739beb953cc52348"
   },
   "WPLP/assets/js/app.js": {
-    "version": "20260830b",
-    "sha256": "44414feadc91dc6c"
+    "version": "20260904a",
+    "sha256": "fa73dab4b1231667"
   },
   "WPLP/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -72,12 +72,12 @@
     "sha256": "5e87015a08e9a2f7"
   },
   "assets/js/app-v2.js": {
-    "version": "20260830b",
-    "sha256": "bcb5ff0388032798"
+    "version": "20260904a",
+    "sha256": "739beb953cc52348"
   },
   "assets/js/app.js": {
-    "version": "20260830b",
-    "sha256": "44414feadc91dc6c"
+    "version": "20260904a",
+    "sha256": "fa73dab4b1231667"
   },
   "assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -143,13 +143,17 @@
     "version": "20260712",
     "sha256": "ba51970a23d862f5"
   },
+  "denkisekou/steps-lazy.html": {
+    "version": "20260701c",
+    "sha256": "67985789f1cab262"
+  },
   "dk_lp/assets/css/cvr-boost-sekoukanri.css": {
     "version": "20260829e",
     "sha256": "664734656b8eb1af"
   },
   "dk_lp/assets/js/app.js": {
-    "version": "20260830b",
-    "sha256": "44414feadc91dc6c"
+    "version": "20260904a",
+    "sha256": "fa73dab4b1231667"
   },
   "dk_lp/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -165,7 +169,7 @@
   },
   "dk_lp/denkikouji/assets/js/main.js": {
     "version": "20260830c",
-    "sha256": "2d9e396d5637627b"
+    "sha256": "71be262d441310f0"
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260701c",
@@ -216,12 +220,12 @@
     "sha256": "04233f3ec2720dd1"
   },
   "自前LP/assets/js/app-v2.js": {
-    "version": "20260830b",
-    "sha256": "bcb5ff0388032798"
+    "version": "20260904a",
+    "sha256": "739beb953cc52348"
   },
   "自前LP/assets/js/app.js": {
-    "version": "20260830b",
-    "sha256": "44414feadc91dc6c"
+    "version": "20260904a",
+    "sha256": "fa73dab4b1231667"
   },
   "自前LP/assets/js/cvr-boost.js": {
     "version": "20260823a",
