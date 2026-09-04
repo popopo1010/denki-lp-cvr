@@ -144,6 +144,8 @@ VARIANTS = [
         "root_only": True,
         "service_slug": "sekoukanri-denkisekou",
         "faq_key": "denkisekou-main",
+        # CTA下の求人カード（テンプレートは lp-job-cards-sekoukanri.json）。無い variant はブロックごと外す
+        "jobs_src": "lp-job-cards-denkisekou.json",
         "title": "電気施工管理技士の求人・転職｜電気工事士・電気主任技術者も歓迎｜施工管理キャリア",
         "description": "電気施工管理技士（1級・2級）の求人を専門紹介。第一種・第二種電気工事士、電気主任技術者の方も登録可。完全無料。",
         "og_desc": "電気施工管理1級・2級の求人を専門紹介。電気工事士・電気主任技術者の非公開求人も。",
@@ -395,6 +397,17 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool
         lambda m: f'{m.group(1)}service/{v.get("service_slug", v["slug"])}/"',
         html,
     )
+
+    # CTA下の求人カード（2026-09-04）。対象は denkikouji / sekoukanri / denkisekou の3本（オーナー指示）。
+    # jobs_src を持つ variant はデータを差し替え、持たない variant（建築・土木・WPLP/自前LP 配下）は
+    # セクションと lp-job-cards.js ごと外す。テンプレートに残したままだと再生成で全 variant に広がる。
+    jobs_block = re.compile(r"\n<!-- CTAより下・初期画面の外に置く求人カード.*?</section>\n", re.S)
+    jobs_script = re.compile(r'\n<script src="[^"]*lp-job-cards\.js[^"]*" defer></script>')
+    if v.get("jobs_src") and not nenshu and not url_prefix:
+        html = html.replace("lp-job-cards-sekoukanri.json", v["jobs_src"])
+    else:
+        html = jobs_block.sub("\n", html)
+        html = jobs_script.sub("", html)
 
     # FAQの工種別2問も同じ理由で差し替える（テンプレートは施工管理全般の文面）。
     # 表示と JSON-LD の両方を置換する。ズレると check-faq-schema が落ちる。

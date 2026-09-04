@@ -87,9 +87,10 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
          フェッチされ、低速回線ではCSS到着(~4s)時の再レイアウトがラボLCP再登録とCLS 0.168の
          原因になっていた（2026-08-19 STG計測で精査）。1回のレンダリングで確定させる -->
     <link rel="stylesheet" href="../assets/css/theme-lp.css?v20260904a">
-    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260904c">
+    <link rel="stylesheet" href="../assets/css/cvr-boost-denkikouji.css?v20260904d">
     <script>window.__LP_ID="denkikouji";</script>
     <script src="../assets/js/app.js?v20260904a" defer></script>
+    <script src="../assets/js/lp-job-cards.js?v20260831a" defer></script>
 <style id="cvr-about-css">
 .cvr-about{max-width:600px;margin:16px auto 0;padding:14px 16px;border:1px solid #e8e8e8;border-radius:10px;background:#fbfcfe}
 .cvr-about__title{font-size:14px;font-weight:700;color:#314c85;margin:0 0 10px;text-align:left}
@@ -329,6 +330,14 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 </form>
 </div>
 </div>
+
+<!-- CTAより下・初期画面の外に置く求人カード（2026-09-04 オーナー依頼）。データ到着で枠が動かないよう min-height で予約（CLS対策）。
+     取得失敗・0件ならセクションごと消える（lp-job-cards.js）。フォーム中は cvr-boost の body.lp-form-step .lp-jobs で隠す -->
+<section class="lp-jobs" data-lp-job-cards data-src="../assets/data/lp-job-cards-denki.json?v=20260904a" data-limit="6" style="min-height:700px">
+    <p class="lp-jobs__head">ご紹介できる求人の一例</p>
+    <div class="lp-jobs__list" data-lp-job-cards-list></div>
+    <p class="lp-jobs__note" data-lp-job-cards-note></p>
+</section>
 
 <div class="cvr-testimonials">
     <h2 class="cvr-testimonials__title">電気工事士・電気施工管理の声</h2>

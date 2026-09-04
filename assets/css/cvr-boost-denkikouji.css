@@ -1034,3 +1034,23 @@ body.lp-form-step .cvr-about { display: none; }
 @media (max-width: 767px) and (max-height: 660px) {
   body.lp-form-step #step01 .c-nextLink { padding-top: 8px; }
 }
+
+/* ===== 求人カード（CTAより下・初期画面の外。2026-09-04 オーナー依頼） =====
+   denkikouji-trust で検証済みの実装（#124/#125）を主力LPへ展開。描画は assets/js/lp-job-cards.js。
+   フォーム中は出さない（CTA直下に求人が並ぶとステップの続きに見えて邪魔＝会社概要と同じ扱い）。
+   margin-top 28px は「FV(100svh-100px)の下端＋ヘッダー最小78px」でも初期画面に見出しが覗かないための余白 */
+.lp-jobs { margin: 28px 12px 0; text-align: left; }
+.lp-jobs[hidden] { display: none !important; }
+body.lp-form-step .lp-jobs { display: none; }
+.lp-jobs__head { font-size: 13px; font-weight: 700; color: #314c85; margin: 0 0 8px; }
+.lp-jobs__list { display: grid; gap: 8px; }
+.lp-job { display: block; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; -webkit-appearance: none; appearance: none; border: 1px solid #e2e7f0; border-radius: 9px; background: #fff; padding: 9px 11px; position: relative; }
+.lp-job:active { background: #f7f9fd; }
+.lp-job__title, .lp-job__tags, .lp-job__more { display: block; }
+.lp-job__more { font-size: 11px; color: #314c85; font-weight: 700; margin-top: 6px; }
+.lp-job__title { font-size: 13px; font-weight: 700; color: #1b2330; margin: 0 0 4px; line-height: 1.45; }
+.lp-job__meta { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: 12px; color: #5b6880; margin: 0; }
+.lp-job__pay { color: #314c85; font-weight: 700; white-space: nowrap; }
+.lp-job__tags { display: flex; gap: 5px; flex-wrap: wrap; margin: 6px 0 0; }
+.lp-job__tag { font-size: 11px; background: #eef1f8; color: #46536b; padding: 2px 7px; border-radius: 4px; line-height: 1.5; }
+.lp-jobs__note { font-size: 11px; color: #8c97ab; margin: 7px 0 0; line-height: 1.5; }

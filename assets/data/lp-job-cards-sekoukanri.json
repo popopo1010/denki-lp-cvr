@@ -1,0 +1,128 @@
+{
+  "_note": "表示イメージ確認用の仮データ。実在の求人ではない。thanks-job-previews-sekoukanri.json（thanks-v2 の求人プレビュー）と同じ職種・年収レンジから抜粋し、LP→thanks で見せる条件が食い違わないようにしている。年収は相場+訴求レンジ（オーナー指示 2026-08-31 と同じ流儀）であり相場の実測値ではない。実フィードに差し替えるときは is_sample を false にし、source を実際の出所にする。JobPosting構造化データはこのデータのままでは出さないこと（架空求人の構造化データはスパム扱いになる）。",
+  "generated_at": "2026-09-04",
+  "is_sample": true,
+  "salary_basis": "thanks-v2 の求人プレビューと同じ訴求レンジ（相場の実測値ではない）",
+  "note_text": "条件は一例。あなたに合う求人は登録後にLINEでお送りします",
+  "source": "公開求人サイトの相場調査（2026-08 時点）にもとづくサンプル",
+  "job_family": "sekoukanri",
+  "jobs": [
+    {
+      "id": "sk-001",
+      "title": "大手デベロッパー 商業施設新築 建築CM",
+      "pref": "東京都",
+      "region": "関東",
+      "salary_min": 720,
+      "salary_max": 950,
+      "tags": [
+        "非公開",
+        "年収交渉代行"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-002",
+      "title": "データセンター 新築工事管理",
+      "pref": "大阪府",
+      "region": "近畿",
+      "salary_min": 700,
+      "salary_max": 920,
+      "tags": [
+        "非公開",
+        "高待遇"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-003",
+      "title": "トンネル新設 土木工事管理",
+      "pref": "神奈川県",
+      "region": "関東",
+      "salary_min": 720,
+      "salary_max": 900,
+      "tags": [
+        "高待遇",
+        "賞与2回"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-004",
+      "title": "マンション新築 建築監督補佐",
+      "pref": "千葉県",
+      "region": "関東",
+      "salary_min": 490,
+      "salary_max": 630,
+      "tags": [
+        "未経験相談可",
+        "資格手当"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-005",
+      "title": "再エネ 発電所メンテ管理",
+      "pref": "静岡県",
+      "region": "中部",
+      "salary_min": 540,
+      "salary_max": 700,
+      "tags": [
+        "非公開",
+        "週休2日"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-006",
+      "title": "橋梁補修 土木現場管理",
+      "pref": "福岡県",
+      "region": "九州",
+      "salary_min": 450,
+      "salary_max": 580,
+      "tags": [
+        "非公開",
+        "出張手当"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-007",
+      "title": "データセンター 配管工事監督",
+      "pref": "愛知県",
+      "region": "中部",
+      "salary_min": 630,
+      "salary_max": 800,
+      "tags": [
+        "非公開",
+        "残業少なめ"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-008",
+      "title": "マンション新築 建築施工管理",
+      "pref": "福岡県",
+      "region": "九州",
+      "salary_min": 620,
+      "salary_max": 800,
+      "tags": [
+        "関西・九州",
+        "資格手当"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "sk-009",
+      "title": "造成工事 土木工事管理",
+      "pref": "兵庫県",
+      "region": "近畿",
+      "salary_min": 490,
+      "salary_max": 640,
+      "tags": [
+        "関西",
+        "資格手当"
+      ],
+      "is_public": true
+    }
+  ]
+}

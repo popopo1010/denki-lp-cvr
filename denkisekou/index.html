@@ -44,9 +44,10 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 @media(max-width:767px){#step-first .p-first__buttonArea{display:flex;flex-direction:column;gap:10px}#step-first .p-first__buttonArea .p-firstButton{width:100%;max-width:none;min-height:56px}#step-first .p-firstButton .p-firstButton__icon{display:none}#step-first .cvr-micro-copy{padding-left:12px;padding-right:12px}}
 </style>
 <link rel="stylesheet" href="../assets/css/theme-lp.css?v20260904a">
-<link rel="stylesheet" href="../assets/css/cvr-boost-sekoukanri.css?v20260904d">
+<link rel="stylesheet" href="../assets/css/cvr-boost-sekoukanri.css?v20260904e">
 <script>window.__LP_ID="denkisekou";</script>
 <script src="../assets/js/app.js?v20260904a" defer></script>
+<script src="../assets/js/lp-job-cards.js?v20260831a" defer></script>
 <style id="cvr-about-css">
 .cvr-about{max-width:600px;margin:16px auto 0;padding:14px 16px;border:1px solid #e8e8e8;border-radius:10px;background:#fbfcfe}
 .cvr-about__title{font-size:14px;font-weight:700;color:#314c85;margin:0 0 10px;text-align:left}
@@ -241,6 +242,14 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 </form>
 </div>
 </div>
+
+<!-- CTAより下・初期画面の外に置く求人カード（2026-09-04 オーナー依頼）。データ到着で枠が動かないよう min-height で予約（CLS対策）。
+     取得失敗・0件ならセクションごと消える（lp-job-cards.js）。フォーム中は cvr-boost の body.lp-form-step .lp-jobs で隠す -->
+<section class="lp-jobs" data-lp-job-cards data-src="../assets/data/lp-job-cards-denkisekou.json?v=20260904a" data-limit="6" style="min-height:700px">
+    <p class="lp-jobs__head">ご紹介できる求人の一例</p>
+    <div class="lp-jobs__list" data-lp-job-cards-list></div>
+    <p class="lp-jobs__note" data-lp-job-cards-note></p>
+</section>
 
 <div class="cvr-testimonials">
     <h2 class="cvr-testimonials__title">電気施工管理の利用者の声</h2>

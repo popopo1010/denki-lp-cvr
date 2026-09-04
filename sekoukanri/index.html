@@ -44,9 +44,10 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 @media(max-width:767px){#step-first .p-first__buttonArea{display:flex;flex-direction:column;gap:10px}#step-first .p-first__buttonArea .p-firstButton{width:100%;max-width:none;min-height:56px}#step-first .p-firstButton .p-firstButton__icon{display:none}#step-first .cvr-micro-copy{padding-left:12px;padding-right:12px}}
 </style>
 <link rel="stylesheet" href="../assets/css/theme-lp.css?v20260904a">
-<link rel="stylesheet" href="../assets/css/cvr-boost-sekoukanri.css?v20260904d">
+<link rel="stylesheet" href="../assets/css/cvr-boost-sekoukanri.css?v20260904e">
 <script>window.__LP_ID="sekoukanri";</script>
 <script src="../assets/js/app.js?v20260904a" defer></script>
+<script src="../assets/js/lp-job-cards.js?v20260831a" defer></script>
 <style id="cvr-about-css">
 .cvr-about{max-width:600px;margin:16px auto 0;padding:14px 16px;border:1px solid #e8e8e8;border-radius:10px;background:#fbfcfe}
 .cvr-about__title{font-size:14px;font-weight:700;color:#314c85;margin:0 0 10px;text-align:left}
@@ -213,6 +214,14 @@ html.dk-inapp.dk-ios body.lp-form-step .js-page-body{padding-top:64px!important}
 </form>
 </div>
 </div>
+
+<!-- CTAより下・初期画面の外に置く求人カード（2026-09-04 オーナー依頼）。データ到着で枠が動かないよう min-height で予約（CLS対策）。
+     取得失敗・0件ならセクションごと消える（lp-job-cards.js）。フォーム中は cvr-boost の body.lp-form-step .lp-jobs で隠す -->
+<section class="lp-jobs" data-lp-job-cards data-src="../assets/data/lp-job-cards-sekoukanri.json?v=20260904a" data-limit="6" style="min-height:700px">
+    <p class="lp-jobs__head">ご紹介できる求人の一例</p>
+    <div class="lp-jobs__list" data-lp-job-cards-list></div>
+    <p class="lp-jobs__note" data-lp-job-cards-note></p>
+</section>
 
 <div class="cvr-testimonials"><h2 class="cvr-testimonials__title">建築・土木・電気施工管理の声</h2><p class="cvr-testimonials__lead">1級・2級ごとに、工種に合った求人をご案内しています</p><div class="cvr-testimonial"><div class="cvr-testimonial__header"><div class="cvr-testimonial__avatar">T.Y</div><div class="cvr-testimonial__meta"><span class="cvr-testimonial__name">T.Yさん（38歳）</span> <span class="cvr-testimonial__role">1級建築施工管理技士</span></div><div class="cvr-testimonial__stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span></div></div><p class="cvr-testimonial__text">建築施工管理に特化しているので、<strong>1級として年収100万円アップ</strong>。ゼネコンからの転職でもキャリアを正当に評価してくれる企業に出会えました。</p></div><div class="cvr-testimonial"><div class="cvr-testimonial__header"><div class="cvr-testimonial__avatar">K.T</div><div class="cvr-testimonial__meta"><span class="cvr-testimonial__name">K.Tさん（29歳）</span> <span class="cvr-testimonial__role">2級建築施工管理技士</span></div><div class="cvr-testimonial__stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span></div></div><p class="cvr-testimonial__text">2級でも建築現場の経験を評価してもらい、<strong>年収80万円アップ</strong>で転職。同じ2級でも会社選びで待遇が変わると実感しました。</p></div><div class="cvr-testimonial"><div class="cvr-testimonial__header"><div class="cvr-testimonial__avatar">H.S</div><div class="cvr-testimonial__meta"><span class="cvr-testimonial__name">H.Sさん（42歳）</span> <span class="cvr-testimonial__role">1級土木施工管理技士</span></div><div class="cvr-testimonial__stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span></div></div><p class="cvr-testimonial__text">土木施工管理に強く、<strong>同じ1級でも年収200万円以上差</strong>があると知れました。インフラ系の好条件企業を紹介してもらえました。</p></div><div class="cvr-testimonial"><div class="cvr-testimonial__header"><div class="cvr-testimonial__avatar">M.K</div><div class="cvr-testimonial__meta"><span class="cvr-testimonial__name">M.Kさん（31歳）</span> <span class="cvr-testimonial__role">2級土木施工管理技士</span></div><div class="cvr-testimonial__stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span></div></div><p class="cvr-testimonial__text">2級土木でも経験を活かせる求人が豊富で、<strong>残業が少なく年収も上がる</strong>企業に転職できました。</p></div><div class="cvr-testimonial"><div class="cvr-testimonial__header"><div class="cvr-testimonial__avatar">S.N</div><div class="cvr-testimonial__meta"><span class="cvr-testimonial__name">S.Nさん（36歳）</span> <span class="cvr-testimonial__role">1級電気施工管理技士</span></div><div class="cvr-testimonial__stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span></div></div><p class="cvr-testimonial__text">電気施工管理に特化しているので、<strong>1級の監理経験を評価</strong>してくれる企業に出会え、年収120万円アップしました。</p></div><div class="cvr-testimonial"><div class="cvr-testimonial__header"><div class="cvr-testimonial__avatar">Y.M</div><div class="cvr-testimonial__meta"><span class="cvr-testimonial__name">Y.Mさん（33歳）</span> <span class="cvr-testimonial__role">2級電気施工管理技士</span></div><div class="cvr-testimonial__stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span></div></div><p class="cvr-testimonial__text">2級電気施工管理でも、設備系の非公開求人を多数紹介してもらい、<strong>ワークライフバランスと年収</strong>を両立できました。</p></div></div>
 

@@ -1,0 +1,129 @@
+{
+  "_note": "表示イメージ確認用の仮データ。実在の求人ではない。thanks-job-previews-sekoukanri.json（thanks-v2 の求人プレビュー）と同じ職種・年収レンジから抜粋し、LP→thanks で見せる条件が食い違わないようにしている。年収は相場+訴求レンジ（オーナー指示 2026-08-31 と同じ流儀）であり相場の実測値ではない。実フィードに差し替えるときは is_sample を false にし、source を実際の出所にする。JobPosting構造化データはこのデータのままでは出さないこと（架空求人の構造化データはスパム扱いになる）。",
+  "generated_at": "2026-09-04",
+  "is_sample": true,
+  "salary_basis": "thanks-v2 の求人プレビューと同じ訴求レンジ（相場の実測値ではない）",
+  "note_text": "条件は一例。あなたに合う求人は登録後にLINEでお送りします",
+  "source": "公開求人サイトの相場調査（2026-08 時点）にもとづくサンプル",
+  "job_family": "denkisekou",
+  "jobs": [
+    {
+      "id": "ds-001",
+      "title": "再エネEPC 電気施工管理（1級）",
+      "pref": "東京都",
+      "region": "関東",
+      "salary_min": 720,
+      "salary_max": 950,
+      "tags": [
+        "非公開",
+        "年収交渉代行"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-002",
+      "title": "オフィスビル新築 電気施工管理",
+      "pref": "東京都",
+      "region": "関東",
+      "salary_min": 580,
+      "salary_max": 760,
+      "tags": [
+        "非公開",
+        "賞与2回"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-003",
+      "title": "物流ターミナル 新設工事監督",
+      "pref": "福岡県",
+      "region": "九州",
+      "salary_min": 660,
+      "salary_max": 850,
+      "tags": [
+        "土日祝休み",
+        "1級必須"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-004",
+      "title": "病院設備 電気工事管理",
+      "pref": "神奈川県",
+      "region": "関東",
+      "salary_min": 570,
+      "salary_max": 740,
+      "tags": [
+        "残業少なめ",
+        "退職金あり"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-005",
+      "title": "ビル設備管理（電気主任技術者候補）",
+      "pref": "大阪府",
+      "region": "近畿",
+      "salary_min": 470,
+      "salary_max": 650,
+      "tags": [
+        "資格手当",
+        "長期安定",
+        "夜勤あり"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-006",
+      "title": "商業施設の電気工事（第一種）",
+      "pref": "京都府",
+      "region": "近畿",
+      "salary_min": 490,
+      "salary_max": 670,
+      "tags": [
+        "転勤なし",
+        "賞与年2回"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-007",
+      "title": "病院増築 電気工事管理",
+      "pref": "愛知県",
+      "region": "中部",
+      "salary_min": 680,
+      "salary_max": 880,
+      "tags": [
+        "長期案件",
+        "残業20h以下"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-008",
+      "title": "商業施設 設備改修 現場監督",
+      "pref": "兵庫県",
+      "region": "近畿",
+      "salary_min": 560,
+      "salary_max": 720,
+      "tags": [
+        "関西高待遇",
+        "資格手当"
+      ],
+      "is_public": true
+    },
+    {
+      "id": "ds-009",
+      "title": "データセンター新設 電気工事",
+      "pref": "三重県",
+      "region": "中部",
+      "salary_min": 530,
+      "salary_max": 730,
+      "tags": [
+        "非公開",
+        "現場手当"
+      ],
+      "is_public": true
+    }
+  ]
+}
