@@ -1020,3 +1020,7 @@ body {
   z-index: 3;
   pointer-events: none;
 }
+
+/* 会社概要ブロックはフォーム中は出さない（全幅）。CTA直下に会社情報が並ぶとステップの続きに見えて邪魔
+   （2026-09-04 オーナー指摘・施工管理LPと構造を揃える）。FVでは表示、同意文の導線は step06 の .cvr-pp-text が担保 */
+body.lp-form-step .cvr-about { display: none; }

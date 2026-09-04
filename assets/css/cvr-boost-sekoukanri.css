@@ -841,6 +841,9 @@ body.lp-form-step .cvr-floating-cta {
 
 body.lp-form-step .cvr-testimonials,
   body.lp-form-step .cvr-faq { display: none; }
+/* 会社概要ブロックもフォーム中は出さない（CTA直下に会社情報が並ぶとステップの続きに見えて邪魔。
+   2026-09-04 オーナー指摘。FVでは表示、同意文の導線は step06 の .cvr-pp-text が担保） */
+body.lp-form-step .cvr-about { display: none; }
 
 body.lp-form-step .js-page-body { padding-bottom: 12px; }
 
