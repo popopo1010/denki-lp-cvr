@@ -71,6 +71,7 @@
 | `e2e-lp-flow-local.mjs` | 実ブラウザでフォームを最後まで通す＋DOM差し替え/遅延ステップ失敗/load前クリックからの復旧 |
 | `audit-mobile-ux.mjs` | **手動**。6機種×LP×全ステップの実測（横スクロール・タップ領域44px・入力欄16px・FV内CTA）。CIには入れない（遅い） |
 
+- **【失敗メモ 2026-09-04・必ず読む】**（詳細と再発防止は `docs/qa-2026-09-04.md` 5章）①**STG デプロイが rsync 前の SSH タイムアウトで落ちる**ことがある（#520・#526。5回×45秒で回復せず）。**落ちた run の STG は旧版のまま**なので、オーナーに実機確認を頼む前に、そのコミットの run が `Verify staging deployment` まで success かを必ず見る。再実行 API（rerun / workflow_dispatch）はこの連携では 403 なので、再送は実コミット（メモ追記など）を積んで `staging` を更新する。②**`html{scroll-behavior:smooth}` のページでは `scrollTo` 直後に位置を読む計測は全部ウソ**（ナッジ本体 2026-08-29 と同じ罠をテスト側でも踏んだ。E2E の押し下げは `behavior:"instant"`）。③**レイアウトを詰めたら、スクロール余地に依存するテストが空振りで緑にならないかを見る**（step06 の 120px を詰めたら、キーボード競合の E2E がナッジ無効でも通る状態になっていた。`keyboardRace` は余白を足して再現条件を固定）。④`check-denkikouji-release.mjs` は ci.yml だけで走る（deploy.yml・release-pre-check には無い）。コピーの必須文言を変えたらここも更新する。
 - 実行タイミング: 静的チェックは 作業ブランチ・PR = `.github/workflows/ci.yml`、`main`/`staging` = `deploy.yml`、手元一括 = `scripts/release-pre-check.sh` の3箇所で走る。**`e2e-lp-flow-local.mjs`（実ブラウザ）だけは `ci.yml` と手元のみ**——Playwrightの導入でデプロイが数分延びるため deploy には入れない。つまり**mainへ直接pushするとE2Eを通らない**ので、必ず作業ブランチ経由で出す。
 - **`?v=` を上げたら `node scripts/check-asset-versions.mjs --update` で `scripts/asset-versions.json` を更新する。**
 - ローカルE2EはWPテーマCSSを持たないので**見た目の崩れは検出できない**。表示に関わる変更のSTG実機確認は今までどおり必須。
