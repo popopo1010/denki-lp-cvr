@@ -439,9 +439,9 @@ for (const [canonical, mirrors] of MIRRORS) {
     check("theme-lp.css が現在の theme-snapshot.css から生成されている（node scripts/build-theme-lp-css.mjs）",
       !!m && m[1] === snapHash, m ? `生成元 ${m[1]} ≠ 現在 ${snapHash}` : "theme-lp.css が無い/バナー欠落");
     const MAIN_LPS = ["denkikouji/index.html", "sekoukanri/index.html", "sekoukanri-kentiku/index.html",
-      "sekoukanri-doboku/index.html", "sekoukanri-denkisekou/index.html"];
+      "sekoukanri-doboku/index.html", "sekoukanri-denkisekou/index.html", "denkisekou/index.html"];
     const heavy = MAIN_LPS.filter((p) => !/theme-lp\.css\?v/.test(read(p)));
-    check("主力LP(5本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
+    check("主力LP(6本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
       heavy.length === 0, heavy.join(", "));
   }
 

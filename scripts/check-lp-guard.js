@@ -13,6 +13,7 @@ const patternPages = {
     "sekoukanri-kentiku/index.html",
     "sekoukanri-doboku/index.html",
     "sekoukanri-denkisekou/index.html",
+    "denkisekou/index.html",
     "thanks/index.html",
     "privacypolicy/index.html"
   ],
@@ -43,6 +44,7 @@ const formPages = [
   "sekoukanri-kentiku/index.html",
   "sekoukanri-doboku/index.html",
   "sekoukanri-denkisekou/index.html",
+  "denkisekou/index.html",
   "nenshu-shindan/sekoukanri/index.html",
   "nenshu-shindan/sekoukanri-kentiku/index.html",
   "nenshu-shindan/sekoukanri-doboku/index.html",
