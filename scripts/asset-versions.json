@@ -63,6 +63,10 @@
     "version": "57",
     "sha256": "856e87fd72f8d0e6"
   },
+  "assets/css/theme-lp.css": {
+    "version": "20260904a",
+    "sha256": "4f8fdcc4b1d8e6ca"
+  },
   "assets/css/theme-snapshot.css": {
     "version": "20260708a",
     "sha256": "5e87015a08e9a2f7"

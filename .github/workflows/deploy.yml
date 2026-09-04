@@ -134,6 +134,7 @@ jobs:
           for f in \
             assets/css/cvr-boost.css \
             assets/css/theme-snapshot.css \
+            assets/css/theme-lp.css \
             assets/css/cvr-boost-denkikouji.css \
             assets/css/cvr-boost-denkikouji-rich.css \
             assets/css/cvr-boost-sekoukanri.css \
@@ -403,7 +404,14 @@ jobs:
           done < /tmp/lpdirs.txt
           # HTMLから読む資産（JS/JSON）が取れないと、ページは出るのに中身だけ
           # 消える。求人カードがまさにこれ（取得失敗時はセクションごと隠す設計）。
-          echo "--- 求人カードの資産 ---"
+          # 軽量化の前提（gzip/brotli・immutable）が本当に効いているかを毎回出す（2026-09-04）。
+          # .htaccess の IfModule が効いていない環境だと、minify しても転送量は減らない。
+          echo "--- 圧縮・キャッシュヘッダ（主力LPの読み込みチェーン） ---"
+          for a in denkikouji/ assets/css/theme-lp.css?v20260904a assets/css/cvr-boost-denkikouji.css?v20260829d assets/js/app.js?v20260830b denkikouji/steps-lazy.html?v20260712; do
+            printf '  %s\n    %s\n' "$a" \
+              "$(curl -sIL -H 'Accept-Encoding: gzip, br' "${DEPLOY_URL_BASE}/${a}" | grep -iE '^(content-encoding|cache-control|content-length):' | tr -d '\r' | tr '\n' ' ')"
+          done
+          echo "--- 求人カードの資産 ---
           for a in assets/js/lp-job-cards.js assets/data/lp-job-cards-denki.json; do
             printf '  %s  %s\n' \
               "$(curl -sL -o /dev/null -w '%{http_code} %{content_type}' "${DEPLOY_URL_BASE}/${a}")" "$a"
@@ -481,7 +489,7 @@ jobs:
             denki_lp=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji/")
             echo "$denki_lp" | grep -q 'app.js?v20260830b' || return 1
             echo "$denki_lp" | grep -q 'cvr-boost-denkikouji.css?v20260829d' || return 1
-            echo "$denki_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
+            echo "$denki_lp" | grep -q 'theme-lp.css?v20260904a' || return 1
             echo "$denki_lp" | grep -q '全5ステップ' || return 1
             app_js=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/js/app.js")
             echo "$app_js" | grep -q 'thanks-v2' || return 1
@@ -496,7 +504,7 @@ jobs:
             css=$(curl -s "https://denkilp.builders-job.com/denki-lp-cvr/assets/css/cvr-boost-sekoukanri.css")
             echo "$css" | grep -q 'is-step-active' || return 1
             echo "$sekou_lp" | grep -q 'cvr-boost-sekoukanri.css?v20260829d' || return 1
-            echo "$sekou_lp" | grep -q 'theme-snapshot.css?v20260708a' || return 1
+            echo "$sekou_lp" | grep -q 'theme-lp.css?v20260904a' || return 1
             echo "$sekou_lp" | grep -q 'app.js?v20260830b' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
             echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260701c' || return 1

@@ -77,6 +77,8 @@ jobs:
       - name: 生成・同期スクリプトを実行
         run: |
           set -euo pipefail
+          npm i --no-save --no-audit --no-fund purgecss@7.0.2
+          node scripts/build-theme-lp-css.mjs
           node scripts/sync-lp-canonical-urls.mjs
           node scripts/generate-wp-redirects-fragment.mjs
           node scripts/build-thanks-v2-deferred.mjs

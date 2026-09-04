@@ -13,6 +13,7 @@
  *   dk_lp/denkikouji/assets/js/main.js
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join, resolve, dirname } from "node:path";
 
@@ -426,6 +427,23 @@ for (const [canonical, mirrors] of MIRRORS) {
   }
   check("本番WPテーマCSSを直接読むHTMLが無い（theme-snapshot.css に統一）",
     liveTheme.length === 0, liveTheme.slice(0, 5).join(", "));
+
+  // 主力LPは theme-snapshot.css から「LPで使う規則だけ」を残した生成物 theme-lp.css を読む
+  // （2026-09-04 高速化: minify後 37KB→14KB、gzip 8KB→3.6KB。scripts/build-theme-lp-css.mjs）。
+  // 生成物の先頭バナーに生成元スナップショットのハッシュを埋めてあり、スナップショットだけ
+  // 更新して再生成を忘れると「テーマ変更が主力LPに届かない」ので、ここでズレを止める。
+  {
+    const themeLp = existsSync(join(ROOT, "assets/css/theme-lp.css")) ? read("assets/css/theme-lp.css") : "";
+    const snapHash = createHash("sha256").update(readFileSync(join(ROOT, "assets/css/theme-snapshot.css"))).digest("hex").slice(0, 16);
+    const m = themeLp.match(/theme-snapshot\.css@([0-9a-f]{16})/);
+    check("theme-lp.css が現在の theme-snapshot.css から生成されている（node scripts/build-theme-lp-css.mjs）",
+      !!m && m[1] === snapHash, m ? `生成元 ${m[1]} ≠ 現在 ${snapHash}` : "theme-lp.css が無い/バナー欠落");
+    const MAIN_LPS = ["denkikouji/index.html", "sekoukanri/index.html", "sekoukanri-kentiku/index.html",
+      "sekoukanri-doboku/index.html", "sekoukanri-denkisekou/index.html"];
+    const heavy = MAIN_LPS.filter((p) => !/theme-lp\.css\?v/.test(read(p)));
+    check("主力LP(5本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
+      heavy.length === 0, heavy.join(", "));
+  }
 
   // HTML側（クマのタップ等）にも block:"center" を残さない。中央寄せは上部を押し出す。
   for (const p of htmlFiles) {

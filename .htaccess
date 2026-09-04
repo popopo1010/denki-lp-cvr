@@ -26,6 +26,13 @@
   <FilesMatch "\.(js|css)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
+  # 遅延ステップ steps-lazy.html は HTML だが「JSが ?v= 付きで fetch するアセット」であり、
+  # ?v= は check-asset-versions.mjs の台帳で中身のハッシュと突き合わせている。
+  # 上の .html no-cache のままだと再訪ごとに再検証（往復1回・~4KB）になるため
+  # JS/CSS と同じ長期キャッシュにする（2026-09-04 高速化）。後勝ちなので上の .html より後に置く。
+  <FilesMatch "^steps-lazy\.html$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
 </IfModule>
 
 # テキスト系の圧縮配信（2026-08-19 軽量化）
