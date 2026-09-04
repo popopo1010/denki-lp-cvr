@@ -1414,6 +1414,13 @@ body {
    ───────────────────────────────────────────────────────────── */
 .c-select-box select { font-size: 16px; }
 
+/* step04 の都道府県/市区町村 select は inline の -webkit-appearance:menulist で OS 標準の矢印（iOS17 は「⌃⌄」）を出す。
+   テーマの .c-select-box::after（赤▼・right:24px）が残っていて二重に見え、位置もズレて重なっていた
+   （2026-09-04 オーナー実機指摘）。標準の矢印に統一し、テーマ側の擬似要素を消す */
+#step04 .c-select-box::after,
+#step04 .c-select-box::before { display: none; }
+
+
 /* タップ領域（WCAG 2.5.8=24px / Apple HIG=44px）。
    フッターの規約リンクは行の高さが 13px しかなく押し分けられないので 44px に広げる。
    step06 の同意文リンクは送信CTAの真横にあり、44px まで広げると誤タップ離脱が増える。

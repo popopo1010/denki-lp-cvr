@@ -540,6 +540,12 @@ async function keyboardRace(page) {
         return { skip: true, why: "見出しが入力欄より下（この指標が成立しない構成）" };
       }
       const headOf = () => Math.round(headEl.getBoundingClientRect().top);
+      // 「入力欄を最上部へ」の再現はページに下方向のスクロール余地が要る。step06 の下余白を詰めた
+      // （2026-09-04）ら文書が短くなり、押し下げが 73px で頭打ち＝見出しが 7px（BAR 12px − MIN_MOVE 8px の
+      // 不感帯）に残って「戻らない」と誤判定した上、ナッジを無効にしても同じ 7px になる＝退行を検知できなく
+      // なっていた。実機はキーボード分だけ必ず余地があるので、ここでも余白を足して再現条件を固定する。
+      const prevPad = document.body.style.paddingBottom;
+      document.body.style.paddingBottom = "800px";
       const before = headOf();
       input.focus({ preventScroll: true });
       input.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
@@ -552,7 +558,9 @@ async function keyboardRace(page) {
       const vvh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
       // 入力欄をキーボード上に残す制約に当たっているか（＝これ以上戻せない）
       const clamped = Math.round(ir.bottom) >= Math.round(vvh - 8) - 16;
-      return { before, pushed, head: headOf(), clamped, gained: headOf() - pushed };
+      const result = { before, pushed, head: headOf(), clamped, gained: headOf() - pushed };
+      document.body.style.paddingBottom = prevPad;
+      return result;
   });
 }
 
