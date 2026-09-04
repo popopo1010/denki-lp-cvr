@@ -32,6 +32,16 @@
 得られるもの: 東京/大阪エッジでの TLS 終端・HTTP/3・brotli、`?v=` 付きアセット（immutable）のエッジ配信。
 HTML は origin の `no-cache` をそのまま尊重するので**エッジには乗らない**（＝古いHTML事故は起きない）。
 
+### 1-0. 切替前に Xserver 側を確認する（ここを飛ばすと切替の瞬間に全ページ 403 になり得る）
+
+- Xserver サーバーパネル → **WAF設定 / 国外IPアクセス制限 / IPアクセス制限** を見る。Cloudflare 経由の
+  origin への接続元は Cloudflare のエッジ IP（日本以外のこともある）になるため、サイト全体や
+  `/denki-lp-cvr/` に国外IP制限が掛かっていると、切替直後から**広告の着地も PSI も Cloudflare 越しで 403** になる
+  （手順書「サイトが403になったとき」の PSI 403 と同じ仕組み）。掛かっていたら切替前に OFF にし、
+  必要なら Cloudflare 側の WAF（`/wp-login.php` を日本以外から遮断）へ移す。
+- WordPress セキュリティ設定（ダッシュボード・XML-RPC・REST API の国外IP制限）は管理画面ログインにだけ効く。
+  切替後にログインできなければここ。
+
 ### 1-1. Cloudflare 側
 
 1. Cloudflare にサイト `builders-job.com` を追加（Free）。DNS レコードは自動インポートされる。
@@ -110,6 +120,21 @@ HTML は origin の `no-cache` をそのまま尊重するので**エッジに�
 - 段階2の Cache Rule を無効化すれば、HTML は即 origin 尊重（no-cache）に戻る。パージ不要。
 
 ---
+
+## 広告媒体（Meta / Google）の観点で守ること
+
+ドメイン・URL・HTML の中身は変わらないので、品質スコア（Google）・ドメイン認証とピクセルの学習（Meta）・
+検索評価はそのまま引き継がれる。崩れるのは次の3つだけなので、ここだけ守る。
+
+| 守ること | 理由 | どこで |
+|---|---|---|
+| **審査クローラーを弾かない**（Bot Fight Mode OFF / Under Attack OFF / Security Level Medium 以下 / WAF に「Verified Bots を許可」） | Google の AdsBot・Meta の facebookexternalhit がチャレンジで止まると「リンク先が機能していない」＝広告不承認・配信停止・品質スコア低下 | 段階1 の 1-1 |
+| **DNS の TXT を1件も落とさない**（Meta ドメイン認証・Google サイト確認・Search Console・SPF/DKIM/DMARC） | 落ちると Meta のドメイン認証が外れて配信設定が触れなくなる、メールが届かなくなる | 段階1 の DNS 突合 |
+| **`?utm_*` `?gclid` `?fbclid` `?dk_test=1` 付きでも同じ HTML が返る**（段階2 の Ignore Query String はそのために入れる。LP は query を JS で読むだけ） | 媒体の計測パラメータで別キャッシュ・別内容にならない。`dk_test=1` の本番テスト判定も JS 側なので影響なし | 段階2 |
+
+さらに、媒体が見る「ランディングページの速度」は実ユーザーの計測（CrUX）なので、TTFB が下がれば
+Google 広告の「ランディングページの利便性」には良い方向にしか働かない。STG（`-stg/`）は noindex を維持し、
+**広告のリンク先には絶対に使わない**（既存ルールどおり）。
 
 ## やらないこと・注意
 
