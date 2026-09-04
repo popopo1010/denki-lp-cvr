@@ -550,8 +550,11 @@ async function keyboardRace(page) {
       input.focus({ preventScroll: true });
       input.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
       await new Promise((r) => setTimeout(r, 500));
-      // ブラウザ主導の「入力欄を可視ビューポート最上部へ」を再現
-      window.scrollTo(0, window.scrollY + input.getBoundingClientRect().top - 4);
+      // ブラウザ主導の「入力欄を可視ビューポート最上部へ」を再現。
+      // instant で動かす: 全LPの html{scroll-behavior:smooth} 下で scrollTo(0,y) はアニメーションになり、
+      // 直後に読む pushed が「押し下げ前」の値になって gained が負になる（2026-09-04 CI: sekoukanri-v2 が
+      // 入力欄の制約で 9px まで戻した正常動作を「戻らない」と誤判定した）。
+      window.scrollTo({ top: window.scrollY + input.getBoundingClientRect().top - 4, left: 0, behavior: "instant" });
       const pushed = headOf();
       await new Promise((r) => setTimeout(r, 1600));
       const ir = input.getBoundingClientRect();
