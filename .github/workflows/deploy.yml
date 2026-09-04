@@ -25,6 +25,9 @@ jobs:
       XSERVER_PORT: ${{ secrets.XSERVER_PORT }}
       XSERVER_USER: ${{ secrets.XSERVER_USER }}
       XSERVER_DEPLOY_PATH: ${{ secrets.XSERVER_DEPLOY_PATH }}
+      # Cloudflare 導入後だけ設定する（docs/cloudflare-setup.md）。未設定なら purge ステップは何もしない
+      CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -360,6 +363,10 @@ jobs:
           find . -type f -name '*.md' -print -delete
           echo "後始末おわり"
           REMOTE
+
+      - name: Purge Cloudflare edge cache (Cloudflare 導入後のみ・HTML/JSON)
+        if: env.CF_ZONE_ID != ''
+        run: bash scripts/cloudflare-purge.sh "${DEPLOY_URL_BASE}"
 
       - name: Apply WP legacy redirects (.htaccess)
         if: github.ref_name != 'staging'

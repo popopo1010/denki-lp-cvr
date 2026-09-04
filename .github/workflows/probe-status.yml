@@ -22,7 +22,12 @@ jobs:
             "https://denkilp.builders-job.com/denki-lp-cvr-stg/denkikouji/" \
             "https://denkilp.builders-job.com/denki-lp-cvr-stg/assets/css/cvr-boost-denkikouji.css?v20260819a"; do
             code=$(curl -s -o /dev/null -w "%{http_code}" -A "$UA" --max-time 30 "$u")
-            echo "STATUS ${code:-ERR} $u"
+            # Cloudflare 導入の前後で見比べるヘッダ（server=cloudflare / cf-cache-status / 圧縮 / HTTP版）
+            hdr=$(curl -sI -A "$UA" -H 'Accept-Encoding: gzip, br' --max-time 30 "$u" \
+              | grep -iE '^(server|cf-cache-status|content-encoding|cache-control):' | tr -d '\r' | tr '\n' ' ')
+            ver=$(curl -s -o /dev/null -w "%{http_version}" -A "$UA" --max-time 30 "$u")
+            echo "STATUS ${code:-ERR} http/${ver} $u"
+            echo "        ${hdr}"
           done
           echo "done (always green: 判定はログのSTATUS行で行う)"
 
