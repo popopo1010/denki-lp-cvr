@@ -59,6 +59,7 @@
 
 | スクリプト | 守っているもの |
 |---|---|
+| `check-workflow-shell.py` | **ワークフロー内シェルの構文**（全 `run:` を `bash -n`）。2026-09-04 に deploy.yml の検証ステップで閉じ引用符が欠け、rsync 後の Verify だけ落ちた（STG #511）。Python の三重引用符でシェルを編集すると `"` を食いやすい。同時に `snapshot-theme-css.yml` の行末 `\\`（行継続にならず次行 `\|\|` が構文エラー＝差分が出た週だけPR作成が失敗する潜在バグ）も検出・修正済み |
 | `check-banned-copy.mjs` | 禁止コピー（「営業」系・ラベル接頭辞） |
 | `check-kuma-anchor.mjs` | クマの**初期位置**（CSS） |
 | `check-form-invariants.mjs` | **「全フォームLP」= `index.html` **または**隣の `steps-lazy.html` に `your-tel` があるページ（60本）**——`index.html` だけで判定すると入力欄を遅延側に置く主力2本(denkikouji/sekoukanri)を含む10本が漏れる（2026-08-23発覚）。／ クマの**移動配線**、スクロール/フォーカス5クラス、フォーム自己修復4クラス、ミラー一致（cvr-boost.js含む）、アプリ内ブラウザ余白(96pxのCSS **と** それを効かせる `body.lp-input-step` 付与の両方)、**キーボードナッジの多段補正(300/700/1200ms＋visualViewport resize。1回きりに戻すとiOSの再スクロールに負ける)**、ステップの初期非表示、生まれ年範囲の一致、`form_step` の二重push禁止（リポジトリ内の cvr-boost.js を全数走査）、テーマCSSの出所、予約先読みの範囲 |
