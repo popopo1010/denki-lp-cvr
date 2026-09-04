@@ -263,7 +263,7 @@ body.lp-form-step .cvr-floating-cta {
   font-weight: 600; font-size: 11px; line-height: 15px;
   z-index: 2; pointer-events: none;
 }
-.cvr-tel-reassurance { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 8px; font-size: 10px; color: #94a3b8; padding-right: 52px; /* 追従クマ(右下)と重ならない余白 */ }
+.cvr-tel-reassurance { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 8px; font-size: 10px; color: #94a3b8; padding: 0 12px; /* 追従クマ(右下)と重ならない余白 */ }
 .cvr-tel-reassurance svg { flex-shrink: 0; }
 
 /* ===== PP同意テキスト ===== */
@@ -813,6 +813,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     font-weight: 600;
     line-height: 1.4;
   }
+  /* step06 のクマは入力欄の右端の内側に置く（app.js の inline bottom:-30px は安心文に被さり、安心文側を
+     padding-right:52px で逃がすと中央からズレて見えた＝2026-09-04 本番・オーナー指摘）。入力欄は左詰めで
+     右端は空くので被らない。11桁入力後は moveIconById が CTA へ移すため、この規則は入力欄の中にいる間だけ効く */
+  body.lp-input-step #step06 .p-step07__tel > .cvr-kuma { right: 6px !important; bottom: 4px !important; }
   body.lp-input-step #step06 .cvr-tel-reassurance {
     margin: 6px 0 0;
     font-size: 10px;
