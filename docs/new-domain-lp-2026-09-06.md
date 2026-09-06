@@ -1,48 +1,67 @@
-# 新ドメイン向け電気工事士LP（参考: denko-mirai.com/lp01）— 着手前メモ（2026-09-06）
+# 新ドメイン向け電気工事士LP `denkikouji-nd/`（参考: denko-mirai.com/lp01）— 2026-09-06
 
 依頼: 「新規ドメインで、https://denko-mirai.com/lp01（デンコウミライエージェントのFB広告LP）を参考に、いまのLPをアップデートしてほしい」
 
-現在地: **①設計メモのみブランチに push 済み。HTML/CSS/JS は未着手。PR未作成・STG未反映・本番は旧版のまま。**
+現在地: **①作業ブランチ `claude/new-domain-lp-update-kvb1tw` に push 済み → STG 反映（`staging` ブランチ）→ PR 未作成 → main 未マージ → 本番はまだ旧版のまま。**
+本番 `denkikouji/` は触っていない（新ディレクトリ `denkikouji-nd/` を追加）。**新ドメイン名は未指定**のため、canonical / og:url / デプロイ先は現行ドメイン配下（`/denki-lp-cvr/denkikouji-nd/`）のまま。ドメインが決まったら §4 の残作業を行う。
 
-## 0. 止まっている理由（オーナーに必要なインプット）
+## 1. 参考LPの採取結果（denko-mirai.com/lp01 = テンプレ `0037`）
 
-| # | 足りないもの | 何が困るか | もらい方 |
-|---|---|---|---|
-| 1 | **参考LPの中身** | 作業環境のネットワークポリシーで `denko-mirai.com` / `denko.mirai-agent.jp` / archive.org / 各種ミラー / Octoparse（未認証）がすべて遮断され、1バイトも読めない。Slack・Notion・Drive・Gmail にも共有なし。見えないものを「参考に」すると、構成もコピーも想像で作ることになる | スマホでページ全体のスクショ（FV〜フッターまで数枚）を Slack に貼る、または PC で「ページのソースを保存」した HTML をリポジトリの `docs/assets/` か Slack に置く。**どのセクション／訴求を取り入れたいか**（例: FVの見せ方・求人条件の出し方・フォームの質問数）を一言添えてもらえると精度が上がる |
-| 2 | **新ドメイン名とホスティング** | canonical / og:url / thanks への遷移先 / デプロイ先 / GTM・Meta のドメイン設定がすべてこれで決まる | ドメイン名（例: `example.com`）と、置き場所（a. 同じ Xserver アカウントの別ドメイン、b. 別サーバー、c. 旧ドメインのサブディレクトリではない）。Xserver なら新ドメインのドキュメントルートのパス |
-| 3 | 送客媒体と計測 | FB(Meta) CPM 前提なら、Meta のドメイン認証・イベント設定を新ドメインでやり直す必要がある。GTM を同じコンテナで使うか | 「Meta のみ」「Google も」／GTM は既存 `GTM-KV525PZ` を使うか新コンテナか |
-| 4 | thanks の扱い | 新ドメインに `thanks-v2` も置くか、旧ドメインの `thanks-v2` へ飛ばすか（後者は CV 計測がクロスドメインになる） | どちらか |
+作業環境のネットワークポリシーで最初は遮断されていたが、オーナーが `denko-mirai.com` を許可 → 本体HTML/JS/画像は取得できた（`api.mirai-agent.jp` / `static.mirai-agent.jp` は遮断のままなので、選択肢の API 応答だけスタブして描画）。Chromium は TLS で切られるため、取得した HTML/JS/画像をローカルにミラーして描画した。スクショは `docs/assets/ref-denko-mirai-lp01/`。
 
-参考LPについて検索エンジンのスニペットから分かったのは「デンコウミライエージェント（本体サイト `denko.mirai-agent.jp`）の広告用LP」「電気系技術者向け・待遇/福利厚生・教育制度を訴求」程度で、ページ構成・フォーム・数字は不明。
+| 位置 | 参考LPの中身 |
+|---|---|
+| ヘッダー | ロゴ｜「ご利用者様数 年間230,000人 ※2025年1月〜12月実績」バッジ｜厚生労働大臣許可番号（白背景） |
+| FV | 写真ヒーロー「電気工事士専門 人気の非公開求人をご紹介！」＋3チップ（年休120日の高収入求人／急募中の好条件企業／かんたん30秒で完了） |
+| FV直下 | 求人カード3枚（【未経験歓迎】電気工事スタッフ／【若手活躍中】電気工事士／【経験者優遇】電気工事士：タグ3つ・写真・年収レンジ・説明文）。**その上にモーダル**「電気工事士で転職なら！」＋「工事関連の経験はありますか？ いいえ／はい」の2択（背景は暗転） |
+| STEP1〜7 | STEP ラベル＋トラック線＋クマがトラック上を進む進捗。①ご経験（6択・アイコン）②お持ちの資格（6択・イラスト）③いつ頃の求人（1/3/6/12ヶ月以内・いつでも。「急募多数」リボン）④ご希望の働き方（「年間休日120日以上／月収50万円以上の求人」見出し＋雇用形態4択・「オススメ」リボン）⑤郵便番号（「公開されません」鍵付き・「わからない場合はコチラ」で都道府県/市区町村 select）＋**「保有求人の一例」横スクロール8枚**⑥「対象住所付近の最新求人数：N件」＋お名前＋生まれ年（クマ吹き出し「給与情報などがより正確にわかります」）⑦「ご入力いただいた情報に当てはまる求人数：N件」＋携帯電話＋**オレンジ2行CTA「利用規約に同意の上／求人を探しにいく！」**（無効時は薄色）＋クマ吹き出し「◯◯様のお住まいの都道府県ではさらに多くの求人を保有しています」 |
+| フッター | 黄色帯「YYYY/M/D 最新求人更新」／利用規約・会社概要・個人情報保護方針／© |
+| 実装 | Next.js（Vercel）。選択肢・求人件数・住所は `api.mirai-agent.jp` から取得。画像は `/static/images/sp/entry/tp/0037/…` |
 
-## 1. 新ドメインで動かすときに外す必要がある旧ドメイン依存（棚卸し済み）
+## 2. `denkikouji-nd/` に取り入れたもの／見送ったもの
 
-対象は主力 `denkikouji/index.html` + `steps-lazy.html` + `assets/js/app.js` のスタック。**旧ドメイン `denkilp.builders-job.com` が消えても／新ドメイン単体でも壊れないこと**を目標にする。
+ベースは本番 `denkikouji/`（フォームの質問・データ項目・GAS/Zoho 連携は不変。`__LP_ID="denkikouji-nd"` で Slack/シート/Zoho の LP 列に出る）。差分は `assets/css/cvr-boost-denkikouji-nd.css`（denkikouji の CSS の後に読む上書き）と HTML の構造だけ。
 
-| 依存 | 現状 | 新ドメインでの対処 |
+| 参考LPの要素 | 対応 | 備考 |
 |---|---|---|
-| canonical / `og:url` | 旧ドメイン固定。`scripts/sync-lp-canonical-urls.mjs` が `ORIGIN` 定数で毎デプロイ上書きする | 新LPディレクトリを `SKIP_DIR_RE` に足すか、`ORIGIN` をディレクトリ別に持てるようにする（そうしないとデプロイのたび旧ドメインに戻る） |
-| `og:image` | 旧ドメインの WP テーマ `assets/ogp/ogp.jpg`（リポジトリ内に無い） | 画像を `assets/img/` に持ち込み、新ドメインの絶対URLで指す |
-| FV画像PC版・2択アイコン・資格アイコン・step03 アイコン・クマ `follower_icon.svg` | **19ファイルが旧ドメインの WP テーマから配信**（`wp-content/themes/original-thema/assets/img/…`）。同名ファイルは `自前LP/assets/img/` に全部ある | `assets/img/` へコピーして `../assets/img/…` の相対参照に切替（`check-local-refs.mjs` が参照切れを見張る） |
-| `/privacypolicy` `/terms` の root-relative リンク（index 2箇所 + steps-lazy 1箇所ずつ） | `privacypolicy/` はリポジトリにあるが、**`/terms` は WP 側のページでリポジトリに無い** → 新ドメインでは 404 | 利用規約ページを静的に用意する（`terms/index.html` 新規）か、旧ドメインの絶対URLへ。step06 の同意文リンクは CVR 直結なので 404 は不可 |
-| `../service/denkikouji/` | 相対。`service/` はデプロイ対象 | そのままで可 |
-| `app.js` の `THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/"` | **root-relative**。新ドメインが `/denki-lp-cvr/` 配下でなければ送信後に 404 | `thanks-v2` を新ドメインにも置くなら、`location.pathname` から `<LP dir>/../thanks-v2/` を組み立てる相対解決に変える（`nenshu-shindan-v2` は既に相対解決している。同じ書き方）。旧ドメインの thanks へ飛ばすなら絶対URL＋クロスドメイン計測の設定 |
-| `app.js` / GAS の STG 判定 `"/denki-lp-cvr-stg/"` | パス文字列依存（`app.js` 1255行・`gas-recorder/コード.js` 712行・`zoho.js` 283行） | 新ドメインの STG をどう作るかに合わせて判定を追加（STG が無いなら本番テストは `?dk_test=1` 運用で足りる） |
-| GTM `GTM-KV525PZ` | 全211箇所同一 | タグ自体は新ドメインでも動く。GTM 側でホスト名条件のトリガー／CV があれば追加。**Meta のドメイン認証・イベント優先度は新ドメインで別途必要** |
-| GAS / Zapier / Slack / Zoho | `_page`=送信時URL、`_lp`=`window.__LP_ID` で分岐。ホスト名は見ていない | 新LPに固有の `__LP_ID`（例 `denkikouji-nd`）を与えれば、シート／Slack／Zoho の LP 列にそのまま出る。GAS の変更は不要 |
-| デプロイ（`deploy.yml`） | rsync 先は `XSERVER_DEPLOY_PATH` の1本（main=本番 / staging=STG） | 同じ Xserver なら Secret `XSERVER_DEPLOY_PATH_<新ドメイン>` を足して転送ステップを1つ増やす。別サーバーなら別ワークフロー。`.htaccess`（HTML no-cache / JS·CSS immutable / gzip）はディレクトリごと同梱されるので新ドメインでも効く |
-| `deploy/wp-legacy-url-map.json` の 301 | 旧 WP URL → 静的LP | 新ドメインには不要 |
-| `theme-lp.css` / `cvr-boost-denkikouji.css` / `app.js` / `lp-job-cards.js` | すべて相対参照・旧ドメイン依存ゼロ（`?v=` 管理） | そのまま共有できる。**CSS/JS を新LP専用に変えるなら別ファイルにして主力LPを巻き込まない** |
-| 自動チェック | `check-form-invariants.mjs` は `your-tel` を持つページを自動で対象化、`check-local-refs` / `check-asset-versions` / `check-banned-copy` / `check-kuma-anchor` も自動 | 新ディレクトリを足すだけで番人が付く。`sync-lp-canonical-urls` だけ上記の例外登録が要る |
+| 白ヘッダー（ブランド｜利用者数バッジ｜許可番号） | **採用** | 数字は確認済みの「34,513人」。参考の「年間230,000人」等は転記しない |
+| ヒーロー下の3チップ | **採用**（ハローワーク非掲載の求人／完全無料・転職しなくてもOK／かんたん30秒で完了） | すべて既存の確認済み訴求。「年休120日」「急募」は当社実績が未確認なので使わない |
+| 質問＋2択を白カード（モーダル相当）に | **採用**（`.nd-card`。背景暗転はしない） | オーバーレイ型は 5クラスのスクロール事故と相性が悪いのでインラインのまま |
+| FV直下に求人カードが覗く | **採用**（FV のフルハイトをやめ、`lp-jobs` を CTA 直下 14px に） | 主力 `denkikouji/` は「初期画面はFVだけ」の方針。**この LP だけ**参考どおり覗かせる。データは既存の `lp-job-cards-denki.json`（`is_sample:true` の仮求人・要確認項目のまま） |
+| 求人カードの意匠（青枠・タグ・年収主役） | **採用**（CSSのみ。`lp-job-cards.js` は不変） | 写真・説明文はデータに無いので出さない |
+| STEP進捗のトラック線 | **採用**（ドットを線でつなぐ） | クマがトラック上を進む演出は見送り（クマは「次のCTAへ移動」が当社ルール） |
+| 選択肢のイラストカード | 既存のまま | denkikouji は既に 54px アイコン・2列で参考と同等 |
+| 郵便番号ステップの「保有求人の一例」横スクロール | **採用**（step04 都道府県で `lp-jobs` を横スクロール表示。`body:has(#step04.is-step-active)`） | 他のステップでは従来どおり非表示 |
+| 「対象住所付近の最新求人数：N件」 | **見送り** | 都道府県別の実数が無い（未確認の数字は出さない） |
+| 「急募多数」「オススメ」リボン | **見送り** | 根拠が無い |
+| オレンジ2行CTA「利用規約に同意の上／…」 | **採用**（`::before` で1行目を足し、無効時はグレーのまま） | 文言は既存「あなたに合う求人を見る」 |
+| 「◯◯様の…さらに多くの求人」吹き出し | **見送り** | 根拠が無い。既存の安心文（完全無料・職場に知られない）を維持 |
+| 7ステップ化（時期・働き方の追加） | **見送り** | 質問を増やすとデータ項目と Zoho 連携が変わる。現行5ステップ（意欲→資格→経験→都道府県→氏名/生年→携帯）のまま |
+| 黄色帯「最新求人更新 日付」 | **見送り** | 更新日の実体が無い |
 
-## 2. 進め方（インプットが揃ったら）
+ローカル確認（iPhone 13 相当）: `docs/assets/denkikouji-nd/`（fv / step01 / step04 / step06）。`e2e-lp-flow-local.mjs --lp /denkikouji-nd/` **19/19**、静的チェック全通過（form-invariants 133/133、asset-versions 整合、theme-lp.css ドリフトなし）。
 
-1. **ドメイン非依存版を先に作る**（参考LPの中身に依存しない）: `denkikouji/` を複製して新ディレクトリ（仮 `denkikouji-nd/`・`__LP_ID` 別）を作り、§1 の依存を全部外す。旧ドメインの STG（`git push -f origin <branch>:staging`）でスマホ実機（LINE/Instagram アプリ内ブラウザ含む）を通す。ここまでで「新ドメインに置けば動くLP」ができる。
-2. **参考LPの構成を反映する**: もらったスクショ／HTMLからセクション構成・訴求・フォーム設計を書き起こし、`LP作成リファレンス.md` §2.7 のファンダメンタルズチェックで当社ルール（禁止コピー「営業」「電話」予告／数字は要確認扱い／クマ移動・スクロール5クラス）に照らしてから HTML に落とす。数字・実績・社名は参考LPのものを**転記しない**（要確認項目）。
-3. **新ドメインの配信経路**: `deploy.yml` の転送先追加、canonical の例外、Meta ドメイン認証／GTM 設定。デプロイ後の Verify に新ドメインURLを足す。
-4. STG 実機 → PR → main（本番デプロイは main マージでのみ起動。明示の許可なくマージしない）。
+## 3. 旧ドメイン依存の解消（新ドメインに置いても壊れないように）
 
-## 3. やらないと決めたこと
+| 依存 | `denkikouji/`（現状） | `denkikouji-nd/` |
+|---|---|---|
+| WPテーマ配信の画像19件（FV PC版・2択アイコン・資格アイコン・step03アイコン・クマ） | 旧ドメインの `wp-content/themes/…` | `assets/img/` に同梱（`自前LP/assets/img` から複製）。`../assets/img/…` 参照 |
+| `/privacypolicy` | root-relative | `../privacypolicy/`（リポジトリ同梱） |
+| `/terms` | root-relative（WP側ページ・リポジトリに無い） | **旧ドメインの絶対URL** `https://denkilp.builders-job.com/terms`。静的な利用規約ページを用意できたら差し替える（残課題） |
+| thanks の遷移先 `app.js` の `THANKS_V2_PATH`（root-relative） | `/denki-lp-cvr/thanks-v2/` 固定 | `app.js` に `window.__THANKS_PATH` 上書きを追加し、`../thanks-v2/` を指定（同じ木の `thanks-v2/` へ相対で飛ぶ）。未設定のLPは従来どおり。**app.js は全ミラー同期＋ `?v20260906a` に全LP bump**（deploy.yml の期待値も更新） |
+| canonical / og:url | 旧ドメイン固定（`sync-lp-canonical-urls.mjs`） | 当面は `/denki-lp-cvr/denkikouji-nd/`。新ドメイン決定後に §4 |
+| og:image | WPテーマの `ogp.jpg` | `assets/img/first_banner0103.jpg`（絶対URLは当面旧ドメイン） |
 
-- 参考LPが見えない状態で「それっぽい」LPを作ること（想像で作ると、参考にした意味がなく、オーナー確認の往復が増える）。
-- 新ドメイン名が決まる前に canonical / thanks 先 / デプロイ先を仮置きすること（仮置きは `sync-lp-canonical-urls` に上書きされるか、本番に仮URLが出る）。
+## 4. 新ドメインが決まったらやること（残作業）
+
+1. **ドメイン名と置き場所**（同じ Xserver の別ドメインか／別サーバーか／ドキュメントルート）をもらう。
+2. `deploy.yml`: 新ドメイン向けの転送先 Secret と rsync ステップ追加（`.htaccess` は同梱されるのでそのまま効く）。同じ木を丸ごと置くなら `thanks-v2/` `privacypolicy/` `assets/` も一緒に届く。
+3. `sync-lp-canonical-urls.mjs`: `denkikouji-nd` の canonical / og:url を新ドメインにする（ディレクトリ別 ORIGIN か SKIP 登録）。og:image の絶対URLも同様。
+4. 利用規約: 静的 `terms/index.html` を用意するか、旧ドメインリンクのままにするかを決める。
+5. GTM `GTM-KV525PZ` はそのまま動く。**Meta のドメイン認証・イベント設定を新ドメインでやり直す**。STG判定はパス文字列（`/denki-lp-cvr-stg/`）なので、新ドメインで本番テストするときは `?dk_test=1` を付ける。
+6. GAS/Zoho は `_lp=denkikouji-nd` で分岐。追加設定なし（`_page` に新ドメインのURLが記録される）。
+
+## 5. 確認方法（マージ前）
+
+- STG: `https://denkilp.builders-job.com/denki-lp-cvr-stg/denkikouji-nd/` をスマホ実機（LINE/Instagram アプリ内ブラウザ含む）で、FV → 2択 → step01 → … → step06 → 送信（STGからの送信は無条件テスト扱い）まで。**クマが次のCTAへ移動すること**、step04 で求人例が横スクロールで出ること、step06 のCTAがオレンジ2行になること。
+- 同じ STG で主力 `denkikouji/` `sekoukanri/` も一度通す（app.js の版が上がっているため）。挙動は変えていない（`__THANKS_PATH` 未設定時は従来パス）。

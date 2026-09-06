@@ -140,7 +140,10 @@
   };
 
   const CVR_BOOST_VER = "20260823a"; // assets/js/cvr-boost.js のキャッシュキー（中身を変えたら必ず上げる）
-  const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
+  // thanks の遷移先。既定は本番の root-relative パス。新ドメイン等で /denki-lp-cvr/ 配下に
+  // 置かないLPは、HTML側で window.__THANKS_PATH="../thanks-v2/" のように相対で上書きできる
+  // （2026-09-06 新ドメイン向け denkikouji-nd）。未設定なら従来どおり。
+  const THANKS_V2_PATH = (typeof window.__THANKS_PATH === "string" && window.__THANKS_PATH) || "/denki-lp-cvr/thanks-v2/";
   const NENSHU_THANKS_V1_PATH = "/denki-lp-cvr/nenshu-shindan/thanks/";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
   // 送信時のテスト判定を thanks 側へ引き継ぐキー（thanks-v2-shared.js が読む）
