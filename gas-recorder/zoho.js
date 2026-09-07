@@ -387,6 +387,25 @@ function zohoMarketingChannel(params) {
   return out.length > 250 ? out.slice(0, 250) : out; // text項目の上限対策
 }
 
+// 商談名は Zoho 側の上限が 120 文字。
+// 施工管理LPの step01 は資格の複数選択で、たくさん選ぶと「氏名/資格A, 資格B, …」が
+// 120 文字を超えて Zoho が INVALID_DATA(maximum_length:120) で商談作成ごと拒否する
+// （2026-09-07 本番で発生。Slack・シートには残るが商談だけ作られない）。
+// 収まらないときは先頭の資格だけ残し「ほかN件」と付ける。資格の全量は shikaku / lp_info に入る。
+var ZOHO_DEAL_NAME_MAX = 120;
+function zohoBuildDealName(name, license) {
+  var base = String(name || "") + "/";
+  var full = base + String(license || "");
+  if (full.length <= ZOHO_DEAL_NAME_MAX) return full;
+  var parts = String(license || "").split(",").map(function (v) { return v.trim(); })
+    .filter(function (v) { return !!v; });
+  for (var keep = parts.length - 1; keep >= 1; keep--) {
+    var cand = base + parts.slice(0, keep).join(", ") + " ほか" + (parts.length - keep) + "件";
+    if (cand.length <= ZOHO_DEAL_NAME_MAX) return cand;
+  }
+  return full.slice(0, ZOHO_DEAL_NAME_MAX);
+}
+
 // Zohoの商談1件ぶんのペイロードを作る
 function buildZohoDeal(params, meta) {
   meta = meta || zohoFieldMeta();
@@ -424,7 +443,7 @@ function buildZohoDeal(params, meta) {
   if (birthday.yearOnly) info.push("生年月日は年のみ回答（月日は4/1の仮置き）");
 
   var deal = {
-    Deal_Name: name + "/" + license,
+    Deal_Name: zohoBuildDealName(name, license),
     Pipeline: ZOHO_DEAL_PIPELINE,
     Stage: ZOHO_DEAL_STAGE,
     m_phone_number: tel,
