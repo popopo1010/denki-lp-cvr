@@ -104,3 +104,8 @@ body.lp-form-step:has(#step04.is-step-active) .lp-jobs__note { padding: 0 12px; 
 .nd-lp #step-first .p-firstButton .arrow, .nd-lp #step-first .p-firstButton i { display: none !important; content: none !important; background: none !important; }
 /* エラー帯はクマより手前（帯の右端がクマに隠れて読めない） */
 .nd-lp .p-step06__formGroup > dd > .c-error-message, .nd-lp .p-step07__formGroup > dd > .c-error-message { z-index: 4; }
+
+/* ===== 体験談のアバター: イニシャル → 電気工事士のイラスト（2026-09-07 オーナー依頼）。
+   実写（Gemini生成等）に差し替えるときは同じ <img> に入れ替え、カード末尾に「写真はイメージです」を添える ===== */
+.nd-lp .cvr-testimonial__avatar { background: none; overflow: hidden; }
+.nd-lp .cvr-testimonial__avatar img { width: 100%; height: 100%; display: block; border-radius: 50%; }

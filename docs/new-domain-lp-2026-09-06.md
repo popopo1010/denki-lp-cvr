@@ -70,6 +70,11 @@
 - PC表示の被り（オーナーPC実機）: ヒーロー画像下部の「年間12,000」帯にチップが被る／タイトル緑帯とボタン赤▶の二重（テーマ装飾の無効化がスマホ幅限定）／クマがマイクロコピーに被る → nd はPCも SP 画像に統一、テーマ装飾の無効化を全幅に、マイクロコピーに右余白。`cvr-boost-denkikouji-nd.css?v20260906c`。
 - 番人: `check-form-invariants`（配線）・`e2e-lp-flow-local` に実キーボードで打つシナリオ「氏名/生まれ年のエラー表示」を追加（5本＋dk_lp で通過）。CLAUDE.md にも【頻出バグ 2026-09-06】として記録。
 
+## 4c. 体験談のアバター（2026-09-07 オーナー依頼「Gemini で生成した電気工事士っぽい顔を入れられる？」）
+
+- この作業環境からは Gemini の画像生成を呼べないため、まず **電気工事士のイラスト（ヘルメット＋作業着）の SVG 4点**（`assets/img/testimonials/avatar-elec-1〜4.svg`）を作り、nd の体験談カードのイニシャルを `<img>` に置き換えた。
+- 実写（Gemini 生成）に差し替える手順: 正方形・192px 以上の PNG/WebP を `assets/img/testimonials/` に置き、`denkikouji-nd/index.html` の `avatar-elec-N.svg` を差し替える。**体験談は例示（K.Tさん等）なので、写実的な顔を載せるときはカードに「写真はイメージです」を添える**（実在の人物に見せない）。
+
 ## 5. 確認方法（マージ前）
 
 - STG: `https://denkilp.builders-job.com/denki-lp-cvr-stg/denkikouji-nd/` をスマホ実機（LINE/Instagram アプリ内ブラウザ含む）で、FV → 2択 → step01 → … → step06 → 送信（STGからの送信は無条件テスト扱い）まで。**クマが次のCTAへ移動すること**、step04 で求人例が横スクロールで出ること、step06 のCTAがオレンジ2行になること。
