@@ -75,6 +75,10 @@
 - この作業環境からは Gemini の画像生成を呼べないため、まず **電気工事士のイラスト（ヘルメット＋作業着）の SVG 4点**（`assets/img/testimonials/avatar-elec-1〜4.svg`）を作り、nd の体験談カードのイニシャルを `<img>` に置き換えた。
 - 実写（Gemini 生成）に差し替える手順: 正方形・192px 以上の PNG/WebP を `assets/img/testimonials/` に置き、`denkikouji-nd/index.html` の `avatar-elec-N.svg` を差し替える。**体験談は例示（K.Tさん等）なので、写実的な顔を載せるときはカードに「写真はイメージです」を添える**（実在の人物に見せない）。
 
+## 4d. STG デプロイの失敗メモ（2026-09-07）
+
+- run #534（367cdde・アバター版）は rsync 前の SSH `Connection timed out` ×5 で失敗（CLAUDE.md 失敗メモ①と同型。#520 / #526 に続き3回目）。STG は #533（PC修正版）のまま。再実行 API は 403 なので、このメモを積んだコミットで `staging` を再送した。
+
 ## 5. 確認方法（マージ前）
 
 - STG: `https://denkilp.builders-job.com/denki-lp-cvr-stg/denkikouji-nd/` をスマホ実機（LINE/Instagram アプリ内ブラウザ含む）で、FV → 2択 → step01 → … → step06 → 送信（STGからの送信は無条件テスト扱い）まで。**クマが次のCTAへ移動すること**、step04 で求人例が横スクロールで出ること、step06 のCTAがオレンジ2行になること。
