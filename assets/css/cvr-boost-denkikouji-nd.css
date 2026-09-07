@@ -1,0 +1,111 @@
+/* =====================================================================
+   denkikouji-nd（新ドメイン向け・参考LP準拠版）の上書きCSS。
+   cvr-boost-denkikouji.css の「後」に読む。共通側は触らず、差分だけをここに置く。
+   参考: denko-mirai.com/lp01（テンプレ 0037）2026-09-06 採取。
+     - ヘッダー: ブランド｜利用者数バッジ｜許可番号（白背景）
+     - FV: ヒーロー画像の下に3つの訴求チップ → 白いカードに質問＋2択
+     - CTA直下に求人カード（参考LPの「広告1〜3」相当）を初期画面で覗かせる
+     - STEP進捗はドットをトラック線でつなぐ
+     - step04（都道府県）で「保有求人の一例」を出す（参考LPの STEP5）
+     - 送信CTAはオレンジ・2行（利用規約に同意の上／あなたに合う求人を見る）
+   数字・実績は CLAUDE.md の確認済み3点（96.4% / 34,513人 / 120万円）だけを使う。
+   ===================================================================== */
+
+/* ===== ヘッダー ===== */
+.nd-lp .l-header__container.nd-header { background: #fff; color: #333; border-bottom: 1px solid #e6e6e6; padding: 6px 10px; }
+.nd-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 8px; max-width: 600px; margin: 0 auto; }
+.nd-brand { display: flex !important; flex-direction: column; line-height: 1.1; margin: 0; }
+.nd-brand .nd-brand__name { font-size: 17px; font-weight: 900; color: #314c85; letter-spacing: .02em; margin: 0 !important; }
+.nd-brand .nd-brand__sub { font-size: 9px; color: #666; font-weight: 600; margin: 2px 0 0 !important; }
+.nd-badge { display: flex; flex-direction: column; align-items: center; line-height: 1.1; padding: 3px 8px; margin: 0; border: 1px solid #f0c36d; border-radius: 8px; background: #fff8e6; color: #8a5a00; white-space: nowrap; }
+.nd-badge__label { font-size: 8px; font-weight: 700; color: #c0392b; }
+.nd-badge__num { font-size: 16px; font-weight: 900; color: #e67e22; letter-spacing: -.5px; }
+.nd-badge__unit { font-size: 9px; font-weight: 700; margin-left: 1px; }
+.nd-badge__val { white-space: nowrap; }
+.nd-permit { font-size: 9px; color: #666; text-align: right; line-height: 1.25; margin: 0; white-space: nowrap; }
+/* フォーム中はヘッダーを最小化（denkikouji と同じ思想: STEP表示を上に） */
+body.lp-form-step .nd-permit, body.lp-form-step .nd-brand .nd-brand__sub { display: none; }
+body.lp-form-step .nd-header__inner { min-height: 0; }
+body.lp-form-step .nd-badge__num { font-size: 14px; }
+
+/* ===== FV: 訴求チップ（ヒーロー画像の下端に重ねる。画像は固定高さなのでCLSなし） ===== */
+.nd-chips { display: flex; gap: 6px; list-style: none; margin: -24px 6px 0; padding: 0; position: relative; z-index: 2; }
+.nd-chips li { flex: 1; min-width: 0; background: rgba(255,255,255,.96); border-radius: 8px; padding: 6px 2px; text-align: center; font-size: 10px; line-height: 1.3; color: #333; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.nd-chips b { display: block; color: #c0392b; font-size: 11px; font-weight: 900; letter-spacing: 0; white-space: nowrap; }
+#step-first > picture { opacity: 1; filter: none; } /* 参考LPは写真をそのまま見せる */
+
+/* ===== FV: 質問＋2択を白いカードに（参考LPのモーダル相当） ===== */
+.nd-card { background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.14); padding: 12px 12px 10px; margin: 12px 0 0; }
+#step-first .nd-card .c-title01 { margin-top: 0; padding-top: 0; }
+#step-first .nd-card .cvr-micro-copy { margin-top: 40px !important; padding: 0 56px 0 !important; } /* 右のクマ(48px)と文末を重ねない */
+
+/* ===== 求人カード: 参考LPの「広告カード」に寄せる（青枠・タグはアウトライン・年収を主役） ===== */
+.nd-lp .lp-jobs { margin-top: 14px; }
+.nd-lp .lp-jobs__head { font-size: 14px; text-align: center; position: relative; }
+.nd-lp .lp-jobs__head::before, .nd-lp .lp-jobs__head::after { content: ""; display: inline-block; width: 28px; height: 2px; background: #e67e22; vertical-align: middle; margin: 0 8px; }
+.nd-lp .lp-job { border: 2px solid #b9c8e6; border-radius: 10px; padding: 10px 12px; box-shadow: 0 2px 6px rgba(49,76,133,.08); }
+.nd-lp .lp-job__title { color: #2b57a8; font-size: 14px; }
+.nd-lp .lp-job__tags { order: -1; margin: 0 0 6px; }
+.nd-lp .lp-job__tag { background: #fff; border: 1px solid #5b7fc4; color: #2b57a8; border-radius: 4px; }
+.nd-lp .lp-job__pay { font-size: 14px; color: #1b2330; }
+.nd-lp .lp-job__pay::before { content: "¥ "; color: #8c97ab; font-weight: 400; }
+/* step04（都道府県）だけ求人カードを出す＝参考LPの STEP5「保有求人の一例」。他のステップは非表示のまま */
+body.lp-form-step:has(#step04.is-step-active) .lp-jobs { display: block; margin: 16px 0 0; }
+body.lp-form-step:has(#step04.is-step-active) .lp-jobs__list { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding: 2px 12px 6px; scrollbar-width: none; }
+body.lp-form-step:has(#step04.is-step-active) .lp-jobs__list::-webkit-scrollbar { display: none; }
+body.lp-form-step:has(#step04.is-step-active) .lp-job { flex: 0 0 76%; scroll-snap-align: start; }
+body.lp-form-step:has(#step04.is-step-active) .lp-jobs__note { padding: 0 12px; }
+
+/* ===== STEP進捗: ドットをトラック線でつなぐ ===== */
+.nd-lp .c-step__no { position: relative; }
+.nd-lp .c-step__no::before { content: ""; position: absolute; left: 10px; right: 10px; top: 50%; height: 3px; margin-top: -1px; background: #dfe5f0; border-radius: 2px; z-index: 0; }
+.nd-lp .c-step__no li { position: relative; z-index: 1; }
+
+/* ===== 送信CTA: オレンジ・2行（参考LP「利用規約に同意の上／求人を探しにいく！」） ===== */
+#step06 .c-submit-button:not(.is-disable) { background: linear-gradient(180deg, #ffb52e, #ff8c00) !important; border-radius: 12px; box-shadow: 0 4px 0 #cc6f00, 0 6px 14px rgba(255,140,0,.35) !important; }
+.nd-lp #step06 .c-submit-button__text::before { content: "利用規約に同意の上"; display: block; font-size: 11px; font-weight: 600; line-height: 1.2; margin-bottom: 2px; color: rgba(255,255,255,.95); }
+.nd-lp #step06 .c-submit-button.is-disable .c-submit-button__text::before { color: #9aa7b8; }
+.nd-lp #step06 .c-submit-button:not(.is-disable) .c-submit-button__text span { color: #fff; font-size: 17px; font-weight: 900; text-shadow: 0 1px 0 rgba(0,0,0,.15); }
+.nd-lp #step06 .c-submit-button:not(.is-disable) .arrow { filter: brightness(10); }
+
+/* ===== 参考LPの「公開されません」相当（既存 .c-info-text）を鍵アイコン付きの中央寄せに ===== */
+.nd-lp .c-info-text { justify-content: center; }
+
+@media (max-width: 767px) {
+  .nd-chips li { font-size: 9.5px; }
+  /* FV はフルハイトにしない: CTA の直下に求人カードが覗くのが参考LPの意図 */
+  #step-first { min-height: auto !important; }
+  #step-first .nd-card .cvr-micro-copy { margin-top: 40px !important; }
+}
+@media (max-width: 360px) {
+  .nd-brand .nd-brand__name { font-size: 15px; }
+  .nd-permit { display: none; }
+}
+
+/* ===== PC幅（2026-09-07 オーナーPC実機「かぶってます」） =====
+   ① PCのヒーロー画像は固定高さでなく、画像下部に焼き込まれた「年間12,000…」帯にチップが被っていた
+      → HTML側で PC も SP 画像（帯なし）に統一し、固定高さ＋cover にする（数字は未確認の要確認項目でもある）
+   ② タイトルの緑帯・ボタンの赤▶（WPテーマ装飾）の無効化がスマホ幅限定で、PCで二重表示になっていた
+      → このLPは全幅で無効化する */
+@media (min-width: 768px) {
+  /* SP 画像も下部に「年間12,000」帯を持つ。スマホと同じ 150px×center 35% の切り出しなら帯は出ない（実測） */
+  #step-first > picture { display: block; height: 150px; overflow: hidden; border-radius: 8px; }
+  #step-first > picture img { height: 100% !important; max-height: 150px !important; width: 100%; object-fit: cover; object-position: center 35%; border-radius: 8px; }
+  .nd-chips { margin: -26px 12px 0; }
+  .nd-chips li { font-size: 11px; padding: 8px 3px; }
+  .nd-chips b { font-size: 12px; }
+}
+.nd-lp #step-first .c-title01 { background: none !important; text-align: center !important; padding: 0 !important; }
+.nd-lp #step-first .p-firstButton__container { justify-content: center !important; }
+.nd-lp #step-first .p-firstButton__text { text-align: center !important; }
+.nd-lp #step-first .p-firstButton::after,
+.nd-lp #step-first .p-firstButton__container::before, .nd-lp #step-first .p-firstButton__container::after,
+.nd-lp #step-first .p-firstButton__text::before, .nd-lp #step-first .p-firstButton__text::after,
+.nd-lp #step-first .p-firstButton .arrow, .nd-lp #step-first .p-firstButton i { display: none !important; content: none !important; background: none !important; }
+/* エラー帯はクマより手前（帯の右端がクマに隠れて読めない） */
+.nd-lp .p-step06__formGroup > dd > .c-error-message, .nd-lp .p-step07__formGroup > dd > .c-error-message { z-index: 4; }
+
+/* ===== 体験談のアバター: イニシャル → 電気工事士のイラスト（2026-09-07 オーナー依頼）。
+   実写（Gemini生成等）に差し替えるときは同じ <img> に入れ替え、カード末尾に「写真はイメージです」を添える ===== */
+.nd-lp .cvr-testimonial__avatar { background: none; overflow: hidden; }
+.nd-lp .cvr-testimonial__avatar img { width: 100%; height: 100%; display: block; border-radius: 50%; }

@@ -898,6 +898,46 @@
       return namesOk && yearOk;
     }
 
+    // 何が足りないかを決める（2026-09-06 オーナー実機・denkikouji-nd STG）。
+    // ルール: (1) 入力中（このステップの欄にフォーカスがある）は「通り過ぎた項目」だけ見る＝
+    //             いま打っている欄も、まだ手を付けていない先の欄も叱らない
+    //         (2) 手が止まっている（フォーカスなし）なら、足りない項目を順に出す＝
+    //             CTA が無効の間は理由が見える（2026-08-29 の原則）
+    //         (3) 文言は項目を特定し、帯はその項目の上に出す（placeErrBox）
+    function pendingMessage() {
+      const active = document.activeElement;
+      const lastEl = group.querySelector("#last-name");
+      const firstEl = group.querySelector("#first-name");
+      const yearEl = birthYear ? birthYear : null;
+      const order = [lastEl, firstEl, yearEl].filter(Boolean);
+      const idx = order.indexOf(active);
+      const upto = idx === -1 ? order.length : idx;
+      const lastOk = !!((lastEl && lastEl.value) || "").trim();
+      const firstOk = !!((firstEl && firstEl.value) || "").trim();
+      if (lastEl && upto > order.indexOf(lastEl) && !lastOk) {
+        return { field: "name", msg: firstOk ? "お名前（姓）も入力してください" : "お名前を入力してください" };
+      }
+      if (firstEl && upto > order.indexOf(firstEl) && !firstOk) {
+        return { field: "name", msg: lastOk ? "お名前（名）も入力してください" : "お名前を入力してください" };
+      }
+      if (yearEl && upto > order.indexOf(yearEl)) {
+        const v = (yearEl.value || "").trim();
+        const yearOk = isValidBirthYear(v);
+        if (!yearOk) {
+          return { field: "year", msg: v ? `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください` : "生まれ年（西暦）を入力してください" };
+        }
+      }
+      return null;
+    }
+    // エラー帯を該当項目（お名前 / 生まれ年）の dd へ移す。各 CSS の
+    // `.p-step06__formGroup > dd > .c-error-message`（絶対配置・占有高ゼロ）がそのまま効く。
+    function placeErrBox(field) {
+      if (!errBox) return;
+      const anchor = field === "year" ? birthYear : group.querySelector("#last-name");
+      const dd = anchor && anchor.closest ? anchor.closest("dd") : null;
+      if (dd && errBox.parentNode !== dd) dd.insertBefore(errBox, dd.firstChild);
+    }
+
     function validate(opts) {
       opts = opts || {};
       if (allFilled()) {
@@ -908,17 +948,15 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        // この実装は未入力項目を全部列挙する方式で、touched（触れた項目）を持たない。
-        // 即時表示にすると1文字目から「姓・名・生まれ年」の赤帯が出続けるので、
-        // タイピング中は切り替えない（2026-08-29）。絶対配置でレイアウトは動かないため、
-        // 以前の「入力がバグる」体感は解消済み。
-        if (errBox && !opts.silent) {
-          errBox.style.display = "block";
-          if (errText) {
-            const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
-            errText.textContent = namesOk
-              ? `生年月日（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`
-              : "必ず入力してください";
+        // 2026-09-06: いま入力中の項目は叱らない（app.js と同じ pendingMessage）
+        if (errBox) {
+          const pending = pendingMessage();
+          if (pending) {
+            placeErrBox(pending.field);
+            errBox.style.display = "block";
+            if (errText) errText.textContent = pending.msg;
+          } else {
+            errBox.style.display = "none";
           }
         }
         moveIconById("#" + target.id);
@@ -926,11 +964,13 @@
     }
 
     inputs.forEach((input) => {
-      input.addEventListener("blur", () => validate());
+      input.addEventListener("focus", () => validate({ silent: true }));
+      input.addEventListener("blur", () => setTimeout(() => validate(), 0));
       input.addEventListener("input", () => validate({ silent: true }));
     });
     if (birthYear) {
-      birthYear.addEventListener("blur", () => validate());
+      birthYear.addEventListener("focus", () => validate({ silent: true }));
+      birthYear.addEventListener("blur", () => setTimeout(() => validate(), 0));
       birthYear.addEventListener("input", () => validate({ silent: true }));
     }
 

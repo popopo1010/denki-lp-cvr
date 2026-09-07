@@ -140,7 +140,10 @@
   };
 
   const CVR_BOOST_VER = "20260823a"; // assets/js/cvr-boost.js のキャッシュキー（中身を変えたら必ず上げる）
-  const THANKS_V2_PATH = "/denki-lp-cvr/thanks-v2/";
+  // thanks の遷移先。既定は本番の root-relative パス。新ドメイン等で /denki-lp-cvr/ 配下に
+  // 置かないLPは、HTML側で window.__THANKS_PATH="../thanks-v2/" のように相対で上書きできる
+  // （2026-09-06 新ドメイン向け denkikouji-nd）。未設定なら従来どおり。
+  const THANKS_V2_PATH = (typeof window.__THANKS_PATH === "string" && window.__THANKS_PATH) || "/denki-lp-cvr/thanks-v2/";
   const NENSHU_THANKS_V1_PATH = "/denki-lp-cvr/nenshu-shindan/thanks/";
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
   // 送信時のテスト判定を thanks 側へ引き継ぐキー（thanks-v2-shared.js が読む）
@@ -921,6 +924,46 @@
       return touched.size > 0;
     }
 
+    // 何が足りないかを決める（2026-09-06 オーナー実機・denkikouji-nd STG）。
+    // ルール: (1) 入力中（このステップの欄にフォーカスがある）は「通り過ぎた項目」だけ見る＝
+    //             いま打っている欄も、まだ手を付けていない先の欄も叱らない
+    //         (2) 手が止まっている（フォーカスなし）なら、足りない項目を順に出す＝
+    //             CTA が無効の間は理由が見える（2026-08-29 の原則）
+    //         (3) 文言は項目を特定し、帯はその項目の上に出す（placeErrBox）
+    function pendingMessage() {
+      const active = document.activeElement;
+      const lastEl = group.querySelector("#last-name");
+      const firstEl = group.querySelector("#first-name");
+      const yearEl = birthYear ? birthYear : null;
+      const order = [lastEl, firstEl, yearEl].filter(Boolean);
+      const idx = order.indexOf(active);
+      const upto = idx === -1 ? order.length : idx;
+      const lastOk = !!((lastEl && lastEl.value) || "").trim();
+      const firstOk = !!((firstEl && firstEl.value) || "").trim();
+      if (lastEl && upto > order.indexOf(lastEl) && !lastOk) {
+        return { field: "name", msg: firstOk ? "お名前（姓）も入力してください" : "お名前を入力してください" };
+      }
+      if (firstEl && upto > order.indexOf(firstEl) && !firstOk) {
+        return { field: "name", msg: lastOk ? "お名前（名）も入力してください" : "お名前を入力してください" };
+      }
+      if (yearEl && upto > order.indexOf(yearEl)) {
+        const v = (yearEl.value || "").trim();
+        const yearOk = isValidBirthYear(v);
+        if (!yearOk) {
+          return { field: "year", msg: v ? `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください` : "生まれ年（西暦）を入力してください" };
+        }
+      }
+      return null;
+    }
+    // エラー帯を該当項目（お名前 / 生まれ年）の dd へ移す。各 CSS の
+    // `.p-step06__formGroup > dd > .c-error-message`（絶対配置・占有高ゼロ）がそのまま効く。
+    function placeErrBox(field) {
+      if (!errBox) return;
+      const anchor = field === "year" ? birthYear : group.querySelector("#last-name");
+      const dd = anchor && anchor.closest ? anchor.closest("dd") : null;
+      if (dd && errBox.parentNode !== dd) dd.insertBefore(errBox, dd.firstChild);
+    }
+
     function validate(opts) {
       opts = opts || {};
       if (allFilled()) {
@@ -936,17 +979,13 @@
         // レイアウトは1pxも動かない。よってタイピング中も即座に切り替えてよい
         // （以前は通常フローにいて出るたび入力欄を+40px押し下げ、1文字ごとに
         // 切り替えると「入力がバグる」体感になっていた。2026-07-05 オーナー報告）。
-        // 直った瞬間にエラーが消えるので、入力中ずっと赤帯が残る問題も解消する。
         // スクロール抑制(moveIconById の !opts.silent)はそのまま残す。
         if (errBox) {
-          if (shouldShowErrors()) {
+          const pending = shouldShowErrors() ? pendingMessage() : null;
+          if (pending) {
+            placeErrBox(pending.field);
             errBox.style.display = "block";
-            if (errText) {
-              const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
-              errText.textContent = namesOk
-                ? `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`
-                : "お名前を入力してください";
-            }
+            if (errText) errText.textContent = pending.msg;
           } else {
             errBox.style.display = "none";
           }
@@ -962,14 +1001,19 @@
         touched.add(input.id || input.name);
         validate({ silent: true });
       });
-      input.addEventListener("blur", () => validate());
+      // 欄に入った瞬間にも判定する＝その欄のエラー帯が消える（入力中は叱らない）
+      input.addEventListener("focus", () => validate({ silent: true }));
+      // blur の時点では activeElement がまだ body なので、次のフォーカス先が
+      // 確定してから判定する（姓→名へ移る瞬間に名前エラーが一瞬出るのを防ぐ）
+      input.addEventListener("blur", () => setTimeout(() => validate(), 0));
     });
     if (birthYear) {
       birthYear.addEventListener("input", () => {
         touched.add("bday-year");
         validate({ silent: true });
       });
-      birthYear.addEventListener("blur", () => validate());
+      birthYear.addEventListener("focus", () => validate({ silent: true }));
+      birthYear.addEventListener("blur", () => setTimeout(() => validate(), 0));
     }
 
     const lastNameInput = group.querySelector("#last-name");

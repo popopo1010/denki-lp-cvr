@@ -8,12 +8,12 @@
     "sha256": "48a4690552073992"
   },
   "WPLP/assets/js/app-v2.js": {
-    "version": "20260904a",
-    "sha256": "739beb953cc52348"
+    "version": "20260906b",
+    "sha256": "e3dd55432efa7162"
   },
   "WPLP/assets/js/app.js": {
-    "version": "20260904a",
-    "sha256": "fa73dab4b1231667"
+    "version": "20260906c",
+    "sha256": "bedd0f1f5c789b39"
   },
   "WPLP/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -26,6 +26,10 @@
   "ad-cr/cr-ad.js": {
     "version": "6",
     "sha256": "e05e7c5c569adac1"
+  },
+  "assets/css/cvr-boost-denkikouji-nd.css": {
+    "version": "20260906f",
+    "sha256": "ffd05ea488af2b17"
   },
   "assets/css/cvr-boost-denkikouji-rich.css": {
     "version": "20260615",
@@ -72,12 +76,12 @@
     "sha256": "5e87015a08e9a2f7"
   },
   "assets/js/app-v2.js": {
-    "version": "20260904a",
-    "sha256": "739beb953cc52348"
+    "version": "20260906b",
+    "sha256": "e3dd55432efa7162"
   },
   "assets/js/app.js": {
-    "version": "20260904a",
-    "sha256": "fa73dab4b1231667"
+    "version": "20260906c",
+    "sha256": "bedd0f1f5c789b39"
   },
   "assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -119,6 +123,10 @@
     "version": "10",
     "sha256": "c211a55b9cd3aa57"
   },
+  "denkikouji-nd/steps-lazy.html": {
+    "version": "20260906a",
+    "sha256": "c8c82e939b3afb8c"
+  },
   "denkikouji-trust/steps-lazy.html": {
     "version": "20260901b",
     "sha256": "d36c1f1b8a082582"
@@ -152,8 +160,8 @@
     "sha256": "664734656b8eb1af"
   },
   "dk_lp/assets/js/app.js": {
-    "version": "20260904a",
-    "sha256": "fa73dab4b1231667"
+    "version": "20260906c",
+    "sha256": "bedd0f1f5c789b39"
   },
   "dk_lp/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -168,8 +176,8 @@
     "sha256": "652c387eb157f624"
   },
   "dk_lp/denkikouji/assets/js/main.js": {
-    "version": "20260830c",
-    "sha256": "71be262d441310f0"
+    "version": "20260906b",
+    "sha256": "38d9a6e7ff83ac3c"
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260701c",
@@ -220,12 +228,12 @@
     "sha256": "04233f3ec2720dd1"
   },
   "自前LP/assets/js/app-v2.js": {
-    "version": "20260904a",
-    "sha256": "739beb953cc52348"
+    "version": "20260906b",
+    "sha256": "e3dd55432efa7162"
   },
   "自前LP/assets/js/app.js": {
-    "version": "20260904a",
-    "sha256": "fa73dab4b1231667"
+    "version": "20260906c",
+    "sha256": "bedd0f1f5c789b39"
   },
   "自前LP/assets/js/cvr-boost.js": {
     "version": "20260823a",

@@ -436,6 +436,72 @@ async function runLp(browser, devices, lp) {
 }
 
 /** 5) 外部スクリプトによるフォームDOM差し替えからの自己修復 */
+// 氏名／生まれ年のエラー表示（2026-09-06 オーナー実機 STG で発覚）。
+// 姓を1文字打った瞬間に「お名前を入力してください」の赤帯が名前ラベルを覆い、
+// 生まれ年を打っている間も名前のエラーが出続けた＝「入力がバグっている」体感。
+// ルール: フォーカス中の項目のエラーは出さない／出すときは項目を特定する／
+// フォーカスが外れたら CTA が無効な理由を必ず出す（2026-08-29 の原則）。
+// 実キーボードで打つ（value代入＋inputイベントでは activeElement が動かず再現しない）。
+async function runNameErrorUx(browser, devices, lp) {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
+  const page = await ctx.newPage();
+  await page.route(/hooks\.zapier\.com|script\.google\.com|api\.ipify\.org|googletagmanager|zipcloud|geoapi/, (r) => r.abort());
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  let arrived = false;
+  for (let i = 0; i < 12; i++) {
+    const { acted, after } = await advanceOnce(page);
+    if (acted === "stuck" || acted === "no-step") break;
+    if (after.step === "step05") { arrived = true; break; }
+  }
+  const has = await page.$("#step05 #last-name, #step05 #bday-year");
+  if (!arrived || !has) { pass(`${lp} 氏名/生まれ年のエラー表示`, "この構成には無い（対象外）"); await ctx.close(); return; }
+  const errState = () => page.evaluate(() => {
+    const e = document.querySelector("#error-name");
+    const shown = !!e && getComputedStyle(e).display !== "none";
+    const dd = e && e.closest("dd");
+    return { shown, text: shown ? e.textContent.trim() : "",
+      onYear: !!(dd && dd.querySelector("#bday-year")), onName: !!(dd && dd.querySelector("#last-name")) };
+  });
+  // 入力欄をタップしたら末尾にキャレットを置く（中央クリックで文字の間に挿入されるのを防ぐ）
+  const tap = async (sel) => { await page.click(sel); await page.keyboard.press("End"); await page.waitForTimeout(300); };
+  const bad = [];
+  await tap("#last-name"); await page.keyboard.type("検"); await page.waitForTimeout(250);
+  let st = await errState();
+  if (st.shown) bad.push(`姓の入力中にエラー「${st.text}」`);
+  // 姓だけ入れて生まれ年へ飛ぶ＝名を通り過ぎた。名を特定して、お名前の上に出る
+  await tap("#bday-year");
+  st = await errState();
+  if (!st.shown || !/名/.test(st.text) || !st.onName) bad.push(`名を飛ばしたのに理由が出ない/特定しない/位置が違う（${st.shown ? st.text : "非表示"} onName=${st.onName}）`);
+  await page.keyboard.type("19"); await page.waitForTimeout(250);
+  st = await errState();
+  if (st.shown && /生まれ年/.test(st.text)) bad.push(`年の入力中に年のエラー「${st.text}」`);
+  // 名へ戻って入力中: 姓は埋まっている＝叱らない。年 "19" はまだ先（未確定）なので叱らない
+  await tap("#first-name");
+  st = await errState();
+  if (st.shown) bad.push(`名の入力中にエラー「${st.text}」（オーナー報告の再現: 先の項目を叱っている）`);
+  await page.keyboard.type("証"); await page.waitForTimeout(250);
+  st = await errState();
+  if (st.shown) bad.push(`名の入力中(2文字目)にエラー「${st.text}」`);
+  // 年へ移る: 姓名は揃っている＝叱らない
+  await tap("#bday-year");
+  st = await errState();
+  if (st.shown) bad.push(`年の入力中にエラー「${st.text}」`);
+  await page.keyboard.type("90"); await page.waitForTimeout(300);
+  const done = await page.evaluate(() => ({
+    shown: getComputedStyle(document.querySelector("#error-name")).display !== "none",
+    enabled: !document.querySelector("#step05-next-button").classList.contains("is-disable"),
+    year: document.querySelector("#bday-year").value
+  }));
+  if (done.shown || !done.enabled) bad.push(`全部入れてもエラー${done.shown ? "表示" : "非表示"}/CTA${done.enabled ? "有効" : "無効"}（year=${done.year}）`);
+  // 不正な年のまま欄を離れる（手が止まる）＝年の理由を、生まれ年の上に出す
+  await page.fill("#bday-year", "20"); await page.waitForTimeout(150);
+  await page.evaluate(() => document.activeElement && document.activeElement.blur()); await page.waitForTimeout(300);
+  st = await errState();
+  if (!st.shown || !/生まれ年/.test(st.text) || !st.onYear) bad.push(`不正な年で離れても理由が出ない/位置が違う（${st.shown ? st.text : "非表示"} onYear=${st.onYear}）`);
+  bad.length ? fail(`${lp} 氏名/生まれ年のエラー表示`, bad.join(" / ")) : pass(`${lp} 氏名/生まれ年のエラー表示`, "入力中は通り過ぎた項目だけ・手が止まったら項目を特定して該当欄の上に");
+  await ctx.close();
+}
 async function runSelfHeal(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
   const page = await ctx.newPage();
@@ -744,6 +810,7 @@ async function main() {
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
     for (const lp of lps) await runSafariKeyboardRace(browser, devices, lp);
+    for (const lp of lps) await runNameErrorUx(browser, devices, lp);
   } finally {
     await browser.close();
     server.close();
