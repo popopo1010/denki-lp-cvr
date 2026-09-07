@@ -436,6 +436,60 @@ async function runLp(browser, devices, lp) {
 }
 
 /** 5) 外部スクリプトによるフォームDOM差し替えからの自己修復 */
+// 氏名／生まれ年のエラー表示（2026-09-06 オーナー実機 STG で発覚）。
+// 姓を1文字打った瞬間に「お名前を入力してください」の赤帯が名前ラベルを覆い、
+// 生まれ年を打っている間も名前のエラーが出続けた＝「入力がバグっている」体感。
+// ルール: フォーカス中の項目のエラーは出さない／出すときは項目を特定する／
+// フォーカスが外れたら CTA が無効な理由を必ず出す（2026-08-29 の原則）。
+// 実キーボードで打つ（value代入＋inputイベントでは activeElement が動かず再現しない）。
+async function runNameErrorUx(browser, devices, lp) {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
+  const page = await ctx.newPage();
+  await page.route(/hooks\.zapier\.com|script\.google\.com|api\.ipify\.org|googletagmanager|zipcloud|geoapi/, (r) => r.abort());
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  let arrived = false;
+  for (let i = 0; i < 12; i++) {
+    const { acted, after } = await advanceOnce(page);
+    if (acted === "stuck" || acted === "no-step") break;
+    if (after.step === "step05") { arrived = true; break; }
+  }
+  const has = await page.$("#step05 #last-name, #step05 #bday-year");
+  if (!arrived || !has) { pass(`${lp} 氏名/生まれ年のエラー表示`, "この構成には無い（対象外）"); await ctx.close(); return; }
+  const errState = () => page.evaluate(() => {
+    const e = document.querySelector("#error-name");
+    const shown = !!e && getComputedStyle(e).display !== "none";
+    return { shown, text: shown ? e.textContent.trim() : "", active: (document.activeElement || {}).id || "" };
+  });
+  const bad = [];
+  await page.click("#last-name"); await page.keyboard.press("End"); await page.keyboard.type("検"); await page.waitForTimeout(250);
+  let st = await errState();
+  if (st.shown) bad.push(`姓の入力中にエラー「${st.text}」`);
+  // 姓だけ入れて生まれ年へ移る＝名が未入力。フォーカスは年なので「名」を特定して出る
+  await page.click("#bday-year"); await page.waitForTimeout(300);
+  st = await errState();
+  if (!st.shown || !/名/.test(st.text)) bad.push(`名が未入力なのに理由が出ない/特定しない（${st.shown ? st.text : "非表示"}）`);
+  await page.keyboard.press("End"); await page.keyboard.type("19"); await page.waitForTimeout(250);
+  st = await errState();
+  if (st.shown && /生まれ年/.test(st.text)) bad.push(`年の入力中に年のエラー「${st.text}」`);
+  await page.click("#first-name"); await page.waitForTimeout(300);
+  st = await errState();
+  if (st.shown && /お名前/.test(st.text)) bad.push(`名の入力中に名前のエラー「${st.text}」`);
+  await page.keyboard.press("End"); await page.keyboard.type("証"); await page.waitForTimeout(250);
+  // 名まで入れて年へ戻ると、年 "19" は不正だがフォーカス中なので出ない
+  await page.click("#bday-year"); await page.waitForTimeout(300);
+  st = await errState();
+  if (st.shown) bad.push(`年の入力中にエラー「${st.text}」`);
+  await page.keyboard.press("End"); await page.keyboard.type("90"); await page.waitForTimeout(300);
+  const done = await page.evaluate(() => ({
+    shown: getComputedStyle(document.querySelector("#error-name")).display !== "none",
+    enabled: !document.querySelector("#step05-next-button").classList.contains("is-disable")
+  }));
+  if (done.shown || !done.enabled) bad.push(`全部入れてもエラー${done.shown ? "表示" : "非表示"}/CTA${done.enabled ? "有効" : "無効"}`);
+  bad.length ? fail(`${lp} 氏名/生まれ年のエラー表示`, bad.join(" / ")) : pass(`${lp} 氏名/生まれ年のエラー表示`, "入力中の項目は叱らない・未入力は項目を特定");
+  await ctx.close();
+}
+
 async function runSelfHeal(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
   const page = await ctx.newPage();
@@ -744,6 +798,7 @@ async function main() {
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
     for (const lp of lps) await runSafariKeyboardRace(browser, devices, lp);
+    for (const lp of lps) await runNameErrorUx(browser, devices, lp);
   } finally {
     await browser.close();
     server.close();

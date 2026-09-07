@@ -924,6 +924,33 @@
       return touched.size > 0;
     }
 
+    // 何が足りないかを、いま入力中の項目を除いて決める。
+    // 2026-09-06 オーナー実機（denkikouji-nd STG）: 姓を1文字打った瞬間に
+    // 「お名前を入力してください」の赤帯が名前ラベルを覆い、生まれ年を打っている間も
+    // 名前のエラーが出続けて「入力がバグっている」ように見えた。
+    // ルール: (1) フォーカス中の項目のエラーは出さない（入力の途中で叱らない）
+    //         (2) 出すときは項目を特定する（姓／名／生まれ年）
+    //         (3) CTAが無効の間、フォーカスが外れていれば必ず理由を出す（2026-08-29 の原則は維持）
+    function pendingMessage() {
+      const active = document.activeElement;
+      const lastEl = group.querySelector("#last-name");
+      const firstEl = group.querySelector("#first-name");
+      const lastOk = !!((lastEl && lastEl.value) || "").trim();
+      const firstOk = !!((firstEl && firstEl.value) || "").trim();
+      const focusOnName = Array.prototype.some.call(inputs, (i) => i === active);
+      const focusOnYear = !!birthYear && active === birthYear;
+      if (!(lastOk && firstOk)) {
+        if (focusOnName) return null;
+        if (!lastOk && !firstOk) return "お名前を入力してください";
+        return lastOk ? "お名前（名）も入力してください" : "お名前（姓）も入力してください";
+      }
+      if (birthYear && !isValidBirthYear(birthYear.value)) {
+        if (focusOnYear) return null;
+        return `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`;
+      }
+      return null;
+    }
+
     function validate(opts) {
       opts = opts || {};
       if (allFilled()) {
@@ -939,17 +966,12 @@
         // レイアウトは1pxも動かない。よってタイピング中も即座に切り替えてよい
         // （以前は通常フローにいて出るたび入力欄を+40px押し下げ、1文字ごとに
         // 切り替えると「入力がバグる」体感になっていた。2026-07-05 オーナー報告）。
-        // 直った瞬間にエラーが消えるので、入力中ずっと赤帯が残る問題も解消する。
         // スクロール抑制(moveIconById の !opts.silent)はそのまま残す。
         if (errBox) {
-          if (shouldShowErrors()) {
+          const msg = shouldShowErrors() ? pendingMessage() : null;
+          if (msg) {
             errBox.style.display = "block";
-            if (errText) {
-              const namesOk = Array.from(inputs).every((i) => !!(i.value || "").trim());
-              errText.textContent = namesOk
-                ? `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`
-                : "お名前を入力してください";
-            }
+            if (errText) errText.textContent = msg;
           } else {
             errBox.style.display = "none";
           }
@@ -965,14 +987,16 @@
         touched.add(input.id || input.name);
         validate({ silent: true });
       });
-      input.addEventListener("blur", () => validate());
+      // blur の時点では activeElement がまだ body なので、次のフォーカス先が
+      // 確定してから判定する（姓→名へ移る瞬間に名前エラーが一瞬出るのを防ぐ）
+      input.addEventListener("blur", () => setTimeout(() => validate(), 0));
     });
     if (birthYear) {
       birthYear.addEventListener("input", () => {
         touched.add("bday-year");
         validate({ silent: true });
       });
-      birthYear.addEventListener("blur", () => validate());
+      birthYear.addEventListener("blur", () => setTimeout(() => validate(), 0));
     }
 
     const lastNameInput = group.querySelector("#last-name");

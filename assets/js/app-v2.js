@@ -824,7 +824,36 @@
     // エラーが出没しレイアウトがジャンプ＝「入力がバグる」体感 2026-07-05 オーナー報告）
     if (isYearInput) {
       bdayYearInput.addEventListener("input", () => validate({ silent: true }));
-      bdayYearInput.addEventListener("blur", () => validate());
+      // blur は次のフォーカス先が確定してから判定する（blur 時点は activeElement=body）
+      bdayYearInput.addEventListener("blur", () => setTimeout(() => validate(), 0));
+    }
+
+    // 何が足りないかを、いま入力中の項目を除いて決める（2026-09-06 オーナー実機・denkikouji-nd STG）。
+    // ルール: (1) フォーカス中の項目のエラーは出さない (2) 出すときは項目を特定する
+    //         (3) フォーカスが外れて CTA が無効なら必ず理由を出す（2026-08-29 の原則）
+    function pendingMessage() {
+      const active = document.activeElement;
+      const lastN = group.querySelector("#last-name");
+      const firstN = group.querySelector("#first-name");
+      const lastOk = !!((lastN && lastN.value) || "").trim();
+      const firstOk = !!((firstN && firstN.value) || "").trim();
+      const focusOnName = Array.prototype.some.call(inputs, (i) => i === active);
+      const focusOnYear = !!isYearInput && active === bdayYearInput;
+      if (!(lastOk && firstOk)) {
+        if (focusOnName) return null;
+        if (!lastOk && !firstOk) return "お名前を入力してください";
+        return lastOk ? "お名前（名）も入力してください" : "お名前（姓）も入力してください";
+      }
+      if (isYearInput) {
+        const v = (bdayYearInput.value || "").trim();
+        const n = parseInt(v, 10);
+        const yearOk = /^[0-9]{4}$/.test(v) && n >= BIRTH_YEAR_MIN && n <= BIRTH_YEAR_MAX;
+        if (!yearOk) {
+          if (focusOnYear) return null;
+          return `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`;
+        }
+      }
+      return null;
     }
 
     function validate(opts) {
@@ -855,42 +884,27 @@
       } else {
         nextBtn.classList.add(DISABLE);
         target.classList.remove(SKIP);
-        // この実装は未入力項目を全部列挙する方式で、touched（触れた項目）を持たない。
-        // 即時表示にすると1文字目から「姓・名・生まれ年」の赤帯が出続けるので、
-        // タイピング中は切り替えない（2026-08-29）。絶対配置でレイアウトは動かないため、
-        // 以前の「入力がバグる」体感は解消済み。
-        if (errBox && !opts.silent) {
-          errBox.style.display = "block";
-          if (errText) {
-            // どの項目が未入力かで具体的に出し分け
-            const missing = [];
-            const lastN = group.querySelector("#last-name");
-            const firstN = group.querySelector("#first-name");
-            if (lastN && !lastN.value) missing.push("姓");
-            if (firstN && !firstN.value) missing.push("名");
-            if (isYearInput) {
-              const v = (bdayYearInput.value || "").trim();
-              if (!/^[0-9]{4}$/.test(v)) {
-                missing.push("生まれ年(西暦4桁)");
-              } else {
-                const n = parseInt(v, 10);
-                if (n < BIRTH_YEAR_MIN || n > BIRTH_YEAR_MAX) missing.push(`生まれ年(${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX})`);
-              }
-            }
-            if (missing.length === 0) {
-              errText.textContent = "入力内容をご確認ください";
-            } else if (missing.length === 1) {
-              errText.textContent = missing[0] + "を入力してください";
-            } else {
-              errText.textContent = missing.join("・") + "を入力してください";
-            }
+        // 2026-09-06: いま入力中の項目は叱らない（app.js と同じ pendingMessage）。
+        // 以前は blur 時に未入力を全部列挙していたため、姓→名へ移った瞬間に
+        // 「名・生まれ年を入力してください」が出て、名を打っている間ずっと残っていた。
+        if (errBox) {
+          const msg = pendingMessage();
+          if (msg) {
+            errBox.style.display = "block";
+            if (errText) errText.textContent = msg;
+          } else {
+            errBox.style.display = "none";
           }
         }
         moveIconById("#" + target.id);
       }
     }
 
-    inputs.forEach(input => input.addEventListener("blur", () => validate()));
+    inputs.forEach((input) => {
+      // タイピング中も判定する（フォーカス中の項目は叱らないので出没しない。埋まった項目の帯は消える）
+      input.addEventListener("input", () => validate({ silent: true }));
+      input.addEventListener("blur", () => setTimeout(() => validate(), 0));
+    });
 
     // 姓・名を「入力し終えてフィールドを離れた(blur)」ときだけ生年月日(西暦)へ誘導する。
     // 旧実装は input 中（姓・名が各1文字入った瞬間）に focus を奪い、名前が中途半端に
