@@ -459,37 +459,49 @@ async function runNameErrorUx(browser, devices, lp) {
   const errState = () => page.evaluate(() => {
     const e = document.querySelector("#error-name");
     const shown = !!e && getComputedStyle(e).display !== "none";
-    return { shown, text: shown ? e.textContent.trim() : "", active: (document.activeElement || {}).id || "" };
+    const dd = e && e.closest("dd");
+    return { shown, text: shown ? e.textContent.trim() : "",
+      onYear: !!(dd && dd.querySelector("#bday-year")), onName: !!(dd && dd.querySelector("#last-name")) };
   });
+  // 入力欄をタップしたら末尾にキャレットを置く（中央クリックで文字の間に挿入されるのを防ぐ）
+  const tap = async (sel) => { await page.click(sel); await page.keyboard.press("End"); await page.waitForTimeout(300); };
   const bad = [];
-  await page.click("#last-name"); await page.keyboard.press("End"); await page.keyboard.type("検"); await page.waitForTimeout(250);
+  await tap("#last-name"); await page.keyboard.type("検"); await page.waitForTimeout(250);
   let st = await errState();
   if (st.shown) bad.push(`姓の入力中にエラー「${st.text}」`);
-  // 姓だけ入れて生まれ年へ移る＝名が未入力。フォーカスは年なので「名」を特定して出る
-  await page.click("#bday-year"); await page.waitForTimeout(300);
+  // 姓だけ入れて生まれ年へ飛ぶ＝名を通り過ぎた。名を特定して、お名前の上に出る
+  await tap("#bday-year");
   st = await errState();
-  if (!st.shown || !/名/.test(st.text)) bad.push(`名が未入力なのに理由が出ない/特定しない（${st.shown ? st.text : "非表示"}）`);
-  await page.keyboard.press("End"); await page.keyboard.type("19"); await page.waitForTimeout(250);
+  if (!st.shown || !/名/.test(st.text) || !st.onName) bad.push(`名を飛ばしたのに理由が出ない/特定しない/位置が違う（${st.shown ? st.text : "非表示"} onName=${st.onName}）`);
+  await page.keyboard.type("19"); await page.waitForTimeout(250);
   st = await errState();
   if (st.shown && /生まれ年/.test(st.text)) bad.push(`年の入力中に年のエラー「${st.text}」`);
-  await page.click("#first-name"); await page.waitForTimeout(300);
+  // 名へ戻って入力中: 姓は埋まっている＝叱らない。年 "19" はまだ先（未確定）なので叱らない
+  await tap("#first-name");
   st = await errState();
-  if (st.shown && /お名前/.test(st.text)) bad.push(`名の入力中に名前のエラー「${st.text}」`);
-  await page.keyboard.press("End"); await page.keyboard.type("証"); await page.waitForTimeout(250);
-  // 名まで入れて年へ戻ると、年 "19" は不正だがフォーカス中なので出ない
-  await page.click("#bday-year"); await page.waitForTimeout(300);
+  if (st.shown) bad.push(`名の入力中にエラー「${st.text}」（オーナー報告の再現: 先の項目を叱っている）`);
+  await page.keyboard.type("証"); await page.waitForTimeout(250);
+  st = await errState();
+  if (st.shown) bad.push(`名の入力中(2文字目)にエラー「${st.text}」`);
+  // 年へ移る: 姓名は揃っている＝叱らない
+  await tap("#bday-year");
   st = await errState();
   if (st.shown) bad.push(`年の入力中にエラー「${st.text}」`);
-  await page.keyboard.press("End"); await page.keyboard.type("90"); await page.waitForTimeout(300);
+  await page.keyboard.type("90"); await page.waitForTimeout(300);
   const done = await page.evaluate(() => ({
     shown: getComputedStyle(document.querySelector("#error-name")).display !== "none",
-    enabled: !document.querySelector("#step05-next-button").classList.contains("is-disable")
+    enabled: !document.querySelector("#step05-next-button").classList.contains("is-disable"),
+    year: document.querySelector("#bday-year").value
   }));
-  if (done.shown || !done.enabled) bad.push(`全部入れてもエラー${done.shown ? "表示" : "非表示"}/CTA${done.enabled ? "有効" : "無効"}`);
-  bad.length ? fail(`${lp} 氏名/生まれ年のエラー表示`, bad.join(" / ")) : pass(`${lp} 氏名/生まれ年のエラー表示`, "入力中の項目は叱らない・未入力は項目を特定");
+  if (done.shown || !done.enabled) bad.push(`全部入れてもエラー${done.shown ? "表示" : "非表示"}/CTA${done.enabled ? "有効" : "無効"}（year=${done.year}）`);
+  // 不正な年のまま欄を離れる（手が止まる）＝年の理由を、生まれ年の上に出す
+  await page.fill("#bday-year", "20"); await page.waitForTimeout(150);
+  await page.evaluate(() => document.activeElement && document.activeElement.blur()); await page.waitForTimeout(300);
+  st = await errState();
+  if (!st.shown || !/生まれ年/.test(st.text) || !st.onYear) bad.push(`不正な年で離れても理由が出ない/位置が違う（${st.shown ? st.text : "非表示"} onYear=${st.onYear}）`);
+  bad.length ? fail(`${lp} 氏名/生まれ年のエラー表示`, bad.join(" / ")) : pass(`${lp} 氏名/生まれ年のエラー表示`, "入力中は通り過ぎた項目だけ・手が止まったら項目を特定して該当欄の上に");
   await ctx.close();
 }
-
 async function runSelfHeal(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
   const page = await ctx.newPage();

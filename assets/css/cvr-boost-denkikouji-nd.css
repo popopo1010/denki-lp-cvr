@@ -37,7 +37,7 @@ body.lp-form-step .nd-badge__num { font-size: 14px; }
 /* ===== FV: 質問＋2択を白いカードに（参考LPのモーダル相当） ===== */
 .nd-card { background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.14); padding: 12px 12px 10px; margin: 12px 0 0; }
 #step-first .nd-card .c-title01 { margin-top: 0; padding-top: 0; }
-#step-first .nd-card .cvr-micro-copy { margin-top: 40px !important; padding-bottom: 0 !important; }
+#step-first .nd-card .cvr-micro-copy { margin-top: 40px !important; padding: 0 56px 0 !important; } /* 右のクマ(48px)と文末を重ねない */
 
 /* ===== 求人カード: 参考LPの「広告カード」に寄せる（青枠・タグはアウトライン・年収を主役） ===== */
 .nd-lp .lp-jobs { margin-top: 14px; }
@@ -81,3 +81,26 @@ body.lp-form-step:has(#step04.is-step-active) .lp-jobs__note { padding: 0 12px; 
   .nd-brand .nd-brand__name { font-size: 15px; }
   .nd-permit { display: none; }
 }
+
+/* ===== PC幅（2026-09-07 オーナーPC実機「かぶってます」） =====
+   ① PCのヒーロー画像は固定高さでなく、画像下部に焼き込まれた「年間12,000…」帯にチップが被っていた
+      → HTML側で PC も SP 画像（帯なし）に統一し、固定高さ＋cover にする（数字は未確認の要確認項目でもある）
+   ② タイトルの緑帯・ボタンの赤▶（WPテーマ装飾）の無効化がスマホ幅限定で、PCで二重表示になっていた
+      → このLPは全幅で無効化する */
+@media (min-width: 768px) {
+  /* SP 画像も下部に「年間12,000」帯を持つ。スマホと同じ 150px×center 35% の切り出しなら帯は出ない（実測） */
+  #step-first > picture { display: block; height: 150px; overflow: hidden; border-radius: 8px; }
+  #step-first > picture img { height: 100% !important; max-height: 150px !important; width: 100%; object-fit: cover; object-position: center 35%; border-radius: 8px; }
+  .nd-chips { margin: -26px 12px 0; }
+  .nd-chips li { font-size: 11px; padding: 8px 3px; }
+  .nd-chips b { font-size: 12px; }
+}
+.nd-lp #step-first .c-title01 { background: none !important; text-align: center !important; padding: 0 !important; }
+.nd-lp #step-first .p-firstButton__container { justify-content: center !important; }
+.nd-lp #step-first .p-firstButton__text { text-align: center !important; }
+.nd-lp #step-first .p-firstButton::after,
+.nd-lp #step-first .p-firstButton__container::before, .nd-lp #step-first .p-firstButton__container::after,
+.nd-lp #step-first .p-firstButton__text::before, .nd-lp #step-first .p-firstButton__text::after,
+.nd-lp #step-first .p-firstButton .arrow, .nd-lp #step-first .p-firstButton i { display: none !important; content: none !important; background: none !important; }
+/* エラー帯はクマより手前（帯の右端がクマに隠れて読めない） */
+.nd-lp .p-step06__formGroup > dd > .c-error-message, .nd-lp .p-step07__formGroup > dd > .c-error-message { z-index: 4; }

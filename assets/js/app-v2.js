@@ -825,35 +825,48 @@
     if (isYearInput) {
       bdayYearInput.addEventListener("input", () => validate({ silent: true }));
       // blur は次のフォーカス先が確定してから判定する（blur 時点は activeElement=body）
+      bdayYearInput.addEventListener("focus", () => validate({ silent: true }));
       bdayYearInput.addEventListener("blur", () => setTimeout(() => validate(), 0));
     }
 
-    // 何が足りないかを、いま入力中の項目を除いて決める（2026-09-06 オーナー実機・denkikouji-nd STG）。
-    // ルール: (1) フォーカス中の項目のエラーは出さない (2) 出すときは項目を特定する
-    //         (3) フォーカスが外れて CTA が無効なら必ず理由を出す（2026-08-29 の原則）
+    // 何が足りないかを決める（2026-09-06 オーナー実機・denkikouji-nd STG）。
+    // ルール: (1) 入力中（このステップの欄にフォーカスがある）は「通り過ぎた項目」だけ見る＝
+    //             いま打っている欄も、まだ手を付けていない先の欄も叱らない
+    //         (2) 手が止まっている（フォーカスなし）なら、足りない項目を順に出す＝
+    //             CTA が無効の間は理由が見える（2026-08-29 の原則）
+    //         (3) 文言は項目を特定し、帯はその項目の上に出す（placeErrBox）
     function pendingMessage() {
       const active = document.activeElement;
-      const lastN = group.querySelector("#last-name");
-      const firstN = group.querySelector("#first-name");
-      const lastOk = !!((lastN && lastN.value) || "").trim();
-      const firstOk = !!((firstN && firstN.value) || "").trim();
-      const focusOnName = Array.prototype.some.call(inputs, (i) => i === active);
-      const focusOnYear = !!isYearInput && active === bdayYearInput;
-      if (!(lastOk && firstOk)) {
-        if (focusOnName) return null;
-        if (!lastOk && !firstOk) return "お名前を入力してください";
-        return lastOk ? "お名前（名）も入力してください" : "お名前（姓）も入力してください";
+      const lastEl = group.querySelector("#last-name");
+      const firstEl = group.querySelector("#first-name");
+      const yearEl = isYearInput ? bdayYearInput : null;
+      const order = [lastEl, firstEl, yearEl].filter(Boolean);
+      const idx = order.indexOf(active);
+      const upto = idx === -1 ? order.length : idx;
+      const lastOk = !!((lastEl && lastEl.value) || "").trim();
+      const firstOk = !!((firstEl && firstEl.value) || "").trim();
+      if (lastEl && upto > order.indexOf(lastEl) && !lastOk) {
+        return { field: "name", msg: firstOk ? "お名前（姓）も入力してください" : "お名前を入力してください" };
       }
-      if (isYearInput) {
-        const v = (bdayYearInput.value || "").trim();
-        const n = parseInt(v, 10);
-        const yearOk = /^[0-9]{4}$/.test(v) && n >= BIRTH_YEAR_MIN && n <= BIRTH_YEAR_MAX;
+      if (firstEl && upto > order.indexOf(firstEl) && !firstOk) {
+        return { field: "name", msg: lastOk ? "お名前（名）も入力してください" : "お名前を入力してください" };
+      }
+      if (yearEl && upto > order.indexOf(yearEl)) {
+        const v = (yearEl.value || "").trim();
+        const yearOk = /^[0-9]{4}$/.test(v) && parseInt(v, 10) >= BIRTH_YEAR_MIN && parseInt(v, 10) <= BIRTH_YEAR_MAX;
         if (!yearOk) {
-          if (focusOnYear) return null;
-          return `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください`;
+          return { field: "year", msg: v ? `生まれ年（西暦）は${BIRTH_YEAR_MIN}〜${BIRTH_YEAR_MAX}で入力してください` : "生まれ年（西暦）を入力してください" };
         }
       }
       return null;
+    }
+    // エラー帯を該当項目（お名前 / 生まれ年）の dd へ移す。各 CSS の
+    // `.p-step06__formGroup > dd > .c-error-message`（絶対配置・占有高ゼロ）がそのまま効く。
+    function placeErrBox(field) {
+      if (!errBox) return;
+      const anchor = field === "year" ? bdayYearInput : group.querySelector("#last-name");
+      const dd = anchor && anchor.closest ? anchor.closest("dd") : null;
+      if (dd && errBox.parentNode !== dd) dd.insertBefore(errBox, dd.firstChild);
     }
 
     function validate(opts) {
@@ -888,10 +901,11 @@
         // 以前は blur 時に未入力を全部列挙していたため、姓→名へ移った瞬間に
         // 「名・生まれ年を入力してください」が出て、名を打っている間ずっと残っていた。
         if (errBox) {
-          const msg = pendingMessage();
-          if (msg) {
+          const pending = pendingMessage();
+          if (pending) {
+            placeErrBox(pending.field);
             errBox.style.display = "block";
-            if (errText) errText.textContent = msg;
+            if (errText) errText.textContent = pending.msg;
           } else {
             errBox.style.display = "none";
           }
@@ -903,6 +917,7 @@
     inputs.forEach((input) => {
       // タイピング中も判定する（フォーカス中の項目は叱らないので出没しない。埋まった項目の帯は消える）
       input.addEventListener("input", () => validate({ silent: true }));
+      input.addEventListener("focus", () => validate({ silent: true }));
       input.addEventListener("blur", () => setTimeout(() => validate(), 0));
     });
 

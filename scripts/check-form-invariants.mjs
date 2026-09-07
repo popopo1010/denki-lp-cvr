@@ -81,16 +81,19 @@ for (const p of IMPLS) {
   check(`${p}: html.dk-inapp では autofocus しない`,
     /dk-inapp/.test(src) && /classList\.contains\("dk-inapp"\)/.test(src));
 
-  // 氏名/生まれ年のエラー表示（2026-09-06 オーナー実機）。入力中の項目に対して
-  // 「お名前を入力してください」を出すと、姓を1文字打った瞬間に赤帯が出て
-  // 「入力がバグっている」体感になる。判定は必ず document.activeElement を見て
-  // フォーカス中の項目を除外し、blur は次のフォーカス先が確定してから（setTimeout 0）行う。
+  // 氏名/生まれ年のエラー表示（2026-09-06 オーナー実機）。
+  // 入力中の項目や、まだ手を付けていない先の項目に対して「〜を入力してください」を出すと、
+  // 姓を1文字打った瞬間や名を打っている最中に赤帯が出て「入力がバグっている」体感になる。
+  // 判定は document.activeElement を見て「通り過ぎた項目」だけ叱り、手が止まったら
+  // 足りない項目を順に出す。帯は該当項目の dd へ移す（placeErrBox）。
+  // blur は次のフォーカス先が確定してから（setTimeout 0）判定する。
   if (/initNameInputs/.test(src)) {
-    check(`${p}: 氏名/生まれ年のエラーはフォーカス中の項目を除いて決める`,
-      /function pendingMessage\(\)/.test(src) && /focusOnName/.test(src) && /focusOnYear/.test(src) &&
-      /document\.activeElement/.test(src.slice(src.indexOf("function initNameInputs"))));
+    const body = src.slice(src.indexOf("function initNameInputs"));
+    check(`${p}: 氏名/生まれ年のエラーは「通り過ぎた項目」だけ（activeElement 基準）`,
+      /function pendingMessage\(\)/.test(body) && /order\.indexOf\(active\)/.test(body) &&
+      /upto > order\.indexOf/.test(body) && /function placeErrBox\(/.test(body) && /placeErrBox\(pending\.field\)/.test(body));
     check(`${p}: 氏名/生まれ年の blur 判定はフォーカス先の確定後（setTimeout 0）`,
-      /addEventListener\("blur", \(\) => setTimeout\(\(\) => validate\(\), 0\)\)/.test(src));
+      /addEventListener\("blur", \(\) => setTimeout\(\(\) => validate\(\), 0\)\)/.test(body));
   }
 
   // 送信ミラー(Zapier/GAS)は form 要素ではなく document に張る。
