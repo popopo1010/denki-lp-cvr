@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google Tag Manager（既存コンテナを使用） -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KV525PZ');</script>
+  <!-- End Google Tag Manager -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>診断ありがとうございました｜電気工事の適正年収診断</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="../assets/nenshu-v3.css?v=2">
+  <style>
+    .nv-ty { padding: 28px 18px 40px; text-align: center; }
+    .nv-ty__check {
+      width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 50%;
+      background: #1a8a3e; display: flex; align-items: center; justify-content: center;
+    }
+    .nv-ty__check svg { fill: #fff; }
+    .nv-ty__title { font-size: 20px; font-weight: 800; margin: 0 0 8px; }
+    .nv-ty__lead { font-size: 14px; color: var(--nv-sub); margin: 0 0 22px; line-height: 1.7; }
+    .nv-ty__line {
+      display: block; background: #06c755; color: #fff; font-size: 17px; font-weight: 800;
+      padding: 16px; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 0 #04a548;
+    }
+    .nv-ty__line:active { transform: translateY(3px); box-shadow: none; }
+    .nv-ty__line-note { font-size: 12px; color: var(--nv-sub); margin: 10px 0 0; }
+    .nv-ty__steps { list-style: none; padding: 0; margin: 0 0 22px; display: flex; justify-content: center; gap: 8px; }
+    .nv-ty__steps li { font-size: 12px; font-weight: 700; color: var(--nv-sub); }
+    .nv-ty__steps li.is-cur { color: var(--nv-primary); }
+  </style>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KV525PZ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <div class="nv-wrap">
+    <header class="nv-header">
+      <p class="nv-header__title">電気工事の適正年収診断</p>
+      <span class="nv-header__permit">厚生労働大臣許可 13-ユ-316946</span>
+    </header>
+
+    <div class="nv-ty">
+      <div class="nv-ty__check">
+        <svg width="34" height="34" viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <h1 class="nv-ty__title">診断ありがとうございました</h1>
+      <ul class="nv-ty__steps">
+        <li>①登録完了</li>
+        <li class="is-cur">②LINEで受け取る</li>
+      </ul>
+      <p class="nv-ty__lead">担当者より、あなたの推定年収と<br>条件に合う求人を無料でご案内します。<br>下のLINEからの受け取りがスムーズです。</p>
+
+      <a class="nv-ty__line" id="nv-line" href="https://lin.ee/PzFJp7H" target="_blank" rel="noopener" data-line-position="thanks">LINEで結果と求人を受け取る</a>
+      <p class="nv-ty__line-note">通知をオンにすると見逃しません</p>
+    </div>
+
+    <footer class="nv-footer">
+      <div class="nv-footer__links">
+        <a href="/terms" target="_blank" rel="noopener">利用規約</a>
+        <a href="/privacypolicy" target="_blank" rel="noopener">プライバシーポリシー</a>
+        <a href="https://builders-job.com/company" target="_blank" rel="noopener">運営会社</a>
+      </div>
+      <p class="nv-footer__copy">Copyright &copy; XCHANGE 有料職業紹介事業許可番号 13-ユ-316946</p>
+    </footer>
+  </div>
+
+  <script>
+  (function () {
+    /* ===== 職種別 LINE友だち追加URL =====
+       診断した資格区分に応じて最適なLINE公式アカウントへ振り分ける。
+       URLは既存LP（thanks-v2）で実際に使用しているものを採用。
+       施工管理用に別のLINE公式アカウントが用意され次第、sekoukanri を差し替えるだけでよい。
+       - denki      : 電気工事士（第一種/第二種/電気主任/その他）
+       - sekoukanri : 施工管理（1級/2級 電気施工管理） */
+    var LINE_URLS = {
+      denki: "https://lin.ee/PzFJp7H",
+      sekoukanri: "https://lin.ee/PzFJp7H"
+    };
+
+    function getOcc() {
+      var q = new URLSearchParams(location.search).get("occ");
+      if (q === "denki" || q === "sekoukanri") return q;
+      try {
+        var s = sessionStorage.getItem("nv3_occ");
+        if (s === "denki" || s === "sekoukanri") return s;
+      } catch (e) {}
+      return "denki";
+    }
+
+    var occ = getOcc();
+    var url = LINE_URLS[occ] || LINE_URLS.denki;
+    var line = document.getElementById("nv-line");
+    if (line) line.setAttribute("href", url);
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: "thanks_page_view", lp_slug: "nenshu-shindan-v3", occupation: occ });
+
+    if (line) {
+      line.addEventListener("click", function () {
+        window.dataLayer.push({ event: "line_friend_click", occupation: occ, line_cta_position: "thanks" });
+      });
+    }
+  })();
+  </script>
+</body>
+</html>
