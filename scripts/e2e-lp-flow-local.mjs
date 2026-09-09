@@ -445,7 +445,12 @@ async function runLp(browser, devices, lp) {
 async function runNameErrorUx(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
   const page = await ctx.newPage();
-  await page.route(/hooks\.zapier\.com|script\.google\.com|api\.ipify\.org|googletagmanager|zipcloud|geoapi/, (r) => r.abort());
+  // 遮断は共通の blockExternal に任せる。ここだけドメイン列挙だったため
+  // connect.facebook.net と www.google-analytics.com が素通りしており、
+  // waitUntil:"load" が外部の応答待ちで 30 秒タイムアウトすることがあった
+  // （2026-09-09 CI #164 の denkikouji-v2 で発生）。列挙式は新しい外部タグが
+  // 増えるたびに漏れる。あわせてテーマCSSもスナップショットで供給される。
+  await blockExternal(page);
   await page.goto(BASE + lp, { waitUntil: "load" });
   await page.waitForTimeout(600);
   let arrived = false;
