@@ -12,6 +12,13 @@
 #    GAS側にある場合は中断する（clasp push はリモート専用ファイルを消すため）
 #  - .claspignore のホワイトリストで送るファイルを固定
 #
+# このワークフローが GAS 反映の唯一の入口。
+# 2026-09-09 まで同名の gas-deploy.yml が並存し、main マージのたびに**2本とも走って**
+# 同じGASプロジェクトへ同時に clasp push していた（実測: #135 のマージで2ラン同時起動）。
+# 旧ファイルには下の削除ガードも concurrency も無く、clasp もバージョン未固定だった
+# ため、負けた側が意図せず上書きし得る状態だった。旧ファイルは削除し、
+# そこにしか無かった Slack Bot ヘルスチェックはこのファイルの末尾へ移した。
+#
 # 必要な Secret: CLASPRC_JSON（`npm i -g @google/clasp@2.4.2 && clasp login` 後の
 # ~/.clasprc.json の中身）。手順は gas-recorder/自動デプロイセットアップ.md。
 name: Deploy GAS (gas-recorder)
@@ -87,3 +94,9 @@ jobs:
       - name: 既存Webアプリデプロイを新バージョン化（URL不変）
         working-directory: gas-recorder
         run: clasp deploy -i "$GAS_DEPLOYMENT_ID" -d "auto ${GITHUB_SHA::7}"
+
+      # 反映後、公開中のWebアプリが応答しBotトークンが生きているかだけ見る
+      # （auth.test のみ・チャンネルへの投稿はしない）。
+      # 旧 gas-deploy.yml から移設（2026-09-09。重複ワークフロー統合）。
+      - name: Slack Bot ヘルスチェック（投稿なし）
+        run: node scripts/check-slack-bot.mjs
