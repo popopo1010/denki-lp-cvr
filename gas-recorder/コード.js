@@ -358,7 +358,9 @@ function doPost(e) {
     if (zohoDeal.ok) {
       updateRowColumns(sheet, header, newRow, {
         zoho_deal_id: zohoDeal.id,
-        zoho_synced_at: toJst(new Date())
+        zoho_synced_at: toJst(new Date()),
+        // 項目を直して作り直した場合は痕跡を残す（無言で値が変わると後で追えない）
+        zoho_error: zohoDeal.repaired ? ("repaired: " + zohoDeal.repaired) : ""
       });
     } else if (zohoDeal.error) {
       updateRowColumns(sheet, header, newRow, { zoho_error: zohoDeal.error });
