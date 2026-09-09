@@ -324,9 +324,16 @@ jobs:
           echo "除外リスト検証OK"
 
           # XserverのSSHは一時的に接続不可になることがあるためリトライする
-          # （2026-06-10 #236/#237 が connect timeout で連続失敗した教訓）
+          # （2026-06-10 #236/#237、2026-09-04 #520/#526、2026-09-09 #537 が connect timeout）
+          #
+          # 待ち時間は「固定45秒×5回」だった。ConnectTimeout=60 と合わせても粘るのは
+          # 実質7分ほどで、上記はいずれもその窓の中で復旧しきらず落ちている。
+          # 復旧待ちは長引くほど1回あたりの成功率が上がるので、待ち時間を伸ばしながら
+          # 6回・待ち時間の合計10分半（接続待ちを含めて実質15分前後）まで粘る。
+          # ここで落ちても本番のファイルは1バイトも変わらない（転送前に切れるため）。
           deploy_ok=false
-          for attempt in 1 2 3 4 5; do
+          backoffs=(30 60 120 180 240)
+          for attempt in 1 2 3 4 5 6; do
             if rsync -avz --delete "${EXCLUDES[@]}" \
               -e "ssh -p ${XSERVER_PORT} -i ${HOME}/.ssh/id_ed25519 ${SSH_CHECK} -o ConnectTimeout=60 -o ServerAliveInterval=15" \
               ./ "${XSERVER_USER}@${XSERVER_HOST}:${XSERVER_DEPLOY_PATH}${DEPLOY_SUFFIX}/"; then
@@ -334,11 +341,14 @@ jobs:
               echo "rsync succeeded on attempt ${attempt}"
               break
             fi
-            echo "rsync failed (attempt ${attempt}/5), waiting 45s..."
-            sleep 45
+            if [ "${attempt}" -le 5 ]; then
+              wait_s="${backoffs[$((attempt - 1))]}"
+              echo "rsync failed (attempt ${attempt}/6), waiting ${wait_s}s..."
+              sleep "${wait_s}"
+            fi
           done
           if [ "$deploy_ok" != "true" ]; then
-            echo "::error::rsync failed after 5 attempts (Xserver SSH unreachable?)"
+            echo "::error::rsync failed after 6 attempts over ~15min (Xserver SSH unreachable). サーバ側の復旧待ち。本番ファイルは未変更"
             exit 1
           fi
 
