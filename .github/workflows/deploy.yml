@@ -77,6 +77,10 @@ jobs:
       - name: Check agency share (代理店共有シートのPII混入検査)
         run: node scripts/check-agency-share.mjs
 
+      # 項目長オーバーは商談だけが無言で作られない壊れ方をするので本番経路でも見る
+      - name: Check zoho field limits (Zoho項目の長さガード)
+        run: node scripts/check-zoho-field-limits.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js

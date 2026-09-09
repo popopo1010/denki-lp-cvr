@@ -161,7 +161,7 @@ function zohoErrorText(res) {
 }
 
 /**
- * Deals の項目メタデータ（使える項目・各ピックリストの選択肢）を取得。
+ * Deals の項目メタデータ（使える項目・ピックリストの選択肢・各項目の最大長）を取得。
  * Zoho画面での項目追加・選択肢追加に自動追従させるための土台。6時間キャッシュ。
  * 取得に失敗したら「制約なし」を返し、送信自体は止めない。
  */
@@ -172,13 +172,15 @@ function zohoFieldMeta() {
     try { return JSON.parse(cached); } catch (e) { /* 壊れていたら取り直す */ }
   }
 
-  var meta = { ok: false, usable: {}, options: {} };
+  var meta = { ok: false, usable: {}, options: {}, lengths: {} };
   try {
     var res = zohoFetch("/settings/fields?module=Deals&type=all");
     if (res.code === 200 && res.body && res.body.fields) {
       meta.ok = true;
       res.body.fields.forEach(function (f) {
         meta.usable[f.api_name] = f.type !== "unused";
+        // 各項目の最大長。1文字でも超えると作成ごと 400 で落ちるので送信前に丸める材料にする。
+        if (typeof f.length === "number" && f.length > 0) meta.lengths[f.api_name] = f.length;
         if (f.pick_list_values && f.pick_list_values.length) {
           // Stage のように表示名と内部値がズレる項目があるため、両方を許容値として持つ
           var vals = [];
@@ -387,6 +389,109 @@ function zohoMarketingChannel(params) {
   return out.length > 250 ? out.slice(0, 250) : out; // text項目の上限対策
 }
 
+/**
+ * ── Zoho の「項目の長さ制限」対策 ───────────────────────────────
+ * Zoho は項目ごとに最大長を持ち、**1文字でも超えるとその1件の作成/更新ごと**
+ * 400 INVALID_DATA で拒否する。つまり長い値が1つあるだけでリードが商談にならない。
+ * 2026-09-07 本番で発生: 施工管理LPの step01 は資格の複数選択で、11個すべて選んだ人の
+ * 商談名「氏名/資格×11」が 142 文字になり Deal_Name(120) を超えて商談だけ作られなかった
+ * （Slack通知とシート記録は正常なので、商談が無いことに気づきにくい）。
+ *
+ * 対策は3段構え。1つ壊れても次段が拾う。
+ *   1段目 zohoBuildDealName   … 商談名を「意味を保ったまま」上限内に組み立てる
+ *   2段目 zohoClampDealFields … 送信直前に全テキスト項目をメタデータの最大長で丸める
+ *   3段目 zohoRepairDeal      … それでも弾かれたら、Zohoが名指しした項目だけ直して1回だけ再送
+ * 上限値はメタデータ（実行時取得・6時間キャッシュ）から読むので、Zoho画面で項目長を
+ * 変えてもコード変更は要らない。メタが取れないときだけ下の既定値を使う。
+ */
+var ZOHO_FIELD_LENGTH_FALLBACK = { Deal_Name: 120, marketing_channel: 250 };
+
+// 必須項目は「落とす」ことができない（無いと作成自体が通らない）。丸めるだけにする。
+var ZOHO_DEAL_REQUIRED_FIELDS = ["Deal_Name", "Pipeline", "Stage", "m_phone_number"];
+
+// サロゲートペア（絵文字など）の途中で切らずに丸める。
+// 片割れだけ残るとZoho側で別のエラーになりうるので1文字戻す。
+function zohoSliceSafe(str, max) {
+  if (str.length <= max) return str;
+  var out = str.slice(0, max);
+  var last = out.charCodeAt(out.length - 1);
+  if (last >= 0xD800 && last <= 0xDBFF) out = out.slice(0, -1);
+  return out;
+}
+
+function zohoFieldMaxLength(meta, apiName) {
+  if (meta && meta.ok && meta.lengths && typeof meta.lengths[apiName] === "number") {
+    return meta.lengths[apiName];
+  }
+  return ZOHO_FIELD_LENGTH_FALLBACK[apiName] || 0; // 0 = 上限不明（丸めない）
+}
+
+/**
+ * 商談名を組み立てる。命名は既存の運用に合わせて `姓名/資格`。
+ * 上限を超えるときは資格を先頭から入るだけ残し「ほかN件」を付ける。
+ * 資格の全量は保有資格(shikaku)項目と lp_info に入るので、短くしても情報は失われない。
+ * ※ ぶつ切りにすると営業側で誰の商談か読めなくなるため、意味の単位で切る。
+ */
+function zohoBuildDealName(name, license, max) {
+  max = max || ZOHO_FIELD_LENGTH_FALLBACK.Deal_Name;
+  var base = String(name || "") + "/";
+  var full = base + String(license || "");
+  if (full.length <= max) return full;
+
+  var parts = String(license || "").split(",").map(function (v) { return v.trim(); })
+    .filter(function (v) { return !!v; });
+  for (var keep = parts.length - 1; keep >= 1; keep--) {
+    var cand = base + parts.slice(0, keep).join(", ") + " ほか" + (parts.length - keep) + "件";
+    if (cand.length <= max) return cand;
+  }
+  return full.slice(0, max); // 氏名だけで上限を超えるような極端な場合の保険
+}
+
+/**
+ * 送信直前の最終防波堤。文字列項目をすべてメタデータの最大長で丸める。
+ * Deal_Name 以外（lp_info・marketing_channel・shikaku_sonota など）も同じ理由で落ちうるため、
+ * 項目を1つずつ手当てするのではなく、まとめて面で守る。数値・配列には触れない。
+ */
+function zohoClampDealFields(deal, meta) {
+  Object.keys(deal).forEach(function (key) {
+    if (typeof deal[key] !== "string") return;
+    // ピックリスト（Stage・area 等）は丸めると選択肢として存在しない値になり、
+    // 長さエラーの代わりに MAPPING_MISMATCH で落ちる。値の検証は zohoValidOption の担当。
+    if (meta && meta.ok && meta.options && meta.options[key]) return;
+    var max = zohoFieldMaxLength(meta, key);
+    if (max && deal[key].length > max) {
+      zohoLog("Zoho項目 " + key + " が上限 " + max + " 文字を超えたため丸めました");
+      deal[key] = zohoSliceSafe(deal[key], max);
+    }
+  });
+  return deal;
+}
+
+/**
+ * 作成が 400 INVALID_DATA で落ちたとき、Zohoの応答が名指しした項目だけを直す。
+ * 直せたら理由を文字列で返す（呼び出し元が1回だけ再送する）。直せなければ "" を返す。
+ * 方針は CLAUDE.md と同じ「判定できないときは作る側に倒す」——
+ * 未知の制約で1項目が弾かれたせいでリードごと消えるより、その項目を落として商談を残す方が良い。
+ */
+function zohoRepairDeal(deal, res) {
+  var first = (res && res.body && res.body.data && res.body.data[0]) || {};
+  if (first.code !== "INVALID_DATA") return "";
+  var details = first.details || {};
+  var field = details.api_name;
+  if (!field || deal[field] === undefined) return "";
+
+  var max = details.maximum_length;
+  if (typeof max === "number" && max > 0 && typeof deal[field] === "string" && deal[field].length > max) {
+    // 1段目で組み立て済みの値を、Zohoが言ってきた本当の上限まで詰める
+    // （ここに来るのはメタの上限が実際より緩かったとき）。
+    deal[field] = zohoSliceSafe(deal[field], max);
+    return field + " を " + max + " 文字に短縮";
+  }
+  if (ZOHO_DEAL_REQUIRED_FIELDS.indexOf(field) !== -1) return ""; // 必須は落とせない
+  delete deal[field];
+  return field + " を除外";
+}
+
 // Zohoの商談1件ぶんのペイロードを作る
 function buildZohoDeal(params, meta) {
   meta = meta || zohoFieldMeta();
@@ -424,7 +529,7 @@ function buildZohoDeal(params, meta) {
   if (birthday.yearOnly) info.push("生年月日は年のみ回答（月日は4/1の仮置き）");
 
   var deal = {
-    Deal_Name: name + "/" + license,
+    Deal_Name: zohoBuildDealName(name, license, zohoFieldMaxLength(meta, "Deal_Name")),
     Pipeline: ZOHO_DEAL_PIPELINE,
     Stage: ZOHO_DEAL_STAGE,
     m_phone_number: tel,
@@ -453,7 +558,7 @@ function buildZohoDeal(params, meta) {
   if (birthday.date) deal.date_seinengappi = birthday.date;
   if (String(params["your-email"] || "").trim()) deal.email_main = String(params["your-email"]).trim();
 
-  return deal;
+  return zohoClampDealFields(deal, meta);
 }
 
 // 電話番号で既存の商談を探す。見つかればそのIDを返す（重複作成の防止）。
@@ -490,9 +595,20 @@ function findZohoDealByPhone(tel) {
   return hours <= ZOHO_DEDUP_HOURS ? String(data[0].id) : "";
 }
 
+// 商談を1件 POST して結果を判定する。初回送信と再送で同じ判定を使うために切り出した。
+// 戻り値: { ok:true, id } または { ok:false, res }（res は呼び出し元の修復・エラー整形用）
+function zohoCreateDealRequest(deal) {
+  var res = zohoFetch("/Deals", { method: "post", payload: { data: [deal] } });
+  var first = (res.body && res.body.data && res.body.data[0]) || {};
+  if (res.code === 201 && first.code === "SUCCESS") {
+    return { ok: true, id: String(first.details && first.details.id) };
+  }
+  return { ok: false, res: res };
+}
+
 /**
  * フォーム送信1件を Zoho の商談として登録する。
- * 戻り値: { ok:boolean, id?:string, existing?:boolean, skipped?:string, error?:string }
+ * 戻り値: { ok:boolean, id?:string, existing?:boolean, skipped?:string, error?:string, repaired?:string }
  * 例外は投げない（呼び出し元の doPost を落とさないため）。
  */
 function syncDealToZoho(params, meta) {
@@ -505,12 +621,22 @@ function syncDealToZoho(params, meta) {
     if (existing) return { ok: true, id: existing, existing: true };
 
     var deal = buildZohoDeal(params, meta);
-    var res = zohoFetch("/Deals", { method: "post", payload: { data: [deal] } });
-    var first = (res.body && res.body.data && res.body.data[0]) || {};
-    if (res.code === 201 && first.code === "SUCCESS") {
-      return { ok: true, id: String(first.details && first.details.id) };
+    var res = zohoCreateDealRequest(deal);
+    if (res.ok) return res;
+
+    // 項目1つのせいで弾かれただけなら、その項目を直して1回だけ作り直す。
+    // ここで諦めるとリードが商談にならず、後から一覧で拾う手段もない。
+    var repaired = zohoRepairDeal(deal, res.res);
+    if (repaired) {
+      zohoLog("Zoho商談の作成に失敗したため " + repaired + " して再送します");
+      var retry = zohoCreateDealRequest(deal);
+      if (retry.ok) {
+        retry.repaired = repaired;
+        return retry;
+      }
+      return { ok: false, error: zohoErrorText(retry.res) + " ※" + repaired + "して再送も失敗" };
     }
-    return { ok: false, error: zohoErrorText(res) };
+    return { ok: false, error: zohoErrorText(res.res) };
   } catch (err) {
     return { ok: false, error: String(err) };
   }
@@ -592,7 +718,7 @@ function backfillZohoDeals(limit) {
       updateRowColumns(sheet, header, rowNum, {
         zoho_deal_id: result.id,
         zoho_synced_at: toJst(new Date()),
-        zoho_error: ""
+        zoho_error: result.repaired ? ("repaired: " + result.repaired) : ""
       });
       if (result.existing) linked++; else created++;
     } else {

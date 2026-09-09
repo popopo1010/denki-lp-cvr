@@ -70,6 +70,7 @@
 | `check-asset-versions.mjs` | `?v=` の上げ忘れ・不揃い（`--update` で台帳更新） |
 | `check-lazy-steps.mjs` / `check-local-refs.mjs` | 参照切れ |
 | `check-agency-share.mjs` | 代理店共有シートに個人情報が混ざらないこと |
+| `check-zoho-field-limits.mjs` | **Zoho商談が「作られずに消える」のを防ぐ**。項目の最大長を1文字でも超えると Zoho は 400 で作成ごと拒否するが、Slack通知もシート記録も正常に出るため気づけない（2026-09-07: 資格11個選択で商談名142文字→`Deal_Name`(120)超過）。商談名の組み立て・送信直前の全項目クランプ・弾かれた後の1回再送の3段を検査する |
 | `e2e-lp-flow-local.mjs` | 実ブラウザでフォームを最後まで通す＋DOM差し替え/遅延ステップ失敗/load前クリックからの復旧 |
 | `audit-mobile-ux.mjs` | **手動**。6機種×LP×全ステップの実測（横スクロール・タップ領域44px・入力欄16px・FV内CTA）。CIには入れない（遅い） |
 
