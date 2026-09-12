@@ -105,6 +105,9 @@ jobs:
       - name: Check FV images (FV主画像のモバイル出し分け)
         run: node scripts/check-fv-images.mjs
 
+      - name: Check step01 icons (step01アイコンの軽量版)
+        run: node scripts/check-step01-icons.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js
