@@ -22,6 +22,7 @@ node scripts/check-gas-row-integrity.mjs # 送信行の状態列を別人の行�
 node scripts/check-gas-rescue-merge.mjs  # thanks到達ピンが先着しても二重行・二重@channel・重複商談にしない
 node scripts/check-fv-images.mjs       # モバイルにPC用のFV画像を配らない
 node scripts/check-minify-coverage.mjs # deploy.yml の minify 対象の取りこぼし
+node scripts/check-step01-icons.mjs    # step01アイコンを原寸で配らない
 
 echo "== 1/5 thanks-v2 静的 =="
 node scripts/check-thanks-v2-release.mjs
