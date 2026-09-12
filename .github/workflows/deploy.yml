@@ -105,6 +105,9 @@ jobs:
       - name: Check GAS row integrity (送信行の行番号すり替わり防止)
         run: node scripts/check-gas-row-integrity.mjs
 
+      - name: Check FV images (FV主画像のモバイル出し分け)
+        run: node scripts/check-fv-images.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js

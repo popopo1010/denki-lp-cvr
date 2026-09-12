@@ -21,7 +21,7 @@ jobs:
   static:
     name: 静的チェック（禁止コピー・クマ・参照・?v=・フォーム配線）
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -75,10 +75,13 @@ jobs:
       - name: 送信行の行番号すり替わり防止（状態列を別人に書かない）
         run: node scripts/check-gas-row-integrity.mjs
 
+      - name: FV主画像のモバイル出し分け（PC用の重い方を配らない）
+        run: node scripts/check-fv-images.mjs
+
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -113,7 +116,10 @@ jobs:
     # 当初 push では丸ごと skip していたが、PRを作らずブランチへ push する運用だと
     # 実ブラウザ検証が一度も回らないという穴になっていた（2026-08-23 に発覚）。
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # PRモードは63本×5パスを直列に回すので長い（実測25分超）。
+    # 2026-09-12 に一律25分を入れたら run #172 がこのジョブだけ打ち切られた。
+    # ハング検知の上限としては機能させたいので、実測の倍を上限にする。
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
