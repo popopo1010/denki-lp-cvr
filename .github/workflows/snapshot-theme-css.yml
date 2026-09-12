@@ -83,4 +83,15 @@ jobs:
           gh pr create --base main --head "$BR" \
             --title "WPテーマCSSスナップショット更新" \
             --body "本番の style.css との差分を検知しました。**このPRのマージ＝全LPの見た目が変わる**ので、差分を必ず確認してください。2026-08-23 に全LPが本番URL直参照から theme-snapshot.css に切り替わったため、テーマ変更はこのPRを通してのみLPへ反映されます（以前の『LP表示への影響はありません』は無効）。マージ＝本番デプロイ起動。表示に関わるので STG実機確認を挟んでください。主力LPが読む theme-lp.css も同時に再生成しています（差分があれば theme-lp.css の ?v= を上げないと check-asset-versions が落ちます）。" \
-            || echo "PR already exists (updated by force-push)"
+            || {
+              # `|| echo` で全ての失敗を飲み込んでいた（2026-09-12 修正）。
+              # 403 や rate limit で PR が作られなくてもジョブが緑になり、
+              # テーマCSSの差分が**永久にLPへ届かない**のに誰も気づけなかった。
+              # 「既にPRがある」だけを許し、それ以外は落とす。
+              if gh pr list --head "$BR" --state open --json number --jq 'length' | grep -qv '^0$'; then
+                echo "PR already exists (updated by force-push)"
+              else
+                echo "::error::テーマCSSに差分があるのにPRを作成できませんでした。差分が全LPへ届きません。"
+                exit 1
+              fi
+            }

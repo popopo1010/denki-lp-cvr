@@ -25,9 +25,23 @@ DRY=false; [ "${2:-}" = "--dry-run" ] && DRY=true
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [ "$DRY" != true ] && { [ -z "${CF_ZONE_ID:-}" ] || [ -z "${CF_API_TOKEN:-}" ]; }; then
-  echo "cloudflare-purge: CF_ZONE_ID / CF_API_TOKEN が無いのでスキップ（Cloudflare 未導入）"
-  exit 0
+# 片方だけ設定されている状態は「Cloudflare 未導入」ではなく**設定ミス**。
+# 以前はまとめて exit 0 していたため、導入済みなのにパージされず
+# エッジに旧HTMLが residual するのに無言だった（2026-09-12 修正）。
+if [ "$DRY" != true ]; then
+  if [ -n "${CF_ZONE_ID:-}" ] && [ -z "${CF_API_TOKEN:-}" ]; then
+    echo "cloudflare-purge: CF_ZONE_ID があるのに CF_API_TOKEN がありません（設定ミス）。" >&2
+    echo "  このまま進むとエッジに旧HTMLが残り続けます。Secret を登録してください。" >&2
+    exit 1
+  fi
+  if [ -z "${CF_ZONE_ID:-}" ] && [ -n "${CF_API_TOKEN:-}" ]; then
+    echo "cloudflare-purge: CF_API_TOKEN があるのに CF_ZONE_ID がありません（設定ミス）。" >&2
+    exit 1
+  fi
+  if [ -z "${CF_ZONE_ID:-}" ]; then
+    echo "cloudflare-purge: CF_ZONE_ID / CF_API_TOKEN が無いのでスキップ（Cloudflare 未導入）"
+    exit 0
+  fi
 fi
 
 # 配信対象の HTML（deploy.yml の rsync 除外と同じディレクトリを外す）

@@ -21,6 +21,7 @@ jobs:
   static:
     name: 静的チェック（禁止コピー・クマ・参照・?v=・フォーム配線）
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,9 +72,16 @@ jobs:
       - name: Zoho項目の長さガード（商談が作られず消えるのを防ぐ）
         run: node scripts/check-zoho-field-limits.mjs
 
+      - name: 送信行の行番号すり替わり防止（状態列を別人に書かない）
+        run: node scripts/check-gas-row-integrity.mjs
+
+      - name: FV主画像のモバイル出し分け（PC用の重い方を配らない）
+        run: node scripts/check-fv-images.mjs
+
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -108,11 +116,26 @@ jobs:
     # 当初 push では丸ごと skip していたが、PRを作らずブランチへ push する運用だと
     # 実ブラウザ検証が一度も回らないという穴になっていた（2026-08-23 に発覚）。
     runs-on: ubuntu-latest
+    # PRモードは63本×5パスを**直列**に回すので長い。
+    # 手元で 1127 検査 / 約40分、CIランナーはさらに遅く 55分超（run #174 で実測）。
+    # 2026-09-12 に一律25分を入れたら run #172 が、60分でも run #174 が足りなかった。
+    # ハング検知の上限としては機能させたいので 90分にする。
+    # 恒久対策は LP リストのシャーディング（matrix）で、これは別PRで扱う。
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # Chromium 本体を毎ラン落とし直していた（約100MB）。バージョン文字列をキーに
+      # キャッシュする。外れても従来どおり取得するだけなので、失敗しても害はない。
+      - name: Playwright ブラウザのキャッシュ
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.56.1-${{ runner.os }}
 
       - name: Playwright（Chromiumのみ）
         run: |
