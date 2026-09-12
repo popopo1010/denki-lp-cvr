@@ -81,6 +81,9 @@ jobs:
       - name: Check zoho field limits (Zoho項目の長さガード)
         run: node scripts/check-zoho-field-limits.mjs
 
+      - name: Check GAS row integrity (送信行の行番号すり替わり防止)
+        run: node scripts/check-gas-row-integrity.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js

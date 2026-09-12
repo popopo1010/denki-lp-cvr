@@ -17,6 +17,7 @@ node scripts/check-asset-versions.mjs  # ?v= の上げ忘れ・不揃い
 node scripts/check-lp-guard.js         # LPガード（本番反映手順書に載っている）
 node scripts/check-agency-share.mjs   # 代理店共有シートに個人情報が出ないこと
 node scripts/check-zoho-field-limits.mjs # Zoho項目の長さ超過で商談が作られない事故を防ぐ
+node scripts/check-gas-row-integrity.mjs # 送信行の状態列を別人の行に書かない
 
 echo "== 1/5 thanks-v2 静的 =="
 node scripts/check-thanks-v2-release.mjs

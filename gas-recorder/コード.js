@@ -336,9 +336,7 @@ function doPost(e) {
     for (var j = 0; j < header.length; j++) {
       row.push((header[j] in params) ? params[header[j]] : "");
     }
-    sheet.appendRow(row);
-
-    var newRow = sheet.getLastRow();
+    var newRow = appendRowAndGetIndex(sheet, row);
     var slackLead = notifySlackNewLead(params);
     if (slackLead.ok && slackLead.ts) {
       updateRowColumns(sheet, header, newRow, {
@@ -480,8 +478,7 @@ function handleThanksReached(params) {
     for (var j = 0; j < header.length; j++) {
       rowVals.push((header[j] in params) ? params[header[j]] : "");
     }
-    sheet.appendRow(rowVals);
-    var newRow = sheet.getLastRow();
+    var newRow = appendRowAndGetIndex(sheet, rowVals);
 
     var text;
     if (testReason) {
@@ -941,6 +938,39 @@ function ensureColumn(sheet, header, colName) {
   return idx;
 }
 
+/**
+ * 行を追記して「その行の行番号」を返す。
+ *
+ * appendRow の直後に getLastRow() を読むだけだと、**同時に届いた別の送信**が
+ * 先に追記していた場合に他人の行番号を拾う。すると slack_thread_ts / zoho_deal_id /
+ * zoho_error を**別人の行に書き込む**ことになり、
+ *  - 書き込まれた側は「連携済み」と誤認され、backfillZohoDeals() が永久に商談を作らない
+ *  - 書けなかった側は未連携のまま残り、後から重複商談が立つ
+ *  - Slackスレッドの面談予約返信も別人に紐づく
+ * という壊れ方をする。しかもエラーはどこにも残らない（このリポジトリが繰り返し
+ * 踏んできた「無言でリードが消える」型）。追記と行番号取得をロックで一体にする。
+ *
+ * ロックが取れないときは**記録を優先して続行**する。行番号がずれる可能性より
+ * リードを1件落とすほうが損失が大きい（Zoho連携の判断と同じ方針）。
+ */
+function appendRowAndGetIndex(sheet, row) {
+  var lock = null, locked = false;
+  try {
+    lock = LockService.getScriptLock();
+    locked = lock.tryLock(30000);
+    if (!locked) console.log("appendRowAndGetIndex: ロックを取得できずロック無しで続行");
+  } catch (e) {
+    console.log("appendRowAndGetIndex: LockService を使えません: " + e);
+  }
+  try {
+    sheet.appendRow(row);
+    SpreadsheetApp.flush(); // 追記を確定させてから行番号を読む
+    return sheet.getLastRow();
+  } finally {
+    if (locked) { try { lock.releaseLock(); } catch (e2) { /* 解放失敗は放置（自動失効する） */ } }
+  }
+}
+
 function updateRowColumns(sheet, header, rowNum, updates) {
   for (var key in updates) {
     if (!updates.hasOwnProperty(key) || updates[key] === "" || updates[key] == null) continue;
@@ -995,8 +1025,7 @@ function handleCalendarBooked(params) {
         var h = header[j];
         row.push((h in params) ? params[h] : ((h in updates) ? updates[h] : ""));
       }
-      sheet.appendRow(row);
-      matchedRow = sheet.getLastRow();
+      matchedRow = appendRowAndGetIndex(sheet, row);
     }
 
     var slackResult = notifySlackBooking(sheet, header, matchedRow, params);

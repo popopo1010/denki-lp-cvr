@@ -71,6 +71,9 @@ jobs:
       - name: Zoho項目の長さガード（商談が作られず消えるのを防ぐ）
         run: node scripts/check-zoho-field-limits.mjs
 
+      - name: 送信行の行番号すり替わり防止（状態列を別人に書かない）
+        run: node scripts/check-gas-row-integrity.mjs
+
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
     runs-on: ubuntu-latest
