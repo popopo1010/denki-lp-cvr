@@ -499,8 +499,25 @@ async function runNameErrorUx(browser, devices, lp) {
     year: document.querySelector("#bday-year").value
   }));
   if (done.shown || !done.enabled) bad.push(`全部入れてもエラー${done.shown ? "表示" : "非表示"}/CTA${done.enabled ? "有効" : "無効"}（year=${done.year}）`);
-  // 不正な年のまま欄を離れる（手が止まる）＝年の理由を、生まれ年の上に出す
-  await page.fill("#bday-year", "20"); await page.waitForTimeout(150);
+  // 不正な年のまま欄を離れる（手が止まる）＝年の理由を、生まれ年の上に出す。
+  // 生まれ年の欄は LP によって <input>（42本）と <select>（21本・年収診断系）がある。
+  // select に page.fill() を使うと「編集可能になるまで待つ」で30秒タイムアウトし、
+  // **PRモードの全LP走査がこの1行で完走できなくなっていた**（2026-09-12 発覚）。
+  const year = await page.$eval("#bday-year", (el) => ({
+    tag: el.tagName.toLowerCase(),
+    clearable: el.tagName.toLowerCase() !== "select" || [...el.options].some((o) => o.value === "")
+  }));
+  if (!year.clearable) {
+    // 年収診断系の <select> は空の選択肢を持たない＝**ユーザーは年を未確定にできない**。
+    // ここは到達不能な状態なので検証しない（page.fill を当てると「編集可能になるまで待つ」で
+    // 30秒タイムアウトし、PRモードの全LP走査がこの1行で完走できなくなっていた。2026-09-12）。
+    pass(`${lp} 氏名/生まれ年のエラー表示`, bad.length ? bad.join(" / ") : "入力中は通り過ぎた項目だけ（年は select で未確定にできないため不正年の検証は対象外）");
+    if (bad.length) fail(`${lp} 氏名/生まれ年のエラー表示`, bad.join(" / "));
+    await ctx.close();
+    return;
+  }
+  await page.fill("#bday-year", "20");                // 桁が足りない＝不正な年
+  await page.waitForTimeout(150);
   await page.evaluate(() => document.activeElement && document.activeElement.blur()); await page.waitForTimeout(300);
   st = await errState();
   if (!st.shown || !/生まれ年/.test(st.text) || !st.onYear) bad.push(`不正な年で離れても理由が出ない/位置が違う（${st.shown ? st.text : "非表示"} onYear=${st.onYear}）`);
