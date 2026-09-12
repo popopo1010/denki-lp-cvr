@@ -98,5 +98,10 @@ jobs:
       # 反映後、公開中のWebアプリが応答しBotトークンが生きているかだけ見る
       # （auth.test のみ・チャンネルへの投稿はしない）。
       # 旧 gas-deploy.yml から移設（2026-09-09。重複ワークフロー統合）。
+      # GAS 側に WEBHOOK_SECRET を設定すると handleSlackHealthRequest が key 一致を
+      # 要求するため、渡していないと**設定した瞬間から毎回 unauthorized で赤くなる**。
+      # Secret 未登録なら空が渡るだけで、いまの挙動と変わらない（2026-09-12 配線）。
       - name: Slack Bot ヘルスチェック（投稿なし）
+        env:
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
         run: node scripts/check-slack-bot.mjs

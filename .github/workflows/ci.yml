@@ -111,17 +111,21 @@ jobs:
           echo "生成物のドリフトなし"
 
   e2e:
-    name: LPフォームのローカルE2E（実ブラウザ）
+    name: LPフォームのローカルE2E（実ブラウザ・${{ matrix.shard }}/4）
     # 主要LPは「push のたび」に実ブラウザで通す。PRなら全50本。
     # 当初 push では丸ごと skip していたが、PRを作らずブランチへ push する運用だと
     # 実ブラウザ検証が一度も回らないという穴になっていた（2026-08-23 に発覚）。
     runs-on: ubuntu-latest
-    # PRモードは63本×5パスを**直列**に回すので長い。
-    # 手元で 1127 検査 / 約40分、CIランナーはさらに遅く 55分超（run #174 で実測）。
-    # 2026-09-12 に一律25分を入れたら run #172 が、60分でも run #174 が足りなかった。
-    # ハング検知の上限としては機能させたいので 90分にする。
-    # 恒久対策は LP リストのシャーディング（matrix）で、これは別PRで扱う。
-    timeout-minutes: 90
+    # スクリプトはLPを**直列**に回すので、PRモードの63本は1ジョブだと55分超かかる
+    # （run #172 が25分、run #174 が60分の timeout で打ち切られた実績）。
+    # 検査内容は1件も減らさず、LPリストを4分割して並列に流す。
+    # 分割は awk 'NR % 4 == shard % 4' で、和集合が元のリストと完全一致することを確認済み。
+    # fail-fast: false ＝ どこかが落ちても他シャードの結果まで見たい。
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -147,15 +151,22 @@ jobs:
           set -euo pipefail
           if [ "${{ github.event_name }}" = "push" ]; then
             # 広告の着地になる主要LPだけ（数分）。壊れたら即わかる
-            node scripts/e2e-lp-flow-local.mjs --lp \
-              /denkikouji/ /sekoukanri/ /denkisekou/ /denkikouji-v2/ /sekoukanri-v2/ /sekoukanri-kentiku-v2/
+            LPS_ALL=$(printf '%s\n' /denkikouji/ /sekoukanri/ /denkisekou/ \
+                        /denkikouji-v2/ /sekoukanri-v2/ /sekoukanri-kentiku-v2/)
           else
             # PRではフォームを持つLPを全部通す。
             # 入力欄が steps-lazy.html 側にあるLP（denkikouji / sekoukanri など主力を含む10本）は
             # index.html に your-tel が無いため、この列挙から漏れていた（2026-08-23 発覚）。
             # index.html と隣の steps-lazy.html の**どちらか**に your-tel があれば対象にする。
-            LPS=$(grep -rl 'name="your-tel"' --include=index.html --include=steps-lazy.html . \
+            LPS_ALL=$(grep -rl 'name="your-tel"' --include=index.html --include=steps-lazy.html . \
                   | sed 's|^\./||; s|/[^/]*\.html$||; s|^|/|; s|$|/|' | sort -u)
-            echo "$LPS" | tr '\n' ' '
-            node scripts/e2e-lp-flow-local.mjs --lp $LPS
           fi
+          # このシャードの担当分だけ取り出す（全シャードの和集合＝元のリスト）
+          LPS=$(printf '%s\n' "$LPS_ALL" | awk -v s="${{ matrix.shard }}" 'NR % 4 == s % 4')
+          if [ -z "$LPS" ]; then
+            echo "シャード ${{ matrix.shard }}/4 は対象LPなし（総数がシャード数より少ない）"
+            exit 0
+          fi
+          echo "シャード ${{ matrix.shard }}/4 の対象: $(printf '%s\n' "$LPS" | wc -l) 本"
+          printf '%s\n' "$LPS" | tr '\n' ' '; echo
+          node scripts/e2e-lp-flow-local.mjs --lp $LPS

@@ -75,9 +75,6 @@ jobs:
       - name: FAQと構造化データの一致
         run: node scripts/check-faq-schema.mjs
 
-      - name: Check asset versions (?v= 上げ忘れ・不揃いの検出)
-        run: node scripts/check-asset-versions.mjs
-
       # 代理店共有シートへのPII混入は本番影響が最も重いので、本番へ出る経路でも必ず見る
       # （ci.yml と release-pre-check では走っていたが、deploy には入っていなかった）
       # 以下4本はネットワーク不要の静的チェックだが ci.yml にしか無く、
@@ -124,6 +121,26 @@ jobs:
           node scripts/build-thanks-job-previews-family.mjs
           node scripts/sync-thanks-v2-mirrors.mjs
           node scripts/generate-lp-thanks-redirects.mjs
+
+      # ?v= の検査は**生成の後**に置く。生成でファイル内容が変わったあとの状態で
+      # 見ないと、古い内容を検査して「上げ忘れ」を見逃す（2026-09-12 に順序を修正）。
+      - name: Check asset versions (?v= 上げ忘れ・不揃いの検出)
+        run: node scripts/check-asset-versions.mjs
+
+      # ci.yml にしか無かった生成物ドリフト判定を本番経路にも置く。
+      # staging へ直接 force-push する経路では ci.yml が走らないため、
+      # 「手編集が次の再生成で消える」状態のまま本番/STGへ出られた。
+      # booking-slots.json だけは毎回の同期で中身が変わる（実データ）ので除く。
+      # minify はファイルを書き換えるので、必ずその**前**に判定する。
+      - name: 生成物のドリフト（コミット済みと一致するか）
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet -- . ':(exclude)assets/data/booking-slots.json'; then
+            echo "::error::生成スクリプトの出力がコミット内容と違います。手編集は次の再生成で消えます。"
+            git --no-pager diff --stat -- . ':(exclude)assets/data/booking-slots.json'
+            exit 1
+          fi
+          echo "生成物のドリフトなし"
 
       - name: Minify JS/CSS/HTML
         run: |
