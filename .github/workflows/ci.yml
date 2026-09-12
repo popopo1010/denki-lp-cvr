@@ -21,6 +21,7 @@ jobs:
   static:
     name: 静的チェック（禁止コピー・クマ・参照・?v=・フォーム配線）
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -77,6 +78,7 @@ jobs:
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -111,11 +113,21 @@ jobs:
     # 当初 push では丸ごと skip していたが、PRを作らずブランチへ push する運用だと
     # 実ブラウザ検証が一度も回らないという穴になっていた（2026-08-23 に発覚）。
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # Chromium 本体を毎ラン落とし直していた（約100MB）。バージョン文字列をキーに
+      # キャッシュする。外れても従来どおり取得するだけなので、失敗しても害はない。
+      - name: Playwright ブラウザのキャッシュ
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.56.1-${{ runner.os }}
 
       - name: Playwright（Chromiumのみ）
         run: |

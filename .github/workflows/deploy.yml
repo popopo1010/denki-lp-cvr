@@ -17,6 +17,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       # 配信されていないことを確認する非Web資産（本番・STGの両Verifyで使う）。
       # rsync の EXCLUDES に足したら、代表例をここにも足す
@@ -49,6 +50,11 @@ jobs:
         with:
           node-version: '20'
 
+      # 壊れたのは deploy.yml 自身だった（STG #511）のに、この検査は ci.yml にしか
+      # 無かった。staging へ直接 force-push する経路では一度も走らない（2026-09-12 追加）。
+      - name: Check shell syntax (ワークフロー run / scripts/*.sh / ヒアドキュメント)
+        run: python3 scripts/check-workflow-shell.py
+
       - name: Check banned copy (禁止コピー/ラベルの再発防止)
         run: node scripts/check-banned-copy.mjs
 
@@ -74,6 +80,21 @@ jobs:
 
       # 代理店共有シートへのPII混入は本番影響が最も重いので、本番へ出る経路でも必ず見る
       # （ci.yml と release-pre-check では走っていたが、deploy には入っていなかった）
+      # 以下4本はネットワーク不要の静的チェックだが ci.yml にしか無く、
+      # 本番では rsync 済み＝事故った後に HTTP で同等のことを確認していた。
+      # 事前に止められるものを事後に見るのは順序が逆なので揃える（2026-09-12 追加）。
+      - name: Check LP guard (LPパターン別の必須ページ構成)
+        run: node scripts/check-lp-guard.js
+
+      - name: Check denkikouji release (コピー必須文言)
+        run: node scripts/check-denkikouji-release.mjs
+
+      - name: Check thanks-v2 release (静的)
+        run: node scripts/check-thanks-v2-release.mjs
+
+      - name: Check LP→GAS bridge
+        run: node scripts/check-lp-bridge-release.mjs
+
       - name: Check agency share (代理店共有シートのPII混入検査)
         run: node scripts/check-agency-share.mjs
 
@@ -107,6 +128,7 @@ jobs:
           for f in \
             assets/js/app.js \
             assets/js/app-v2.js \
+            assets/js/lp-job-cards.js \
             assets/js/wp-lp-redirect.js \
             assets/js/denki-suite.js \
             assets/js/thanks-v2-shared.js \
@@ -146,6 +168,7 @@ jobs:
             assets/css/theme-snapshot.css \
             assets/css/theme-lp.css \
             assets/css/cvr-boost-denkikouji.css \
+            assets/css/cvr-boost-denkikouji-nd.css \
             assets/css/cvr-boost-denkikouji-rich.css \
             assets/css/cvr-boost-sekoukanri.css \
             assets/css/cvr-boost-v2.css \
@@ -382,8 +405,11 @@ jobs:
           echo "後始末おわり"
           REMOTE
 
+      # ZONE_ID だけ設定して TOKEN を入れ忘れると、ステップ条件は真なのに
+      # スクリプト側が exit 0 して**無言でパージされない**（＝エッジに旧HTMLが residual）。
+      # 両方揃ったときだけ動かし、片方だけの状態はスクリプト側で落とす（2026-09-12）。
       - name: Purge Cloudflare edge cache (Cloudflare 導入後のみ・HTML/JSON)
-        if: env.CF_ZONE_ID != ''
+        if: env.CF_ZONE_ID != '' || env.CF_API_TOKEN != ''
         run: bash scripts/cloudflare-purge.sh "${DEPLOY_URL_BASE}"
 
       - name: Apply WP legacy redirects (.htaccess)

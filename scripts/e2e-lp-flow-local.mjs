@@ -800,6 +800,17 @@ async function loadPlaywright() {
   throw new Error("playwright が見つからない（npm i --no-save playwright を実行するか PLAYWRIGHT_MODULE_PATH を指定）");
 }
 
+/**
+ * 自己修復・遅延ステップ復旧を必ず通すLPを選ぶ。
+ * 主力（広告の着地）が対象リストに居ればそれを使い、居なければ先頭で代替する。
+ * 主力は入力欄を steps-lazy.html 側に置いているので、遅延復旧の検証対象として本命。
+ */
+const CRITICAL_LPS = ["/denkikouji/", "/sekoukanri/"];
+function pickCritical(lps) {
+  const hit = CRITICAL_LPS.filter((lp) => lps.includes(lp));
+  return hit.length ? hit : lps.slice(0, 1);
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const lps = args.includes("--lp") ? args.slice(args.indexOf("--lp") + 1) : DEFAULT_LPS;
@@ -810,8 +821,14 @@ async function main() {
   const browser = await chromium.launch(launch);
   try {
     for (const lp of lps) await runLp(browser, devices, lp);
-    await runSelfHeal(browser, devices, lps[0]);
-    await runLazyRecovery(browser, devices, lps[0]);
+    // 自己修復（DOM差し替え耐性）と遅延ステップ復旧は CLAUDE.md が「フォームが死ぬ4クラス」
+    // として最重要視している配線。ところが lps[0] 1本でしか走っておらず、PRでは
+    // リストが sort -u なので先頭が /WPLP/denkikouji-v2/ になり、**主力LPでは一度も
+    // 検証されていなかった**（2026-09-12 発覚）。主力を明示して必ず通す。
+    for (const lp of pickCritical(lps)) {
+      await runSelfHeal(browser, devices, lp);
+      await runLazyRecovery(browser, devices, lp);
+    }
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
     for (const lp of lps) await runSafariKeyboardRace(browser, devices, lp);
