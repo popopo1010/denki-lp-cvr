@@ -20,6 +20,7 @@ node scripts/check-agency-share.mjs   # 代理店共有シートに個人情報�
 node scripts/check-zoho-field-limits.mjs # Zoho項目の長さ超過で商談が作られない事故を防ぐ
 node scripts/check-gas-row-integrity.mjs # 送信行の状態列を別人の行に書かない
 node scripts/check-fv-images.mjs       # モバイルにPC用のFV画像を配らない
+node scripts/check-step01-icons.mjs    # step01アイコンを原寸で配らない
 
 echo "== 1/5 thanks-v2 静的 =="
 node scripts/check-thanks-v2-release.mjs

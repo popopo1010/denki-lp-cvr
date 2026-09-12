@@ -78,6 +78,9 @@ jobs:
       - name: FV主画像のモバイル出し分け（PC用の重い方を配らない）
         run: node scripts/check-fv-images.mjs
 
+      - name: step01アイコンの軽量版（原寸1665pxを配らない）
+        run: node scripts/check-step01-icons.mjs
+
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
     runs-on: ubuntu-latest

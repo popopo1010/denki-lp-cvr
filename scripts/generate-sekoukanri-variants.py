@@ -249,11 +249,14 @@ def qual_label_grade(value: str) -> str:
     return value
 
 
-def qual_button_form(value: str, *, grade_label: bool) -> str:
+def qual_button_form(value: str, *, grade_label: bool, img_rel: str = "../assets/img") -> str:
     """フォームLP用ボタン。grade_label=True は root（q-gradeチップ）、False は WPLP/自前LP（フル名称）"""
     img = FORM_QUAL_IMG[value]
     icon_html = (
-        f'<span class="c-button__img"><picture><source srcset="{IMG_BASE}/{img}.webp" type="image/webp">'
+        # 先頭は軽量版（192px）。表示は最大54pxなのに原寸1665pxを配っていた（2026-09-12）。
+        # テーマ配信の原寸は2番目の source と img に残すので、取得できなくても従来どおり表示される。
+        f'<span class="c-button__img"><picture><source srcset="{img_rel}/{img}-192.webp" type="image/webp">'
+        f'<source srcset="{IMG_BASE}/{img}.webp" type="image/webp">'
         f'<img loading="lazy" decoding="async" src="{IMG_BASE}/{img}.png" alt=""></picture></span>'
     )
     label = qual_label_grade(value) if grade_label else value
@@ -273,7 +276,7 @@ def qual_display_label(value: str) -> str:
     return value
 
 
-def qual_button(value: str) -> str:
+def qual_button(value: str, *, img_rel: str = "../../assets/img") -> str:
     img = QUAL_IMG[value]
     if img in LOCAL_ICONS:
         icon_html = (
@@ -282,7 +285,8 @@ def qual_button(value: str) -> str:
         )
     else:
         icon_html = (
-            f'<span class="c-button__img"><picture><source srcset="{IMG_BASE}/{img}.webp" type="image/webp">'
+            f'<span class="c-button__img"><picture><source srcset="{img_rel}/{img}-192.webp" type="image/webp">'
+            f'<source srcset="{IMG_BASE}/{img}.webp" type="image/webp">'
             f'<img loading="lazy" decoding="async" src="{IMG_BASE}/{img}.png" alt=""></picture></span>'
         )
     return (
@@ -294,7 +298,7 @@ def qual_button(value: str) -> str:
     )
 
 
-def build_step01(v: dict, *, nenshu: bool = False, grade_label: bool = True) -> str:
+def build_step01(v: dict, *, nenshu: bool = False, grade_label: bool = True, img_rel: str = "../assets/img") -> str:
     parts = [
         f'    <p class="c-title01">\n        <span class="js-icon-target">{v["step01_title"]}</span>\n    </p>'
     ]
@@ -310,9 +314,9 @@ def build_step01(v: dict, *, nenshu: bool = False, grade_label: bool = True) -> 
             '    <p class="ns-salary-preview__avg" id="ns-salary-preview-avg"></p>\n'
             "</div>"
         )
-        buttons = "\n".join(qual_button(q) for q in v["quals"])
+        buttons = "\n".join(qual_button(q, img_rel=img_rel) for q in v["quals"])
     else:
-        buttons = "\n".join(qual_button_form(q, grade_label=grade_label) for q in v["quals"])
+        buttons = "\n".join(qual_button_form(q, grade_label=grade_label, img_rel=img_rel) for q in v["quals"])
     parts.append(f'    <div class="p-step01__buttonArea c-button-grid">\n{buttons}\n    </div>')
     return "\n".join(parts)
 
@@ -461,7 +465,10 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool
     # タイトル行の先頭インデントは build_step01 側が持つため、置換開始位置を行頭まで戻す
     start = html.rfind("\n", 0, m.start()) + 1
     rest = re.sub(r"^\s*", "\n", html[m.end():], count=1)  # → '\n<div class="c-nextLink">…'（現行variantと同形）
-    html = html[:start] + build_step01(v, nenshu=nenshu, grade_label=grade_label) + rest
+    # 出力先の深さぶん遡ってリポジトリ直下の assets/img を指す。
+    # root variant は REPO/<slug>/（1階層）、prefix付き・年収診断は REPO/<a>/<b>/（2階層）。
+    img_rel = "../../assets/img" if (url_prefix or nenshu) else "../assets/img"
+    html = html[:start] + build_step01(v, nenshu=nenshu, grade_label=grade_label, img_rel=img_rel) + rest
 
     m2 = re.search(r'<div class="cvr-testimonials">.*?</div>\n\n<div class="cvr-faq">', html, re.DOTALL)
     if not m2:
