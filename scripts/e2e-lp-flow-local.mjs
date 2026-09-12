@@ -468,6 +468,22 @@ async function runNameErrorUx(browser, devices, lp) {
     return { shown, text: shown ? e.textContent.trim() : "",
       onYear: !!(dd && dd.querySelector("#bday-year")), onName: !!(dd && dd.querySelector("#last-name")) };
   });
+  /**
+   * 「エラーが出るはず」の判定を、固定待ちではなく**条件が満たされるまで**待って読む。
+   * 検証は focus/blur の setTimeout(...,0) 経由で走るため、遅いランナーでは
+   * 固定 300ms では間に合わずに「非表示」を読んでしまう
+   * （2026-09-12 CI run #180 の /nenshu-shindan/denkikouji/ で発生。手元は3/3通っていた）。
+   * 「出ないはず」の判定は逆に待ってはいけないので、従来どおり固定待ちのまま。
+   */
+  const waitErrShown = async (ms = 2000) => {
+    const until = Date.now() + ms;
+    let st = await errState();
+    while (!st.shown && Date.now() < until) {
+      await page.waitForTimeout(100);
+      st = await errState();
+    }
+    return st;
+  };
   // 入力欄をタップしたら末尾にキャレットを置く（中央クリックで文字の間に挿入されるのを防ぐ）
   const tap = async (sel) => { await page.click(sel); await page.keyboard.press("End"); await page.waitForTimeout(300); };
   const bad = [];
@@ -476,7 +492,7 @@ async function runNameErrorUx(browser, devices, lp) {
   if (st.shown) bad.push(`姓の入力中にエラー「${st.text}」`);
   // 姓だけ入れて生まれ年へ飛ぶ＝名を通り過ぎた。名を特定して、お名前の上に出る
   await tap("#bday-year");
-  st = await errState();
+  st = await waitErrShown();
   if (!st.shown || !/名/.test(st.text) || !st.onName) bad.push(`名を飛ばしたのに理由が出ない/特定しない/位置が違う（${st.shown ? st.text : "非表示"} onName=${st.onName}）`);
   await page.keyboard.type("19"); await page.waitForTimeout(250);
   st = await errState();
@@ -518,8 +534,8 @@ async function runNameErrorUx(browser, devices, lp) {
   }
   await page.fill("#bday-year", "20");                // 桁が足りない＝不正な年
   await page.waitForTimeout(150);
-  await page.evaluate(() => document.activeElement && document.activeElement.blur()); await page.waitForTimeout(300);
-  st = await errState();
+  await page.evaluate(() => document.activeElement && document.activeElement.blur());
+  st = await waitErrShown();
   if (!st.shown || !/生まれ年/.test(st.text) || !st.onYear) bad.push(`不正な年で離れても理由が出ない/位置が違う（${st.shown ? st.text : "非表示"} onYear=${st.onYear}）`);
   bad.length ? fail(`${lp} 氏名/生まれ年のエラー表示`, bad.join(" / ")) : pass(`${lp} 氏名/生まれ年のエラー表示`, "入力中は通り過ぎた項目だけ・手が止まったら項目を特定して該当欄の上に");
   await ctx.close();
