@@ -266,7 +266,8 @@ jobs:
             dk_lp/denkikouji/index.html dk_lp/sekokanri/index.html \
             service/denkikouji/index.html service/sekoukanri/index.html \
             service/sekoukanri-kentiku/index.html service/sekoukanri-doboku/index.html service/sekoukanri-denkisekou/index.html \
-            privacypolicy/index.html WPLP/privacypolicy/index.html 自前LP/privacypolicy/index.html; do
+            privacypolicy/index.html WPLP/privacypolicy/index.html 自前LP/privacypolicy/index.html \
+            terms/index.html; do
             minify_html "$f"
           done
           # 広告着地ファミリー（meta-lp / nenshu-shindan / WPLP・自前LP の非v2 / v3〜v6）。
@@ -380,7 +381,7 @@ jobs:
             fi
           done
           for must in '^denkikouji/index\.html$' '^sekoukanri/index\.html$' '^assets/js/app\.js$' \
-                      '^assets/css/theme-snapshot\.css$' '^privacypolicy/index\.html$' '^\.htaccess$'; do
+                      '^assets/css/theme-snapshot\.css$' '^privacypolicy/index\.html$' '^terms/index\.html$' '^\.htaccess$'; do
             if ! grep -qE "$must" /tmp/rsync-list.txt; then
               echo "::error::転送対象から落ちている: ${must}（除外が広すぎる）"; exit 1
             fi
@@ -496,7 +497,7 @@ jobs:
           # 軽量化の前提（gzip/brotli・immutable）が本当に効いているかを毎回出す（2026-09-04）。
           # .htaccess の IfModule が効いていない環境だと、minify しても転送量は減らない。
           echo "--- 圧縮・キャッシュヘッダ（主力LPの読み込みチェーン） ---"
-          for a in denkikouji/ assets/css/theme-lp.css?v20260904a assets/css/cvr-boost-denkikouji.css?v20260904h assets/js/app.js?v20260906c denkikouji/steps-lazy.html?v20260915a; do
+          for a in denkikouji/ assets/css/theme-lp.css?v20260904a assets/css/cvr-boost-denkikouji.css?v20260904h assets/js/app.js?v20260906c denkikouji/steps-lazy.html?v20260915b; do
             printf '  %s\n    %s\n' "$a" \
               "$(curl -sIL -H 'Accept-Encoding: gzip, br' "${DEPLOY_URL_BASE}/${a}" | grep -iE '^(content-encoding|cache-control|content-length|cf-cache-status|server):' | tr -d '\r' | tr '\n' ' ')"
           done
@@ -597,7 +598,7 @@ jobs:
             echo "$sekou_lp" | grep -q 'theme-lp.css?v20260904a' || return 1
             echo "$sekou_lp" | grep -q 'app.js?v20260906c' || return 1
             echo "$sekou_lp" | grep -q 'auto-advance-ms="2800"' || return 1
-            echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260915a' || return 1
+            echo "$sekou_lp" | grep -q 'steps-lazy.html?v20260915b' || return 1
             echo "$sekou_lp" | grep -q '複数お持ちの方は' || return 1
             echo "$sekou_lp" | grep -q 'cvr-lp-hub' && return 1 || true
             return 0

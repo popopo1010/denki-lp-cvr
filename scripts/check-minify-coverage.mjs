@@ -13,7 +13,7 @@
  *   1. 配信されるHTMLから参照されるローカル JS / CSS がすべて minify リストにあること
  *   2. フォームLP（index.html か隣の steps-lazy.html に your-tel があるページ）の index.html
  *   3. すべての steps-lazy.html（load 後に必ず fetch されるので毎回の転送量に効く）
- *   4. プライバシーポリシー（全LPの同意文から辿る法務ページ）
+ *   4. プライバシーポリシー・利用規約（全LPの同意文から辿る法務ページ。2026-09-15 に terms/ を新設）
  *
  * 使い方: node scripts/check-minify-coverage.mjs
  */
@@ -84,7 +84,7 @@ for (const f of htmls) {
   else if (base === "index.html") {
     const lazy = path.join(path.dirname(abs), "steps-lazy.html");
     if (hasTel(abs) || hasTel(lazy)) must = true;
-    if (/(^|\/)privacypolicy\/index\.html$/.test(f)) must = true;
+    if (/(^|\/)(privacypolicy|terms)\/index\.html$/.test(f)) must = true;
   }
   if (must && !covered(f)) missing.push(f);
 }

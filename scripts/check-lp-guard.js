@@ -15,7 +15,8 @@ const patternPages = {
     "sekoukanri-denkisekou/index.html",
     "denkisekou/index.html",
     "thanks/index.html",
-    "privacypolicy/index.html"
+    "privacypolicy/index.html",
+    "terms/index.html"
   ],
   "WPLP": [
     "WPLP/index.html",

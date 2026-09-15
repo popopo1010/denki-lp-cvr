@@ -10,7 +10,7 @@
 
 **対処:** 126ファイル・224箇所の `href="/privacypolicy"` を `https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/`（XCHANGE株式会社版）へ付け替え。`meta-lp/denkikouji/` が別階層の `denkikouji/steps-lazy.html` を共有しているため、相対パスではなく絶対URL（既に `index.html` 等8箇所で使っていた形）に統一。`steps-lazy.html` 12本の `?v=` を `v20260915a` に上げた。
 
-**残課題:** `/terms`（利用規約）はリポジトリに実体がなく、229箇所すべてが引き続きWPルートを指す。WP側の社名修正か、リポジトリに利用規約ページを作って付け替えるかはオーナー判断待ち。
+**利用規約（同日・追補）:** オーナー判断で「リポジトリに利用規約ページを作って付け替える」に決定。`terms/index.html` を新設し、`href="/terms"` 229箇所＋絶対URL 3箇所を `https://denkilp.builders-job.com/denki-lp-cvr/terms/` へ。規約本文は起草したもので**要確認**（`本番反映手順書.md` 確認事項）。
 
 **教訓:** 会社情報の是正は「このリポジトリの中身」だけでなく「リンク先に何が表示されるか」まで追う。リポジトリ外（WP固定ページ）を指すリンクは、その先の内容を変更できないので、法務系の導線はリポジトリ内のページに向ける。
 
