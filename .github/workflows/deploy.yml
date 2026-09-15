@@ -105,6 +105,9 @@ jobs:
       - name: Check FV images (FV主画像のモバイル出し分け)
         run: node scripts/check-fv-images.mjs
 
+      - name: Check minify coverage (minify 対象の取りこぼし防止)
+        run: node scripts/check-minify-coverage.mjs
+
       - name: Sync booking slots JSON
         continue-on-error: true
         run: node scripts/sync-booking-slots.js
@@ -149,6 +152,7 @@ jobs:
             assets/js/app.js \
             assets/js/app-v2.js \
             assets/js/lp-job-cards.js \
+            assets/js/lp-area-nav.js \
             assets/js/wp-lp-redirect.js \
             assets/js/denki-suite.js \
             assets/js/thanks-v2-shared.js \
@@ -249,6 +253,20 @@ jobs:
             minify_html "$f"
           done
           find thanks-v2/p WPLP/thanks-v2/p 自前LP/thanks-v2/p -name index.html 2>/dev/null | while read -r f; do
+            minify_html "$f"
+          done
+          # 遅延ステップ steps-lazy.html（全LPが load 後に必ず fetch する断片・?v= 付き immutable）と、
+          # 2026-09-15 まで minify 対象から漏れていた denkikouji-trust / denkikouji-nd / dk_lp / service /
+          # privacypolicy。取りこぼしは scripts/check-minify-coverage.mjs が止める。
+          find . -path ./.git -prune -o -name steps-lazy.html -print | while read -r f; do
+            minify_html "$f"
+          done
+          for f in \
+            denkikouji-trust/index.html denkikouji-nd/index.html \
+            dk_lp/denkikouji/index.html dk_lp/sekokanri/index.html \
+            service/denkikouji/index.html service/sekoukanri/index.html \
+            service/sekoukanri-kentiku/index.html service/sekoukanri-doboku/index.html service/sekoukanri-denkisekou/index.html \
+            privacypolicy/index.html WPLP/privacypolicy/index.html 自前LP/privacypolicy/index.html; do
             minify_html "$f"
           done
           # 広告着地ファミリー（meta-lp / nenshu-shindan / WPLP・自前LP の非v2 / v3〜v6）。

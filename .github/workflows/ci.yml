@@ -77,6 +77,8 @@ jobs:
 
       - name: FV主画像のモバイル出し分け（PC用の重い方を配らない）
         run: node scripts/check-fv-images.mjs
+      - name: minify 対象の取りこぼし（deploy.yml のリスト）
+        run: node scripts/check-minify-coverage.mjs
 
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）

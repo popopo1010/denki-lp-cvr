@@ -459,10 +459,16 @@ for (const [canonical, mirrors] of MIRRORS) {
     const m = themeLp.match(/theme-snapshot\.css@([0-9a-f]{16})/);
     check("theme-lp.css が現在の theme-snapshot.css から生成されている（node scripts/build-theme-lp-css.mjs）",
       !!m && m[1] === snapHash, m ? `生成元 ${m[1]} ≠ 現在 ${snapHash}` : "theme-lp.css が無い/バナー欠落");
+    // 2026-09-15: 広告着地の meta-lp 7本と denkikouji-trust / denkikouji-nd も theme-lp.css へ
+    // （theme-snapshot.css 直読みは gzip 8.0KB、theme-lp.css は 3.5KB。visual-diff-theme-lp で一致確認済み）
     const MAIN_LPS = ["denkikouji/index.html", "sekoukanri/index.html", "sekoukanri-kentiku/index.html",
-      "sekoukanri-doboku/index.html", "sekoukanri-denkisekou/index.html", "denkisekou/index.html"];
+      "sekoukanri-doboku/index.html", "sekoukanri-denkisekou/index.html", "denkisekou/index.html",
+      "denkikouji-trust/index.html", "denkikouji-nd/index.html",
+      "meta-lp/denkikouji/index.html", "meta-lp/sekoukanri-kentiku/index.html", "meta-lp/sekoukanri-doboku/index.html",
+      "meta-lp/sekoukanri-denkisekou/index.html", "meta-lp/nenshu-shindan-kentiku/index.html",
+      "meta-lp/nenshu-shindan-doboku/index.html", "meta-lp/nenshu-shindan-denkisekou/index.html"];
     const heavy = MAIN_LPS.filter((p) => !/theme-lp\.css\?v/.test(read(p)));
-    check("主力LP(6本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
+    check("主力LP・広告着地(15本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
       heavy.length === 0, heavy.join(", "));
   }
 
