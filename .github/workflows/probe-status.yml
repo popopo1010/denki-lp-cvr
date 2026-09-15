@@ -33,9 +33,10 @@ jobs:
 
       - name: プライバシーポリシー導線の到達確認（同意文のリンク先が生きているか）
         run: |
-          # LPの同意文は 171箇所が /privacypolicy（WPルート）、5箇所が
-          # /denki-lp-cvr/privacypolicy/（このリポジトリ側）を指している。
-          # 個人情報の同意導線なので、両方が実際に開けることを本番で確かめる。
+          # LPの同意文は 2026-09-15 から全箇所が /denki-lp-cvr/privacypolicy/
+          # （このリポジトリ側・XCHANGE株式会社版）を指す。WPルートの /privacypolicy は
+          # 別会社名が載っていたため導線から外したが、/terms（利用規約）は引き続きWPルート
+          # なのでWP側の生死も見ておく。個人情報の同意導線なので実際に開けることを本番で確かめる。
           # ローカル/サンドボックスからは本番へ到達できないため、ランナーから叩くしかない。
           set +e
           UA="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
