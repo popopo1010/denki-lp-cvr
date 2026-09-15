@@ -485,7 +485,17 @@ async function runNameErrorUx(browser, devices, lp) {
     return st;
   };
   // 入力欄をタップしたら末尾にキャレットを置く（中央クリックで文字の間に挿入されるのを防ぐ）
-  const tap = async (sel) => { await page.click(sel); await page.keyboard.press("End"); await page.waitForTimeout(300); };
+  // 遅いランナーでは click の瞬間にキーボードナッジ等でレイアウトが動き、クリックが欄に
+  // 当たらず activeElement が移らないことがある（2026-09-15 CI run #197 の /denkisekou/ で
+  // 「名を飛ばしたのに理由が出ない（非表示）」。手元は毎回通る）。フォーカスが目的の欄に
+  // 無ければ focus() で確定させてから続ける（実ユーザーのタップ＝欄にフォーカスが入る前提）。
+  const tap = async (sel) => {
+    await page.click(sel);
+    const focused = await page.evaluate((s) => document.activeElement === document.querySelector(s), sel);
+    if (!focused) await page.focus(sel);
+    await page.keyboard.press("End");
+    await page.waitForTimeout(300);
+  };
   const bad = [];
   await tap("#last-name"); await page.keyboard.type("検"); await page.waitForTimeout(250);
   let st = await errState();
