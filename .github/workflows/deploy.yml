@@ -266,7 +266,7 @@ jobs:
             dk_lp/denkikouji/index.html dk_lp/sekokanri/index.html \
             service/denkikouji/index.html service/sekoukanri/index.html \
             service/sekoukanri-kentiku/index.html service/sekoukanri-doboku/index.html service/sekoukanri-denkisekou/index.html \
-            privacypolicy/index.html WPLP/privacypolicy/index.html 自前LP/privacypolicy/index.html \
+            privacypolicy/index.html 自前LP/privacypolicy/index.html \
             terms/index.html; do
             minify_html "$f"
           done

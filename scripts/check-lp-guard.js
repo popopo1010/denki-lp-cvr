@@ -25,8 +25,7 @@ const patternPages = {
     "WPLP/sekoukanri-kentiku/index.html",
     "WPLP/sekoukanri-doboku/index.html",
     "WPLP/sekoukanri-denkisekou/index.html",
-    "WPLP/thanks/index.html",
-    "WPLP/privacypolicy/index.html"
+    "WPLP/thanks/index.html"
   ],
   "standalone": [
     "自前LP/denkikouji/index.html",

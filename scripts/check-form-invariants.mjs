@@ -459,19 +459,13 @@ for (const [canonical, mirrors] of MIRRORS) {
     const m = themeLp.match(/theme-snapshot\.css@([0-9a-f]{16})/);
     check("theme-lp.css が現在の theme-snapshot.css から生成されている（node scripts/build-theme-lp-css.mjs）",
       !!m && m[1] === snapHash, m ? `生成元 ${m[1]} ≠ 現在 ${snapHash}` : "theme-lp.css が無い/バナー欠落");
-    // 2026-09-15: 広告着地の meta-lp 7本と denkikouji-trust / denkikouji-nd も theme-lp.css へ
-    // （theme-snapshot.css 直読みは gzip 8.0KB、theme-lp.css は 3.5KB。visual-diff-theme-lp で一致確認済み）
-    const MAIN_LPS = ["denkikouji/index.html", "sekoukanri/index.html", "sekoukanri-kentiku/index.html",
-      "sekoukanri-doboku/index.html", "sekoukanri-denkisekou/index.html", "denkisekou/index.html",
-      "denkikouji-trust/index.html", "denkikouji-nd/index.html",
-      "meta-lp/denkikouji/index.html", "meta-lp/sekoukanri-kentiku/index.html", "meta-lp/sekoukanri-doboku/index.html",
-      "meta-lp/sekoukanri-denkisekou/index.html", "meta-lp/nenshu-shindan-kentiku/index.html",
-      "meta-lp/nenshu-shindan-doboku/index.html", "meta-lp/nenshu-shindan-denkisekou/index.html",
-      // 法務ページ（全LPの同意文から辿る。ヘッダー/フッターしかテーマ規則を使わない）2026-09-15
-      "terms/index.html", "privacypolicy/index.html", "WPLP/privacypolicy/index.html"];
-    const heavy = MAIN_LPS.filter((p) => !/theme-lp\.css\?v/.test(read(p)));
-    check("主力LP・広告着地・法務ページ(18本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
-      heavy.length === 0, heavy.join(", "));
+    // 2026-09-15: 全63本（LP・法務ページ・service・thanks）を theme-lp.css に統一した。
+    // theme-snapshot.css（gz 7.9KB）を直読みするHTMLが1本でも戻ると、そのページだけ
+    // レンダーブロックCSSが +4.4KB になるうえ、テーマ変更の反映経路が二重になる。
+    // 例外は無し（theme-snapshot.css は生成元としてリポジトリに残すだけで、HTMLからは読まない）。
+    const heavy = htmlFiles.filter((p) => /theme-snapshot\.css\?v/.test(readFileSync(p, "utf8"))).map((p) => p.slice(ROOT.length));
+    check("HTMLが theme-snapshot.css を直読みしていない（全ページ theme-lp.css に統一。2026-09-15）",
+      heavy.length === 0, heavy.slice(0, 8).join(", "));
   }
 
   // HTML側（クマのタップ等）にも block:"center" を残さない。中央寄せは上部を押し出す。
