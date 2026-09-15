@@ -403,11 +403,19 @@ def apply_variant(html: str, v: dict, *, nenshu: bool = False, grade_label: bool
     # セクションと lp-job-cards.js ごと外す。テンプレートに残したままだと再生成で全 variant に広がる。
     jobs_block = re.compile(r"\n<!-- CTAより下・初期画面の外に置く求人カード.*?</section>\n", re.S)
     jobs_script = re.compile(r'\n<script src="[^"]*lp-job-cards\.js[^"]*" defer></script>')
+    # 会社情報の下の「エリアから探す」（2026-09-15）も同じ3本だけ。ブロック・<style id="lp-area-css">・
+    # lp-area-nav.js をセットで外す（テンプレートに残したままだと再生成で全 variant に広がる）。
+    area_block = re.compile(r"\n<!-- エリアから探す.*?</section>\n", re.S)
+    area_css = re.compile(r'<style id="lp-area-css">.*?</style>\n', re.S)
+    area_script = re.compile(r'\n<script src="[^"]*lp-area-nav\.js[^"]*" defer></script>')
     if v.get("jobs_src") and not nenshu and not url_prefix:
         html = html.replace("lp-job-cards-sekoukanri.json", v["jobs_src"])
     else:
         html = jobs_block.sub("\n", html)
         html = jobs_script.sub("", html)
+        html = area_block.sub("", html)
+        html = area_css.sub("", html)
+        html = area_script.sub("", html)
 
     # FAQの工種別2問も同じ理由で差し替える（テンプレートは施工管理全般の文面）。
     # 表示と JSON-LD の両方を置換する。ズレると check-faq-schema が落ちる。

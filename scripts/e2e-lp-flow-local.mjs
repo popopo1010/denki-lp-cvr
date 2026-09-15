@@ -468,6 +468,22 @@ async function runNameErrorUx(browser, devices, lp) {
     return { shown, text: shown ? e.textContent.trim() : "",
       onYear: !!(dd && dd.querySelector("#bday-year")), onName: !!(dd && dd.querySelector("#last-name")) };
   });
+  /**
+   * 「エラーが出るはず」の判定を、固定待ちではなく**条件が満たされるまで**待って読む。
+   * 検証は focus/blur の setTimeout(...,0) 経由で走るため、遅いランナーでは
+   * 固定 300ms では間に合わずに「非表示」を読んでしまう
+   * （2026-09-12 CI run #180 の /nenshu-shindan/denkikouji/ で発生。手元は3/3通っていた）。
+   * 「出ないはず」の判定は逆に待ってはいけないので、従来どおり固定待ちのまま。
+   */
+  const waitErrShown = async (ms = 2000) => {
+    const until = Date.now() + ms;
+    let st = await errState();
+    while (!st.shown && Date.now() < until) {
+      await page.waitForTimeout(100);
+      st = await errState();
+    }
+    return st;
+  };
   // 入力欄をタップしたら末尾にキャレットを置く（中央クリックで文字の間に挿入されるのを防ぐ）
   const tap = async (sel) => { await page.click(sel); await page.keyboard.press("End"); await page.waitForTimeout(300); };
   const bad = [];
@@ -476,7 +492,7 @@ async function runNameErrorUx(browser, devices, lp) {
   if (st.shown) bad.push(`姓の入力中にエラー「${st.text}」`);
   // 姓だけ入れて生まれ年へ飛ぶ＝名を通り過ぎた。名を特定して、お名前の上に出る
   await tap("#bday-year");
-  st = await errState();
+  st = await waitErrShown();
   if (!st.shown || !/名/.test(st.text) || !st.onName) bad.push(`名を飛ばしたのに理由が出ない/特定しない/位置が違う（${st.shown ? st.text : "非表示"} onName=${st.onName}）`);
   await page.keyboard.type("19"); await page.waitForTimeout(250);
   st = await errState();
@@ -518,8 +534,8 @@ async function runNameErrorUx(browser, devices, lp) {
   }
   await page.fill("#bday-year", "20");                // 桁が足りない＝不正な年
   await page.waitForTimeout(150);
-  await page.evaluate(() => document.activeElement && document.activeElement.blur()); await page.waitForTimeout(300);
-  st = await errState();
+  await page.evaluate(() => document.activeElement && document.activeElement.blur());
+  st = await waitErrShown();
   if (!st.shown || !/生まれ年/.test(st.text) || !st.onYear) bad.push(`不正な年で離れても理由が出ない/位置が違う（${st.shown ? st.text : "非表示"} onYear=${st.onYear}）`);
   bad.length ? fail(`${lp} 氏名/生まれ年のエラー表示`, bad.join(" / ")) : pass(`${lp} 氏名/生まれ年のエラー表示`, "入力中は通り過ぎた項目だけ・手が止まったら項目を特定して該当欄の上に");
   await ctx.close();
@@ -544,6 +560,50 @@ async function runSelfHeal(browser, devices, lp) {
     (window.dataLayer || []).some((d) => d && d.error_type === "form_group_reinit"));
   if (after.step && after.step !== "step-first") pass(`${lp} DOM差し替え後も進む`, `→ ${after.step}${healed ? "（自己修復を計測済み）" : ""}`);
   else fail(`${lp} DOM差し替え後も進む`, `止まった: ${after.step}`);
+  await ctx.close();
+}
+
+/** 5b) 会社情報の下の「エリアから探す」（主力3本・2026-09-15）。
+ *  タップでFVの選択肢が押されてフォームへ入り、step04 の都道府県セレクトで押したエリアが
+ *  先頭の optgroup に来ること。lp-area-nav.js は steps-lazy の注入・初期化を MutationObserver で
+ *  待ってから並べ替えるので、「タップ時点で #pref がまだ無い」経路を実ブラウザで通す。
+ *  ブロックの無いLPは対象外（何も出さない）。 */
+async function runAreaNav(browser, devices, lp) {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
+  const page = await ctx.newPage();
+  await blockExternal(page);
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  const has = await page.evaluate(() => !!document.querySelector("[data-lp-area-nav]"));
+  if (!has) { await ctx.close(); return; }
+  const name = `${lp} エリアから探す→step04で先頭に来る`;
+  await page.evaluate(() => { window.dataLayer = window.dataLayer || []; });
+  const clicked = await page.evaluate(() => {
+    const b = document.querySelector('[data-lp-area-nav] [data-lp-area="関東"]');
+    if (!b) return false;
+    b.click();
+    return true;
+  });
+  if (!clicked) { fail(name, "「関東」ボタンが無い"); await ctx.close(); return; }
+  await page.waitForTimeout(900);
+  let st = await page.evaluate(probe);
+  if (!st.step || st.step === "step-first") { fail(name, `タップしてもフォームに入らない: ${st.step || "FV"}`); await ctx.close(); return; }
+  for (let i = 0; i < 8 && st.step !== "step04"; i++) {
+    const r = await advanceOnce(page);
+    st = r.after;
+    if (r.acted === "stuck") break;
+  }
+  if (st.step !== "step04") { fail(name, `step04 に到達しない: ${st.step}`); await ctx.close(); return; }
+  const res = await page.evaluate(() => {
+    const sel = document.getElementById("pref");
+    if (!sel) return { ok: false, why: "#pref が無い" };
+    const g = sel.querySelector("optgroup");
+    const first = sel.options[1];
+    const tracked = (window.dataLayer || []).some((d) => d && d.event === "lp_area_click" && d.lp_area === "関東");
+    const ok = !!g && g.getAttribute("data-lp-area") === "関東" && !!first && first.parentNode === g && sel.options.length >= 47;
+    return { ok, why: `先頭optgroup=${g ? g.label : "なし"} / 先頭=${first ? first.textContent : "なし"} / 件数=${sel.options.length} / 計測=${tracked}`, tracked };
+  });
+  res.ok && res.tracked ? pass(name, res.why) : fail(name, res.why);
   await ctx.close();
 }
 
@@ -847,6 +907,7 @@ async function main() {
       await runLazyRecovery(browser, devices, lp);
     }
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
+    for (const lp of lps) await runAreaNav(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
     for (const lp of lps) await runSafariKeyboardRace(browser, devices, lp);
     for (const lp of lps) await runNameErrorUx(browser, devices, lp);
