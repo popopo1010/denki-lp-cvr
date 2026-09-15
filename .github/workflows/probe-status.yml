@@ -35,8 +35,9 @@ jobs:
         run: |
           # LPの同意文は 2026-09-15 から全箇所が /denki-lp-cvr/privacypolicy/
           # （このリポジトリ側・XCHANGE株式会社版）を指す。WPルートの /privacypolicy は
-          # 別会社名が載っていたため導線から外したが、/terms（利用規約）は引き続きWPルート
-          # なのでWP側の生死も見ておく。個人情報の同意導線なので実際に開けることを本番で確かめる。
+          # 別会社名が載っていたため導線から外した。/terms（利用規約）も 2026-09-15 にリポジトリ側
+          # /denki-lp-cvr/terms/ へ付け替えた（WPルートの2本は旧導線の生死確認として残す）。
+          # 個人情報の同意導線なので実際に開けることを本番で確かめる。
           # ローカル/サンドボックスからは本番へ到達できないため、ランナーから叩くしかない。
           set +e
           UA="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
@@ -44,7 +45,8 @@ jobs:
           for u in \
             "https://denkilp.builders-job.com/privacypolicy" \
             "https://denkilp.builders-job.com/privacypolicy/" \
-            "https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/"; do
+            "https://denkilp.builders-job.com/denki-lp-cvr/privacypolicy/" \
+            "https://denkilp.builders-job.com/denki-lp-cvr/terms/"; do
             out=$(curl -sL -o /dev/null -w "%{http_code} (最終URL: %{url_effective})" -A "$UA" --max-time 30 "$u")
             code=${out%% *}
             echo "PP ${out} <- $u"
