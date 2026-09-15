@@ -466,9 +466,11 @@ for (const [canonical, mirrors] of MIRRORS) {
       "denkikouji-trust/index.html", "denkikouji-nd/index.html",
       "meta-lp/denkikouji/index.html", "meta-lp/sekoukanri-kentiku/index.html", "meta-lp/sekoukanri-doboku/index.html",
       "meta-lp/sekoukanri-denkisekou/index.html", "meta-lp/nenshu-shindan-kentiku/index.html",
-      "meta-lp/nenshu-shindan-doboku/index.html", "meta-lp/nenshu-shindan-denkisekou/index.html"];
+      "meta-lp/nenshu-shindan-doboku/index.html", "meta-lp/nenshu-shindan-denkisekou/index.html",
+      // 法務ページ（全LPの同意文から辿る。ヘッダー/フッターしかテーマ規則を使わない）2026-09-15
+      "terms/index.html", "privacypolicy/index.html", "WPLP/privacypolicy/index.html"];
     const heavy = MAIN_LPS.filter((p) => !/theme-lp\.css\?v/.test(read(p)));
-    check("主力LP・広告着地(15本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
+    check("主力LP・広告着地・法務ページ(18本)が theme-lp.css を読んでいる（theme-snapshot.css 直読みへ戻さない）",
       heavy.length === 0, heavy.join(", "));
   }
 
