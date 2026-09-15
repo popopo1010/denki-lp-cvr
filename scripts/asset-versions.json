@@ -71,10 +71,6 @@
     "version": "20260904a",
     "sha256": "4f8fdcc4b1d8e6ca"
   },
-  "assets/css/theme-snapshot.css": {
-    "version": "20260708a",
-    "sha256": "5e87015a08e9a2f7"
-  },
   "assets/js/app-v2.js": {
     "version": "20260906b",
     "sha256": "e3dd55432efa7162"
