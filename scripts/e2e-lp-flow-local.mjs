@@ -547,6 +547,50 @@ async function runSelfHeal(browser, devices, lp) {
   await ctx.close();
 }
 
+/** 5b) 会社情報の下の「エリアから探す」（主力3本・2026-09-15）。
+ *  タップでFVの選択肢が押されてフォームへ入り、step04 の都道府県セレクトで押したエリアが
+ *  先頭の optgroup に来ること。lp-area-nav.js は steps-lazy の注入・初期化を MutationObserver で
+ *  待ってから並べ替えるので、「タップ時点で #pref がまだ無い」経路を実ブラウザで通す。
+ *  ブロックの無いLPは対象外（何も出さない）。 */
+async function runAreaNav(browser, devices, lp) {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
+  const page = await ctx.newPage();
+  await blockExternal(page);
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+  const has = await page.evaluate(() => !!document.querySelector("[data-lp-area-nav]"));
+  if (!has) { await ctx.close(); return; }
+  const name = `${lp} エリアから探す→step04で先頭に来る`;
+  await page.evaluate(() => { window.dataLayer = window.dataLayer || []; });
+  const clicked = await page.evaluate(() => {
+    const b = document.querySelector('[data-lp-area-nav] [data-lp-area="関東"]');
+    if (!b) return false;
+    b.click();
+    return true;
+  });
+  if (!clicked) { fail(name, "「関東」ボタンが無い"); await ctx.close(); return; }
+  await page.waitForTimeout(900);
+  let st = await page.evaluate(probe);
+  if (!st.step || st.step === "step-first") { fail(name, `タップしてもフォームに入らない: ${st.step || "FV"}`); await ctx.close(); return; }
+  for (let i = 0; i < 8 && st.step !== "step04"; i++) {
+    const r = await advanceOnce(page);
+    st = r.after;
+    if (r.acted === "stuck") break;
+  }
+  if (st.step !== "step04") { fail(name, `step04 に到達しない: ${st.step}`); await ctx.close(); return; }
+  const res = await page.evaluate(() => {
+    const sel = document.getElementById("pref");
+    if (!sel) return { ok: false, why: "#pref が無い" };
+    const g = sel.querySelector("optgroup");
+    const first = sel.options[1];
+    const tracked = (window.dataLayer || []).some((d) => d && d.event === "lp_area_click" && d.lp_area === "関東");
+    const ok = !!g && g.getAttribute("data-lp-area") === "関東" && !!first && first.parentNode === g && sel.options.length >= 47;
+    return { ok, why: `先頭optgroup=${g ? g.label : "なし"} / 先頭=${first ? first.textContent : "なし"} / 件数=${sel.options.length} / 計測=${tracked}`, tracked };
+  });
+  res.ok && res.tracked ? pass(name, res.why) : fail(name, res.why);
+  await ctx.close();
+}
+
 /** 6) steps-lazy.html の取得失敗からの復旧 */
 async function runLazyRecovery(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
@@ -847,6 +891,7 @@ async function main() {
       await runLazyRecovery(browser, devices, lp);
     }
     for (const lp of lps) await runEarlyClick(browser, devices, lp);
+    for (const lp of lps) await runAreaNav(browser, devices, lp);
     for (const lp of lps) await runInAppBar(browser, devices, lp);
     for (const lp of lps) await runSafariKeyboardRace(browser, devices, lp);
     for (const lp of lps) await runNameErrorUx(browser, devices, lp);

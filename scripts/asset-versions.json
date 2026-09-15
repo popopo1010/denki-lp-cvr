@@ -91,6 +91,10 @@
     "version": "20260610",
     "sha256": "09382b74757ed963"
   },
+  "assets/js/lp-area-nav.js": {
+    "version": "20260915a",
+    "sha256": "0246f2aac8867ad1"
+  },
   "assets/js/lp-job-cards.js": {
     "version": "20260831a",
     "sha256": "db82ab2f36a74ec6"
