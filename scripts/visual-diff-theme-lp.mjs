@@ -75,10 +75,16 @@ function styleSignature() {
     if (el.tagName === "SCRIPT" || el.tagName === "STYLE" || el.tagName === "LINK") continue;
     const parts = [el.tagName + (el.id ? "#" + el.id : "") + (el.className && typeof el.className === "string" ? "." + el.className.trim().replace(/\s+/g, ".") : "")];
     if (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") parts.push("value=" + el.value);
+    // クマ（フォロワーアイコン）の transform は app.js / main.js の startBounce() が JS タイマーで
+    // inline に書き続ける揺れアニメーション。FREEZE（CSS animation:none）では止まらず、正本側と
+    // 生成側でサンプリングした瞬間の値（-12px と -11.5px 等）が違うだけで DIFF になる（2026-09-15
+    // /dk_lp/denkikouji/ で 18 件）。テーマCSS由来ではないので署名から外す。位置そのものは E2E の
+    // クマ移動テストと check-kuma-anchor が見ている。
+    const kuma = typeof el.className === "string" && /(^|\s)(js-fixed-icon|c-fixed-icon|cvr-kuma)(\s|$)/.test(el.className);
     // プロパティ名でソートして並び順の違いを無視する（CSS変数 --lg/--xl は宣言順で列挙順が変わる。値は同じ）
-    const dump = (cs) => { const names = []; for (let i = 0; i < cs.length; i++) names.push(cs[i]); names.sort(); let s = ""; for (const p of names) s += p + ":" + cs.getPropertyValue(p) + ";"; return s; };
-    parts.push(dump(getComputedStyle(el)));
-    for (const ps of ["::before", "::after"]) { const c = getComputedStyle(el, ps); if (c.content && c.content !== "none") parts.push(ps + "{" + dump(c) + "}"); }
+    const dump = (cs, skipTransform) => { const names = []; for (let i = 0; i < cs.length; i++) names.push(cs[i]); names.sort(); let s = ""; for (const p of names) { if (skipTransform && p === "transform") continue; s += p + ":" + cs.getPropertyValue(p) + ";"; } return s; };
+    parts.push(dump(getComputedStyle(el), kuma));
+    for (const ps of ["::before", "::after"]) { const c = getComputedStyle(el, ps); if (c.content && c.content !== "none") parts.push(ps + "{" + dump(c, false) + "}"); }
     out.push(parts.join("|"));
   }
   return out;
