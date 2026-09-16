@@ -461,6 +461,28 @@ async function runNameErrorUx(browser, devices, lp) {
   }
   const has = await page.$("#step05 #last-name, #step05 #bday-year");
   if (!arrived || !has) { pass(`${lp} 氏名/生まれ年のエラー表示`, "この構成には無い（対象外）"); await ctx.close(); return; }
+  // ここから先は「姓だけ入れて名を飛ばす」シナリオなので、**欄が空から始まること**が前提。
+  // advanceOnce は見えているグループの #last-name / #first-name / #bday-year を 山田/太郎/1990 で
+  // 埋めるので、到達の仕方（自動遷移が挟まって step05 上で1回 advanceOnce が走る等）によっては
+  // 名が既に埋まった状態で始まり、「名を飛ばしたのに理由が出ない」と誤検知する
+  // （2026-09-16 PR #146 CI run #216 の /自前LP/sekoukanri/。診断で last="山田検" first="太郎" と判明）。
+  // 到達経路に依存しないよう、シナリオの開始状態をここで明示的に作る。
+  const cleared = await page.evaluate(() => {
+    const before = {};
+    for (const id of ["last-name", "first-name", "bday-year"]) {
+      const el = document.querySelector("#step05 #" + id) || document.querySelector("#" + id);
+      if (!el) continue;
+      before[id] = el.value;
+      if (el.tagName.toLowerCase() === "select") continue; // 年が select のLPは空の選択肢が無く未確定にできない
+      el.value = "";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      try { el.blur(); } catch (e) {}
+    }
+    return before;
+  });
+  if (Object.values(cleared).some(Boolean)) console.log(`  · ${lp} 開始前に欄を空にした（到達時: ${JSON.stringify(cleared)}）`);
+  await page.waitForTimeout(200);
   const errState = () => page.evaluate(() => {
     const e = document.querySelector("#error-name");
     const shown = !!e && getComputedStyle(e).display !== "none";
