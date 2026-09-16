@@ -45,7 +45,20 @@ node scripts/sync-booking-slots.js || echo "⚠ 予約枠JSON同期に失敗（G
 
 echo ""
 echo "== 6/6 本番 HTTP =="
-bash scripts/verify-production-release.sh
+# verify-production-release.sh は set -e なので、本番ホストへ到達できない環境（Claude Code の
+# サンドボックス等・egress 制限）では最初の curl が exit 56 で「無言で」落ちる（2026-09-16）。
+# 到達できないこと自体は本番の異常ではないので、先に切り分けて理由を出す。
+# 同じ確認は GitHub 側（probe-status.yml・deploy.yml の Verify deployment）が担う。
+if [[ "${PRECHECK_SKIP_HTTP:-}" == "1" ]]; then
+  echo "⚠ PRECHECK_SKIP_HTTP=1: 本番HTTP確認をスキップ（probe-status.yml / deploy の Verify deployment で代替）"
+elif ! curl -sS -o /dev/null --max-time 20 "https://denkilp.builders-job.com/" 2>/tmp/precheck-curl.err; then
+  echo "✗ 本番ホスト denkilp.builders-job.com へ到達できない（$(head -c 200 /tmp/precheck-curl.err)）"
+  echo "  → この環境からは本番HTTP確認ができない。0〜5 は通過。本番の到達確認は GitHub 側の"
+  echo "    probe-status.yml と deploy.yml の Verify deployment を見る（PRECHECK_SKIP_HTTP=1 で明示スキップ可）"
+  exit 2
+else
+  bash scripts/verify-production-release.sh
+fi
 
 if [[ "${RUN_E2E:-}" == "1" ]]; then
   echo ""
