@@ -32,6 +32,12 @@ const errors = [];
 for (const f of files) {
   const html = readFileSync(f, "utf8");
   const base = path.dirname(f);
+  // HTMLコメントの開閉が揃っているか（2026-09-16: 複数行コメントの先頭行を欠いてブロックを複製し、
+  // コメント本文「都道府県ステップ(step04)で… -->」が denkikouji-v2 の会社情報の下に露出した。
+  // 参照切れと同じ「コピー時の取りこぼし」なので、ここで一緒に見張る）
+  const opens = (html.match(/<!--/g) || []).length;
+  const closes = (html.match(/-->/g) || []).length;
+  if (opens !== closes) errors.push(`${f}: HTMLコメントの開閉が不一致（<!-- ${opens} 個 / --> ${closes} 個）→ コメント本文がページに露出している可能性`);
   for (const url of urlsOf(html)) {
     const u = url.split("?")[0].split("#")[0].trim();
     if (!u || /^(https?:\/\/|\/\/|\/|data:|mailto:|tel:|javascript:|\{)/.test(u)) continue;
@@ -44,7 +50,7 @@ for (const f of files) {
 }
 
 if (errors.length) {
-  console.error(`✗ 相対参照の解決先が存在しないものが ${errors.length} 件:`);
+  console.error(`✗ 相対参照の解決先が存在しない／HTMLコメントの開閉不一致が ${errors.length} 件:`);
   for (const e of errors) console.error("  - " + e);
   process.exit(1);
 }
