@@ -797,3 +797,28 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   z-index: 3;
   pointer-events: none;
 }
+
+
+@media (max-width: 767px) {
+  /* CTA直下の社会的証明（2026-09-20 オーナー実機指摘「詰まりすぎ・96.4%の視認性が悪い」）。
+     従来は同意文(11px/#767676)とほぼ同じ大きさ・同じ灰色で、法務の細字と1つの塊に見えていた
+     ＝売りの数字が細字より目立たない状態。同意文より必ず大きく・濃くし、薄い面で囲って塊を分ける。
+     枠は入力欄とCTAの「間」ではなくCTAの下なので、2026-09-04に外したバッジの再発ではない。 */
+  body.lp-input-step #step06 .cvr-cta-proof {
+    margin: 16px auto 0;
+    max-width: 340px;
+    padding: 7px 12px;
+    background: #f4f7fc;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: center;
+    color: #334155;
+    font-weight: 700;
+  }
+  /* テーマの .p-step06 .c-nextLink{margin:60px 0 120px} の下余白120pxを詰める。
+     v2 だけこの打ち消しが無く、満足度をCTAの下へ移したことで120pxの空きが露出した
+     （他2ファイルは 2026-09-04 に同じ対処済み）。 */
+  body.lp-input-step #step06 .c-nextLink { margin-bottom: 8px; }
+  body.lp-input-step #step06 .cvr-pp-text { margin-top: 12px !important; }
+}

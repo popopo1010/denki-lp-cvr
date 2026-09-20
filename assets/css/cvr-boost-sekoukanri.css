@@ -775,13 +775,23 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     padding-left: 52px !important;
   }
   body.lp-input-step .cvr-birth-hint { margin-top: 4px; font-size: 12px; }
+  /* CTA直下の社会的証明（2026-09-20 オーナー実機指摘「詰まりすぎ・96.4%の視認性が悪い」）。
+     従来は同意文(11px/#767676)とほぼ同じ大きさ・同じ灰色で、法務の細字と1つの塊に見えていた
+     ＝売りの数字が細字より目立たない状態。同意文より必ず大きく・濃くし、薄い面で囲って塊を分ける。
+     枠は入力欄とCTAの「間」ではなくCTAの下なので、2026-09-04に外したバッジの再発ではない。 */
   body.lp-input-step #step06 .cvr-cta-proof {
-    margin: 8px 0 0;
-    font-size: 12px;
+    margin: 16px auto 0;
+    max-width: 340px;
+    padding: 7px 12px;
+    background: #f4f7fc;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.45;
     text-align: center;
-    color: #64748b;
-    font-weight: 600;
+    color: #334155;
+    font-weight: 700;
   }
+  body.lp-input-step #step06 .cvr-pp-text { margin-top: 12px !important; }
   body.lp-input-step #step06 .cvr-step-opp {
     margin: 12px 0 0;
     font-size: 13px;
