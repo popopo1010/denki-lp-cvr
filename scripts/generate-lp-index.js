@@ -45,7 +45,7 @@ const SECTIONS = [
     note: "本番URLのルートパスに対応。GTM反映・静的配信の主対象。",
     accent: "#314c85",
     match: (rel) =>
-      /^(denkikouji|sekoukanri|thanks|privacypolicy)/.test(rel)
+      /^(denkikouji|sekoukanri|denkisekou|thanks|privacypolicy|terms)/.test(rel)
   },
   {
     id: "wplp",

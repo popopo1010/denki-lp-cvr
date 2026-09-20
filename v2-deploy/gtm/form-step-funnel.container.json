@@ -1,0 +1,93 @@
+{
+  "exportFormatVersion": 2,
+  "exportTime": "2026-09-19 00:00:00",
+  "containerVersion": {
+    "path": "accounts/0/containers/0/versions/0",
+    "accountId": "0",
+    "containerId": "0",
+    "containerVersionId": "0",
+    "name": "form_step funnel (LP step reach -> GA4)",
+    "description": "LPの各ステップ到達（dataLayer: form_step / step_name）を GA4 イベントとして送る。docs/GTM-form-step-funnel.md 参照。",
+    "container": {
+      "path": "accounts/0/containers/0",
+      "accountId": "0",
+      "containerId": "0",
+      "name": "denkilp.builders-job.com",
+      "publicId": "GTM-KV525PZ",
+      "usageContext": ["WEB"]
+    },
+    "variable": [
+      {
+        "accountId": "0",
+        "containerId": "0",
+        "variableId": "9001",
+        "name": "DLV - step_name",
+        "type": "v",
+        "parameter": [
+          { "type": "INTEGER", "key": "dataLayerVersion", "value": "2" },
+          { "type": "BOOLEAN", "key": "setDefaultValue", "value": "false" },
+          { "type": "TEMPLATE", "key": "name", "value": "step_name" }
+        ]
+      }
+    ],
+    "trigger": [
+      {
+        "accountId": "0",
+        "containerId": "0",
+        "triggerId": "9001",
+        "name": "CE - form_step",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              { "type": "TEMPLATE", "key": "arg0", "value": "{{_event}}" },
+              { "type": "TEMPLATE", "key": "arg1", "value": "form_step" }
+            ]
+          }
+        ]
+      }
+    ],
+    "tag": [
+      {
+        "accountId": "0",
+        "containerId": "0",
+        "tagId": "9001",
+        "name": "GA4 - form_step",
+        "type": "gaawe",
+        "parameter": [
+          { "type": "BOOLEAN", "key": "sendEcommerceData", "value": "false" },
+          { "type": "TEMPLATE", "key": "eventName", "value": "form_step" },
+          { "type": "TEMPLATE", "key": "measurementIdOverride", "value": "G-3J55ZMS7K1" },
+          {
+            "type": "LIST",
+            "key": "eventSettingsTable",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  { "type": "TEMPLATE", "key": "parameter", "value": "step_name" },
+                  { "type": "TEMPLATE", "key": "parameterValue", "value": "{{DLV - step_name}}" }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  { "type": "TEMPLATE", "key": "parameter", "value": "lp_path" },
+                  { "type": "TEMPLATE", "key": "parameterValue", "value": "{{Page Path}}" }
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["9001"],
+        "tagFiringOption": "ONCE_PER_EVENT",
+        "consentSettings": { "consentStatus": "NOT_SET" }
+      }
+    ],
+    "builtInVariable": [
+      { "accountId": "0", "containerId": "0", "type": "PAGE_PATH", "name": "Page Path" },
+      { "accountId": "0", "containerId": "0", "type": "EVENT", "name": "Event" }
+    ]
+  }
+}
