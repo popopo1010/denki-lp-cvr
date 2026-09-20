@@ -148,12 +148,12 @@
     "sha256": "916d7a2c1b099e55"
   },
   "denkikouji/steps-lazy.html": {
-    "version": "20260915b",
-    "sha256": "88b0a8668a42d36b"
+    "version": "20260920a",
+    "sha256": "3f0c16b7ee37b4c1"
   },
   "denkisekou/steps-lazy.html": {
-    "version": "20260915b",
-    "sha256": "7092d54e3b8c1d7c"
+    "version": "20260920a",
+    "sha256": "5a319eae4a48a23d"
   },
   "dk_lp/assets/css/cvr-boost-sekoukanri.css": {
     "version": "20260829e",
@@ -204,20 +204,20 @@
     "sha256": "157e0ad443abcbd9"
   },
   "sekoukanri-denkisekou/steps-lazy.html": {
-    "version": "20260915b",
-    "sha256": "7092d54e3b8c1d7c"
+    "version": "20260920a",
+    "sha256": "5a319eae4a48a23d"
   },
   "sekoukanri-doboku/steps-lazy.html": {
-    "version": "20260915b",
-    "sha256": "7092d54e3b8c1d7c"
+    "version": "20260920a",
+    "sha256": "5a319eae4a48a23d"
   },
   "sekoukanri-kentiku/steps-lazy.html": {
-    "version": "20260915b",
-    "sha256": "7092d54e3b8c1d7c"
+    "version": "20260920a",
+    "sha256": "5a319eae4a48a23d"
   },
   "sekoukanri/steps-lazy.html": {
-    "version": "20260915b",
-    "sha256": "7092d54e3b8c1d7c"
+    "version": "20260920a",
+    "sha256": "5a319eae4a48a23d"
   },
   "自前LP/assets/css/style-v2.css": {
     "version": "20260829d",
