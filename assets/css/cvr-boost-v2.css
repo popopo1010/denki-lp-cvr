@@ -816,5 +816,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     color: #334155;
     font-weight: 700;
   }
+  /* テーマの .p-step06 .c-nextLink{margin:60px 0 120px} の下余白120pxを詰める。
+     v2 だけこの打ち消しが無く、満足度をCTAの下へ移したことで120pxの空きが露出した
+     （他2ファイルは 2026-09-04 に同じ対処済み）。 */
+  body.lp-input-step #step06 .c-nextLink { margin-bottom: 8px; }
   body.lp-input-step #step06 .cvr-pp-text { margin-top: 12px !important; }
 }
