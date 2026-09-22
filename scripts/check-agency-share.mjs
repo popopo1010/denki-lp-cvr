@@ -166,6 +166,7 @@ const PII = {
   first: "健一",
   email: "sato.kenichi@example.com",
   birthday: "1990-04-02",
+  birthYear: "1990",
   zip: "5900031",
   city: "堺市堺区"
 };
@@ -178,6 +179,7 @@ function makeRow(header, overrides) {
     "your-last-name": PII.last,
     "your-first-name": PII.first,
     "your-birthday": PII.birthday,
+    "your-birthday-year": PII.birthYear,
     "your-zip": PII.zip,
     "your-pref": "大阪府",
     "your-city": PII.city,
@@ -280,6 +282,17 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
   check("LINE登録が 済/未 のみ", body.every((r) => ["済", "未"].includes(r[header.indexOf("LINE登録")])));
   check("lead_id が12桁の16進", /^[0-9a-f]{12}$/.test(String(hot[header.indexOf("lead_id")])),
         String(hot[header.indexOf("lead_id")]));
+
+  // 都道府県・年齢（2026-09-22 オーナー依頼で追加）。
+  // 年齢は「送信年 − 生まれ年」の概算。生年月日そのもの・生まれ年そのものは出さない。
+  check("都道府県が入る", hot[header.indexOf("都道府県")] === "大阪府",
+        String(hot[header.indexOf("都道府県")]));
+  check("年齢が送信時点の概算で入る（2026 − 1990 = 36）",
+        hot[header.indexOf("年齢")] === 36, String(hot[header.indexOf("年齢")]));
+  check("生まれ年そのものは1セルも出ていない",
+        body.every((r) => r.every((c) => String(c) !== PII.birthYear)));
+  check("市区町村・郵便番号は列に無い（都道府県より細かい住所は共有しない）",
+        !header.includes("市区町村") && !header.includes("郵便番号") && !header.includes("your-city"));
   check("lead_id から電話番号が復元できない", !flat.includes(PII.tel));
 
   const summary = share.getSheetByName("チャネル別サマリ");
@@ -323,8 +336,14 @@ console.log("2) lead_id は同じ候補者で不変・別候補者で別値");
     ],
     stageRows: []
   });
-  const a = run().share.getSheetByName("候補者ステージ").grid.slice(1).map((r) => r[0]);
-  const b = run().share.getSheetByName("候補者ステージ").grid.slice(1).map((r) => r[0]);
+  // 列番号で読むと列が増えるたびに壊れるので、必ずヘッダー名で引く
+  const leadIds = (sh) => {
+    const g = sh.getSheetByName("候補者ステージ").grid;
+    const i = g[0].indexOf("lead_id");
+    return g.slice(1).map((r) => r[i]);
+  };
+  const a = leadIds(run().share);
+  const b = leadIds(run().share);
   check("同じデータなら同じ lead_id", JSON.stringify(a) === JSON.stringify(b));
   check("別候補者は別 lead_id", new Set(a).size === a.length);
 }
@@ -413,7 +432,8 @@ console.log("6b) 商談IDがある行はテスト判定で落とさない／電�
     stageRows: [{ id: "4001", Stage: "11_書類選考", Modified_Time: "2026-07-25T14:30:00+09:00" }]
   });
   const body = share.getSheetByName("候補者ステージ").grid.slice(1);
-  const flags = body.map((r) => r[11]); // 11 = 逆オファーOK到達列
+  const head6b = share.getSheetByName("候補者ステージ").grid[0];
+  const flags = body.map((r) => r[head6b.indexOf("逆オファーOK到達")]);
   check("2件残る（商談あり＋未連携で電話あり）", body.length === 2, `${body.length}件`);
   check("商談ありのテスト形式行が残る（11_書類選考→到達）", flags.includes("✓"), JSON.stringify(flags));
   check("電話番号なしの未連携行は落ちる", /電話番号なし 1件を除外/.test(result), result);
@@ -474,7 +494,8 @@ console.log("7b) Meta を追加すると fb / ig / an をまとめて拾う");
     stageRows: []
   });
   const body = share.getSheetByName("候補者ステージ").grid.slice(1);
-  const srcs = body.map((r) => r[5]);
+  const headSrc = share.getSheetByName("候補者ステージ").grid[0];
+  const srcs = body.map((r) => r[headSrc.indexOf("utm_source")]);
   check("google + fb/ig/an + fbclid の5件が残る", body.length === 5, `${body.length}件: ${JSON.stringify(srcs)}`);
   check("fb が含まれる", srcs.includes("fb"));
   check("ig が含まれる", srcs.includes("ig"));
@@ -532,8 +553,9 @@ console.log("9) 日付型セルの _received_at と、同一候補者の重複�
     stageRows: [{ id: "5002", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }]
   });
   const body = share.getSheetByName("候補者ステージ").grid.slice(1);
-  const days = body.map((r) => r[1]);
-  const months = body.map((r) => r[2]);
+  const headDay = share.getSheetByName("候補者ステージ").grid[0];
+  const days = body.map((r) => r[headDay.indexOf("送信日")]);
+  const months = body.map((r) => r[headDay.indexOf("送信月")]);
   check("日付型セルが yyyy-MM-dd になる", days.includes("2026-05-27"), JSON.stringify(days));
   check("送信月が yyyy-MM になる", months.every((m) => /^\d{4}-\d{2}$/.test(m)), JSON.stringify(months));
   check("曜日文字列にならない", !days.some((d) => /[A-Za-z]/.test(String(d))), JSON.stringify(days));
