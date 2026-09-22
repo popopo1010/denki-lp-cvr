@@ -689,7 +689,20 @@ async function runStepEvents(browser, devices, lp) {
   const pushed = await page.evaluate(() =>
     (window.dataLayer || []).filter((d) => d && d.event === "form_step").map((d) => String(d.step_name || "")));
   const ids = await page.evaluate(() => [...document.querySelectorAll(".js-form-group")].map((e) => e.id));
+  // form_step を push してよいのは app.js / app-v2.js だけ（check-form-invariants 5c）。
+  // dk_lp/ は「ブリッジJSの参照実装」で main.js を読み、計測を持たない（docs/REPO-MAP.md）。
+  // ここを一律に必須とすると参照実装が永久に落ちるので、読んでいる実装で期待値を変える。
+  const instrumented = await page.evaluate(() =>
+    [...document.querySelectorAll("script[src]")].some((e) => /assets\/js\/app(-v2)?\.js/.test(e.getAttribute("src") || "")));
   await ctx.close();
+
+  if (!instrumented) {
+    // 計測を持たない実装。「出ないこと」まで確かめる——ここで出ていたら
+    // app.js / app-v2.js 以外が form_step を push している＝二重計測の温床。
+    return pushed.length
+      ? fail(name, `計測を持たない実装なのに form_step が出た: [${pushed.join(",")}]`)
+      : pass(name, "計測対象外（app.js/app-v2.js を読まない参照実装。GA4ファネルには出ない）");
+  }
 
   const dup = pushed.filter((n, i) => pushed.indexOf(n) !== i);
   const unknown = pushed.filter((n) => !ids.includes(n));
