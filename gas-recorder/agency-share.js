@@ -33,6 +33,8 @@ var AGENCY_SHARE_COLUMNS = [
   "送信日",
   "送信月",
   "LP",
+  "都道府県",
+  "年齢",
   "マーケチャネル",
   "utm_source",
   "utm_medium",
@@ -50,6 +52,7 @@ var AGENCY_SHARE_PII_KEYS = [
   "your-last-name",
   "your-first-name",
   "your-birthday",
+  "your-birthday-year",
   "your-zip",
   "your-city",
   "your-email",
@@ -170,6 +173,30 @@ function agencyShareDay(value) {
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   var jst = toJst(s);                      // 解釈できなければ元の文字列が返る
   return /^\d{4}-\d{2}-\d{2}/.test(jst) ? jst.slice(0, 10) : "";
+}
+
+/**
+ * 送信時点の年齢（概算）。
+ *
+ * LPが集めているのは**生まれ年だけ**（step05 の bday-year）なので、
+ * 「送信年 − 生まれ年」で出す＝誕生日前なら1歳多く出る（±1歳の概算）。
+ * 生年月日そのもの（your-birthday / your-birthday-year）は共有対象外なので**絶対に出さない**。
+ *
+ * 「今日」基準にしないこと: このシートは同期のたびに作り直すので、今日基準にすると
+ * 過去の行の数字が毎年勝手に動き、代理店が見ている集計と後から食い違う。
+ */
+function agencyShareAge(params, day) {
+  var year = String(params["your-birthday-year"] == null ? "" : params["your-birthday-year"]).trim();
+  if (!/^\d{4}$/.test(year)) {
+    // 旧フロー（年月日を集めていた頃）は your-birthday に "1990-10-10" 形式で入っている
+    var m = /^(\d{4})-/.exec(String(params["your-birthday"] == null ? "" : params["your-birthday"]).trim());
+    if (!m) return "";
+    year = m[1];
+  }
+  var sent = /^(\d{4})-/.exec(String(day == null ? "" : day));
+  if (!sent) return "";
+  var age = Number(sent[1]) - Number(year);
+  return (age >= 15 && age <= 100) ? age : "";
 }
 
 function agencyShareSetWidth(sheet, cols, columnName, px) {
@@ -409,6 +436,8 @@ function syncAgencyShareRun() {
         "送信日": day,
         "送信月": day ? day.slice(0, 7) : "",
         LP: String(params["_lp"] || "").trim(),
+        "都道府県": String(params["your-pref"] || "").trim(),
+        "年齢": agencyShareAge(params, day),
         "マーケチャネル": zohoMarketingChannel(params),
         utm_source: track.utm_source,
         utm_medium: track.utm_medium,
@@ -552,6 +581,8 @@ function writeAgencyShareDetail(ss, cols, rows) {
   // 明細だけ書けて他タブが古いまま残る（2026-07-28 に実際に発生）。
   agencyShareSetWidth(sheet, cols, "マーケチャネル", 380);
   agencyShareSetWidth(sheet, cols, AGENCY_SHARE_TARGET_LABEL, 130);
+  agencyShareSetWidth(sheet, cols, "都道府県", 90);
+  agencyShareSetWidth(sheet, cols, "年齢", 60);
 }
 
 /**
@@ -756,6 +787,8 @@ function setupAgencyShareLegend(ss, filter, writeErrors) {
     ["送信日", "LPフォーム送信日", "日本時間。同じ人が複数回送信している場合は初回送信日"],
     ["送信月", "送信日の年月", "集計用 (YYYY-MM)"],
     ["LP", "送信元LP", "denkikouji / sekoukanri / sekoukanri-doboku など"],
+    ["都道府県", "候補者の勤務希望エリア", "step04 で選んだ都道府県。市区町村・郵便番号は共有していません"],
+    ["年齢", "送信時点の年齢（概算）", "LPは生まれ年しか集めていないため『送信年 − 生まれ年』。誕生日前なら1歳多く出ます。生年月日そのものは共有していません"],
     ["マーケチャネル", "流入元の要約", "例: google/cpc｜014_denki_top_of_page｜KW: 電気工事士 求人 / ig/paid｜(campaign)｜CR: (クリエイティブ)"],
     ["utm_source", "流入元", "例: google / ig"],
     ["utm_medium", "媒体種別", "例: cpc / paid"],
@@ -772,7 +805,7 @@ function setupAgencyShareLegend(ss, filter, writeErrors) {
      "そのため候補者数は広告管理画面のCV数より少なくなることがあります"],
     ["", "", ""],
     ["【タブの説明】", "", ""],
-    ["候補者ステージ", "1候補者1行の明細", "送信日・流入元・逆オファーOK到達の有無"],
+    ["候補者ステージ", "1候補者1行の明細", "送信日・都道府県・年齢・流入元・逆オファーOK到達の有無"],
     ["チャネル別サマリ", "月 × 流入元の集計", "送信数・LINE登録数・逆オファーOK到達数と到達率"],
     ["月別推移", "月ごとの候補者数・到達数・到達率", "広告コスト入力タブに費用を入れると単価も出ます"],
     ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "候補者数を分母にした到達割合(%)。費用があれば単価も"],
