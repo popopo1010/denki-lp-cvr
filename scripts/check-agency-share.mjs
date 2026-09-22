@@ -301,6 +301,13 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
         !summary.grid[0].some((h) => String(h).includes("HOT")),
         JSON.stringify(summary.grid[0]));
   check("凡例シートが作られる", !!share.getSheetByName("凡例"));
+  // 凡例は代理店が最初に読む説明。列を足したのに説明を書き忘れると、
+  // 意味の分からない列がそのまま渡る（2026-09-22 に都道府県・年齢で実際に手で直した）。
+  {
+    const legendCells = share.getSheetByName("凡例").grid.map((r) => String(r[0] || ""));
+    const missing = evalIn(ctx, "AGENCY_SHARE_COLUMNS").filter((c) => !legendCells.includes(c));
+    check("共有する全列に凡例の説明がある", missing.length === 0, "説明なし: " + JSON.stringify(missing));
+  }
   check("戻り値に件数が入る", /共有シート更新: 3件/.test(result), result);
 }
 

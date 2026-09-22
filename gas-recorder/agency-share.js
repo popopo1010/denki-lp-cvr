@@ -581,6 +581,8 @@ function writeAgencyShareDetail(ss, cols, rows) {
   // 明細だけ書けて他タブが古いまま残る（2026-07-28 に実際に発生）。
   agencyShareSetWidth(sheet, cols, "マーケチャネル", 380);
   agencyShareSetWidth(sheet, cols, AGENCY_SHARE_TARGET_LABEL, 130);
+  agencyShareSetWidth(sheet, cols, "都道府県", 90);
+  agencyShareSetWidth(sheet, cols, "年齢", 60);
 }
 
 /**
@@ -803,7 +805,7 @@ function setupAgencyShareLegend(ss, filter, writeErrors) {
      "そのため候補者数は広告管理画面のCV数より少なくなることがあります"],
     ["", "", ""],
     ["【タブの説明】", "", ""],
-    ["候補者ステージ", "1候補者1行の明細", "送信日・流入元・逆オファーOK到達の有無"],
+    ["候補者ステージ", "1候補者1行の明細", "送信日・都道府県・年齢・流入元・逆オファーOK到達の有無"],
     ["チャネル別サマリ", "月 × 流入元の集計", "送信数・LINE登録数・逆オファーOK到達数と到達率"],
     ["月別推移", "月ごとの候補者数・到達数・到達率", "広告コスト入力タブに費用を入れると単価も出ます"],
     ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "候補者数を分母にした到達割合(%)。費用があれば単価も"],
