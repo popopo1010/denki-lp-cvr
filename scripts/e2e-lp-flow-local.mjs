@@ -661,6 +661,48 @@ async function runAreaNav(browser, devices, lp) {
   await ctx.close();
 }
 
+/**
+ * 5d) ステップ計測 form_step が「1ステップにつき1回・正しい step_name で」出ること。
+ *
+ * GA4 のステップ別ファネルはこの dataLayer だけを材料に組む（docs/GTM-form-step-funnel.md）。
+ * push が1つ欠ければ、そのステップに「誰も到達していない崖」が出て、実在しない離脱を
+ * 追いかけることになる。step_name が実際の step ID とズレても同じことが起きる。
+ * 静的チェック(check-form-invariants 5c)は「push するのは app.js / app-v2.js だけ」＝
+ * 二重pushの防止しか見ていないので、発火そのものは実ブラウザで確かめる。
+ */
+async function runStepEvents(browser, devices, lp) {
+  const name = `${lp} form_step 計測`;
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
+  const page = await ctx.newPage();
+  await blockExternal(page, null);
+  await page.goto(BASE + lp, { waitUntil: "load" });
+  await page.waitForTimeout(600);
+
+  const visited = [];
+  let st = await page.evaluate(probe);
+  for (let i = 0; i < 12; i++) {
+    const r = await advanceOnce(page);
+    st = r.after;
+    if (st.step && visited[visited.length - 1] !== st.step) visited.push(st.step);
+    if (r.acted === "stuck" || st.step === "step06") break;
+  }
+  const pushed = await page.evaluate(() =>
+    (window.dataLayer || []).filter((d) => d && d.event === "form_step").map((d) => String(d.step_name || "")));
+  const ids = await page.evaluate(() => [...document.querySelectorAll(".js-form-group")].map((e) => e.id));
+  await ctx.close();
+
+  const dup = pushed.filter((n, i) => pushed.indexOf(n) !== i);
+  const unknown = pushed.filter((n) => !ids.includes(n));
+  // 到達した入力ステップは、すべて計測されていること（step-first は計測対象外でもよい）
+  const missing = visited.filter((v) => v && v !== "step-first" && !pushed.includes(v));
+  const why = `push=[${pushed.join(",")}] / 到達=[${visited.join(",")}]`;
+  if (!pushed.length) return fail(name, `form_step が1件も出ていない ${why}`);
+  if (dup.length) return fail(name, `同じステップを2回計測: ${dup.join(",")} ${why}`);
+  if (unknown.length) return fail(name, `実在しない step_name: ${unknown.join(",")} ${why}`);
+  if (missing.length) return fail(name, `到達したのに未計測: ${missing.join(",")} ${why}`);
+  pass(name, why);
+}
+
 /** 6) steps-lazy.html の取得失敗からの復旧 */
 async function runLazyRecovery(browser, devices, lp) {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], locale: "ja-JP" });
@@ -965,6 +1007,7 @@ async function main() {
     for (const lp of lps) await runInAppBar(browser, devices, lp);
     for (const lp of lps) await runSafariKeyboardRace(browser, devices, lp);
     for (const lp of lps) await runNameErrorUx(browser, devices, lp);
+    for (const lp of lps) await runStepEvents(browser, devices, lp);
   } finally {
     await browser.close();
     server.close();
