@@ -123,6 +123,10 @@
     "version": "10",
     "sha256": "c211a55b9cd3aa57"
   },
+  "denken/steps-lazy.html": {
+    "version": "20260920a",
+    "sha256": "5a319eae4a48a23d"
+  },
   "denkikouji-nd/steps-lazy.html": {
     "version": "20260906a",
     "sha256": "3770ef0cc6ba0779"

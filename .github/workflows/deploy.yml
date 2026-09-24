@@ -249,7 +249,7 @@ jobs:
             denki-koji-bank-v3/index.html \
             index.html denkikouji/index.html sekoukanri/index.html \
             sekoukanri-kentiku/index.html sekoukanri-doboku/index.html sekoukanri-denkisekou/index.html \
-            denkisekou/index.html; do
+            denkisekou/index.html denken/index.html; do
             minify_html "$f"
           done
           find thanks-v2/p WPLP/thanks-v2/p 自前LP/thanks-v2/p -name index.html 2>/dev/null | while read -r f; do
@@ -266,6 +266,7 @@ jobs:
             dk_lp/denkikouji/index.html dk_lp/sekokanri/index.html \
             service/denkikouji/index.html service/sekoukanri/index.html \
             service/sekoukanri-kentiku/index.html service/sekoukanri-doboku/index.html service/sekoukanri-denkisekou/index.html \
+            service/denken/index.html \
             privacypolicy/index.html 自前LP/privacypolicy/index.html \
             terms/index.html; do
             minify_html "$f"
