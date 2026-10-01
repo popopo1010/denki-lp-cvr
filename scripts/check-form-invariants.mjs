@@ -563,8 +563,15 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
   check("gas-recorder/コード.js: thanks_reached を受けて照合・救済する(handleThanksReached)",
     /handleThanksReached/.test(gas2) &&
     /params\["_event"\]\s*===\s*"thanks_reached"/.test(gas2) &&
-    /Utilities\.sleep\(8000\)/.test(gas2) && // 送信ビーコンとの競合を吸収してから消失と判定
+    // 送信ビーコンとの競合を吸収してから消失と判定。8秒1回では足りなかった（2026-10-01 誤警報）ので
+    // 多段待ち（THANKS_PING_WAIT_ROUNDS × THANKS_PING_WAIT_STEP_MS）。1回きりに戻さない
+    /Utilities\.sleep\(THANKS_PING_WAIT_STEP_MS\)/.test(gas2) && /THANKS_PING_WAIT_ROUNDS/.test(gas2) &&
+    !/Utilities\.sleep\(8000\)/.test(gas2) &&
     /_recovered/.test(gas2) && /送信消失の疑い/.test(gas2));
+  // 本体がピンより後に届いたら救済行へ合流する（二重行・二重@channel・重複商談の芽を潰す）。
+  // 実走の検査は scripts/check-gas-rescue-merge.mjs。
+  check("gas-recorder/コード.js: 本体が後から届いたら救済行へ合流する(findRecentRescueRow/mergeIntoRescueRow)",
+    /findRecentRescueRow\(/.test(gas2) && /mergeIntoRescueRow\(/.test(gas2) && /thanks_ping_merged/.test(gas2));
 }
 {
   const gas = read("gas-recorder/コード.js");

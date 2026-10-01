@@ -674,6 +674,42 @@ function updateZohoDealFromRow(sheet, header, rowNum) {
   }
 }
 
+/** シートの時刻セル（Date か "yyyy-MM-dd HH:mm:ss" のJST文字列）をUTCミリ秒に。読めなければ NaN。 */
+function zohoRowTimeMs(v) {
+  if (v instanceof Date) return v.getTime();
+  var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(String(v || ""));
+  if (!m) return NaN;
+  return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5], +m[6]);
+}
+
+/**
+ * values[i] が未合流の救済行（_recovered=thanks_ping）のとき、同じ電話番号の本体行
+ * （救済行でない行）が前後 ZOHO_DEDUP_HOURS 時間内にあればその行番号を返す。無ければ 0。
+ * 本体が届いた救済行は doPost が合流して thanks_ping_merged にするので、ここに来るのは
+ * 合流機能より前の行か、合流条件（24時間）を外れた行だけ。
+ */
+function zohoFindBodyRowForRescue(values, header, i) {
+  var recCol = header.indexOf("_recovered");
+  var telCol = header.indexOf("your-tel");
+  var atCol = header.indexOf("_received_at");
+  if (recCol === -1 || telCol === -1) return 0;
+  if (String(values[i][recCol] || "").trim() !== "thanks_ping") return 0;
+  var tel = zohoNormalizeTel(values[i][telCol]);
+  if (!tel) return 0;
+  var t0 = atCol !== -1 ? zohoRowTimeMs(values[i][atCol]) : NaN;
+  for (var j = 0; j < values.length; j++) {
+    if (j === i) continue;
+    if (String(values[j][recCol] || "").trim() === "thanks_ping") continue; // 救済行同士は対象外
+    if (zohoNormalizeTel(values[j][telCol]) !== tel) continue;
+    if (atCol !== -1) {
+      var t1 = zohoRowTimeMs(values[j][atCol]);
+      if (!isNaN(t0) && !isNaN(t1) && Math.abs(t1 - t0) > ZOHO_DEDUP_HOURS * 3600000) continue; // 別の機会の再登録
+    }
+    return j + 2;
+  }
+  return 0;
+}
+
 /**
  * 未連携行（zoho_deal_id が空）をまとめて商談化する。
  * 電話番号でZoho側を検索してから作るため、何度実行しても重複しない。
@@ -709,6 +745,15 @@ function backfillZohoDeals(limit) {
 
     if (zohoIsTestSubmission(params)) {
       updateRowColumns(sheet, header, rowNum, { zoho_error: "skipped: test_submission" });
+      skipped++;
+      continue;
+    }
+
+    // 未合流の救済行（thanks到達ピンだけの行）で、同じ番号の本体行が前後24時間内にあるなら
+    // それは誤警報の残骸。名前と電話だけの重複商談を立てない（2026-10-01）。
+    var supersededBy = zohoFindBodyRowForRescue(values, header, i);
+    if (supersededBy) {
+      updateRowColumns(sheet, header, rowNum, { zoho_error: "skipped: superseded_by_row " + supersededBy });
       skipped++;
       continue;
     }

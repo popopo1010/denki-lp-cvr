@@ -75,6 +75,9 @@ jobs:
       - name: 送信行の行番号すり替わり防止（状態列を別人に書かない）
         run: node scripts/check-gas-row-integrity.mjs
 
+      - name: thanks到達ピンと送信本体の順序入れ替わりで二重にならない（救済行への合流）
+        run: node scripts/check-gas-rescue-merge.mjs
+
       - name: FV主画像のモバイル出し分け（PC用の重い方を配らない）
         run: node scripts/check-fv-images.mjs
       - name: minify 対象の取りこぼし（deploy.yml のリスト）
