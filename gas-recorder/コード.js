@@ -80,6 +80,7 @@ const PREFERRED_COLUMNS = [
   "slack_error",
   "thanks_reached_at",
   "_recovered",
+  "_recovered_merged_at",
   "calendar_event_id",
   "zoho_deal_id",
   "zoho_synced_at",
@@ -336,8 +337,20 @@ function doPost(e) {
     for (var j = 0; j < header.length; j++) {
       row.push((header[j] in params) ? params[header[j]] : "");
     }
-    var newRow = appendRowAndGetIndex(sheet, row);
-    var slackLead = notifySlackNewLead(params);
+
+    // thanks到達ピンが本体より先に着いて救済行（_recovered=thanks_ping）が立っていたら、
+    // 新しい行を足さずにその行へ合流する（2026-10-01 誤警報の後始末）。
+    // 合流しないと「同じ人の行が2つ・@channelが2回・backfillで名前と電話だけの重複商談」になる。
+    var rescue = findRecentRescueRow(sheet, header, params["your-tel"]);
+    var newRow, slackLead;
+    if (rescue) {
+      newRow = rescue.row;
+      mergeIntoRescueRow(sheet, header, rescue, params);
+      slackLead = notifySlackRescueMerged(params, rescue);
+    } else {
+      newRow = appendRowAndGetIndex(sheet, row);
+      slackLead = notifySlackNewLead(params);
+    }
     if (slackLead.ok && slackLead.ts) {
       updateRowColumns(sheet, header, newRow, {
         slack_thread_ts: String(slackLead.ts),
@@ -367,7 +380,7 @@ function doPost(e) {
       updateRowColumns(sheet, header, newRow, { zoho_error: "skipped: " + zohoDeal.skipped });
     }
 
-    return jsonOk({ slack_lead: slackLead, zoho_deal: zohoDeal });
+    return jsonOk({ slack_lead: slackLead, zoho_deal: zohoDeal, row: newRow, merged_into_rescue: !!rescue });
   } catch (err) {
     reportErrorToSlack("doPost", err);
     return jsonError(err);
@@ -436,6 +449,14 @@ function handleEmailCapture(params) {
   }
 }
 
+// thanks到達ピンが本体を待つ時間。5秒×6回＝最長30秒（GASの1実行6分には十分収まる）。
+// 2026-10-01 の誤警報（8秒1回で足りなかった）を受けて多段化。値を縮めるときは
+// docs/release-incidents.md 2026-10-01 を読んでから。
+var THANKS_PING_WAIT_STEP_MS = 5000;
+var THANKS_PING_WAIT_ROUNDS = 6;
+// 本体到着時に合流対象とする救済行の新しさ。Zoho の重複判定（ZOHO_DEDUP_HOURS）と同じ24時間。
+var RESCUE_MERGE_HOURS = 24;
+
 /**
  * thanks到達ピン（2026-08-30 リード消失盲点の対策）。
  * LPのフォーム送信後、thanksページ（qualified）から電話番号つきで1本届く。
@@ -453,8 +474,16 @@ function handleThanksReached(params) {
     var header = ensureHeader(sheet);
 
     var row = tel ? findLatestRowByTelOrEmail(sheet, header, tel, "") : -1;
-    if (row === -1 && tel) {
-      Utilities.sleep(8000); // 送信ビーコンとの競合（ピンが先に着いた）を吸収
+    // 送信ビーコンとの競合（ピンが先に着いた）を吸収する。
+    // 2026-10-01: 8秒1回では足りず誤警報が出た（本体の sendBeacon がブラウザ側で遅延し、
+    // さらに GAS の起動待ちが乗ると 8秒を超える）。短い間隔で複数回見に行き、
+    // 合計 THANKS_PING_WAIT_ROUNDS × THANKS_PING_WAIT_STEP_MS（30秒）まで待つ。
+    // それでも無ければ救済行を立てる。本体がその後に届いたら doPost が救済行へ合流する
+    //（findRecentRescueRow / mergeIntoRescueRow）ので、ここで誤警報になっても二重にはならない。
+    var waitedMs = 0;
+    for (var attempt = 0; row === -1 && tel && attempt < THANKS_PING_WAIT_ROUNDS; attempt++) {
+      Utilities.sleep(THANKS_PING_WAIT_STEP_MS);
+      waitedMs += THANKS_PING_WAIT_STEP_MS;
       row = findLatestRowByTelOrEmail(sheet, header, tel, "");
     }
 
@@ -462,7 +491,7 @@ function handleThanksReached(params) {
       var reachedCol = ensureColumn(sheet, header, "thanks_reached_at");
       var cell = sheet.getRange(row, reachedCol + 1);
       if (!String(cell.getValue() || "").trim()) cell.setValue(nowJst); // 初回到達時刻を保持
-      return jsonOk({ matched: true, row: row });
+      return jsonOk({ matched: true, row: row, waited_ms: waitedMs });
     }
 
     // 送信行が無い＝消失の疑い。届いた情報だけで救済行を残す。
@@ -504,7 +533,7 @@ function handleThanksReached(params) {
       updateRowColumns(sheet, header, newRow, { slack_error: String(pingSlackErr) });
       reportErrorToSlack("thanks_ping_recovery (row " + newRow + ")", pingSlackErr);
     }
-    return jsonOk({ matched: false, recovered: true, row: newRow });
+    return jsonOk({ matched: false, recovered: true, row: newRow, waited_ms: waitedMs });
   } catch (err) {
     reportErrorToSlack("handleThanksReached", err);
     return jsonError(err);
@@ -904,6 +933,118 @@ function notifySlackBooking(sheet, header, rowNum, params) {
   return postToSlack(buildCalendarSlackMessage(params));
 }
 
+/**
+ * 同じ電話番号の「未合流の救済行」（_recovered=thanks_ping）が直近 RESCUE_MERGE_HOURS 時間内に
+ * あれば返す。無ければ null。
+ * 戻り値: { row, thread_ts, channel, received_at }
+ */
+function findRecentRescueRow(sheet, header, tel) {
+  var telKey = normalizeTel(tel);
+  if (!telKey) return null;
+  var recCol = header.indexOf("_recovered");
+  var telCol = header.indexOf("your-tel");
+  if (recCol === -1 || telCol === -1) return null;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null;
+  var n = lastRow - 1;
+  var recVals = sheet.getRange(2, recCol + 1, n, 1).getDisplayValues();
+  var telVals = sheet.getRange(2, telCol + 1, n, 1).getDisplayValues();
+  var atCol = header.indexOf("_received_at");
+  var atVals = atCol !== -1 ? sheet.getRange(2, atCol + 1, n, 1).getDisplayValues() : null;
+  var threadCol = header.indexOf("slack_thread_ts");
+  var chCol = header.indexOf("slack_channel_id");
+  for (var i = n - 1; i >= 0; i--) {
+    if (String(recVals[i][0] || "").trim() !== "thanks_ping") continue;
+    if (normalizeTel(telVals[i][0]) !== telKey) continue;
+    var receivedAt = atVals ? String(atVals[i][0] || "").trim() : "";
+    if (receivedAt && !isWithinHours(receivedAt, RESCUE_MERGE_HOURS)) return null; // 古い救済行は別件
+    var rowNum = i + 2;
+    return {
+      row: rowNum,
+      received_at: receivedAt,
+      thread_ts: threadCol !== -1 ? String(sheet.getRange(rowNum, threadCol + 1).getDisplayValue() || "").trim() : "",
+      channel: chCol !== -1 ? String(sheet.getRange(rowNum, chCol + 1).getDisplayValue() || "").trim() : ""
+    };
+  }
+  return null;
+}
+
+/** "yyyy-MM-dd HH:mm:ss"（JST表記）が今から hours 時間以内か。読めない値は「以内」とみなす（合流側に倒す）。 */
+function isWithinHours(jstText, hours) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(String(jstText || ""));
+  if (!m) return true;
+  var utcMs = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5], +m[6]); // JST → UTC
+  var diff = Date.now() - utcMs;
+  return diff <= hours * 3600000;
+}
+
+/**
+ * 救済行を本体の内容で埋める。救済行が既に持つ到達時刻・Slackスレッドは保持し、
+ * _recovered を thanks_ping_merged に、_recovered_merged_at に合流時刻を書く。
+ * 合流後の行は通常の送信行と同じ扱い（Zoho商談もこの行から作る）。
+ */
+function mergeIntoRescueRow(sheet, header, rescue, params) {
+  var keep = { "_recovered": 1, "thanks_reached_at": 1, "slack_thread_ts": 1, "slack_channel_id": 1, "slack_error": 1 };
+  var range = sheet.getRange(rescue.row, 1, 1, header.length);
+  var cur = range.getValues()[0];
+  for (var j = 0; j < header.length; j++) {
+    var key = header[j];
+    if (!key || keep[key]) continue;
+    if (key in params) cur[j] = params[key];
+  }
+  range.setValues([cur]);
+  updateRowColumns(sheet, header, rescue.row, {
+    "_recovered": "thanks_ping_merged",
+    "_recovered_merged_at": toJst(new Date())
+  });
+}
+
+/**
+ * 救済行への合流を Slack に反映する。警報スレッドに本体の全項目を返信し、
+ * 親の警報文を「本体到着済み（誤警報）」に書き換える（@channel は鳴らし直さない）。
+ * 戻り値は notifySlackNewLead と同じ形。ts は警報スレッドの ts（面談予約の返信先を揃える）。
+ */
+function notifySlackRescueMerged(params, rescue) {
+  if (!slackBotEnabled()) return { ok: false, note: "slack bot off" };
+  if (!rescue.thread_ts) return notifySlackNewLead(params); // 警報投稿が失敗していた行は通常通知
+  var channel = rescue.channel || getScriptProp("SLACK_LEAD_CHANNEL_ID");
+  var detail = buildLeadSlackMessage(params).replace(/<!channel>\s*/g, "");
+  var reply = postSlackChatMessage({
+    channel: channel,
+    thread_ts: rescue.thread_ts,
+    text: ":white_check_mark: *送信本体が届きました（上の警報は誤警報・同一リード。架電は1件でOK）*\n" + detail
+  });
+  if (!reply.ok) return reply;
+  var name = ((params["your-last-name"] || "") + " " + (params["your-first-name"] || "")).trim() || params["_name"] || "";
+  updateSlackChatMessage(channel, rescue.thread_ts,
+    ":white_check_mark: *送信本体が届きました（誤警報・架電は1件でOK）*\n" +
+    "thanks到達ピンが本体より先に着いたため一時的に「送信消失の疑い」を出しましたが、同じ送信の本体がその後届きました。\n" +
+    "●名前：" + name + "\n●電話番号：" + (params["your-tel"] || "") + "\n●LP：" + (params["_lp"] || "") + "\n" +
+    "_全項目はこのスレッドの返信、面談予約の返信もこのスレッドに届きます_");
+  return { ok: true, ts: String(rescue.thread_ts), channel: channel, merged: true };
+}
+
+/** 自分（Bot）が投稿したメッセージの本文を書き換える。失敗しても処理は止めない。 */
+function updateSlackChatMessage(channel, ts, text) {
+  try {
+    var token = getScriptProp("SLACK_BOT_TOKEN");
+    if (!token || !channel || !ts) return { ok: false, note: "slack bot not configured" };
+    var res = UrlFetchApp.fetch("https://slack.com/api/chat.update", {
+      method: "post",
+      contentType: "application/json",
+      headers: { Authorization: "Bearer " + token },
+      payload: JSON.stringify({ channel: channel, ts: String(ts), text: text }),
+      muteHttpExceptions: true
+    });
+    var json = JSON.parse(res.getContentText());
+    if (!json.ok) console.log("chat.update failed: " + json.error);
+    return { ok: !!json.ok, error: json.error || "" };
+  } catch (e) {
+    console.log("chat.update error: " + e);
+    return { ok: false, error: String(e) };
+  }
+}
+
 function findLatestRowByTelOrEmail(sheet, header, tel, email) {
   var telColIdx = header.indexOf("your-tel");
   var emailColIdx = header.indexOf("your-email");
@@ -1154,7 +1295,8 @@ const COLUMNS_LEGEND = [
   ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない"],
   ["slack_error", "Slack通知エラー", "新規リードのSlack通知が失敗した理由。空なら通知成功（slack_thread_ts が入る）"],
   ["thanks_reached_at", "thanks到達確認", "thanksページ到達ピンの受信時刻。空でもLINE即遷移等はあり得るが、行全体で常に空が続く場合はピン配線の故障を疑う"],
-  ["_recovered", "救済行フラグ", "thanks_ping=フォーム送信本体が届かずthanks到達ピンだけ届いた救済行（送信消失の疑い）。名前・電話番号以外の項目は無い。@channel警報も出る"],
+  ["_recovered", "救済行フラグ", "thanks_ping=フォーム送信本体が届かずthanks到達ピンだけ届いた救済行（送信消失の疑い）。名前・電話番号以外の項目は無い。@channel警報も出る。thanks_ping_merged=警報の後に本体が届き、この行へ合流した（全項目あり・誤警報だった。Slackの警報文も書き換わる）"],
+  ["_recovered_merged_at", "救済行への合流時刻", "本体が届いて救済行に合流した日本時間。_recovered=thanks_ping_merged の行にだけ入る"],
   ["your-tel", "電話番号", "ハイフンなし11桁。先頭0はスプシで欠落表示することがある"],
   ["your-last-name", "姓", ""],
   ["your-first-name", "名", ""],
