@@ -247,9 +247,27 @@ function zohoToDateString(v) {
  */
 function zohoToDateTimeString(v) {
   if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime())) {
-    return Utilities.formatDate(v, "Asia/Tokyo", "yyyy-MM-dd HH:mm:ss");
+    // コード.js の toJst() と同じ TZ / TS_FORMAT（受信時に書く形式）に揃える。
+    // 単体テストは zoho.js だけを読むので、未定義なら同じ既定値で動かす。
+    var tz = (typeof TZ !== "undefined") ? TZ : "Asia/Tokyo";
+    var fmt = (typeof TS_FORMAT !== "undefined") ? TS_FORMAT : "yyyy-MM-dd HH:mm:ss";
+    return Utilities.formatDate(v, tz, fmt);
   }
   return String(v == null ? "" : v).trim();
+}
+
+/**
+ * シートの1行を params（ヘッダー名 → 値）にする。backfill / resync / 再同期の3箇所で
+ * 同じループを書いていたので1つにまとめ、ここで Date 型セルを受信時と同じ文字列に戻す。
+ * 以後の処理（lp_info・重複判定・テスト判定）は「受信直後の params」と同じ形で受け取れる。
+ */
+function zohoRowToParams(header, row) {
+  var params = {};
+  for (var c = 0; c < header.length; c++) {
+    var v = row[c];
+    params[header[c]] = (Object.prototype.toString.call(v) === "[object Date]") ? zohoToDateTimeString(v) : v;
+  }
+  return params;
 }
 
 /**
@@ -672,8 +690,7 @@ function updateZohoDealFromRow(sheet, header, rowNum) {
     var dealId = String(row[idCol] || "").trim();
     if (!dealId) return { ok: false, skipped: "not_linked" };
 
-    var params = {};
-    for (var c = 0; c < header.length; c++) params[header[c]] = row[c];
+    var params = zohoRowToParams(header, row);
 
     var deal = buildZohoDeal(params);
     var payload = { id: dealId, lp_info: deal.lp_info };
@@ -752,8 +769,7 @@ function backfillZohoDeals(limit) {
   for (var i = 0; i < values.length && processed < limit; i++) {
     if (String(values[i][idCol] || "").trim()) continue;
 
-    var params = {};
-    for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
+    var params = zohoRowToParams(header, values[i]);
     var rowNum = i + 2;
     processed++;
 
@@ -825,8 +841,7 @@ function resyncZohoDealFields(limit) {
     var dealId = String(values[i][idCol] || "").trim();
     if (!dealId || seen[dealId]) continue;
     seen[dealId] = true;
-    var params = {};
-    for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
+    var params = zohoRowToParams(header, values[i]);
     targets.push({ id: dealId, params: params });
   }
   if (!targets.length) return zohoLog("連携済みの行がありません。先に backfillZohoDeals() を実行してください");

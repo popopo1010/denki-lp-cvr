@@ -297,14 +297,15 @@ def qual_label_grade(value: str) -> str:
     return value
 
 
-def qual_button_form(value: str, *, grade_label: bool, img_rel: str = "../assets/img") -> str:
+def qual_button_form(value: str, *, grade_label: bool, img_rel: str) -> str:
     """フォームLP用ボタン。grade_label=True は root（q-gradeチップ）、False は WPLP/自前LP（フル名称）"""
     img = FORM_QUAL_IMG[value]
     icon_html = (
-        # 先頭は軽量版（192px）。表示は最大54pxなのに原寸1665pxを配っていた（2026-09-12）。
-        # テーマ配信の原寸は2番目の source と img に残すので、取得できなくても従来どおり表示される。
+        # 軽量版（192px）だけを source にする。表示は最大54pxなのに原寸1665pxを配っていた（2026-09-12）。
+        # <picture> は type/media で選んだ source が 404 でも次の source へは行かないので、
+        # テーマ原寸の webp を2番目に置いても「取得失敗時のフォールバック」にはならず死んだ約150Bだった
+        # （2026-10-04 に全LPから外した）。<img> の PNG は webp 非対応ブラウザ用。
         f'<span class="c-button__img"><picture><source srcset="{img_rel}/{img}-192.webp" type="image/webp">'
-        f'<source srcset="{IMG_BASE}/{img}.webp" type="image/webp">'
         f'<img loading="lazy" decoding="async" src="{IMG_BASE}/{img}.png" alt=""></picture></span>'
     )
     label = qual_label_grade(value) if grade_label else value
@@ -324,7 +325,7 @@ def qual_display_label(value: str) -> str:
     return value
 
 
-def qual_button(value: str, *, img_rel: str = "../../assets/img") -> str:
+def qual_button(value: str, *, img_rel: str) -> str:
     img = QUAL_IMG[value]
     if img in LOCAL_ICONS:
         icon_html = (
@@ -334,7 +335,6 @@ def qual_button(value: str, *, img_rel: str = "../../assets/img") -> str:
     else:
         icon_html = (
             f'<span class="c-button__img"><picture><source srcset="{img_rel}/{img}-192.webp" type="image/webp">'
-            f'<source srcset="{IMG_BASE}/{img}.webp" type="image/webp">'
             f'<img loading="lazy" decoding="async" src="{IMG_BASE}/{img}.png" alt=""></picture></span>'
         )
     return (
@@ -346,7 +346,7 @@ def qual_button(value: str, *, img_rel: str = "../../assets/img") -> str:
     )
 
 
-def build_step01(v: dict, *, nenshu: bool = False, grade_label: bool = True, img_rel: str = "../assets/img") -> str:
+def build_step01(v: dict, *, nenshu: bool = False, grade_label: bool = True, img_rel: str) -> str:
     parts = [
         f'    <p class="c-title01">\n        <span class="js-icon-target">{v["step01_title"]}</span>\n    </p>'
     ]

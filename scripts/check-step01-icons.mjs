@@ -8,8 +8,11 @@
  * **必要画素数の100倍以上を配っていた**。FVをタップした直後に4枚まとめて走るので、
  * 初期表示ではなく「最初の操作」の体感に効く。
  *
- * 判定: これらのアイコンを持つ <picture> は、**最初の <source> が軽量版 -192.webp**
- *       であること（テーマ配信の原寸は2番目以降に残し、フォールバックとして機能させる）。
+ * 判定: これらのアイコンを持つ <picture> は、**最初の <source> が軽量版 -192.webp** であり、
+ *       **テーマ原寸の webp を <source> に持たない**こと。<picture> は type/media で選んだ source が
+ *       404 でも次の source へ落ちないので、原寸 webp を2番目に置いても取得失敗時のフォールバックには
+ *       ならず、ボタン1つにつき約150Bの死んだタグになるだけ（2026-10-04 に全LPから外した）。
+ *       <img> の PNG は webp 非対応ブラウザ用に残す。
  *
  * 実行: node scripts/check-step01-icons.mjs
  */
@@ -43,13 +46,19 @@ for (const file of walk(ROOT)) {
   const rel = path.relative(ROOT, file);
   let touched = false;
   for (const pic of html.match(/<picture>[\s\S]*?<\/picture>/g) || []) {
-    const icon = ICONS.find((n) => new RegExp(`[/"]${n}\\.(webp|png)`).test(pic));
+    // -192 だけの <picture>（原寸名が <img> にも無い書き方）も見落とさない
+    const icon = ICONS.find((n) => new RegExp(`[/"]${n}(-192)?\\.(webp|png)`).test(pic));
     if (!icon) continue;
     touched = true;
-    const first = (pic.match(/<source[^>]*>/) || [""])[0];
+    const sources = pic.match(/<source[^>]*>/g) || [];
+    const first = sources[0] || "";
     if (!first.includes(`${icon}-192.webp`)) {
       bad++;
       console.log(`  NG  ${rel}: ${icon} の <picture> が原寸から始まっている（先頭に -192 を置く）`);
+    }
+    if (sources.some((t) => new RegExp(`[/"]${icon}\\.webp"`).test(t))) {
+      bad++;
+      console.log(`  NG  ${rel}: ${icon} の <picture> に原寸 webp の <source> が残っている（フォールバックにならない死んだタグ。外す）`);
     }
   }
   if (touched) pages++;
