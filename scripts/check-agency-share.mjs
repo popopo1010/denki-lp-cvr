@@ -671,6 +671,23 @@ console.log("12) _test 列のテスト送信を除外する（2026-08-30〜の�
   check("除外件数に計上される", /テスト送信 2件/.test(result), result);
 }
 
+console.log("12b) 救済行の残骸（_recovered=thanks_ping_superseded）は候補者として数えない（2026-10-04）");
+{
+  const { share, result } = runSync({
+    rows: (header) => [
+      makeRow(header, { zoho_deal_id: "7001" }),
+      // thanks到達ピンの救済行で、本体が別行として届いていた残骸（本体行が数える）
+      makeRow(header, { zoho_deal_id: "", "your-tel": "08055556666", _recovered: "thanks_ping_superseded" }),
+      // 本体が無い本物の消失は候補者として残す
+      makeRow(header, { zoho_deal_id: "", "your-tel": "08055557777", _recovered: "thanks_ping" })
+    ],
+    stageRows: [{ id: "7001", Stage: "08_逆オファーOK", Modified_Time: "2026-08-30T14:30:00+09:00" }]
+  });
+  const body = share.getSheetByName("候補者ステージ").grid.slice(1);
+  check("superseded だけ除外され、本物の救済行は残る", body.length === 2, `${body.length}件`);
+  check("除外件数に計上される", /救済行の残骸 1件/.test(result), result);
+}
+
 console.log("13) 全体が中止しても、止まっていることを凡例に残す");
 {
   const props = {

@@ -388,6 +388,7 @@ function syncAgencyShareRun() {
   var records = [];
   var excludedTest = 0;
   var excludedNoTel = 0;
+  var excludedSuperseded = 0;
   var excludedChannel = 0;
 
   for (var i = 0; i < values.length; i++) {
@@ -399,6 +400,12 @@ function syncAgencyShareRun() {
     // この列を最優先で見る。捕まえ損ねると候補者数が水増しされ、到達率と単価が実態より悪く出る。
     if (String(params["_test"] || "").trim()) {
       excludedTest++;
+      continue;
+    }
+    // thanks到達ピンの救済行のうち、本体が別行で届いていた残骸（2026-10-04）。候補者としては
+    // 本体行が数えるので、ここで数えると候補者数が水増しされる。
+    if (String(params["_recovered"] || "").trim() === "thanks_ping_superseded") {
+      excludedSuperseded++;
       continue;
     }
 
@@ -543,7 +550,8 @@ function syncAgencyShareRun() {
 
   // 何を落としたかは必ず出す。黙って絞ると「全件出ている」と誤解される。
   var msg = "共有シート更新: " + rows.length + "件" +
-            "（テスト送信 " + excludedTest + "件・電話番号なし " + excludedNoTel + "件を除外" +
+            "（テスト送信 " + excludedTest + "件・電話番号なし " + excludedNoTel + "件" +
+            (excludedSuperseded ? "・救済行の残骸 " + excludedSuperseded + "件" : "") + "を除外" +
             (filter ? " / チャネル絞り込み[" + filter.label + "]で " + excludedChannel + "件を除外" : "") +
             " / 同一候補者の重複 " + duplicates + "件を統合" +
             " / ステージ取得 " + Object.keys(stages.map).length + "件）" +

@@ -85,6 +85,8 @@ Apps Script エディタ → ⚙️ プロジェクトの設定 → スクリプ
     「thanks到達ピンが先に着いただけの誤警報の残骸」なので商談を作らず `zoho_error` に
     `skipped: superseded_by_row N` と残す。本体行が無い救済行（本当の送信消失）は名前と電話だけで商談を作る。
     本体が後から届いた救済行は doPost が合流して `_recovered=thanks_ping_merged` になり、通常行と同じく商談化される。
+    合流できずに二重行のまま残ったものは `sweepOrphanRescueRows`（doPost の最後に毎回）が
+    `_recovered=thanks_ping_superseded` にするので、backfill は `skipped: superseded` で飛ばす（2026-10-04）。
 - **Zoho側の選択肢を足したあとの追いつき**：`resyncZohoDealFields()` を実行すると、連携済みの行を
   今のマッピングで上書きし直す。1回あたり最大150行。**ステージ・商談名・パイプラインは送らない**（営業の運用を壊さないため）。
 
