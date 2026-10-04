@@ -239,6 +239,38 @@ function zohoToDateString(v) {
 }
 
 /**
+ * シートの時刻セルを lp_info 用の "yyyy-MM-dd HH:mm:ss"（JST）にする。
+ * 受信時は文字列だが、シート経由（LINE登録後の再同期 / backfill / resync）では
+ * セルが Date 型に変わっているので、そのまま連結すると
+ * "Fri Oct 02 2026 07:02:01 GMT+0900 (日本標準時)" になり、同じ項目に2形式が混在する
+ * （2026-10-03 に Zoho の lp_info で確認）。文字列はそのまま返す。
+ */
+function zohoToDateTimeString(v) {
+  if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime())) {
+    // コード.js の toJst() と同じ TZ / TS_FORMAT（受信時に書く形式）に揃える。
+    // 単体テストは zoho.js だけを読むので、未定義なら同じ既定値で動かす。
+    var tz = (typeof TZ !== "undefined") ? TZ : "Asia/Tokyo";
+    var fmt = (typeof TS_FORMAT !== "undefined") ? TS_FORMAT : "yyyy-MM-dd HH:mm:ss";
+    return Utilities.formatDate(v, tz, fmt);
+  }
+  return String(v == null ? "" : v).trim();
+}
+
+/**
+ * シートの1行を params（ヘッダー名 → 値）にする。backfill / resync / 再同期の3箇所で
+ * 同じループを書いていたので1つにまとめ、ここで Date 型セルを受信時と同じ文字列に戻す。
+ * 以後の処理（lp_info・重複判定・テスト判定）は「受信直後の params」と同じ形で受け取れる。
+ */
+function zohoRowToParams(header, row) {
+  var params = {};
+  for (var c = 0; c < header.length; c++) {
+    var v = row[c];
+    params[header[c]] = (Object.prototype.toString.call(v) === "[object Date]") ? zohoToDateTimeString(v) : v;
+  }
+  return params;
+}
+
+/**
  * 生年月日を Zoho の date 項目形式（YYYY-MM-DD）に組み立てる。
  * 現行LPは「生まれ年（西暦）」しか聞かないため、フル日付が無い行がほとんど。
  * その場合は月日を 4/1 に仮置きして返す（年齢が分かる状態にするのが目的）。
@@ -502,7 +534,7 @@ function buildZohoDeal(params, meta) {
 
   var info = [
     "LP: " + (params["_lp"] || ""),
-    "送信: " + (params["_received_at"] || ""),
+    "送信: " + zohoToDateTimeString(params["_received_at"]),
     "経験: " + (params["your-experience"] || "未選択"),
     "転職意欲: " + (params["your-willingness"] || "未選択")
   ];
@@ -514,10 +546,10 @@ function buildZohoDeal(params, meta) {
   if (track.utm_term) info.push("utm_term: " + track.utm_term);
   if (track.utm_content) info.push("utm_content: " + track.utm_content);
   if (track.utm_id && track.utm_id !== track.utm_campaign) info.push("utm_id: " + track.utm_id);
-  info.push("LINE登録: " + (params["line_clicked_at"] ? ("済 " + params["line_clicked_at"]) : "未"));
-  if (String(params["email_captured_at"] || "").trim()) {
-    info.push("メール登録: 済 " + params["email_captured_at"]);
-  }
+  var lineAt = zohoToDateTimeString(params["line_clicked_at"]);
+  info.push("LINE登録: " + (lineAt ? ("済 " + lineAt) : "未"));
+  var emailAt = zohoToDateTimeString(params["email_captured_at"]);
+  if (emailAt) info.push("メール登録: 済 " + emailAt);
   if (tel.length !== 11) info.push("※電話番号が不正形式（原文: " + String(params["your-tel"] || "") + "）");
 
   var zip = zohoNormalizeZip(params["your-zip"]);
@@ -658,8 +690,7 @@ function updateZohoDealFromRow(sheet, header, rowNum) {
     var dealId = String(row[idCol] || "").trim();
     if (!dealId) return { ok: false, skipped: "not_linked" };
 
-    var params = {};
-    for (var c = 0; c < header.length; c++) params[header[c]] = row[c];
+    var params = zohoRowToParams(header, row);
 
     var deal = buildZohoDeal(params);
     var payload = { id: dealId, lp_info: deal.lp_info };
@@ -738,8 +769,7 @@ function backfillZohoDeals(limit) {
   for (var i = 0; i < values.length && processed < limit; i++) {
     if (String(values[i][idCol] || "").trim()) continue;
 
-    var params = {};
-    for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
+    var params = zohoRowToParams(header, values[i]);
     var rowNum = i + 2;
     processed++;
 
@@ -811,8 +841,7 @@ function resyncZohoDealFields(limit) {
     var dealId = String(values[i][idCol] || "").trim();
     if (!dealId || seen[dealId]) continue;
     seen[dealId] = true;
-    var params = {};
-    for (var c = 0; c < header.length; c++) params[header[c]] = values[i][c];
+    var params = zohoRowToParams(header, values[i]);
     targets.push({ id: dealId, params: params });
   }
   if (!targets.length) return zohoLog("連携済みの行がありません。先に backfillZohoDeals() を実行してください");

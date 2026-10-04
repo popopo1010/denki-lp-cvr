@@ -83,6 +83,9 @@ jobs:
       - name: minify 対象の取りこぼし（deploy.yml のリスト）
         run: node scripts/check-minify-coverage.mjs
 
+      - name: step01アイコンの軽量版（原寸1665pxを配らない）
+        run: node scripts/check-step01-icons.mjs
+
   generated:
     name: 生成物のドリフト（生成スクリプトを流して差分が出ないこと）
     runs-on: ubuntu-latest

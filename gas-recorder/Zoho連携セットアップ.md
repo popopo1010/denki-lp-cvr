@@ -175,6 +175,13 @@ denkikouji｜自然流入
   番人は `node scripts/check-zoho-field-limits.mjs`（ci / deploy / release-pre-check で自動実行）。
   過去に落ちた行は `zoho_error` が残り `zoho_deal_id` が空なので、
   反映後に `backfillZohoDeals()` を1回流せば商談化される。
+- **シート経由で読んだ時刻セルは Date 型になっている**（`_received_at` / `line_clicked_at` /
+  `email_captured_at`）。受信直後は "yyyy-MM-dd HH:mm:ss" の文字列だが、LINE登録後の再同期・
+  backfill・resync はシートから読み直すため、そのまま連結すると
+  `送信: Fri Oct 02 2026 07:02:01 GMT+0900 (日本標準時)` になり、同じ `lp_info` に2形式が混在する
+  （2026-10-03 に Zoho で確認。動作には影響しないが読みづらい）。`buildZohoDeal()` は
+  `zohoToDateTimeString()` で必ず "yyyy-MM-dd HH:mm:ss"（JST）に揃える。
+  既存の商談は `resyncZohoDealFields()`（`lp_info` を送る）を1回流せば揃う。
 
 ## 6. Zoho画面でやると良いこと（任意・コード変更不要）
 

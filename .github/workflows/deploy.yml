@@ -110,6 +110,8 @@ jobs:
 
       - name: Check minify coverage (minify 対象の取りこぼし防止)
         run: node scripts/check-minify-coverage.mjs
+      - name: Check step01 icons (step01アイコンの軽量版)
+        run: node scripts/check-step01-icons.mjs
 
       - name: Sync booking slots JSON
         continue-on-error: true
