@@ -341,16 +341,19 @@ function doPost(e) {
     // thanks到達ピンが本体より先に着いて救済行（_recovered=thanks_ping）が立っていたら、
     // 新しい行を足さずにその行へ合流する（2026-10-01 誤警報の後始末）。
     // 合流しないと「同じ人の行が2つ・@channelが2回・backfillで名前と電話だけの重複商談」になる。
-    var rescue = findRecentRescueRow(sheet, header, params["your-tel"]);
-    var newRow, slackLead;
-    if (rescue) {
-      newRow = rescue.row;
-      mergeIntoRescueRow(sheet, header, rescue, params);
-      slackLead = notifySlackRescueMerged(params, rescue);
-    } else {
-      newRow = appendRowAndGetIndex(sheet, row);
-      slackLead = notifySlackNewLead(params);
-    }
+    // 「救済行を探す→追記/合流」はロック内で一体に行う。ピン側（handleThanksReached）も
+    // 「最終確認→救済行の追記」を同じロック内で行うので、探索と追記の隙間に相手が割り込んで
+    // 同じ人の行が2つになる競合（2026-10-04 に閉じた最後の隙間）は起きない。
+    var rescue = null;
+    var newRow = withScriptLock(function (locked) {
+      rescue = findRecentRescueRow(sheet, header, params["your-tel"]);
+      if (rescue) {
+        mergeIntoRescueRow(sheet, header, rescue, params);
+        return rescue.row;
+      }
+      return appendRowAndGetIndex(sheet, row, { locked: locked });
+    });
+    var slackLead = rescue ? notifySlackRescueMerged(params, rescue) : notifySlackNewLead(params);
     if (slackLead.ok && slackLead.ts) {
       updateRowColumns(sheet, header, newRow, {
         slack_thread_ts: String(slackLead.ts),
@@ -380,7 +383,16 @@ function doPost(e) {
       updateRowColumns(sheet, header, newRow, { zoho_error: "skipped: " + zohoDeal.skipped });
     }
 
-    return jsonOk({ slack_lead: slackLead, zoho_deal: zohoDeal, row: newRow, merged_into_rescue: !!rescue });
+    // 合流できずに残った救済行（合流機能より前の行・24時間の窓を外れた行）を、送信のついでに片付ける。
+    // 二重行のまま放置すると backfill で重複商談・代理店共有で候補者数の水増しになる。
+    var sweep = null;
+    try {
+      sweep = sweepOrphanRescueRows(sheet, header);
+    } catch (sweepErr) {
+      console.log("sweepOrphanRescueRows: " + sweepErr);
+    }
+
+    return jsonOk({ slack_lead: slackLead, zoho_deal: zohoDeal, row: newRow, merged_into_rescue: !!rescue, sweep: sweep });
   } catch (err) {
     reportErrorToSlack("doPost", err);
     return jsonError(err);
@@ -488,9 +500,7 @@ function handleThanksReached(params) {
     }
 
     if (row !== -1) {
-      var reachedCol = ensureColumn(sheet, header, "thanks_reached_at");
-      var cell = sheet.getRange(row, reachedCol + 1);
-      if (!String(cell.getValue() || "").trim()) cell.setValue(nowJst); // 初回到達時刻を保持
+      markThanksReached(sheet, header, row, nowJst);
       return jsonOk({ matched: true, row: row, waited_ms: waitedMs });
     }
 
@@ -507,7 +517,18 @@ function handleThanksReached(params) {
     for (var j = 0; j < header.length; j++) {
       rowVals.push((header[j] in params) ? params[header[j]] : "");
     }
-    var newRow = appendRowAndGetIndex(sheet, rowVals);
+    // 「最終確認→救済行の追記」はロック内で一体に行う（doPost 側の「救済行を探す→追記/合流」と
+    // 同じロック）。待ち切った直後に本体が追記していた場合はここで拾えるので二重行にならない。
+    var lateRow = -1;
+    var newRow = withScriptLock(function (locked) {
+      lateRow = tel ? findLatestRowByTelOrEmail(sheet, header, tel, "") : -1;
+      if (lateRow !== -1) return lateRow;
+      return appendRowAndGetIndex(sheet, rowVals, { locked: locked });
+    });
+    if (lateRow !== -1) {
+      markThanksReached(sheet, header, lateRow, nowJst);
+      return jsonOk({ matched: true, row: lateRow, waited_ms: waitedMs, late: true });
+    }
 
     var text;
     if (testReason) {
@@ -1094,7 +1115,13 @@ function ensureColumn(sheet, header, colName) {
  * ロックが取れないときは**記録を優先して続行**する。行番号がずれる可能性より
  * リードを1件落とすほうが損失が大きい（Zoho連携の判断と同じ方針）。
  */
-function appendRowAndGetIndex(sheet, row) {
+function appendRowAndGetIndex(sheet, row, opts) {
+  // opts.locked=true は呼び出し元が withScriptLock で既にロックを持っている場合（二重取得しない）
+  if (opts && opts.locked) {
+    sheet.appendRow(row);
+    SpreadsheetApp.flush();
+    return sheet.getLastRow();
+  }
   var lock = null, locked = false;
   try {
     lock = LockService.getScriptLock();
@@ -1110,6 +1137,123 @@ function appendRowAndGetIndex(sheet, row) {
   } finally {
     if (locked) { try { lock.releaseLock(); } catch (e2) { /* 解放失敗は放置（自動失効する） */ } }
   }
+}
+
+/**
+ * スクリプトロックを取って fn(locked) を実行する。「探す→書く」を他の実行と排他にしたいときに使う。
+ * ロックが取れないときは appendRowAndGetIndex と同じ方針で**記録を優先して続行**する（fn(false)）。
+ */
+function withScriptLock(fn) {
+  var lock = null, locked = false;
+  try {
+    lock = LockService.getScriptLock();
+    locked = lock.tryLock(30000);
+    if (!locked) console.log("withScriptLock: ロックを取得できずロック無しで続行");
+  } catch (e) {
+    console.log("withScriptLock: LockService を使えません: " + e);
+  }
+  try {
+    return fn(locked);
+  } finally {
+    if (locked) { try { lock.releaseLock(); } catch (e2) { /* 解放失敗は放置（自動失効する） */ } }
+  }
+}
+
+/** 行の thanks_reached_at が空なら到達時刻を書く（初回到達時刻を保持） */
+function markThanksReached(sheet, header, rowNum, nowJst) {
+  var reachedCol = ensureColumn(sheet, header, "thanks_reached_at");
+  var cell = sheet.getRange(rowNum, reachedCol + 1);
+  if (!String(cell.getValue() || "").trim()) cell.setValue(nowJst);
+}
+
+// 孤児救済行の掃除で遡る行数（直近だけ見れば十分。全行を毎回読まない）
+var RESCUE_SWEEP_ROWS = 500;
+
+/**
+ * 合流できずに残った救済行（_recovered=thanks_ping）に、同じ番号の本体行が前後 RESCUE_MERGE_HOURS
+ * 時間内にあれば「誤警報の残骸」として片付ける（2026-10-04）。対象は 合流機能より前の行と、
+ * ロック化前の競合で二重になった行。
+ *  - 救済行: _recovered=thanks_ping_superseded・_recovered_merged_at・（商談IDが無ければ）
+ *    zoho_error=skipped: superseded_by_row N。backfill と代理店共有はこの印で除外する
+ *  - 本体行: thanks_reached_at が空なら救済行の到達時刻を移す
+ *  - Slack: 救済の警報文を「本体到着済み（誤警報）」に書き換え、スレッドに本体の場所を返信する
+ * doPost の最後に毎回走る（直近 RESCUE_SWEEP_ROWS 行だけ）。エディタからは sweepOrphanRescueRowsNow()。
+ * 戻り値: { checked, superseded: [{ rescue_row, body_row }] }
+ */
+function sweepOrphanRescueRows(sheet, header) {
+  var recCol = header.indexOf("_recovered");
+  var telCol = header.indexOf("your-tel");
+  var atCol = header.indexOf("_received_at");
+  if (recCol === -1 || telCol === -1) return { checked: 0, superseded: [] };
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { checked: 0, superseded: [] };
+  var start = Math.max(2, lastRow - RESCUE_SWEEP_ROWS + 1);
+  var n = lastRow - start + 1;
+  var values = sheet.getRange(start, 1, n, header.length).getValues();
+  var out = { checked: n, superseded: [] };
+
+  function isRescue(v) { return String(v || "").trim().indexOf("thanks_ping") === 0 && String(v || "").trim() !== "thanks_ping_merged"; }
+  function timeMs(v) {
+    if (v instanceof Date) return v.getTime();
+    var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(String(v || ""));
+    return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5], +m[6]) : NaN;
+  }
+
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][recCol] || "").trim() !== "thanks_ping") continue;
+    var telKey = normalizeTel(values[i][telCol]);
+    if (!telKey) continue;
+    var t0 = atCol !== -1 ? timeMs(values[i][atCol]) : NaN;
+    var bodyIdx = -1;
+    for (var j = 0; j < values.length; j++) {
+      if (j === i || isRescue(values[j][recCol])) continue;
+      if (normalizeTel(values[j][telCol]) !== telKey) continue;
+      if (atCol !== -1) {
+        var t1 = timeMs(values[j][atCol]);
+        if (!isNaN(t0) && !isNaN(t1) && Math.abs(t1 - t0) > RESCUE_MERGE_HOURS * 3600000) continue;
+      }
+      bodyIdx = j;
+      break;
+    }
+    if (bodyIdx === -1) continue; // 本体が無い＝本当の消失。救済行のまま残す
+
+    var rescueRow = start + i, bodyRow = start + bodyIdx;
+    var rescueParams = readRowAsParams(sheet, header, rescueRow);
+    var bodyParams = readRowAsParams(sheet, header, bodyRow);
+    var now = toJst(new Date());
+    var upd = { "_recovered": "thanks_ping_superseded", "_recovered_merged_at": now };
+    if (!String(rescueParams["zoho_deal_id"] || "").trim()) upd["zoho_error"] = "skipped: superseded_by_row " + bodyRow;
+    updateRowColumns(sheet, header, rescueRow, upd);
+    if (!String(bodyParams["thanks_reached_at"] || "").trim() && rescueParams["thanks_reached_at"]) {
+      updateRowColumns(sheet, header, bodyRow, { thanks_reached_at: rescueParams["thanks_reached_at"] });
+    }
+    var threadTs = String(rescueParams["slack_thread_ts"] || "").trim();
+    if (threadTs && slackBotEnabled()) {
+      var channel = String(rescueParams["slack_channel_id"] || "").trim() || getScriptProp("SLACK_LEAD_CHANNEL_ID");
+      var name = ((bodyParams["your-last-name"] || "") + " " + (bodyParams["your-first-name"] || "")).trim() || rescueParams["your-last-name"] || "";
+      postSlackChatMessage({
+        channel: channel,
+        thread_ts: threadTs,
+        text: ":white_check_mark: 送信本体は別途「新規リード（LP登録）」として届いています（シート " + bodyRow + " 行目）。上の警報は誤警報・同一リードなので架電は1件でOK。面談予約の返信は本体のスレッドに届きます。"
+      });
+      updateSlackChatMessage(channel, threadTs,
+        ":white_check_mark: *送信本体が届いていました（誤警報・架電は1件でOK）*\n" +
+        "thanks到達ピンが本体より先に着いたため「送信消失の疑い」を出しましたが、同じ送信の本体は「新規リード（LP登録）」として別途届いています。\n" +
+        "●名前：" + name + "\n●電話番号：" + (rescueParams["your-tel"] || "") + "\n●LP：" + (rescueParams["_lp"] || "") + "\n" +
+        "_全項目・面談予約の返信は本体の「新規リード」スレッドへ_");
+    }
+    out.superseded.push({ rescue_row: rescueRow, body_row: bodyRow });
+  }
+  return out;
+}
+
+/** GASエディタ用: 孤児救済行の掃除を手で1回流す */
+function sweepOrphanRescueRowsNow() {
+  var sheet = getSheet();
+  var header = ensureHeader(sheet);
+  var res = sweepOrphanRescueRows(sheet, header);
+  Logger.log(JSON.stringify(res));
+  return res;
 }
 
 function updateRowColumns(sheet, header, rowNum, updates) {
@@ -1283,6 +1427,11 @@ function doGet(e) {
     if (!webhookAuthorized(e)) return jsonError("unauthorized");
     return jsonOk({ result: backfillTrackingParams() });
   }
+  // ?action=sweep_orphan_rescues で合流できずに残った救済行を片付ける（要 key 認証。doPost でも毎回走る）
+  if (e && e.parameter && e.parameter.action === "sweep_orphan_rescues") {
+    if (!webhookAuthorized(e)) return jsonError("unauthorized");
+    return jsonOk({ result: sweepOrphanRescueRowsNow() });
+  }
   return ContentService.createTextOutput("LP form recorder is alive.")
     .setMimeType(ContentService.MimeType.TEXT);
 }
@@ -1295,7 +1444,7 @@ const COLUMNS_LEGEND = [
   ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない"],
   ["slack_error", "Slack通知エラー", "新規リードのSlack通知が失敗した理由。空なら通知成功（slack_thread_ts が入る）"],
   ["thanks_reached_at", "thanks到達確認", "thanksページ到達ピンの受信時刻。空でもLINE即遷移等はあり得るが、行全体で常に空が続く場合はピン配線の故障を疑う"],
-  ["_recovered", "救済行フラグ", "thanks_ping=フォーム送信本体が届かずthanks到達ピンだけ届いた救済行（送信消失の疑い）。名前・電話番号以外の項目は無い。@channel警報も出る。thanks_ping_merged=警報の後に本体が届き、この行へ合流した（全項目あり・誤警報だった。Slackの警報文も書き換わる）"],
+  ["_recovered", "救済行フラグ", "thanks_ping=フォーム送信本体が届かずthanks到達ピンだけ届いた救済行（送信消失の疑い）。名前・電話番号以外の項目は無い。@channel警報も出る。thanks_ping_merged=警報の後に本体が届き、この行へ合流した（全項目あり・誤警報だった。Slackの警報文も書き換わる）。thanks_ping_superseded=本体が別の行として既に届いていた救済行（誤警報の残骸。商談・代理店共有の対象外。本体行は zoho_error の superseded_by_row N）"],
   ["_recovered_merged_at", "救済行への合流時刻", "本体が届いて救済行に合流した日本時間。_recovered=thanks_ping_merged の行にだけ入る"],
   ["your-tel", "電話番号", "ハイフンなし11桁。先頭0はスプシで欠落表示することがある"],
   ["your-last-name", "姓", ""],

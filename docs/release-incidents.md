@@ -31,6 +31,12 @@
 
 **教訓:** 「数秒後に届くはず」の前提で1回だけ待つ救済は、遅延が前提を超えた瞬間に二重化する。救済は「後から本物が来たら合流する」まで含めて設計する（警報を出す側と本体側の両方に出口を作る）。合流しないと、シートの二重行が後工程（backfill）で重複商談に化ける。
 
+**追補（2026-10-04・残り3点を閉じた）:**
+1. **探索と追記の隙間**: 本体側「救済行を探す→追記/合流」とピン側「最終確認→救済行の追記」を同じスクリプトロック（`withScriptLock`）の中で一体に行う。ピンが30秒待ち切った直後に本体が追記していた場合もロック内の最終確認で拾う（`late:true`）。`appendRowAndGetIndex(sheet,row,{locked:true})` でロックの二重取得を避ける。
+2. **合流機能より前に出来た二重行（10/01 の2行）**: `sweepOrphanRescueRows` を `doPost` の最後に毎回走らせる（直近500行）。未合流の救済行に同じ番号の本体行が前後24時間内にあれば、救済行を `_recovered=thanks_ping_superseded`（商談IDが無ければ `zoho_error: skipped: superseded_by_row N`）にし、本体行に到達時刻を移し、Slack の警報文を「本体が届いていました（誤警報）」に書き換えてスレッドに本体の場所を返信する。本体の無い救済行（本当の消失）は触らない。エディタからは `sweepOrphanRescueRowsNow()`、URL は `?action=sweep_orphan_rescues&key=…`。**次の本番送信が来た時点で 10/01 の2行は自動で片付く**。
+3. **後工程の除外**: `backfillZohoDeals()` は `thanks_ping_superseded` を飛ばし（`skipped: superseded`）、`zohoFindBodyRowForRescue` は superseded 行を本体候補にしない。代理店共有（`agency-share.js`）は superseded 行を候補者として数えない（除外件数を結果文に出す）。
+4. **番人**: `check-gas-rescue-merge.mjs` に「牧野さんの2行＋本物の消失1行→無関係な送信で救済行だけ片付く」「ロック→読み→追記→解放の順・二重取得なし」を追加。`check-agency-share.mjs` 12b で superseded 除外を検査。
+
 ## 2026-09-15 LPの同意文が「XCHANGE株式会社のプライバシーポリシー」なのに、リンク先は別会社名のWP固定ページだった
 
 **症状:** LPの同意文（`cvr-pp-text`）は「XCHANGE株式会社のプライバシーポリシー・利用規約に同意」と書きつつ、リンク先 `href="/privacypolicy"` はWordPressルートの固定ページで、そこには**別会社名**（テンプレ流用元）が掲載されたままだった（オーナー指摘）。個人情報の同意先が本文と食い違う状態。

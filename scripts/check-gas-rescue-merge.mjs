@@ -52,7 +52,7 @@ class FakeRange {
     }
     return out;
   }
-  getDisplayValues() { return this.getValues().map((l) => l.map((v) => (v == null ? "" : String(v)))); }
+  getDisplayValues() { this.sheet.events.push("read"); return this.getValues().map((l) => l.map((v) => (v == null ? "" : String(v)))); }
   getValue() { return this.getValues()[0][0]; }
   getDisplayValue() { return this.getDisplayValues()[0][0]; }
   setValues(vals) {
@@ -88,7 +88,10 @@ function makeContext(sheet, opts = {}) {
       openById: () => ({ getSheetByName: () => sheet, insertSheet: () => sheet }),
       flush: () => {}
     },
-    LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
+    LockService: { getScriptLock: () => ({
+      tryLock: () => { sheet.events.push("lock"); return true; },
+      releaseLock: () => { sheet.events.push("unlock"); }
+    }) },
     Utilities: {
       sleep: (ms) => sleeps.push(ms),
       formatDate: (d) => jstString(d)
@@ -176,6 +179,15 @@ console.log("1) 静的: 配線が残っているか");
     /zohoFindBodyRowForRescue\(/.test(backfill) && /superseded_by_row/.test(backfill));
   check("PREFERRED_COLUMNS と凡例に _recovered_merged_at がある",
     /"_recovered_merged_at",/.test(codeSrc) && /\["_recovered_merged_at",/.test(codeSrc));
+  // 2026-10-04: 「探す→書く」の隙間を閉じる。doPost もピンも同じスクリプトロックの中で探して書く
+  check("doPost は withScriptLock の中で救済行を探して追記/合流する",
+    /withScriptLock\(function \(locked\) \{[\s\S]*?findRecentRescueRow\([\s\S]*?appendRowAndGetIndex\(sheet, row, \{ locked: locked \}\)/.test(doPostBody));
+  check("ピンは withScriptLock の中で最終確認してから救済行を追記する",
+    /withScriptLock\(function \(locked\) \{[\s\S]*?findLatestRowByTelOrEmail\([\s\S]*?appendRowAndGetIndex\(sheet, rowVals, \{ locked: locked \}\)/.test(ping));
+  check("doPost の最後に孤児救済行の掃除（sweepOrphanRescueRows）が走る", /sweepOrphanRescueRows\(sheet, header\)/.test(doPostBody));
+  check("backfillZohoDeals は thanks_ping_superseded を飛ばす", /thanks_ping_superseded/.test(backfill));
+  const agency = read("gas-recorder/agency-share.js");
+  check("代理店共有は thanks_ping_superseded の行を数えない", /thanks_ping_superseded/.test(agency) && /excludedSuperseded\+\+/.test(agency));
 }
 
 console.log("2) 実走: ピンが先・本体が後（2026-10-01 の実録どおり）");
@@ -264,6 +276,64 @@ console.log("6) backfillZohoDeals の重複商談ガード（zohoFindBodyRowForR
   check("通常行は対象外（0）", ctx.zohoFindBodyRowForRescue(values, header, 4) === 0);
   check("合流済み（thanks_ping_merged）は救済扱いしない（0）",
     ctx.zohoFindBodyRowForRescue([[jstString(new Date(now)), "thanks_ping_merged", "08049711404", "牧野"], values[1]], header, 0) === 0);
+}
+
+console.log("7) 実走: 合流機能より前に出来た二重行（2026-10-01 の牧野さんの2行）を、次の送信のついでに片付ける");
+{
+  const sheet = new FakeSheet();
+  const { ctx, slackCalls } = makeContext(sheet);
+  // 当時の挙動を再現: ピンが救済行を立て、本体は別行として追記された（合流なし）
+  post(ctx, PING);
+  const rescueTs = sheet.cell(2, "slack_thread_ts");
+  const header = sheet.header();
+  const bodyRow = header.map((h) => (h in BODY ? BODY[h] : ""));
+  bodyRow[header.indexOf("_received_at")] = jstString(new Date());
+  bodyRow[header.indexOf("slack_thread_ts")] = "1700000000.999999";
+  sheet.appendRow(bodyRow);
+  // 本体が無い本物の消失（別人）も混ぜる
+  post(ctx, { ...PING, "your-tel": "09011112222", _name: "別人 太郎" });
+  check("前提: 救済行＋本体行＋本物の救済行の3行", sheet.getLastRow() === 4 && sheet.cell(2, "_recovered") === "thanks_ping" && sheet.cell(4, "_recovered") === "thanks_ping");
+  slackCalls.length = 0;
+
+  // 無関係な新しい送信が届く → doPost の最後の掃除が走る
+  const res = post(ctx, { ...BODY, "your-tel": "07055556666", "your-last-name": "新規", "your-first-name": "花子" });
+  check("掃除が走り、牧野さんの救済行だけを片付けた", res.sweep && res.sweep.superseded.length === 1 && res.sweep.superseded[0].rescue_row === 2 && res.sweep.superseded[0].body_row === 3, JSON.stringify(res.sweep));
+  check("救済行は thanks_ping_superseded になり、商談の対象外の印が付く",
+    sheet.cell(2, "_recovered") === "thanks_ping_superseded" && !!sheet.cell(2, "_recovered_merged_at") && /superseded_by_row 3/.test(String(sheet.cell(2, "zoho_error"))));
+  check("本体行に到達時刻が移る", !!sheet.cell(3, "thanks_reached_at"));
+  check("本物の消失（本体なし）は救済行のまま残す", sheet.cell(4, "_recovered") === "thanks_ping");
+  check("救済の警報文を書き換え、スレッドに本体の場所を返信する（@channel は新規送信の1回だけ）",
+    updates(slackCalls).length === 1 && updates(slackCalls)[0].payload.ts === rescueTs &&
+    threadPosts(slackCalls).length === 1 && threadPosts(slackCalls)[0].payload.thread_ts === rescueTs && /3 行目/.test(threadPosts(slackCalls)[0].payload.text) &&
+    channelPosts(slackCalls).length === 1);
+  // 2回目の掃除で同じ行を二度片付けない
+  slackCalls.length = 0;
+  const res2 = post(ctx, { ...BODY, "your-tel": "07077778888", "your-last-name": "新規", "your-first-name": "次郎" });
+  check("片付け済みの行は二度触らない", res2.sweep && res2.sweep.superseded.length === 0 && updates(slackCalls).length === 0);
+  check("backfill ガードは superseded 行の本体を候補にしない（救済行同士）",
+    ctx.zohoFindBodyRowForRescue([[jstString(new Date()), "thanks_ping", "08049711404", "牧野"], [jstString(new Date()), "thanks_ping_superseded", "08049711404", "牧野"]], ["_received_at", "_recovered", "your-tel", "your-last-name"], 0) === 0);
+}
+
+console.log("8) 実走: 「探す→書く」がロックの中で一体になっている（探索と追記の隙間に割り込めない）");
+{
+  const sheet = new FakeSheet();
+  const { ctx } = makeContext(sheet);
+  post(ctx, { ...BODY, "your-tel": "07099990000" }); // 既存行を1つ置く（空シートだと検索が読みに行かない）
+  sheet.events.length = 0;
+  post(ctx, PING); // 本体なし → 救済行を追記
+  const ev = sheet.events;
+  const lastLock = ev.lastIndexOf("lock", ev.indexOf("appendRow"));
+  const lastReadBeforeAppend = ev.lastIndexOf("read", ev.indexOf("appendRow"));
+  const unlockAfter = ev.indexOf("unlock", ev.indexOf("appendRow"));
+  check("ピン: ロック → 最終確認（読み） → 追記 → 解放 の順", lastLock !== -1 && lastLock < lastReadBeforeAppend && lastReadBeforeAppend < ev.indexOf("appendRow") && unlockAfter !== -1, ev.join(","));
+  check("ピン: ロックの二重取得をしない（lock と unlock が1回ずつ）", ev.filter((e) => e === "lock").length === 1 && ev.filter((e) => e === "unlock").length === 1, ev.join(","));
+
+  sheet.events.length = 0;
+  post(ctx, { ...BODY, "your-tel": "07011112222" }); // 救済行なし → 通常追記
+  const ev2 = sheet.events;
+  const lock2 = ev2.indexOf("lock"), app2 = ev2.indexOf("appendRow"), unl2 = ev2.indexOf("unlock");
+  check("本体: ロック → 救済行を探す（読み） → 追記 → 解放 の順", lock2 !== -1 && lock2 < ev2.indexOf("read", lock2) && ev2.indexOf("read", lock2) < app2 && app2 < unl2, ev2.join(","));
+  check("本体: ロックの二重取得をしない", ev2.filter((e) => e === "lock").length === 1 && ev2.filter((e) => e === "unlock").length === 1, ev2.join(","));
 }
 
 console.log(failures ? `\nNG: ${failures} 件` : "\nすべて通過");

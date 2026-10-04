@@ -730,7 +730,8 @@ function zohoFindBodyRowForRescue(values, header, i) {
   var t0 = atCol !== -1 ? zohoRowTimeMs(values[i][atCol]) : NaN;
   for (var j = 0; j < values.length; j++) {
     if (j === i) continue;
-    if (String(values[j][recCol] || "").trim() === "thanks_ping") continue; // 救済行同士は対象外
+    var recJ = String(values[j][recCol] || "").trim();
+    if (recJ === "thanks_ping" || recJ === "thanks_ping_superseded") continue; // 救済行同士は対象外
     if (zohoNormalizeTel(values[j][telCol]) !== tel) continue;
     if (atCol !== -1) {
       var t1 = zohoRowTimeMs(values[j][atCol]);
@@ -775,6 +776,13 @@ function backfillZohoDeals(limit) {
 
     if (zohoIsTestSubmission(params)) {
       updateRowColumns(sheet, header, rowNum, { zoho_error: "skipped: test_submission" });
+      skipped++;
+      continue;
+    }
+
+    // 掃除済みの救済行（本体が別行で届いていた残骸）。商談は本体行から作る（2026-10-04）
+    if (String(params["_recovered"] || "").trim() === "thanks_ping_superseded") {
+      updateRowColumns(sheet, header, rowNum, { zoho_error: "skipped: superseded" });
       skipped++;
       continue;
     }
