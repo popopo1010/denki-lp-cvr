@@ -322,9 +322,12 @@ function zohoIsTestSubmission(params) {
   for (var i = 0; i < tel.length; i++) distinct[tel.charAt(i)] = true;
   if (Object.keys(distinct).length < 3) return true;
   if (zohoIsSequentialTel(tel)) return true;
+  // 090/080/070 の後ろが同じ数字8桁（LP側 isTestLeadSubmission と同じ。2026-10-03 の本番テストが商談になった）
+  if (/^0?[789]0(\d)\1{7}$/.test(tel)) return true;
 
   var name = String(params["your-last-name"] || "").trim() + String(params["your-first-name"] || "").trim();
   name = name.replace(/\s|　/g, "").toLowerCase();
+  if (/テスト|てすと|test/.test(name)) return true;
   return ZOHO_PLACEHOLDER_NAMES.indexOf(name) !== -1;
 }
 

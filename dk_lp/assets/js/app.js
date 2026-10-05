@@ -148,6 +148,8 @@
   const LEAD_SESSION_KEY = "dk_lp_lead_v1";
   // 送信時のテスト判定を thanks 側へ引き継ぐキー（thanks-v2-shared.js が読む）
   const TEST_FLAG_KEY = "dk_lp_test_v1";
+  const TESTER_DEVICE_KEY = "dk_tester_v1";
+  isTesterDevice(); // ?dk_tester=1 で開いた時点で端末を登録する（送信時にはURLから消えていることがある）
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
 
   function buildThanksQuery() {
@@ -1299,12 +1301,31 @@
       if (location.pathname.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
       if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return "param";
     } catch (e) { /* noop */ }
+    if (isTesterDevice()) return "tester";
     const t = String(tel || "").trim();
     const ln = String(last || "").trim();
     const fn = String(first || "").trim();
     if (/^09012345678$|^08012345678$|^07012345678$/.test(t)) return "pattern";
-    if (/テスト/.test(ln + fn)) return "pattern";
+    // 090/080/070 の後ろが同じ数字8桁（09011111111 等）。2026-10-03 の本番テストが素通りした
+    if (/^0[789]0(\d)\1{7}$/.test(t)) return "pattern";
+    if (/テスト|てすと|test/i.test(ln + fn)) return "pattern";
     return "";
+  }
+
+  // テスト端末（2026-10-05）。?dk_tester=1 で開いた端末は、以後の送信をすべてテスト扱いにする
+  // （名前・番号の書き方に頼らず、社内の端末から Meta/Google の主CVを出さないため）。
+  // ?dk_tester=0 で解除。thanks-v2-shared.js も同じキーを読む。
+  function isTesterDevice() {
+    try {
+      const m = /[?&]dk_tester=([01])(?:&|$)/.exec(location.search);
+      if (m) {
+        if (m[1] === "1") localStorage.setItem(TESTER_DEVICE_KEY, String(Date.now()));
+        else localStorage.removeItem(TESTER_DEVICE_KEY);
+      }
+      return !!localStorage.getItem(TESTER_DEVICE_KEY);
+    } catch (e) {
+      return false;
+    }
   }
 
   // 判定結果を thanks 側とミラー送信で共有する。テストなら理由を保存、本物なら消す
