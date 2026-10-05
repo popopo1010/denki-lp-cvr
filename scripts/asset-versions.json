@@ -9,11 +9,11 @@
   },
   "WPLP/assets/js/app-v2.js": {
     "version": "20260906b",
-    "sha256": "e3dd55432efa7162"
+    "sha256": "93f75a77e144f387"
   },
   "WPLP/assets/js/app.js": {
     "version": "20260906c",
-    "sha256": "bedd0f1f5c789b39"
+    "sha256": "a17f0f8ee351ed2b"
   },
   "WPLP/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -73,11 +73,11 @@
   },
   "assets/js/app-v2.js": {
     "version": "20260906b",
-    "sha256": "e3dd55432efa7162"
+    "sha256": "93f75a77e144f387"
   },
   "assets/js/app.js": {
     "version": "20260906c",
-    "sha256": "bedd0f1f5c789b39"
+    "sha256": "a17f0f8ee351ed2b"
   },
   "assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -120,8 +120,8 @@
     "sha256": "120d4bbd0be5c039"
   },
   "assets/js/thanks-v2-shared.js": {
-    "version": "10",
-    "sha256": "c211a55b9cd3aa57"
+    "version": "11",
+    "sha256": "9eec5d9e29e5c3b6"
   },
   "denken/steps-lazy.html": {
     "version": "20260920a",
@@ -165,7 +165,7 @@
   },
   "dk_lp/assets/js/app.js": {
     "version": "20260906c",
-    "sha256": "bedd0f1f5c789b39"
+    "sha256": "a17f0f8ee351ed2b"
   },
   "dk_lp/assets/js/cvr-boost.js": {
     "version": "20260823a",
@@ -180,8 +180,8 @@
     "sha256": "652c387eb157f624"
   },
   "dk_lp/denkikouji/assets/js/main.js": {
-    "version": "20260906b",
-    "sha256": "38d9a6e7ff83ac3c"
+    "version": "20261005a",
+    "sha256": "742002effcfc0be7"
   },
   "dk_lp/sekokanri/steps-lazy.html": {
     "version": "20260915b",
@@ -233,11 +233,11 @@
   },
   "自前LP/assets/js/app-v2.js": {
     "version": "20260906b",
-    "sha256": "e3dd55432efa7162"
+    "sha256": "93f75a77e144f387"
   },
   "自前LP/assets/js/app.js": {
     "version": "20260906c",
-    "sha256": "bedd0f1f5c789b39"
+    "sha256": "a17f0f8ee351ed2b"
   },
   "自前LP/assets/js/cvr-boost.js": {
     "version": "20260823a",

@@ -31,6 +31,10 @@
         if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(href)) return "param";
       }
     } catch (e) { /* noop */ }
+    // テスト端末（LP側 isTesterDevice と同じキー）。LPのミラーが動かなかった回も thanks で止める
+    try {
+      if (localStorage.getItem("dk_tester_v1")) return "tester";
+    } catch (e) { /* noop */ }
     if (location.pathname.indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
     return "";
   };
