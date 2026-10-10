@@ -580,6 +580,10 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
   // 除外IP（2026-10-10）。GAS側で _test=ip にし、LPはフォーム操作時に照会して広告CV(lead_conversion)を止める。
   check("gas-recorder/コード.js: 除外IP(EXCLUDE_IPS)をテスト扱いにし、doGet ip_check で照会できる",
     /isExcludedIp\(params\["_ip"\]\)\) return "ip"/.test(gas) && /action === "ip_check"/.test(gas));
+  const exIps = read("gas-recorder/exclude-ips.js");
+  check("gas-recorder/exclude-ips.js: 除外IPタブを isExcludedIp が読み、テスト送信のIPは .htaccess に足さない・clasp の送信対象",
+    /getExcludeIpSheetList\(\)/.test(gas) && /function refreshExcludeIps/.test(exIps) &&
+    /cTest\][\s\S]{0,40}skippedTest/.test(exIps) && /!exclude-ips\.js/.test(read("gas-recorder/.claspignore")));
   for (const p of ["assets/js/app.js", "assets/js/app-v2.js", "dk_lp/denkikouji/assets/js/main.js"]) {
     const src = read(p);
     check(`${p}: 除外IPを送信前に照会し _test=ip にする（広告CVから外す）`,

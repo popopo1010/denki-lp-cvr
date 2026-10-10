@@ -768,7 +768,7 @@ function detectTestSubmission(params) {
 }
 
 /**
- * 除外IP（2026-10-10）。スクリプトプロパティ EXCLUDE_IPS に、カンマ・空白・改行区切りで
+ * 除外IP（2026-10-10）。「除外IP」タブ（exclude-ips.js）と、スクリプトプロパティ EXCLUDE_IPS に、カンマ・空白・改行区切りで
  * IPv4/IPv6 の完全一致、または IPv4 の CIDR（例 203.0.113.0/24）を書く。
  * 一致した送信は**捨てずにテスト扱い**（_test=ip）＝シートに残り、Slackは【テスト送信】表記・
  * @channelなし、Zoho商談は作らない。LPも doGet ?action=ip_check で照会し、送信前に
@@ -778,6 +778,8 @@ function isExcludedIp(ip) {
   ip = String(ip || "").trim();
   if (!ip) return false;
   var list = String(getScriptProp("EXCLUDE_IPS") || "").split(/[\s,]+/);
+  // 「除外IP」タブ（.htaccess の貼り付け＋refreshExcludeIps の追加分。exclude-ips.js）
+  if (typeof getExcludeIpSheetList === "function") list = list.concat(getExcludeIpSheetList());
   for (var i = 0; i < list.length; i++) {
     var rule = list[i].trim();
     if (!rule) continue;
