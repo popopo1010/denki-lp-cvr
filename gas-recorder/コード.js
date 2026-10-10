@@ -751,7 +751,8 @@ function postSlackChatMessage(options) {
  * テスト送信の判定（2026-08-30）。空文字=本物のリード、非空=テスト種別。
  * ①LP側判定の同送値 _test（stg / param / pattern）
  * ②_page がSTG（/denki-lp-cvr-stg/）から来ている
- * ③明らかなテストパターン（zoho.js の zohoIsTestSubmission と同じ基準）
+ * ③除外IP（EXCLUDE_IPS）からの送信
+ * ④明らかなテストパターン（zoho.js の zohoIsTestSubmission と同じ基準）
  * 本物っぽい入力での本番テストは機械判定できないため、運用ルールとして
  * 「本番で試すときはURLに ?dk_test=1 を付ける」を守ること（CLAUDE.md）。
  */
@@ -759,10 +760,51 @@ function detectTestSubmission(params) {
   var t = String(params["_test"] || "").trim();
   if (t) return t;
   if (String(params["_page"] || "").indexOf("/denki-lp-cvr-stg/") !== -1) return "stg";
+  if (isExcludedIp(params["_ip"])) return "ip";
   try {
     if (typeof zohoIsTestSubmission === "function" && zohoIsTestSubmission(params)) return "pattern";
   } catch (e) { /* noop */ }
   return "";
+}
+
+/**
+ * 除外IP（2026-10-10）。スクリプトプロパティ EXCLUDE_IPS に、カンマ・空白・改行区切りで
+ * IPv4/IPv6 の完全一致、または IPv4 の CIDR（例 203.0.113.0/24）を書く。
+ * 一致した送信は**捨てずにテスト扱い**（_test=ip）＝シートに残り、Slackは【テスト送信】表記・
+ * @channelなし、Zoho商談は作らない。社内・無効リードの発信元を数字から外すための仕組み。
+ */
+function isExcludedIp(ip) {
+  ip = String(ip || "").trim();
+  if (!ip) return false;
+  var list = String(getScriptProp("EXCLUDE_IPS") || "").split(/[\s,]+/);
+  for (var i = 0; i < list.length; i++) {
+    var rule = list[i].trim();
+    if (!rule) continue;
+    if (rule === ip) return true;
+    if (rule.indexOf("/") !== -1 && ipv4InCidr(ip, rule)) return true;
+  }
+  return false;
+}
+
+function ipv4ToInt(ip) {
+  var m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(String(ip));
+  if (!m) return null;
+  var n = 0;
+  for (var i = 1; i <= 4; i++) {
+    var o = Number(m[i]);
+    if (o > 255) return null;
+    n = n * 256 + o;
+  }
+  return n;
+}
+
+function ipv4InCidr(ip, cidr) {
+  var parts = String(cidr).split("/");
+  var bits = Number(parts[1]);
+  var a = ipv4ToInt(ip), b = ipv4ToInt(parts[0]);
+  if (a === null || b === null || !(bits >= 0 && bits <= 32) || parts[1] === "") return false;
+  var size = Math.pow(2, 32 - bits);
+  return Math.floor(a / size) === Math.floor(b / size);
 }
 
 function buildLeadSlackMessage(params) {
@@ -1441,7 +1483,7 @@ const COLUMNS_LEGEND = [
   ["カラム名", "意味", "備考"],
   ["_received_at", "GAS受信時刻", "サーバー側で記録した日本時間 (yyyy-MM-dd HH:mm:ss)"],
   ["_lp", "送信元LP識別子", "sekoukanri / denkikouji / sekoukanri-doboku / sekoukanri-kentiku / sekoukanri-denkisekou / *-meta / nenshu-shindan-* / thanks / nenshu-shindan-thanks など"],
-  ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない"],
+  ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号 / ip=除外IP（スクリプトプロパティ EXCLUDE_IPS）からの送信。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない（ip だけはGAS側判定のため広告CVには乗る）"],
   ["slack_error", "Slack通知エラー", "新規リードのSlack通知が失敗した理由。空なら通知成功（slack_thread_ts が入る）"],
   ["thanks_reached_at", "thanks到達確認", "thanksページ到達ピンの受信時刻。空でもLINE即遷移等はあり得るが、行全体で常に空が続く場合はピン配線の故障を疑う"],
   ["_recovered", "救済行フラグ", "thanks_ping=フォーム送信本体が届かずthanks到達ピンだけ届いた救済行（送信消失の疑い）。名前・電話番号以外の項目は無い。@channel警報も出る。thanks_ping_merged=警報の後に本体が届き、この行へ合流した（全項目あり・誤警報だった。Slackの警報文も書き換わる）。thanks_ping_superseded=本体が別の行として既に届いていた救済行（誤警報の残骸。商談・代理店共有の対象外。本体行は zoho_error の superseded_by_row N）"],
