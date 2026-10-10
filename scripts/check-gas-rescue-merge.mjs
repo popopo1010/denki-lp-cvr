@@ -143,10 +143,10 @@ function post(ctx, params) {
   return JSON.parse(res._text);
 }
 
-const TEL = "08049711404";
-const PING = { _event: "thanks_reached", "your-tel": TEL, _name: "牧野 良太", _lp: "denkikouji-v2", _page: "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" };
+const TEL = "08056781234";
+const PING = { _event: "thanks_reached", "your-tel": TEL, _name: "救済 良太", _lp: "denkikouji-v2", _page: "https://denkilp.builders-job.com/denki-lp-cvr/thanks-v2/" };
 const BODY = {
-  "your-tel": TEL, "your-last-name": "牧野", "your-first-name": "良太", "your-pref": "大阪府",
+  "your-tel": TEL, "your-last-name": "救済", "your-first-name": "良太", "your-pref": "大阪府",
   "your-birthday-year": "1986", "your-license01": "その他の資格", "your-experience": "未経験",
   "your-willingness": "今は情報収集したい", _lp: "denkikouji-v2",
   _page: "https://denkilp.builders-job.com/denki-lp-cvr/denkikouji-v2/?utm_source=google", _ip: "60.83.210.236"
@@ -181,9 +181,9 @@ console.log("1) 静的: 配線が残っているか");
     /"_recovered_merged_at",/.test(codeSrc) && /\["_recovered_merged_at",/.test(codeSrc));
   // 2026-10-04: 「探す→書く」の隙間を閉じる。doPost もピンも同じスクリプトロックの中で探して書く
   check("doPost は withScriptLock の中で救済行を探して追記/合流する",
-    /withScriptLock\(function \(locked\) \{[\s\S]*?findRecentRescueRow\([\s\S]*?appendRowAndGetIndex\(sheet, row, \{ locked: locked \}\)/.test(doPostBody));
+    /withScriptLock\(function \(locked\) \{[\s\S]*?findRecentRescueRow\([\s\S]*?appendRowAndGetIndex\(sheet, sheetSafeRow\(row\), \{ locked: locked \}\)/.test(doPostBody));
   check("ピンは withScriptLock の中で最終確認してから救済行を追記する",
-    /withScriptLock\(function \(locked\) \{[\s\S]*?findLatestRowByTelOrEmail\([\s\S]*?appendRowAndGetIndex\(sheet, rowVals, \{ locked: locked \}\)/.test(ping));
+    /withScriptLock\(function \(locked\) \{[\s\S]*?findLatestRowByTelOrEmail\([\s\S]*?appendRowAndGetIndex\(sheet, sheetSafeRow\(rowVals\), \{ locked: locked \}\)/.test(ping));
   check("doPost の最後に孤児救済行の掃除（sweepOrphanRescueRows）が走る", /sweepOrphanRescueRows\(sheet, header\)/.test(doPostBody));
   check("backfillZohoDeals は thanks_ping_superseded を飛ばす", /thanks_ping_superseded/.test(backfill));
   const agency = read("gas-recorder/agency-share.js");
@@ -264,8 +264,8 @@ console.log("6) backfillZohoDeals の重複商談ガード（zohoFindBodyRowForR
   const header = ["_received_at", "_recovered", "your-tel", "your-last-name"];
   const now = Date.now();
   const values = [
-    [jstString(new Date(now - 60000)), "thanks_ping", "8049711404", "牧野"],      // 行2: 救済（先頭0欠落の数値保存を模す）
-    [jstString(new Date(now)), "", "08049711404", "牧野"],                        // 行3: 本体
+    [jstString(new Date(now - 60000)), "thanks_ping", "8056781234", "救済"],      // 行2: 救済（先頭0欠落の数値保存を模す）
+    [jstString(new Date(now)), "", "08056781234", "救済"],                        // 行3: 本体
     [jstString(new Date(now - 3 * 86400000)), "thanks_ping", "09011112222", "別人"], // 行4: 本体が無い本物の救済
     [jstString(new Date(now)), "", "09011112222", "別人"],                        // 行5: 3日後の再登録（別件）
     [jstString(new Date(now)), "", "07033334444", "通常"]                         // 行6: 通常行
@@ -275,10 +275,10 @@ console.log("6) backfillZohoDeals の重複商談ガード（zohoFindBodyRowForR
   check("3日離れた同番号は別件なので救済行の商談は作る（0）", ctx.zohoFindBodyRowForRescue(values, header, 2) === 0);
   check("通常行は対象外（0）", ctx.zohoFindBodyRowForRescue(values, header, 4) === 0);
   check("合流済み（thanks_ping_merged）は救済扱いしない（0）",
-    ctx.zohoFindBodyRowForRescue([[jstString(new Date(now)), "thanks_ping_merged", "08049711404", "牧野"], values[1]], header, 0) === 0);
+    ctx.zohoFindBodyRowForRescue([[jstString(new Date(now)), "thanks_ping_merged", "08056781234", "救済"], values[1]], header, 0) === 0);
 }
 
-console.log("7) 実走: 合流機能より前に出来た二重行（2026-10-01 の牧野さんの2行）を、次の送信のついでに片付ける");
+console.log("7) 実走: 合流機能より前に出来た二重行（2026-10-01 の救済さんの2行）を、次の送信のついでに片付ける");
 {
   const sheet = new FakeSheet();
   const { ctx, slackCalls } = makeContext(sheet);
@@ -297,7 +297,7 @@ console.log("7) 実走: 合流機能より前に出来た二重行（2026-10-01 
 
   // 無関係な新しい送信が届く → doPost の最後の掃除が走る
   const res = post(ctx, { ...BODY, "your-tel": "07055556666", "your-last-name": "新規", "your-first-name": "花子" });
-  check("掃除が走り、牧野さんの救済行だけを片付けた", res.sweep && res.sweep.superseded.length === 1 && res.sweep.superseded[0].rescue_row === 2 && res.sweep.superseded[0].body_row === 3, JSON.stringify(res.sweep));
+  check("掃除が走り、救済さんの救済行だけを片付けた", res.sweep && res.sweep.superseded.length === 1 && res.sweep.superseded[0].rescue_row === 2 && res.sweep.superseded[0].body_row === 3, JSON.stringify(res.sweep));
   check("救済行は thanks_ping_superseded になり、商談の対象外の印が付く",
     sheet.cell(2, "_recovered") === "thanks_ping_superseded" && !!sheet.cell(2, "_recovered_merged_at") && /superseded_by_row 3/.test(String(sheet.cell(2, "zoho_error"))));
   check("本体行に到達時刻が移る", !!sheet.cell(3, "thanks_reached_at"));
@@ -311,7 +311,7 @@ console.log("7) 実走: 合流機能より前に出来た二重行（2026-10-01 
   const res2 = post(ctx, { ...BODY, "your-tel": "07077778888", "your-last-name": "新規", "your-first-name": "次郎" });
   check("片付け済みの行は二度触らない", res2.sweep && res2.sweep.superseded.length === 0 && updates(slackCalls).length === 0);
   check("backfill ガードは superseded 行の本体を候補にしない（救済行同士）",
-    ctx.zohoFindBodyRowForRescue([[jstString(new Date()), "thanks_ping", "08049711404", "牧野"], [jstString(new Date()), "thanks_ping_superseded", "08049711404", "牧野"]], ["_received_at", "_recovered", "your-tel", "your-last-name"], 0) === 0);
+    ctx.zohoFindBodyRowForRescue([[jstString(new Date()), "thanks_ping", "08056781234", "救済"], [jstString(new Date()), "thanks_ping_superseded", "08056781234", "救済"]], ["_received_at", "_recovered", "your-tel", "your-last-name"], 0) === 0);
 }
 
 console.log("8) 実走: 「探す→書く」がロックの中で一体になっている（探索と追記の隙間に割り込めない）");

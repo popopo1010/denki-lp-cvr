@@ -5,6 +5,10 @@ name: Deploy to Xserver
 # 本番と同じ minify パイプライン・同じサーバー・本物のWPテーマCSS/LandingHub/WAF環境で
 # マージ前にスマホ実機確認するための経路（2026-07-08 FV非表示インシデントの再発防止）。
 # 使い方: git push -f origin <作業ブランチ>:staging → /denki-lp-cvr-stg/ を実機で確認 → mainへPR
+# GITHUB_TOKEN を読み取り専用に落とす（リポ既定の権限に依存しない。2026-10-10 セキュリティ監査）
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, staging]
@@ -30,7 +34,7 @@ jobs:
       CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Resolve deploy target (main=本番 / staging=STG)
         run: |
@@ -46,7 +50,7 @@ jobs:
           fi
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
 
@@ -152,7 +156,13 @@ jobs:
 
       - name: Minify JS/CSS/HTML
         run: |
-          ESBUILD="npx -y --package=esbuild@0.23.1 -- esbuild"
+          # esbuild / html-minifier-terser は1回だけ入れて直接呼ぶ。以前は `npx -y --package=…` を
+          # ファイルごとに起動しており、約250本ぶんの npx 起動だけでこのステップが 90 秒かかっていた
+          # （2026-10-10 実測: 同じ20本で npx 37.7s → 直接呼び出し 10.7s。出力は byte 一致）。
+          # 版は固定のまま。取れなければ生のまま配信せず止める（無言で素通りさせない）。
+          npm i --no-save --no-audit --no-fund esbuild@0.23.1 html-minifier-terser@7.2.0 \
+            || { echo "::error::minify ツール（esbuild / html-minifier-terser）の取得に失敗"; exit 1; }
+          ESBUILD="./node_modules/.bin/esbuild"
           for f in \
             assets/js/app.js \
             assets/js/app-v2.js \
@@ -217,7 +227,7 @@ jobs:
             ad-cr/cr-ad.css; do
             [ -f "$f" ] && $ESBUILD "$f" --minify --allow-overwrite --outfile="$f"
           done
-          HTML_MIN="npx -y --package=html-minifier-terser@7.2.0 -- html-minifier-terser"
+          HTML_MIN="./node_modules/.bin/html-minifier-terser"
           minify_html() {
             local f="$1"
             [ -f "$f" ] || return 0
@@ -372,6 +382,9 @@ jobs:
             --exclude='*.md' --exclude='scripts/' --exclude='gas-recorder/'
             --exclude='deploy/' --exclude='v2-deploy/' --exclude='serve.sh'
             --exclude='.env.example' --exclude='.gitignore' --exclude='.netlify'
+            # ランナーで npm i した node_modules/（sharp・esbuild 等、約17MB）。除外しないと
+            # そのまま本番の Web ルートへ転送される（2026-10-10 にドライランで 140 件を確認）
+            --exclude='node_modules/'
             --exclude='/thanks/' --exclude='WPLP/thanks/'
             --exclude='自前LP/thanks/' --exclude='nenshu-shindan/thanks/'
           )
@@ -381,7 +394,7 @@ jobs:
           # 間違ったリストで走らせると本番から消える）。
           rsync -an --delete --out-format='%n' "${EXCLUDES[@]}" ./ /tmp/rsync-dryrun-dest/ > /tmp/rsync-list.txt
           echo "転送対象 $(grep -c . /tmp/rsync-list.txt) 件"
-          for must_not in 'CLAUDE.md' '本番反映手順書' 'gas-recorder/' 'scripts/' 'v2-deploy/' '\.md$'; do
+          for must_not in 'CLAUDE.md' '本番反映手順書' 'gas-recorder/' 'scripts/' 'v2-deploy/' 'node_modules/' '\.md$'; do
             if grep -q "$must_not" /tmp/rsync-list.txt; then
               echo "::error::除外できていない: ${must_not}（本番に非Web資産が出る）"; exit 1
             fi
@@ -444,7 +457,7 @@ jobs:
             echo "配信ディレクトリに見えないので削除を中止する: $TARGET" >&2
             exit 1
           fi
-          rm -rf ./scripts ./gas-recorder ./v2-deploy ./deploy ./docs ./dk_lp/docs
+          rm -rf ./scripts ./gas-recorder ./v2-deploy ./deploy ./docs ./dk_lp/docs ./node_modules
           rm -f ./serve.sh ./.env.example ./.gitignore ./package.json ./package-lock.json
           find . -type f -name '*.md' -print -delete
           echo "後始末おわり"

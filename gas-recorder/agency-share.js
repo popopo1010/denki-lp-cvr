@@ -516,7 +516,7 @@ function writeAgencyShareDetail(ss, cols, rows) {
   sheet.getRange(1, 1, 1, cols.length).setValues([cols])
     .setFontWeight("bold").setBackground("#f0f0f0");
   if (rows.length) {
-    sheet.getRange(2, 1, rows.length, cols.length).setValues(rows);
+    sheet.getRange(2, 1, rows.length, cols.length).setValues(rows.map(sheetSafeRow));
   }
   sheet.setFrozenRows(1);
   // 列名が変わっても落ちないようにする。indexOf が -1 のとき setColumnWidth(0,…) は例外になり、
@@ -557,7 +557,7 @@ function writeAgencyShareSummary(ss, cols, rows) {
   sheet.clear();
   sheet.getRange(1, 1, 1, header.length).setValues([header])
     .setFontWeight("bold").setBackground("#f0f0f0");
-  if (out.length) sheet.getRange(2, 1, out.length, header.length).setValues(out);
+  if (out.length) sheet.getRange(2, 1, out.length, header.length).setValues(out.map(sheetSafeRow));
   sheet.setFrozenRows(1);
 }
 
@@ -700,7 +700,7 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel, 
   sheet.clear();
   sheet.getRange(1, 1, 1, header.length).setValues([header])
     .setFontWeight("bold").setBackground("#f0f0f0");
-  if (out.length) sheet.getRange(2, 1, out.length, header.length).setValues(out);
+  if (out.length) sheet.getRange(2, 1, out.length, header.length).setValues(out.map(sheetSafeRow));
   sheet.setFrozenRows(1);
   sheet.setColumnWidth(1, 320);
 }

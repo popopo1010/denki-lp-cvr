@@ -2,6 +2,10 @@
 # GitHubランナーから本番/STG/WPルートのHTTPステータスを取得してログに出すだけ。
 # デプロイや書き込みは一切しない。不要になったら削除してよい。
 name: Probe site status
+# GITHUB_TOKEN を読み取り専用に落とす（リポ既定の権限に依存しない。2026-10-10 セキュリティ監査）
+permissions:
+  contents: read
+
 on:
   push:
     branches: [staging]

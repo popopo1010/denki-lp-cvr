@@ -142,7 +142,7 @@ console.log("4) 実際の送信ペイロードで検証（buildZohoDeal 通し�
 {
   const params = {
     "your-last-name": "Rhatlakorn", "your-first-name": "Khomsan",
-    "your-tel": "07091453901", "your-license01": ALL_LICENSES,
+    "your-tel": "07056781235", "your-license01": ALL_LICENSES,
     "your-pref": "愛知県", "your-experience": "設計・積算経験",
     "your-willingness": "近いうちに転職したい", "your-birthday-year": "1992",
     "_lp": "sekoukanri", "_received_at": "2026-09-07 19:55:52"
