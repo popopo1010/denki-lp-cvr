@@ -577,6 +577,24 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
   const gas = read("gas-recorder/コード.js");
   check("gas-recorder/コード.js: テスト判定(detectTestSubmission)と【テスト送信】通知（@channelなし）",
     /function detectTestSubmission/.test(gas) && /【テスト送信】/.test(gas));
+  // 除外IP（2026-10-10）。GAS側で _test=ip にし、LPはフォーム操作時に照会して広告CV(lead_conversion)を止める。
+  check("gas-recorder/コード.js: 除外IP(EXCLUDE_IPS)をテスト扱いにし、doGet ip_check で照会できる",
+    /isExcludedIp\(params\["_ip"\]\)\) return "ip"/.test(gas) && /action === "ip_check"/.test(gas));
+  const exIps = read("gas-recorder/exclude-ips.js");
+  check("gas-recorder/exclude-ips.js: 除外IPタブを isExcludedIp が読み、テスト送信のIPは .htaccess に足さない・clasp の送信対象",
+    /getExcludeIpSheetList\(\)/.test(gas) && /function refreshExcludeIps/.test(exIps) &&
+    /testIps\[cip\]\) \{ skippedTest/.test(exIps) && /okIps\[cip\]\) \{ skippedShared/.test(exIps) &&
+    /!exclude-ips\.js/.test(read("gas-recorder/.claspignore")));
+  check("gas-recorder/コード.js: 除外IPの自動更新を doPost で1日1回だけ回す（失敗しても送信を止めない）",
+    /maybeRefreshExcludeIpsDaily\(\)/.test(gas) && /EXCLUDE_IPS_REFRESHED_ON/.test(exIps));
+  for (const p of ["assets/js/app.js", "assets/js/app-v2.js", "dk_lp/denkikouji/assets/js/main.js"]) {
+    const src = read(p);
+    check(`${p}: 除外IPを送信前に照会し _test=ip にする（広告CVから外す）`,
+      /if \(excludedIpHit\) return "ip";/.test(src) && /action=ip_check/.test(src) && /excludedIpHit = true/.test(src));
+    // ipify はフォームに触れた人だけ（全PVで外部通信しない）
+    check(`${p}: IP取得(ipify)はフォーム操作後に1回だけ（全PVで叩かない）`,
+      /function startIpLookup/.test(src) && !/requestIdleCallback\(fetchClientIp/.test(src));
+  }
   check("gas-recorder/コード.js: Slack通知失敗を slack_error に記録して報告する",
     /slack_error:\s*String\(slackErr\)/.test(gas) && /reportErrorToSlack\("slack_lead_notify/.test(gas));
   const zoho = read("gas-recorder/zoho.js");
