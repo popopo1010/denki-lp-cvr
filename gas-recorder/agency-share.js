@@ -2,8 +2,9 @@
  * 候補者ステージの代理店共有（個人情報なし）
  *
  * 目的:
- *  マーケ代理店に「どのチャネル/キャンペーンから来た候補者が、いま Zoho のどのステージか」を
- *  随時共有する。ただし**個人情報は一切渡さない**。
+ *  マーケ代理店に「どのチャネル/キャンペーン/KW/都道府県/年齢から何人の候補者が来たか」を
+ *  随時共有する。**個人情報は一切渡さない**。**逆オファーOK以降の選考の進み具合も渡さない**
+ *  （2026-10-10 オーナー指示。以前は Zoho のステージから逆オファーOK到達を出していた）。
  *
  * なぜ別スプレッドシートなのか:
  *  Googleの共有権限は**ファイル単位**で、同じスプレッドシート内のタブごとに権限を分けられない。
@@ -11,8 +12,8 @@
  *  個人情報を落とした行だけを**別ファイル**に書き出し、そのファイルだけを代理店に渡す。
  *
  * 動作:
- *  - syncAgencyShare() が form_submissions を読み、Zohoから現在のステージを取り直して
- *    共有用スプレッドシートを毎回まるごと作り直す（＝ステージは常に最新・冪等）。
+ *  - syncAgencyShare() が form_submissions を読み、共有用スプレッドシートを毎回まるごと作り直す（冪等）。
+ *    Zoho には問い合わせない。
  *  - Apps Script の時間主導トリガー（1時間おき）に syncAgencyShare を登録して自動更新する。
  *  - 出す列は AGENCY_SHARE_COLUMNS の許可リストだけ。さらに書き出す直前に
  *    元データの個人情報が混ざっていないかを1セルずつ検査して、混ざっていたら書き込みを中止する。
@@ -42,7 +43,6 @@ var AGENCY_SHARE_COLUMNS = [
   "utm_content",
   "utm_term",
   "utm_id",
-  "逆オファーOK到達",
   "LINE登録"
 ];
 
@@ -135,30 +135,19 @@ function agencyShareMatchesFilter(filter, track, params) {
   return agencyShareHasClickId(params, filter.groups);
 }
 
-var AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET = "キャンペーン別到達率";
-var AGENCY_SHARE_KEYWORD_FUNNEL_SHEET = "KW別到達率";
+var AGENCY_SHARE_CAMPAIGN_FUNNEL_SHEET = "キャンペーン別";
+var AGENCY_SHARE_KEYWORD_FUNNEL_SHEET = "KW別";
+// 2026-10-10 までの旧名。中身が逆オファーOK到達率だったので、同期のたびに残っていれば消す。
+var AGENCY_SHARE_LEGACY_SHEETS = ["キャンペーン別到達率", "KW別到達率"];
 var AGENCY_SHARE_MONTHLY_SHEET = "月別推移";
 // 広告費の手入力タブ。sync は**読むだけで消さない**（唯一、上書きしないタブ）。
 var AGENCY_SHARE_COST_SHEET = "広告コスト入力";
 
-// 見たいのは「逆オファーOKまで到達したか」だけ。他のステージは出さない。
-// 別の段階も見たくなったら rank を足す（04_HOT なら 4、21_内定なら 21）。
-var AGENCY_SHARE_TARGET_LABEL = "逆オファーOK到達";
-var AGENCY_SHARE_TARGET_RANK = 8; // 08_逆オファーOK
-var AGENCY_SHARE_TARGET_MARK = "✓";
+// 【絶対】代理店には「逆オファーOK」以降（逆OK・書類・法人OK・面接・内定・受諾など）を一切出さない
+// （2026-10-10 オーナー「代理店に逆オファーOK以降はでないように」）。以前はここで 08_逆オファーOK 到達の
+// ✓ と到達率・到達単価を出していたが、列ごと廃止した。Zoho のステージも取りに行かない（取らなければ漏れない）。
+// 出してよい質の指標は「LINE登録」まで。足したくなったらオーナーの判断を取ること。
 
-/**
- * ステージ名の先頭連番を進捗ランクにする（"01_新規リード" → 1）。
- * ただし 27_ナーチャリング / 28_無効リード は**番号が大きいだけで前進ではない**ため 0 を返す。
- * ここを素直に数値比較すると、無効リードが「内定到達」に化けて率が壊れる。
- */
-var AGENCY_SHARE_NON_PROGRESS_MIN_RANK = 26;
-function agencyShareStageRank(stage) {
-  var m = /^(\d{1,2})[_ ]/.exec(String(stage == null ? "" : stage).trim());
-  if (!m) return 0;
-  var n = Number(m[1]);
-  return n >= AGENCY_SHARE_NON_PROGRESS_MIN_RANK ? 0 : n;
-}
 
 /**
  * 送信日を "yyyy-MM-dd" にする。
@@ -247,47 +236,6 @@ function agencyShareLeadId(seed, salt) {
   return hex.slice(0, 12);
 }
 
-/**
- * Zohoから商談IDごとの現在ステージを取ってくる。
- * COQL は1回200件までなので100件ずつ問い合わせる。
- * 戻り値: { map: { dealId: {stage, modified} }, errors: [...] }
- */
-function fetchZohoStages(dealIds) {
-  var out = { map: {}, errors: [] };
-  if (!dealIds.length) return out;
-  if (typeof zohoEnabled !== "function" || !zohoEnabled()) {
-    out.errors.push("Zoho連携が無効（ZOHO_* 未設定）のためステージを取得できません");
-    return out;
-  }
-
-  for (var i = 0; i < dealIds.length; i += 100) {
-    var chunk = dealIds.slice(i, i + 100).map(function (id) {
-      return "'" + String(id).replace(/[^0-9]/g, "") + "'"; // 数値以外は落として式を壊さない
-    }).filter(function (v) { return v !== "''"; });
-    if (!chunk.length) continue;
-
-    var res = zohoFetch("/coql", {
-      method: "post",
-      payload: {
-        select_query: "select id, Stage, Modified_Time from Deals where id in (" +
-                      chunk.join(",") + ") limit 200"
-      }
-    });
-    if (res.code === 204) continue;            // 該当なし（全件削除済みなど）
-    if (res.code !== 200) {
-      out.errors.push("COQL " + zohoErrorText(res));
-      continue;
-    }
-    var rows = (res.body && res.body.data) || [];
-    for (var r = 0; r < rows.length; r++) {
-      out.map[String(rows[r].id)] = {
-        stage: String(rows[r].Stage || ""),
-        modified: rows[r].Modified_Time ? toJst(rows[r].Modified_Time) : ""
-      };
-    }
-  }
-  return out;
-}
 
 /**
  * 書き出す直前の安全網。元データの個人情報がセルに混ざっていたら例外を投げて中止する。
@@ -452,7 +400,6 @@ function syncAgencyShareRun() {
         utm_content: track.utm_content,
         utm_term: track.utm_term,
         utm_id: track.utm_id,
-        "逆オファーOK到達": "",
         "LINE登録": String(params["line_clicked_at"] || "").trim() ? "済" : "未",
         gclid: String(params["gclid"] || ""),
         gbraid: String(params["gbraid"] || ""),
@@ -465,7 +412,7 @@ function syncAgencyShareRun() {
   }
 
   // 同じ候補者の再送信は1人にまとめる（同一電話番号は同じ商談に紐づくため lead_id が同じ）。
-  // まとめないと到達率の分母が水増しされる。獲得したチャネルを残したいので初回送信を採用する。
+  // まとめないと候補者数が水増しされる。獲得したチャネルを残したいので初回送信を採用する。
   var byLead = {};
   var unique = [];
   var duplicates = 0;
@@ -487,22 +434,9 @@ function syncAgencyShareRun() {
   }
   records = unique;
 
-  var dealIds = [];
-  for (var q = 0; q < records.length; q++) {
-    if (records[q].dealId) dealIds.push(records[q].dealId);
-  }
-
-  var stages = fetchZohoStages(dealIds);
   var rows = [];
   for (var k = 0; k < records.length; k++) {
     var rec = records[k];
-    // 到達＝現在のステージ番号が 08_逆オファーOK 以上。
-    // 未連携・CRMに無い・27/28（ナーチャリング/無効リード）はチェックなし。
-    var found = rec.dealId ? stages.map[rec.dealId] : null;
-    var rank = found ? agencyShareStageRank(found.stage) : 0;
-    rec.values[AGENCY_SHARE_TARGET_LABEL] = rank >= AGENCY_SHARE_TARGET_RANK
-      ? AGENCY_SHARE_TARGET_MARK : "";
-
     var row = cols.map(function (name) { return rec.values[name] == null ? "" : rec.values[name]; });
     assertNoPii(row, rec.params); // ここで落ちたら1行も書かずに終わる
     rows.push(row);
@@ -545,6 +479,12 @@ function syncAgencyShareRun() {
     writeAgencyShareFunnel(ss, cols, rows, AGENCY_SHARE_KEYWORD_FUNNEL_SHEET,
                            "utm_term", "キーワード");
   });
+  safeWrite("旧タブの削除", function () {
+    AGENCY_SHARE_LEGACY_SHEETS.forEach(function (name) {
+      var old = ss.getSheetByName(name);
+      if (old) ss.deleteSheet(old);
+    });
+  });
   // 凡例は最後に、失敗があっても必ず書く（どのタブが古いままかを載せる場所）
   setupAgencyShareLegend(ss, filter, writeErrors);
 
@@ -554,19 +494,13 @@ function syncAgencyShareRun() {
             (excludedSuperseded ? "・救済行の残骸 " + excludedSuperseded + "件" : "") + "を除外" +
             (filter ? " / チャネル絞り込み[" + filter.label + "]で " + excludedChannel + "件を除外" : "") +
             " / 同一候補者の重複 " + duplicates + "件を統合" +
-            " / ステージ取得 " + Object.keys(stages.map).length + "件）" +
+            "）" +
             " 最終更新 " + toJst(new Date());
   if (costs.note) msg += " ※" + costs.note;
   if (writeErrors.length) {
     msg += " ※書き込み失敗タブ（内容が古いまま）: " + writeErrors.join(" / ");
     if (typeof reportErrorToSlack === "function") {
       reportErrorToSlack("syncAgencyShare/write", writeErrors.join(" / "));
-    }
-  }
-  if (stages.errors.length) {
-    msg += " ※Zoho取得エラー: " + stages.errors.join(" / ");
-    if (typeof reportErrorToSlack === "function") {
-      reportErrorToSlack("syncAgencyShare", stages.errors.join(" / "));
     }
   }
   Logger.log(msg);
@@ -588,38 +522,35 @@ function writeAgencyShareDetail(ss, cols, rows) {
   // 列名が変わっても落ちないようにする。indexOf が -1 のとき setColumnWidth(0,…) は例外になり、
   // 明細だけ書けて他タブが古いまま残る（2026-07-28 に実際に発生）。
   agencyShareSetWidth(sheet, cols, "マーケチャネル", 380);
-  agencyShareSetWidth(sheet, cols, AGENCY_SHARE_TARGET_LABEL, 130);
   agencyShareSetWidth(sheet, cols, "都道府県", 90);
   agencyShareSetWidth(sheet, cols, "年齢", 60);
 }
 
 /**
- * 月 × チャネル（source/medium/campaign）で、送信数・LINE登録数・逆オファーOK到達数と到達率を出す。
- * ステージ別の内訳は出さない（見たいのは逆オファーOKまで到達したかどうかだけ）。
+ * 月 × チャネル（source/medium/campaign）で、候補者数・LINE登録数を出す。
+ * 逆オファーOK 以降は出さない（ファイル先頭の【絶対】を参照）。
  */
 function writeAgencyShareSummary(ss, cols, rows) {
   var iMonth = cols.indexOf("送信月");
   var iSrc = cols.indexOf("utm_source");
   var iMed = cols.indexOf("utm_medium");
   var iCamp = cols.indexOf("utm_campaign");
-  var iTarget = cols.indexOf(AGENCY_SHARE_TARGET_LABEL);
   var iLine = cols.indexOf("LINE登録");
 
   var groups = {};
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
     var key = [r[iMonth], r[iSrc] || "(なし)", r[iMed] || "(なし)", r[iCamp] || "(なし)"].join("\t");
-    if (!groups[key]) groups[key] = { total: 0, line: 0, reached: 0 };
+    if (!groups[key]) groups[key] = { total: 0, line: 0 };
     groups[key].total++;
     if (r[iLine] === "済") groups[key].line++;
-    if (r[iTarget] === AGENCY_SHARE_TARGET_MARK) groups[key].reached++;
   }
 
   var header = ["送信月", "utm_source", "utm_medium", "utm_campaign", "候補者数", "LINE登録数",
-                AGENCY_SHARE_TARGET_LABEL, AGENCY_SHARE_TARGET_LABEL + "率(%)"];
+                "LINE登録率(%)"];
   var out = Object.keys(groups).sort().reverse().map(function (key) {
     var g = groups[key];
-    return key.split("\t").concat([g.total, g.line, g.reached, agencySharePct(g.reached, g.total)]);
+    return key.split("\t").concat([g.total, g.line, agencySharePct(g.line, g.total)]);
   });
 
   var sheet = agencyShareGetOrCreateSheet(ss, AGENCY_SHARE_SUMMARY_SHEET);
@@ -717,23 +648,19 @@ function agencyShareUnitCost(cost, count) {
 }
 
 /**
- * キャンペーン別 / KW別の到達率タブ。分母は送信数、分子は逆オファーOK到達数。
- *
- * 到達の判定は「**現在の**ステージ番号が 08_逆オファーOK 以上か」。ステージ履歴はZohoから
- * 取っていないので、一度到達してから 27_ナーチャリング / 28_無効リード に戻った候補者は
- * 数えない＝**実態よりやや低めに出る**。この前提は凡例タブにも書く。
+ * 月別 / キャンペーン別 / KW別のタブ。候補者数・LINE登録と、広告費があれば候補者単価。
+ * 逆オファーOK 以降は出さない（ファイル先頭の【絶対】を参照）。
  */
 function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel, opts) {
   opts = opts || {};
   var iKey = cols.indexOf(keyColumn);
-  var iTarget = cols.indexOf(AGENCY_SHARE_TARGET_LABEL);
   var iLine = cols.indexOf("LINE登録");
 
   var groups = {};
   var order = [];
   function bucket(key) {
     if (!groups[key]) {
-      groups[key] = { total: 0, line: 0, reached: 0 };
+      groups[key] = { total: 0, line: 0 };
       order.push(key);
     }
     return groups[key];
@@ -746,14 +673,12 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel, 
     for (var t = 0; t < targets.length; t++) {
       targets[t].total++;
       if (rows[i][iLine] === "済") targets[t].line++;
-      if (rows[i][iTarget] === AGENCY_SHARE_TARGET_MARK) targets[t].reached++;
     }
   }
 
   var costs = opts.costs || null;
-  var header = [keyLabel, "候補者数", "LINE登録", "LINE登録率(%)",
-                AGENCY_SHARE_TARGET_LABEL, AGENCY_SHARE_TARGET_LABEL + "率(%)"];
-  if (costs) header = header.concat(["広告費(円)", "候補者単価(円)", AGENCY_SHARE_TARGET_LABEL + "単価(円)"]);
+  var header = [keyLabel, "候補者数", "LINE登録", "LINE登録率(%)"];
+  if (costs) header = header.concat(["広告費(円)", "候補者単価(円)"]);
 
   // 【全体】を先頭に固定。月別推移はキーの新しい順、それ以外は候補者数の多い順。
   var keys = order.slice(1).sort(function (a, b) {
@@ -763,11 +688,10 @@ function writeAgencyShareFunnel(ss, cols, rows, sheetName, keyColumn, keyLabel, 
 
   var out = keys.map(function (key) {
     var g = groups[key];
-    var row = [key, g.total, g.line, agencySharePct(g.line, g.total),
-               g.reached, agencySharePct(g.reached, g.total)];
+    var row = [key, g.total, g.line, agencySharePct(g.line, g.total)];
     if (costs) {
       var cost = key === "【全体】" ? costs.total : (costs.map[key] || 0);
-      row.push(cost || "", agencyShareUnitCost(cost, g.total), agencyShareUnitCost(cost, g.reached));
+      row.push(cost || "", agencyShareUnitCost(cost, g.total));
     }
     return row;
   });
@@ -804,28 +728,22 @@ function setupAgencyShareLegend(ss, filter, writeErrors) {
     ["utm_content", "コンテンツ", "検索広告はマッチタイプ、SNSはクリエイティブ"],
     ["utm_term", "キーワード", "検索広告のKW"],
     ["utm_id", "キャンペーンID", ""],
-    [AGENCY_SHARE_TARGET_LABEL, "08_逆オファーOK まで到達したか",
-     AGENCY_SHARE_TARGET_MARK + "＝到達済み（08_逆オファーOK 以上のステージ）／空欄＝未到達。" +
-     "空欄には「まだCRMに登録されていない（送信直後・連携エラー）」も含まれるため、厳密には『未到達 or 判定不能』"],
     ["LINE登録", "LINE登録の有無", "済 / 未"],
     ["", "", ""],
     ["※ 同じ候補者の重複送信は1人にまとめています（初回送信のチャネルで集計）。", "",
      "そのため候補者数は広告管理画面のCV数より少なくなることがあります"],
     ["", "", ""],
     ["【タブの説明】", "", ""],
-    ["候補者ステージ", "1候補者1行の明細", "送信日・都道府県・年齢・流入元・逆オファーOK到達の有無"],
-    ["チャネル別サマリ", "月 × 流入元の集計", "送信数・LINE登録数・逆オファーOK到達数と到達率"],
-    ["月別推移", "月ごとの候補者数・到達数・到達率", "広告コスト入力タブに費用を入れると単価も出ます"],
-    ["キャンペーン別到達率", "utm_campaign ごとの逆オファーOK到達率", "候補者数を分母にした到達割合(%)。費用があれば単価も"],
+    ["候補者ステージ", "1候補者1行の明細", "送信日・都道府県・年齢・流入元・LINE登録の有無"],
+    ["チャネル別サマリ", "月 × 流入元の集計", "候補者数・LINE登録数と登録率"],
+    ["月別推移", "月ごとの候補者数・LINE登録", "広告コスト入力タブに費用を入れると候補者単価も出ます"],
+    ["キャンペーン別", "utm_campaign ごとの候補者数・LINE登録", "費用があれば候補者単価も"],
     ["広告コスト入力", "★人が入力するタブ（自動更新で消えません）",
-     "年月 / キャンペーン / 広告費(円) を入れると、月別推移・キャンペーン別に「候補者単価」「逆オファーOK単価」が出ます"],
-    ["KW別到達率", "utm_term（検索KW）ごとの同上", "検索広告以外は「(なし)」にまとまります"],
+     "年月 / キャンペーン / 広告費(円) を入れると、月別推移・キャンペーン別に「候補者単価」が出ます"],
+    ["KW別", "utm_term（検索KW）ごとの同上", "検索広告以外は「(なし)」にまとまります"],
     ["", "", ""],
     ["※ 単価は（広告費 ÷ 件数）です。広告コスト入力タブが空なら空欄になります。", "",
      "キャンペーン名は広告側の名称と一致させてください（utm_campaign と突き合わせています）"],
-    ["※ 判定は『現在のステージが 08_逆オファーOK 以上か』です。", "",
-     "一度到達してから 27_ナーチャリング / 28_無効リード に戻った候補者はチェックが外れるため、実態よりやや低めに出ます"],
-    ["※ 27_ナーチャリング / 28_無効リード は番号が大きいですが前進ではないため、到達扱いにしていません。", "", ""],
     ["", "", ""],
     ["※ 個人情報（氏名・電話番号・メール・生年月日・住所）は共有していません。", "", ""],
     ["※ このシートは1時間ごとに自動更新されます（手動編集しても次回更新で消えます）。", "", ""]
@@ -871,7 +789,6 @@ function diagnoseAgencyShare() {
 
   var filter = agencyShareSourceFilter();
   lines.push("対象チャネル: " + (filter ? filter.label + " のみ → " + filter.sources.join(",") : "全チャネル"));
-  lines.push("Zoho連携: " + (typeof zohoEnabled === "function" && zohoEnabled() ? "有効" : "無効（ステージが取れません）"));
 
   var out = lines.join("\n");
   Logger.log(out);

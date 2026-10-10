@@ -95,11 +95,48 @@ class FakeSpreadsheet {
     this.sheets.push(s);
     return s;
   }
+  deleteSheet(sheet) {
+    const i = this.sheets.indexOf(sheet);
+    if (i === -1) throw new Error("no such sheet: " + (sheet && sheet.name));
+    this.sheets.splice(i, 1);
+  }
 }
 
 // const 宣言はグローバルオブジェクトに載らないため、式として取り出す
 function evalIn(ctx, expr) {
   return vm.runInContext(expr, ctx);
+}
+
+/**
+ * Zoho の API を1回でも呼んだら数える（2026-10-10〜 代理店共有は Zoho のステージを取りに行かない）。
+ * 呼ばれたときに返す値は「選考が進んだ商談」にしてあるので、もし本体が呼んで使えば
+ * 逆オファーOK以降の語がシートに出て、下の禁止語検査でも落ちる。
+ */
+function trapZoho(ctx) {
+  const calls = [];
+  ctx.zohoFetch = (pathname, options) => {
+    calls.push(String(pathname) + " " + (options?.payload?.select_query || ""));
+    return { code: 200, body: { data: [
+      { id: "1001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }
+    ] } };
+  };
+  return calls;
+}
+
+// 代理店に出してはいけない「逆オファーOK以降」の語（2026-10-10 オーナー「代理店に逆オファーOK以降はでないように」）
+const FORBIDDEN_PROGRESS = /逆オファー|逆OK|到達|内定|受諾|書類|法人OK|面接/;
+
+/** 全タブ・全セル（ヘッダー・凡例・タブ名を含む）から禁止語を探す。見つかった場所を返す。 */
+function findForbiddenProgress(share) {
+  const hits = [];
+  for (const sh of share.getSheets()) {
+    if (FORBIDDEN_PROGRESS.test(sh.getName())) hits.push(`タブ名 ${sh.getName()}`);
+    sh.grid.forEach((row, r) => (row || []).forEach((cell, c) => {
+      const v = String(cell ?? "");
+      if (FORBIDDEN_PROGRESS.test(v)) hits.push(`${sh.getName()}!R${r + 1}C${c + 1}: ${v.slice(0, 40)}`);
+    }));
+  }
+  return hits;
 }
 
 function buildContext({ props, spreadsheets }) {
@@ -218,10 +255,12 @@ function runSync({ rows, stageRows, props: extraProps = {} }) {
   sheet.getRange(1, 1, 1, header.length).setValues([header]);
   rows(header).forEach((r) => sheet.appendRow(r));
 
+  // stageRows は「Zoho に聞かれたら返す」値。2026-10-10〜 本体は Zoho を呼ばないので、
+  // 呼ばれた回数（queried）が 0 であることを各テストで確かめる。
   const queried = [];
   ctx.zohoFetch = (pathname, options) => {
-    queried.push(options?.payload?.select_query || "");
-    return { code: 200, body: { data: stageRows } };
+    queried.push(String(pathname) + " " + (options?.payload?.select_query || ""));
+    return { code: 200, body: { data: stageRows || [] } };
   };
 
   const result = ctx.syncAgencyShare();
@@ -232,7 +271,7 @@ function runSync({ rows, stageRows, props: extraProps = {} }) {
 
 console.log("1) 通常同期：個人情報が1セルも出ないこと");
 {
-  const { ctx, share, result } = runSync({
+  const { ctx, share, result, queried } = runSync({
     rows: (header) => [
       makeRow(header, {}),
       makeRow(header, { zoho_deal_id: "", "your-tel": "08055556666", _received_at: "2026-07-21 09:00:00" }),
@@ -263,15 +302,22 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
   check("氏名（姓+名）が出力に含まれない", !flat.includes(PII.last + PII.first));
   check("gclid は既定で共有しない", !flat.includes("Cj0abc"));
 
-  const iTarget = header.indexOf("逆オファーOK到達");
-  const marked = body.filter((r) => r[iTarget] === "✓");
-  check("逆オファーOK以上の行にチェックが付く", marked.length === 1, `${marked.length}件`);
-  check("未連携・CRMに無い行はチェックなし",
-        body.filter((r) => r[iTarget] === "").length === 2);
+  // 逆オファーOK以降は代理店に出さない（2026-10-10）。Zoho には商談 1001 が 08_逆オファーOK だと
+  // 答えさせてあるが、本体は聞きに行かないので、どこにも出ない。
+  check("Zoho の API（COQL）を1回も呼ばない", queried.length === 0, JSON.stringify(queried));
+  check("明細に逆オファーOK到達の列が無い",
+        !header.some((h) => FORBIDDEN_PROGRESS.test(String(h))), JSON.stringify(header));
   check("ステージ名そのものは出さない",
         !body.flat().map(String).some((v) => v.includes("_逆オファー") || v.includes("未通電")));
+  check("✓（到達マーク）がどのセルにも無い",
+        !share.getSheets().some((sh) => sh.grid.some((r) => (r || []).some((c) => String(c) === "✓"))));
+  {
+    const hits = findForbiddenProgress(share);
+    check("全タブ全セル（凡例含む）に逆オファーOK以降の語が出ない", hits.length === 0, JSON.stringify(hits));
+  }
 
-  const hot = marked[0];
+  const hot = body.find((r) => r[header.indexOf("送信日")] === "2026-07-20");
+  check("初回送信の行がある", !!hot);
   check("送信日が入る", hot[header.indexOf("送信日")] === "2026-07-20");
   check("送信月が入る", hot[header.indexOf("送信月")] === "2026-07");
   check("utm_source が入る", hot[header.indexOf("utm_source")] === "google");
@@ -296,10 +342,18 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
   check("lead_id から電話番号が復元できない", !flat.includes(PII.tel));
 
   const summary = share.getSheetByName("チャネル別サマリ");
-  check("サマリは逆オファーOK到達と率だけ",
-        summary.grid[0].includes("逆オファーOK到達") && summary.grid[0].includes("逆オファーOK到達率(%)") &&
-        !summary.grid[0].some((h) => String(h).includes("HOT")),
+  check("サマリの列は 送信月〜LINE登録率(%) だけ",
+        JSON.stringify(summary.grid[0]) === JSON.stringify(
+          ["送信月", "utm_source", "utm_medium", "utm_campaign", "候補者数", "LINE登録数", "LINE登録率(%)"]),
         JSON.stringify(summary.grid[0]));
+  {
+    // 3件とも google/cpc/014_denki_top・2026-07・LINE登録済 → 1行に集計される
+    const sh = summary.grid[0];
+    const r = summary.grid[1] || [];
+    check("サマリ: 候補者数3・LINE登録数3・登録率100",
+          r[sh.indexOf("候補者数")] === 3 && r[sh.indexOf("LINE登録数")] === 3 && r[sh.indexOf("LINE登録率(%)")] === 100,
+          JSON.stringify(r));
+  }
   check("凡例シートが作られる", !!share.getSheetByName("凡例"));
   // 凡例は代理店が最初に読む説明。列を足したのに説明を書き忘れると、
   // 意味の分からない列がそのまま渡る（2026-09-22 に都道府県・年齢で実際に手で直した）。
@@ -309,6 +363,7 @@ console.log("1) 通常同期：個人情報が1セルも出ないこと");
     check("共有する全列に凡例の説明がある", missing.length === 0, "説明なし: " + JSON.stringify(missing));
   }
   check("戻り値に件数が入る", /共有シート更新: 3件/.test(result), result);
+  check("戻り値に「ステージ取得」が出ない", !/ステージ取得/.test(result), result);
 }
 
 console.log("1b) 事前に用意した空スプレッドシートのタブを流用する");
@@ -325,12 +380,16 @@ console.log("1b) 事前に用意した空スプレッドシートのタブを流
   const sheet = source.getSheetByName("form_submissions");
   sheet.getRange(1, 1, 1, header.length).setValues([header]);
   sheet.appendRow(makeRow(header, {}));
-  ctx.zohoFetch = () => ({ code: 200, body: { data: [{ id: "1001", Stage: "01_新規リード", Modified_Time: "2026-07-25T14:30:00+09:00" }] } });
+  const zohoCalls = trapZoho(ctx);
 
   ctx.syncAgencyShare();
+  check("Zoho を呼ばない", zohoCalls.length === 0, JSON.stringify(zohoCalls));
   const names = share.getSheets().map((s) => s.getName());
   check("空タブ「シート1」が残らない", !names.includes("シート1"), JSON.stringify(names));
   check("7タブになる", names.length === 7, JSON.stringify(names));
+  check("タブ名は新名（キャンペーン別・KW別）",
+        names.includes("キャンペーン別") && names.includes("KW別") &&
+        !names.includes("キャンペーン別到達率") && !names.includes("KW別到達率"), JSON.stringify(names));
   check("明細が書かれている", share.getSheetByName("候補者ステージ").grid.length === 2);
 }
 
@@ -399,7 +458,7 @@ console.log("4) 数字だけのPIIは部分一致で誤検知しない（Metaの
         rowsOut.length === 1 && String(rowsOut[0]).includes("120248499798320789"));
 }
 
-console.log("5) Zoho取得が失敗しても落ちず、理由を戻り値に残す");
+console.log("5) Zoho が使えない状態（401）でも同期は通り、Zoho は1回も呼ばない");
 {
   const props = {
     ZOHO_CLIENT_ID: "id", ZOHO_CLIENT_SECRET: "secret", ZOHO_REFRESH_TOKEN: "token",
@@ -412,19 +471,20 @@ console.log("5) Zoho取得が失敗しても落ちず、理由を戻り値に残
   const sheet = source.getSheetByName("form_submissions");
   sheet.getRange(1, 1, 1, header.length).setValues([header]);
   sheet.appendRow(makeRow(header, {}));
-  ctx.zohoFetch = () => ({ code: 401, body: {} });
+  const calls = [];
+  ctx.zohoFetch = (pathname) => { calls.push(String(pathname)); return { code: 401, body: {} }; };
 
   const result = ctx.syncAgencyShare();
   const body = share.getSheetByName("候補者ステージ").grid.slice(1);
   check("行は書き出される", body.length === 1);
-  check("ステージ取得失敗時はチェックなし",
-        body[0][evalIn(ctx, "AGENCY_SHARE_COLUMNS").indexOf("逆オファーOK到達")] === "");
-  check("戻り値にZohoエラーが載る", /Zoho取得エラー/.test(result), result);
+  check("Zoho の API を1回も呼ばない", calls.length === 0, JSON.stringify(calls));
+  check("戻り値に Zoho取得エラー が載らない（聞いていないので失敗もしない）", !/Zoho取得エラー/.test(result), result);
+  check("戻り値は正常の更新メッセージ", /共有シート更新: 1件/.test(result) && !/NG/.test(result), result);
 }
 
 console.log("6b) 商談IDがある行はテスト判定で落とさない／電話番号なしの未連携行は落とす");
 {
-  const { share, result } = runSync({
+  const { share, result, queried } = runSync({
     rows: (header) => [
       // 氏名も電話もテスト形式だが、Zohoに商談がある＝実在の候補者として扱う
       makeRow(header, {
@@ -439,11 +499,13 @@ console.log("6b) 商談IDがある行はテスト判定で落とさない／電�
     stageRows: [{ id: "4001", Stage: "11_書類選考", Modified_Time: "2026-07-25T14:30:00+09:00" }]
   });
   const body = share.getSheetByName("候補者ステージ").grid.slice(1);
-  const head6b = share.getSheetByName("候補者ステージ").grid[0];
-  const flags = body.map((r) => r[head6b.indexOf("逆オファーOK到達")]);
   check("2件残る（商談あり＋未連携で電話あり）", body.length === 2, `${body.length}件`);
-  check("商談ありのテスト形式行が残る（11_書類選考→到達）", flags.includes("✓"), JSON.stringify(flags));
+  // Zoho では 11_書類選考 だが、代理店には選考の進み具合を出さない
+  check("商談ありの行にも選考の進み具合（書類・✓）は出ない",
+        findForbiddenProgress(share).length === 0 && !body.flat().some((c) => String(c) === "✓"),
+        JSON.stringify(findForbiddenProgress(share)));
   check("電話番号なしの未連携行は落ちる", /電話番号なし 1件を除外/.test(result), result);
+  check("Zoho を呼ばない", queried.length === 0, JSON.stringify(queried));
 }
 
 console.log("7) チャネル絞り込み（Google広告だけ共有）");
@@ -510,15 +572,17 @@ console.log("7b) Meta を追加すると fb / ig / an をまとめて拾う");
   check("自然流入は除外されたまま", /チャネル絞り込み\[google \/ meta\]で 1件を除外/.test(result), result);
 }
 
-console.log("8) キャンペーン別・KW別の到達率タブ");
+console.log("8) キャンペーン別・KW別タブ（候補者数・LINE登録のみ）");
 {
-  const { share } = runSync({
+  const { share, queried } = runSync({
     rows: (header) => [
       makeRow(header, { zoho_deal_id: "3001" }),
       makeRow(header, { zoho_deal_id: "3002", "your-tel": "08055556666" }),
       makeRow(header, { zoho_deal_id: "3003", "your-tel": "07033334444" }),
-      makeRow(header, { zoho_deal_id: "3004", "your-tel": "09088886666" })
+      // LINE未登録が1人 → 登録率 75%
+      makeRow(header, { zoho_deal_id: "3004", "your-tel": "09088886666", line_clicked_at: "" })
     ],
+    // 聞かれたら選考が進んだ商談を返すが、本体は聞かない
     stageRows: [
       { id: "3001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" },
       { id: "3002", Stage: "21_内定", Modified_Time: "2026-07-25T14:30:00+09:00" },
@@ -527,24 +591,75 @@ console.log("8) キャンペーン別・KW別の到達率タブ");
     ]
   });
 
-  const camp = share.getSheetByName("キャンペーン別到達率");
+  const camp = share.getSheetByName("キャンペーン別");
+  check("キャンペーン別タブができる", !!camp);
   const head = camp.grid[0];
   const all = camp.grid[1];
-  const i8 = head.indexOf("逆オファーOK到達");
+  check("キャンペーンタブの列は キー・候補者数・LINE登録・登録率＋費用列だけ",
+        JSON.stringify(head.slice(0, 4)) === JSON.stringify(["キャンペーン", "候補者数", "LINE登録", "LINE登録率(%)"]) &&
+        head.slice(4).every((h) => h === "広告費(円)" || h === "候補者単価(円)"),
+        JSON.stringify(head));
   check("キャンペーンタブの1行目は【全体】", all[0] === "【全体】", String(all[0]));
-  check("候補者数4件", all[1] === 4, String(all[1]));
-  check("逆オファーOK到達が2件（08と21）", all[i8] === 2, String(all[i8]));
-  check("到達率が50%", all[i8 + 1] === 50, String(all[i8 + 1]));
-  check("28_無効リードは到達に数えない", all[i8] === 2);
+  check("候補者数4件", all[head.indexOf("候補者数")] === 4, String(all[head.indexOf("候補者数")]));
+  check("LINE登録3件", all[head.indexOf("LINE登録")] === 3, String(all[head.indexOf("LINE登録")]));
+  check("LINE登録率75%", all[head.indexOf("LINE登録率(%)")] === 75, String(all[head.indexOf("LINE登録率(%)")]));
+  check("Zoho を呼ばない（ステージで数えない）", queried.length === 0, JSON.stringify(queried));
   check("ステージ名の列は無い", !head.some((h) => String(h).includes("_内定") || String(h).includes("HOT")),
         JSON.stringify(head));
   check("キャンペーン名の行がある", camp.grid[2] && camp.grid[2][0] === "014_denki_top",
         JSON.stringify(camp.grid[2] && camp.grid[2][0]));
 
-  const kw = share.getSheetByName("KW別到達率");
-  check("KWタブの見出しがキーワード", kw.grid[0][0] === "キーワード", String(kw.grid[0][0]));
+  const kw = share.getSheetByName("KW別");
+  check("KW別タブができる", !!kw);
+  check("KWタブの列は キーワード・候補者数・LINE登録・登録率 だけ",
+        JSON.stringify(kw.grid[0]) === JSON.stringify(["キーワード", "候補者数", "LINE登録", "LINE登録率(%)"]),
+        JSON.stringify(kw.grid[0]));
   check("KW行が検索語で立つ", kw.grid[2] && kw.grid[2][0] === "電気工事士",
         JSON.stringify(kw.grid[2] && kw.grid[2][0]));
+  {
+    const hits = findForbiddenProgress(share);
+    check("全タブ全セルに逆オファーOK以降の語が出ない", hits.length === 0, JSON.stringify(hits));
+  }
+}
+
+console.log("8b) 旧名タブ（キャンペーン別到達率・KW別到達率）は同期で消え、新名タブができる");
+{
+  const props = {
+    ZOHO_CLIENT_ID: "id", ZOHO_CLIENT_SECRET: "secret", ZOHO_REFRESH_TOKEN: "token",
+    AGENCY_SHARE_SHEET_ID: "share-sheet", AGENCY_SHARE_SALT: "fixed-salt"
+  };
+  const source = new FakeSpreadsheet("1JwwkLThWTMMmi9p1CMGK8gAz-I5f9cmueGFFpplZwGc", ["form_submissions"]);
+  // 2026-10-10 以前の同期が作った状態（到達率入りのタブが残っている）
+  const share = new FakeSpreadsheet("share-sheet",
+    ["候補者ステージ", "チャネル別サマリ", "月別推移", "キャンペーン別到達率", "KW別到達率", "凡例"]);
+  share.getSheetByName("キャンペーン別到達率").getRange(1, 1, 2, 6).setValues([
+    ["キャンペーン", "候補者数", "LINE登録", "LINE登録率(%)", "逆オファーOK到達", "逆オファーOK到達率(%)"],
+    ["【全体】", 4, 3, 75, 2, 50]
+  ]);
+  share.getSheetByName("KW別到達率").getRange(1, 1, 2, 6).setValues([
+    ["キーワード", "候補者数", "LINE登録", "LINE登録率(%)", "逆オファーOK到達", "逆オファーOK到達率(%)"],
+    ["【全体】", 4, 3, 75, 2, 50]
+  ]);
+  const ctx = buildContext({ props, spreadsheets: { [source.getId()]: source, "share-sheet": share } });
+  const header = evalIn(ctx, "PREFERRED_COLUMNS").slice();
+  const sheet = source.getSheetByName("form_submissions");
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  sheet.appendRow(makeRow(header, {}));
+  const zohoCalls = trapZoho(ctx);
+
+  const result = ctx.syncAgencyShare();
+  const names = share.getSheets().map((sh) => sh.getName());
+  check("旧名タブ「キャンペーン別到達率」が消える", !names.includes("キャンペーン別到達率"), JSON.stringify(names));
+  check("旧名タブ「KW別到達率」が消える", !names.includes("KW別到達率"), JSON.stringify(names));
+  check("新名タブ「キャンペーン別」「KW別」ができる",
+        names.includes("キャンペーン別") && names.includes("KW別"), JSON.stringify(names));
+  check("新名タブに中身が書かれる", share.getSheetByName("キャンペーン別").grid.length > 1);
+  check("旧タブの削除で失敗が出ない", !/書き込み失敗タブ/.test(result), result);
+  check("Zoho を呼ばない", zohoCalls.length === 0, JSON.stringify(zohoCalls));
+  {
+    const hits = findForbiddenProgress(share);
+    check("旧タブの到達率がどこにも残らない", hits.length === 0, JSON.stringify(hits));
+  }
 }
 
 console.log("9) 日付型セルの _received_at と、同一候補者の重複送信");
@@ -595,30 +710,47 @@ console.log("10) 月別推移と広告費からの単価");
     { id: "6002", tel: "08055556666", at: "2026-07-06 10:00:00" },
     { id: "6003", tel: "07033334444", at: "2026-06-05 10:00:00" }
   ].forEach((r) => sheet.appendRow(makeRow(header, { zoho_deal_id: r.id, "your-tel": r.tel, _received_at: r.at })));
-  ctx.zohoFetch = () => ({ code: 200, body: { data: [
-    { id: "6001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" },
-    { id: "6003", Stage: "21_内定", Modified_Time: "2026-07-25T14:30:00+09:00" }
-  ] } });
+  const zohoCalls = trapZoho(ctx);
 
   ctx.syncAgencyShare();
+  check("Zoho を呼ばない", zohoCalls.length === 0, JSON.stringify(zohoCalls));
   const m = share.getSheetByName("月別推移");
   const head = m.grid[0];
   check("月別推移タブができる", !!m && head[0] === "送信月", JSON.stringify(head));
-  check("単価の列がある", head.includes("逆オファーOK到達単価(円)"), JSON.stringify(head));
+  check("月別推移の列は 送信月・候補者数・LINE登録・登録率・広告費・候補者単価 だけ",
+        JSON.stringify(head) === JSON.stringify(
+          ["送信月", "候補者数", "LINE登録", "LINE登録率(%)", "広告費(円)", "候補者単価(円)"]),
+        JSON.stringify(head));
   const rows = m.grid.slice(1);
   const jul = rows.find((r) => r[0] === "2026-07");
   const jun = rows.find((r) => r[0] === "2026-06");
   check("先頭は【全体】", rows[0][0] === "【全体】", String(rows[0][0]));
   check("新しい月が先", rows[1][0] === "2026-07", String(rows[1][0]));
-  check("7月: 候補者2人・到達1人", jul[1] === 2 && jul[4] === 1, JSON.stringify(jul));
-  check("7月の逆オファーOK単価 = 200000/1", jul[head.indexOf("逆オファーOK到達単価(円)")] === 200000, JSON.stringify(jul));
-  check("7月の候補者単価 = 200000/2", jul[head.indexOf("候補者単価(円)")] === 100000, JSON.stringify(jul));
-  check("6月の逆オファーOK単価 = 100000/1", jun[head.indexOf("逆オファーOK到達単価(円)")] === 100000, JSON.stringify(jun));
+  check("7月: 候補者2人・広告費200000", jul[head.indexOf("候補者数")] === 2 &&
+        jul[head.indexOf("広告費(円)")] === 200000, JSON.stringify(jul));
+  check("7月の候補者単価 = 広告費 ÷ 候補者数 = 200000/2", jul[head.indexOf("候補者単価(円)")] === 100000, JSON.stringify(jul));
+  check("6月の候補者単価 = 100000/1", jun[head.indexOf("候補者単価(円)")] === 100000, JSON.stringify(jun));
+  {
+    const all = rows[0];
+    check("【全体】の候補者単価 = 300000/3", all[head.indexOf("広告費(円)")] === 300000 &&
+          all[head.indexOf("候補者単価(円)")] === 100000, JSON.stringify(all));
+  }
+  {
+    const camp = share.getSheetByName("キャンペーン別").grid;
+    const ch = camp[0];
+    const row = camp.slice(1).find((r) => r[0] === "014_denki_top");
+    check("キャンペーン別の候補者単価 = 300000/3",
+          row && row[ch.indexOf("広告費(円)")] === 300000 && row[ch.indexOf("候補者単価(円)")] === 100000,
+          JSON.stringify(row));
+  }
+  check("単価は候補者単価だけ（逆オファーOK単価などは無い）",
+        ["月別推移", "キャンペーン別"].every((n) =>
+          share.getSheetByName(n).grid[0].filter((h) => String(h).includes("単価")).join() === "候補者単価(円)"));
   check("広告コスト入力タブは消されない",
         share.getSheetByName("広告コスト入力").grid.length === 3,
         String(share.getSheetByName("広告コスト入力").grid.length));
   check("KWタブに単価は出さない",
-        !share.getSheetByName("KW別到達率").grid[0].some((h) => String(h).includes("単価")));
+        !share.getSheetByName("KW別").grid[0].some((h) => String(h).includes("単価")));
 }
 
 console.log("11) 1タブが失敗しても他タブは更新し、どこが古いかを残す");
@@ -634,24 +766,24 @@ console.log("11) 1タブが失敗しても他タブは更新し、どこが古�
   const sheet = source.getSheetByName("form_submissions");
   sheet.getRange(1, 1, 1, header.length).setValues([header]);
   sheet.appendRow(makeRow(header, {}));
-  ctx.zohoFetch = () => ({ code: 200, body: { data: [
-    { id: "1001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }
-  ] } });
+  trapZoho(ctx);
 
-  // キャンペーン別到達率タブの書き込みだけを故意に失敗させる
+  // キャンペーン別タブの書き込みだけを故意に失敗させる
   const orig = ctx.writeAgencyShareFunnel;
   ctx.writeAgencyShareFunnel = function (ss, cols, rows, sheetName, keyColumn, keyLabel, opts) {
-    if (sheetName === "キャンペーン別到達率") throw new Error("boom");
+    if (sheetName === "キャンペーン別") throw new Error("boom");
     return orig(ss, cols, rows, sheetName, keyColumn, keyLabel, opts);
   };
 
   const result = ctx.syncAgencyShare();
   check("他タブは更新される", share.getSheetByName("月別推移").grid.length > 1);
   check("明細も更新される", share.getSheetByName("候補者ステージ").grid.length === 2);
-  check("戻り値に失敗タブ名が出る", /書き込み失敗タブ/.test(result) && /キャンペーン別到達率/.test(result), result);
+  check("戻り値に失敗タブ名が出る", /書き込み失敗タブ/.test(result) && /キャンペーン別（/.test(result), result);
   const legend = share.getSheetByName("凡例").grid;
   check("凡例に状態行がある", legend[1][0] === "状態", JSON.stringify(legend[1]));
-  check("凡例が古いタブを名指しする", String(legend[1][2]).includes("キャンペーン別到達率"), JSON.stringify(legend[1]));
+  check("凡例が古いタブを名指しする", String(legend[1][2]).includes("キャンペーン別（"), JSON.stringify(legend[1]));
+  check("KW別など他の集計タブは失敗扱いにならない",
+        !/KW別（|月別推移（|チャネル別サマリ（/.test(result), result);
 }
 
 console.log("12) _test 列のテスト送信を除外する（2026-08-30〜の運用）");
@@ -704,9 +836,10 @@ console.log("13) 全体が中止しても、止まっていることを凡例に
   sheet.appendRow(makeRow(header, {
     _page: "https://denkilp.builders-job.com/denkikouji/?utm_source=google&utm_campaign=" + PII.tel
   }));
-  ctx.zohoFetch = () => ({ code: 200, body: { data: [] } });
+  const zohoCalls = trapZoho(ctx);
 
   const result = ctx.syncAgencyShare();
+  check("Zoho を呼ばない", zohoCalls.length === 0, JSON.stringify(zohoCalls));
   check("例外を投げずに中止メッセージを返す", /更新を中止しました/.test(result), result);
   check("個人情報は書かれない",
         !(share.getSheetByName("候補者ステージ") || { grid: [] }).grid.flat().map(String).join("").includes(PII.tel));
@@ -740,9 +873,7 @@ console.log("14) 広告費: 粒度違い(month/week)の二重計上を防ぐ");
   ["8001", "8002"].forEach((id, i) => sheet.appendRow(makeRow(header, {
     zoho_deal_id: id, "your-tel": i ? "08055556666" : "09077778888", _received_at: "2026-07-05 10:00:00"
   })));
-  ctx.zohoFetch = () => ({ code: 200, body: { data: [
-    { id: "8001", Stage: "08_逆オファーOK", Modified_Time: "2026-07-25T14:30:00+09:00" }
-  ] } });
+  const zohoCalls = trapZoho(ctx);
 
   const result = ctx.syncAgencyShare();
   const m = share.getSheetByName("月別推移");
@@ -751,11 +882,12 @@ console.log("14) 広告費: 粒度違い(month/week)の二重計上を防ぐ");
   check("月次だけ採用され広告費は300,000", jul[head.indexOf("広告費(円)")] === 300000,
         String(jul[head.indexOf("広告費(円)")]));
   check("候補者単価 = 300000/2", jul[head.indexOf("候補者単価(円)")] === 150000, String(jul[head.indexOf("候補者単価(円)")]));
-  check("逆オファーOK単価 = 300000/1", jul[head.indexOf("逆オファーOK到達単価(円)")] === 300000,
-        String(jul[head.indexOf("逆オファーOK到達単価(円)")]));
+  check("単価は候補者単価だけ（逆オファーOK単価の列は無い）",
+        head.filter((h) => String(h).includes("単価")).join() === "候補者単価(円)", JSON.stringify(head));
+  check("Zoho を呼ばない", zohoCalls.length === 0, JSON.stringify(zohoCalls));
   check("除外した重複行数をログに出す", /粒度違いの重複 3行を除外/.test(result), result);
   check("列が増えてもヘッダー名で読める",
-        share.getSheetByName("キャンペーン別到達率").grid.slice(1)
+        share.getSheetByName("キャンペーン別").grid.slice(1)
           .some((r) => r[0] === "014_denki_top" && r[head.indexOf("広告費(円)")] === 300000));
 }
 
