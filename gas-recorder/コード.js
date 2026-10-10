@@ -392,6 +392,14 @@ function doPost(e) {
       console.log("sweepOrphanRescueRows: " + sweepErr);
     }
 
+    // 除外IPの自動更新（1日1回・その日最初の送信のついで）。トリガーをコードで作ると
+    // script.scriptapp スコープの再認可が要り、未認可の間は送信の記録ごと止まるため使わない。
+    try {
+      if (typeof maybeRefreshExcludeIpsDaily === "function") maybeRefreshExcludeIpsDaily();
+    } catch (exErr) {
+      console.log("maybeRefreshExcludeIpsDaily: " + exErr);
+    }
+
     return jsonOk({ slack_lead: slackLead, zoho_deal: zohoDeal, row: newRow, merged_into_rescue: !!rescue, sweep: sweep });
   } catch (err) {
     reportErrorToSlack("doPost", err);

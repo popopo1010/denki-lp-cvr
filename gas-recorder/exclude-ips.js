@@ -9,8 +9,15 @@
  *      - E列に「A列＋不足分」を差し込んだ .htaccess 全文を書き出す（E列を丸ごとコピーして貼り替える）
  *   3. 次回は新しい .htaccess を A列に貼り直して 2 を実行するだけ（毎回 A列が正本）。
  *
- * テスト送信（_test 付き）の IP は追加しない。社内・オーナーの端末の IP を .htaccess に入れると
- * 自分たちが LP を開けなくなる（STGでの実機確認もできなくなる）。
+ * 追加しないIP（誤ブロック防止）:
+ *   - テスト送信（_test 付き）を一度でも出したIP。社内・オーナーの端末の IP を .htaccess に入れると
+ *     自分たちが LP を開けなくなる（STGでの実機確認もできなくなる）。無効リードとテストの両方が
+ *     出ているIP（8/30 の _test 導入前の社内テスト等）もここで外れる。
+ *   - 無効ではない商談（28_無効リード 以外）も出しているIP。携帯回線のIPは共有されるので、
+ *     本物の応募者を巻き込まないため。
+ *
+ * 自動実行: doPost の最後で maybeRefreshExcludeIpsDaily() が1日1回だけ走る（その日最初の送信のついで）。
+ * 手で今すぐ回すときは GAS エディタで refreshExcludeIps()。
  *
  * このタブの IP（A列＋C列）は isExcludedIp() も読む＝フォーム送信のテスト扱い・広告CV除外にも効く。
  */
@@ -135,18 +142,31 @@ function refreshExcludeIps() {
   var cIp = col("_ip"), cTel = col("your-tel"), cDeal = col("zoho_deal_id"),
       cTest = col("_test"), cAt = col("_received_at"), cLp = col("_lp");
 
-  var added = {}, order = [], skippedTest = {};
+  // 1周目: IPごとに「テストを出したか」「無効でないリードを出したか」を集める
+  var testIps = {}, okIps = {}, candidates = [];
   for (var i = 0; i < values.length; i++) {
     var r = values[i];
     var ip = String(r[cIp] || "").trim();
     if (!ip) continue;
+    if (String(r[cTest] || "").trim()) { testIps[ip] = true; continue; }
     var deal = String(r[cDeal] || "").trim();
     var tel = zohoNormalizeTel(r[cTel]);
-    if (!inv.ids[deal] && !(tel.length >= 10 && inv.phones[tel])) continue;
-    if (String(r[cTest] || "").trim()) { skippedTest[ip] = true; continue; }
-    if (have[ip] || isIpCoveredByList(ip, Object.keys(have)) || added[ip]) continue;
-    added[ip] = { at: String(r[cAt] || "").slice(0, 10), lp: String(r[cLp] || "") };
-    order.push(ip);
+    if (inv.ids[deal] || (tel.length >= 10 && inv.phones[tel])) candidates.push(r);
+    // 無効でない商談が実在する行だけを「本物のリード」と数える。商談IDの無い行（Zoho連携前・
+    // 手で消したテスト等）は判断材料にしない＝無効扱いにも本物扱いにもしない。
+    else if (/^\d{15,}$/.test(deal)) okIps[ip] = true;
+  }
+  // 2周目: 無効リードだけを出しているIPを追加候補にする
+  var added = {}, order = [], skippedTest = {}, skippedShared = {};
+  var haveList = Object.keys(have);
+  for (var k = 0; k < candidates.length; k++) {
+    var c = candidates[k];
+    var cip = String(c[cIp]).trim();
+    if (testIps[cip]) { skippedTest[cip] = true; continue; }
+    if (okIps[cip]) { skippedShared[cip] = true; continue; }
+    if (have[cip] || added[cip] || isIpCoveredByList(cip, haveList)) continue;
+    added[cip] = { at: String(c[cAt] || "").slice(0, 10), lp: String(c[cLp] || "") };
+    order.push(cip);
   }
 
   // C列: 追加分（IP 送信日 LP）
@@ -169,9 +189,26 @@ function refreshExcludeIps() {
 
   CacheService.getScriptCache().remove(EXCLUDE_IP_CACHE_KEY);
   var msg = "OK: 追加 " + order.length + " 件 / 貼り付け済み " + Object.keys(have).length +
-    " 件 / テスト送信のため除外 " + Object.keys(skippedTest).length + " 件" +
+    " 件 / 社内テストのIPのため除外 " + Object.keys(skippedTest).length +
+    " 件 / 無効でないリードとIPが共通のため除外 " + Object.keys(skippedShared).length + " 件" +
     (pasted.join("").trim() ? "" : "（A列が空のため、E列は追加分のブロックだけ）");
   Logger.log(msg);
+  return msg;
+}
+
+/**
+ * doPost から呼ぶ1日1回の自動更新。日付をスクリプトプロパティに残し、同じ日は2回目以降なにもしない。
+ * 同時に2つの送信が来ても二重に走らないよう、先に日付を書いてから実行する（失敗してもその日は再試行しない
+ * ＝送信のたびに重い処理を繰り返さない。翌日また走る）。
+ */
+function maybeRefreshExcludeIpsDaily() {
+  if (typeof zohoEnabled !== "function" || !zohoEnabled()) return "skip: zoho disabled";
+  var today = toJst(new Date()).slice(0, 10);
+  var props = PropertiesService.getScriptProperties();
+  if (props.getProperty("EXCLUDE_IPS_REFRESHED_ON") === today) return "skip: already ran " + today;
+  props.setProperty("EXCLUDE_IPS_REFRESHED_ON", today);
+  var msg = refreshExcludeIps();
+  props.setProperty("EXCLUDE_IPS_LAST_RESULT", today + " " + String(msg).slice(0, 400));
   return msg;
 }
 

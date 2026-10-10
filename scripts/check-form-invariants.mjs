@@ -583,7 +583,10 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
   const exIps = read("gas-recorder/exclude-ips.js");
   check("gas-recorder/exclude-ips.js: 除外IPタブを isExcludedIp が読み、テスト送信のIPは .htaccess に足さない・clasp の送信対象",
     /getExcludeIpSheetList\(\)/.test(gas) && /function refreshExcludeIps/.test(exIps) &&
-    /cTest\][\s\S]{0,40}skippedTest/.test(exIps) && /!exclude-ips\.js/.test(read("gas-recorder/.claspignore")));
+    /testIps\[cip\]\) \{ skippedTest/.test(exIps) && /okIps\[cip\]\) \{ skippedShared/.test(exIps) &&
+    /!exclude-ips\.js/.test(read("gas-recorder/.claspignore")));
+  check("gas-recorder/コード.js: 除外IPの自動更新を doPost で1日1回だけ回す（失敗しても送信を止めない）",
+    /maybeRefreshExcludeIpsDaily\(\)/.test(gas) && /EXCLUDE_IPS_REFRESHED_ON/.test(exIps));
   for (const p of ["assets/js/app.js", "assets/js/app-v2.js", "dk_lp/denkikouji/assets/js/main.js"]) {
     const src = read(p);
     check(`${p}: 除外IPを送信前に照会し _test=ip にする（広告CVから外す）`,
