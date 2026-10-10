@@ -1152,6 +1152,11 @@
   }
 
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
+  // 除外IP（2026-10-10）。GASのスクリプトプロパティ EXCLUDE_IPS に一致したら true。
+  // 送信前に立っていれば _test=ip になり、thanks で lead_conversion（Meta/Google主CV）が発火しない。
+  // 判定の正本はGAS側（IPリストをLPに置かない）。照会はフォームに触れた時に1回だけ（startIpLookup）。
+  var excludedIpHit = false;
+
   // テスト送信の判定。戻り値は ""（本物のリード）か種別（"stg" / "param" / "pattern"）。
   // テストは**握りつぶさず、印を付けて全部記録する**（2026-08-30 リード件数調査の教訓。
   // 黙って捨てる／通知だけ消すと「届いていない」誤認とMetaの過大計上を生む）：
@@ -1169,6 +1174,7 @@
       if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return "param";
     } catch (e) { /* noop */ }
     if (isTesterDevice()) return "tester";
+    if (excludedIpHit) return "ip";
     const t = String(tel || "").trim();
     const ln = String(last || "").trim();
     const fn = String(first || "").trim();
@@ -1226,18 +1232,30 @@
     const sentAt = new Map(); // 送信内容 -> 最後に送った時刻
     let clientIp = "";
 
-    // IP取得は初期ロード後アイドル時に実行（送信前に確実に取得するため）
-    function fetchClientIp() {
+    // IP取得と除外IPの照会は、フォームに触れた人だけ・1回だけ行う（2026-10-10）。
+    // 以前は全PVで ipify を叩いていたが、_ip を使うのは送信時だけで、フォームに触れずに
+    // 離脱する大半の訪問者には不要な外部通信だった。触れてから送信までは5ステップ＝数十秒あるので間に合う。
+    // 照会に失敗したら本物扱い（CVを落とさない側）。
+    let ipLookupStarted = false;
+    function startIpLookup(e) {
+      if (ipLookupStarted || !e.target || !e.target.closest || !e.target.closest(".wpcf7-form")) return;
+      ipLookupStarted = true;
+      document.removeEventListener("click", startIpLookup, true);
+      document.removeEventListener("focusin", startIpLookup, true);
       fetch("https://api.ipify.org?format=json")
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && d.ip) clientIp = d.ip; })
+        .then(d => {
+          if (!d || !d.ip) return;
+          clientIp = d.ip;
+          if (!GAS_URL) return;
+          return fetch(GAS_URL + "?action=ip_check&ip=" + encodeURIComponent(clientIp))
+            .then(r => r.ok ? r.json() : null)
+            .then(x => { if (x && x.excluded) excludedIpHit = true; });
+        })
         .catch(() => {});
     }
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(fetchClientIp, { timeout: 5000 });
-    } else {
-      setTimeout(fetchClientIp, 2000);
-    }
+    document.addEventListener("click", startIpLookup, true);
+    document.addEventListener("focusin", startIpLookup, true);
 
     function postTo(url, body) {
       if (!url) return;
