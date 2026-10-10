@@ -351,7 +351,7 @@ function doPost(e) {
         mergeIntoRescueRow(sheet, header, rescue, params);
         return rescue.row;
       }
-      return appendRowAndGetIndex(sheet, row, { locked: locked });
+      return appendRowAndGetIndex(sheet, sheetSafeRow(row), { locked: locked });
     });
     var slackLead = rescue ? notifySlackRescueMerged(params, rescue) : notifySlackNewLead(params);
     if (slackLead.ok && slackLead.ts) {
@@ -437,7 +437,7 @@ function handleEmailCapture(params) {
           }
         }
         if (matchedRow > 0) {
-          sheet.getRange(matchedRow, emailColIdx + 1).setValue(email);
+          sheet.getRange(matchedRow, emailColIdx + 1).setValue(sheetSafeCell(email));
           sheet.getRange(matchedRow, capturedColIdx + 1).setValue(nowJst);
           // 紐づく商談があればメールアドレスをZohoにも反映する
           var zohoUpdate = updateZohoDealFromRow(sheet, header, matchedRow);
@@ -454,7 +454,7 @@ function handleEmailCapture(params) {
     for (var j = 0; j < header.length; j++) {
       row.push((header[j] in params) ? params[header[j]] : "");
     }
-    sheet.appendRow(row);
+    sheet.appendRow(sheetSafeRow(row));
     return jsonOk({ matched: false, appended: true });
   } catch (err) {
     return jsonError(err);
@@ -523,7 +523,7 @@ function handleThanksReached(params) {
     var newRow = withScriptLock(function (locked) {
       lateRow = tel ? findLatestRowByTelOrEmail(sheet, header, tel, "") : -1;
       if (lateRow !== -1) return lateRow;
-      return appendRowAndGetIndex(sheet, rowVals, { locked: locked });
+      return appendRowAndGetIndex(sheet, sheetSafeRow(rowVals), { locked: locked });
     });
     if (lateRow !== -1) {
       markThanksReached(sheet, header, lateRow, nowJst);
@@ -533,14 +533,14 @@ function handleThanksReached(params) {
     var text;
     if (testReason) {
       text = ":test_tube: 【テスト送信】thanks到達のみ検知（送信本体なし・種別: " + testReason + "）\n" +
-        "●電話番号：" + tel + "\n●LP：" + (params["_lp"] || "");
+        "●電話番号：" + slackSafe(tel) + "\n●LP：" + slackSafe(params["_lp"] || "");
     } else {
       text = "<!channel> :rotating_light: *送信消失の疑い（救済リード）*\n" +
         "thanksページ到達を検知しましたが、フォーム送信本体がシートに届いていません。\n" +
         "届いた情報だけで記録しました。**本物のリードとして架電してください。**\n" +
-        "●名前：" + (params["_name"] || "不明") + "\n" +
-        "●電話番号：" + (tel || "不明") + "\n" +
-        "●LP：" + (params["_lp"] || "不明") + "\n" +
+        "●名前：" + slackSafe(params["_name"] || "不明") + "\n" +
+        "●電話番号：" + slackSafe(tel || "不明") + "\n" +
+        "●LP：" + slackSafe(params["_lp"] || "不明") + "\n" +
         "_資格・都道府県などの詳細は取得できていません（送信データが消失）_";
     }
     var slackRes = postSlackChatMessage({ text: text });
@@ -765,6 +765,15 @@ function detectTestSubmission(params) {
   return "";
 }
 
+/**
+ * Slack の text に差し込むユーザー入力の無害化。& < > を Slack 指定のエンティティにする。
+ * 姓に <!channel> や <https://…|正規サイト> を入れられると、全員メンションやリンク偽装になる
+ * （フォームは誰でも送れる）。見出しの <!channel> はコード側の固定文なので対象外。
+ */
+function slackSafe(v) {
+  return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function buildLeadSlackMessage(params) {
   var last = params["your-last-name"] || "";
   var first = params["your-first-name"] || "";
@@ -794,16 +803,16 @@ function buildLeadSlackMessage(params) {
   var lines = [testReason
     ? ":test_tube: *【テスト送信】LP登録テスト（種別: " + testReason + "・Zoho登録なし）*"
     : "<!channel> :inbox_tray: *新規リード（LP登録）*"];
-  lines.push("●名前：" + name);
-  lines.push("●電話番号：" + tel);
-  lines.push("●都道府県：" + location);
-  if (birthday)   lines.push("●生年月日：" + birthday);
-  if (willingness) lines.push("●転職意思：" + willingness);
-  if (license)    lines.push("●保有資格：" + license);
-  if (experience) lines.push("●経験：" + experience);
-  lines.push("●キーワード：" + keyword);
-  lines.push("●IP：" + ip);
-  lines.push("●LP：" + lp);
+  lines.push("●名前：" + slackSafe(name));
+  lines.push("●電話番号：" + slackSafe(tel));
+  lines.push("●都道府県：" + slackSafe(location));
+  if (birthday)   lines.push("●生年月日：" + slackSafe(birthday));
+  if (willingness) lines.push("●転職意思：" + slackSafe(willingness));
+  if (license)    lines.push("●保有資格：" + slackSafe(license));
+  if (experience) lines.push("●経験：" + slackSafe(experience));
+  lines.push("●キーワード：" + slackSafe(keyword));
+  lines.push("●IP：" + slackSafe(ip));
+  lines.push("●LP：" + slackSafe(lp));
   lines.push("_このスレッドに面談予約の返信が届きます_");
   return lines.join("\n");
 }
@@ -841,11 +850,11 @@ function buildBookingThreadSlackMessage(params) {
   if (ca && staffMention) head = ca + " " + staffMention;
   else if (ca) head = ca;
   else if (staffMention) head = staffMention;
-  var lines = ["面談の予約がされました", "*日時:* " + (when || "要確認")];
+  var lines = ["面談の予約がされました", "*日時:* " + slackSafe(when || "要確認")];
   if (head) lines.unshift(head);
-  if (staffName) lines.push("*担当:* " + staffName);
-  if (name) lines.push("*名前:* " + name);
-  if (tel) lines.push("*電話:* " + tel);
+  if (staffName) lines.push("*担当:* " + slackSafe(staffName));
+  if (name) lines.push("*名前:* " + slackSafe(name));
+  if (tel) lines.push("*電話:* " + slackSafe(tel));
   return lines.join("\n");
 }
 
@@ -1011,7 +1020,7 @@ function mergeIntoRescueRow(sheet, header, rescue, params) {
   for (var j = 0; j < header.length; j++) {
     var key = header[j];
     if (!key || keep[key]) continue;
-    if (key in params) cur[j] = params[key];
+    if (key in params) cur[j] = sheetSafeCell(params[key]);
   }
   range.setValues([cur]);
   updateRowColumns(sheet, header, rescue.row, {
@@ -1098,6 +1107,22 @@ function ensureColumn(sheet, header, colName) {
   header.push(colName);
   sheet.getRange(1, idx + 1).setValue(colName);
   return idx;
+}
+
+/**
+ * シートに書く値の無害化（数式インジェクション対策）。
+ * フォームから届いた文字列が = + - @ やタブ・改行で始まると、Sheets はそれを数式として評価する
+ * （=IMPORTXML(...) で他の行の氏名・電話を外部へ送れる）。先頭に ' を付けると文字列として保存され、
+ * getValues() で読む側には ' は見えない（値はそのまま）。数値・日付・空はそのまま返す。
+ */
+function sheetSafeCell(v) {
+  if (typeof v !== "string" || !v) return v;
+  return /^[=+\-@\t\r\n]/.test(v) ? "'" + v : v;
+}
+function sheetSafeRow(row) {
+  var out = [];
+  for (var i = 0; i < row.length; i++) out.push(sheetSafeCell(row[i]));
+  return out;
 }
 
 /**
@@ -1266,7 +1291,7 @@ function updateRowColumns(sheet, header, rowNum, updates) {
       cell.setNumberFormat("@");
       val = String(val);
     }
-    cell.setValue(val);
+    cell.setValue(sheetSafeCell(val));
   }
 }
 
@@ -1310,7 +1335,7 @@ function handleCalendarBooked(params) {
         var h = header[j];
         row.push((h in params) ? params[h] : ((h in updates) ? updates[h] : ""));
       }
-      matchedRow = appendRowAndGetIndex(sheet, row);
+      matchedRow = appendRowAndGetIndex(sheet, sheetSafeRow(row));
     }
 
     var slackResult = notifySlackBooking(sheet, header, matchedRow, params);
