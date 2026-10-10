@@ -771,7 +771,8 @@ function detectTestSubmission(params) {
  * 除外IP（2026-10-10）。スクリプトプロパティ EXCLUDE_IPS に、カンマ・空白・改行区切りで
  * IPv4/IPv6 の完全一致、または IPv4 の CIDR（例 203.0.113.0/24）を書く。
  * 一致した送信は**捨てずにテスト扱い**（_test=ip）＝シートに残り、Slackは【テスト送信】表記・
- * @channelなし、Zoho商談は作らない。社内・無効リードの発信元を数字から外すための仕組み。
+ * @channelなし、Zoho商談は作らない。LPも doGet ?action=ip_check で照会し、送信前に
+ * _test=ip を立てて thanks の lead_conversion（広告CV）を止める。社内・無効リードの発信元を数字から外すための仕組み。
  */
 function isExcludedIp(ip) {
   ip = String(ip || "").trim();
@@ -1456,6 +1457,12 @@ function doGet(e) {
   if (e && e.parameter && e.parameter.action === "book") {
     return handleBookRequest(e);
   }
+  // ?action=ip_check&ip=… 除外IP（EXCLUDE_IPS）の照会（2026-10-10）。LPがフォームに触れた時に1回だけ呼ぶ。
+  // 一致したらLPが送信前に _test=ip を立て、thanks で lead_conversion（広告CV）を発火させない。
+  // 返すのは真偽だけ（IPリスト自体は外に出さない）。
+  if (e && e.parameter && e.parameter.action === "ip_check") {
+    return jsonOk({ excluded: isExcludedIp(e.parameter.ip) });
+  }
   if (e && e.parameter && e.parameter.action === "slack_health") {
     return handleSlackHealthRequest(e);
   }
@@ -1483,7 +1490,7 @@ const COLUMNS_LEGEND = [
   ["カラム名", "意味", "備考"],
   ["_received_at", "GAS受信時刻", "サーバー側で記録した日本時間 (yyyy-MM-dd HH:mm:ss)"],
   ["_lp", "送信元LP識別子", "sekoukanri / denkikouji / sekoukanri-doboku / sekoukanri-kentiku / sekoukanri-denkisekou / *-meta / nenshu-shindan-* / thanks / nenshu-shindan-thanks など"],
-  ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号 / ip=除外IP（スクリプトプロパティ EXCLUDE_IPS）からの送信。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない（ip だけはGAS側判定のため広告CVには乗る）"],
+  ["_test", "テスト送信フラグ", "空=本物のリード。stg=ステージングから送信 / param=?dk_test=1付き / pattern=テスト名・テスト番号 / ip=除外IP（スクリプトプロパティ EXCLUDE_IPS）からの送信。テストもシートには残すが、Slackは【テスト送信】表記・Zoho商談は作らない・広告CVにも乗らない（ip はLPがフォーム操作時にGASへ照会して送信前に判定する。照会が間に合わなかった/失敗した送信だけはGAS側で ip が付くが広告CVには乗る）"],
   ["slack_error", "Slack通知エラー", "新規リードのSlack通知が失敗した理由。空なら通知成功（slack_thread_ts が入る）"],
   ["thanks_reached_at", "thanks到達確認", "thanksページ到達ピンの受信時刻。空でもLINE即遷移等はあり得るが、行全体で常に空が続く場合はピン配線の故障を疑う"],
   ["_recovered", "救済行フラグ", "thanks_ping=フォーム送信本体が届かずthanks到達ピンだけ届いた救済行（送信消失の疑い）。名前・電話番号以外の項目は無い。@channel警報も出る。thanks_ping_merged=警報の後に本体が届き、この行へ合流した（全項目あり・誤警報だった。Slackの警報文も書き換わる）。thanks_ping_superseded=本体が別の行として既に届いていた救済行（誤警報の残骸。商談・代理店共有の対象外。本体行は zoho_error の superseded_by_row N）"],

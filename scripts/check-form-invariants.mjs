@@ -577,6 +577,14 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
   const gas = read("gas-recorder/コード.js");
   check("gas-recorder/コード.js: テスト判定(detectTestSubmission)と【テスト送信】通知（@channelなし）",
     /function detectTestSubmission/.test(gas) && /【テスト送信】/.test(gas));
+  // 除外IP（2026-10-10）。GAS側で _test=ip にし、LPはフォーム操作時に照会して広告CV(lead_conversion)を止める。
+  check("gas-recorder/コード.js: 除外IP(EXCLUDE_IPS)をテスト扱いにし、doGet ip_check で照会できる",
+    /isExcludedIp\(params\["_ip"\]\)\) return "ip"/.test(gas) && /action === "ip_check"/.test(gas));
+  for (const p of ["assets/js/app.js", "assets/js/app-v2.js", "dk_lp/denkikouji/assets/js/main.js"]) {
+    const src = read(p);
+    check(`${p}: 除外IPを送信前に照会し _test=ip にする（広告CVから外す）`,
+      /if \(excludedIpHit\) return "ip";/.test(src) && /action=ip_check/.test(src) && /excludedIpHit = true/.test(src));
+  }
   check("gas-recorder/コード.js: Slack通知失敗を slack_error に記録して報告する",
     /slack_error:\s*String\(slackErr\)/.test(gas) && /reportErrorToSlack\("slack_lead_notify/.test(gas));
   const zoho = read("gas-recorder/zoho.js");

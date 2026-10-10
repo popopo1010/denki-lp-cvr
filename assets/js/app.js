@@ -1285,6 +1285,11 @@
   }
 
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
+  // 除外IP（2026-10-10）。GASのスクリプトプロパティ EXCLUDE_IPS に一致したら true。
+  // 送信前に立っていれば _test=ip になり、thanks で lead_conversion（Meta/Google主CV）が発火しない。
+  // 判定の正本はGAS側（IPリストをLPに置かない）。照会はフォームに触れた時に1回だけ。
+  var excludedIpHit = false;
+
   // テスト送信の判定。戻り値は ""（本物のリード）か種別（"stg" / "param" / "pattern"）。
   // テストは**握りつぶさず、印を付けて全部記録する**（2026-08-30 リード件数調査の教訓。
   // 黙って捨てる／通知だけ消すと「届いていない」誤認とMetaの過大計上を生む）：
@@ -1302,6 +1307,7 @@
       if (/[?&](?:_test|dk_test)=1(?:&|$)/.test(location.search)) return "param";
     } catch (e) { /* noop */ }
     if (isTesterDevice()) return "tester";
+    if (excludedIpHit) return "ip";
     const t = String(tel || "").trim();
     const ln = String(last || "").trim();
     const fn = String(first || "").trim();
@@ -1360,12 +1366,32 @@
     let clientIp = "";
 
     // IP取得は初期ロード後アイドル時に実行（送信前に確実に取得するため）
+    let ipCheckWanted = false; // フォームに触れたら true（照会はそれ以降に1回だけ）
+    let ipChecked = false;
     function fetchClientIp() {
       fetch("https://api.ipify.org?format=json")
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && d.ip) clientIp = d.ip; })
+        .then(d => { if (d && d.ip) { clientIp = d.ip; checkExcludedIp(); } })
         .catch(() => {});
     }
+    // 除外IPの照会。全PVでGASを叩かないよう、フォームに触れた人だけ照会する
+    // （送信までに数十秒あるので間に合う。失敗したら本物扱い＝CVを落とさない側に倒す）。
+    function checkExcludedIp() {
+      if (!ipCheckWanted || ipChecked || !clientIp || !GAS_URL) return;
+      ipChecked = true;
+      fetch(GAS_URL + "?action=ip_check&ip=" + encodeURIComponent(clientIp))
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d && d.excluded) excludedIpHit = true; })
+        .catch(() => {});
+    }
+    ["click", "focusin"].forEach((type) => {
+      document.addEventListener(type, function onFirstTouch(e) {
+        if (!e.target || !e.target.closest || !e.target.closest(".wpcf7-form")) return;
+        document.removeEventListener(type, onFirstTouch, true);
+        ipCheckWanted = true;
+        checkExcludedIp();
+      }, true);
+    });
     if (typeof requestIdleCallback === "function") {
       requestIdleCallback(fetchClientIp, { timeout: 5000 });
     } else {
