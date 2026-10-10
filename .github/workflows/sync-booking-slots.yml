@@ -10,6 +10,10 @@ name: Sync booking slots JSON
 # CI失敗メールを飛ばしていたため、定期実行をやめて手動実行だけ残す。
 # 本番の booking-slots.json は deploy.yml が毎回のデプロイで生成・配信するので、
 # 手動実行が必要になる場面はほぼない。カレンダーを本格的に再開するなら schedule を戻す。
+# GITHUB_TOKEN を読み取り専用に落とす（リポ既定の権限に依存しない。2026-10-10 セキュリティ監査）
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
 

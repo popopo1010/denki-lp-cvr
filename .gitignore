@@ -8,3 +8,13 @@ package-lock.json
 *.log
 *.pyc
 .env
+
+# 秘密情報・環境別 .env（2026-10-10 セキュリティ監査で追加）
+.env.*
+!.env.example
+!.env.template
+!*.env.template
+*.pem
+*.key
+service-account*.json
+.clasprc.json

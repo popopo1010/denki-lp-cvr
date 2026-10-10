@@ -7,6 +7,10 @@ name: CI
 # 直すのに本番デプロイをもう1回まわすことになる。ここで前倒しする。
 #
 # 本番/STGへは一切触らない（ネットワークも本番へは出さない）。
+# GITHUB_TOKEN を読み取り専用に落とす（リポ既定の権限に依存しない。2026-10-10 セキュリティ監査）
+permissions:
+  contents: read
+
 on:
   pull_request:
   push:

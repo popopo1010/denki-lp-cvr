@@ -5,6 +5,10 @@ name: Deploy to Xserver
 # 本番と同じ minify パイプライン・同じサーバー・本物のWPテーマCSS/LandingHub/WAF環境で
 # マージ前にスマホ実機確認するための経路（2026-07-08 FV非表示インシデントの再発防止）。
 # 使い方: git push -f origin <作業ブランチ>:staging → /denki-lp-cvr-stg/ を実機で確認 → mainへPR
+# GITHUB_TOKEN を読み取り専用に落とす（リポ既定の権限に依存しない。2026-10-10 セキュリティ監査）
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, staging]
