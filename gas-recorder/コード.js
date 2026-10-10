@@ -788,11 +788,10 @@ function isExcludedIp(ip) {
   var list = String(getScriptProp("EXCLUDE_IPS") || "").split(/[\s,]+/);
   // 「除外IP」タブ（.htaccess の貼り付け＋refreshExcludeIps の追加分。exclude-ips.js）
   if (typeof getExcludeIpSheetList === "function") list = list.concat(getExcludeIpSheetList());
+  // 完全一致を先に（大半はこれ）。CIDR は範囲指定の行だけ順に見る
+  if (list.indexOf(ip) !== -1) return true;
   for (var i = 0; i < list.length; i++) {
-    var rule = list[i].trim();
-    if (!rule) continue;
-    if (rule === ip) return true;
-    if (rule.indexOf("/") !== -1 && ipv4InCidr(ip, rule)) return true;
+    if (list[i].indexOf("/") !== -1 && ipv4InCidr(ip, list[i].trim())) return true;
   }
   return false;
 }

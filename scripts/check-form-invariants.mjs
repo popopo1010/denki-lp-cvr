@@ -591,6 +591,9 @@ for (const p of ["assets/js/thanks-v2-shared.js", "dk_lp/denkikouji/assets/js/ma
     const src = read(p);
     check(`${p}: 除外IPを送信前に照会し _test=ip にする（広告CVから外す）`,
       /if \(excludedIpHit\) return "ip";/.test(src) && /action=ip_check/.test(src) && /excludedIpHit = true/.test(src));
+    // ipify はフォームに触れた人だけ（全PVで外部通信しない）
+    check(`${p}: IP取得(ipify)はフォーム操作後に1回だけ（全PVで叩かない）`,
+      /function startIpLookup/.test(src) && !/requestIdleCallback\(fetchClientIp/.test(src));
   }
   check("gas-recorder/コード.js: Slack通知失敗を slack_error に記録して報告する",
     /slack_error:\s*String\(slackErr\)/.test(gas) && /reportErrorToSlack\("slack_lead_notify/.test(gas));

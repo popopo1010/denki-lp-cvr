@@ -1154,7 +1154,7 @@
   // ========== Form mirror (Zapier + Google Sheets via GAS) ==========
   // 除外IP（2026-10-10）。GASのスクリプトプロパティ EXCLUDE_IPS に一致したら true。
   // 送信前に立っていれば _test=ip になり、thanks で lead_conversion（Meta/Google主CV）が発火しない。
-  // 判定の正本はGAS側（IPリストをLPに置かない）。照会はフォームに触れた時に1回だけ。
+  // 判定の正本はGAS側（IPリストをLPに置かない）。照会はフォームに触れた時に1回だけ（startIpLookup）。
   var excludedIpHit = false;
 
   // テスト送信の判定。戻り値は ""（本物のリード）か種別（"stg" / "param" / "pattern"）。
@@ -1232,38 +1232,30 @@
     const sentAt = new Map(); // 送信内容 -> 最後に送った時刻
     let clientIp = "";
 
-    // IP取得は初期ロード後アイドル時に実行（送信前に確実に取得するため）
-    let ipCheckWanted = false; // フォームに触れたら true（照会はそれ以降に1回だけ）
-    let ipChecked = false;
-    function fetchClientIp() {
+    // IP取得と除外IPの照会は、フォームに触れた人だけ・1回だけ行う（2026-10-10）。
+    // 以前は全PVで ipify を叩いていたが、_ip を使うのは送信時だけで、フォームに触れずに
+    // 離脱する大半の訪問者には不要な外部通信だった。触れてから送信までは5ステップ＝数十秒あるので間に合う。
+    // 照会に失敗したら本物扱い（CVを落とさない側）。
+    let ipLookupStarted = false;
+    function startIpLookup(e) {
+      if (ipLookupStarted || !e.target || !e.target.closest || !e.target.closest(".wpcf7-form")) return;
+      ipLookupStarted = true;
+      document.removeEventListener("click", startIpLookup, true);
+      document.removeEventListener("focusin", startIpLookup, true);
       fetch("https://api.ipify.org?format=json")
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && d.ip) { clientIp = d.ip; checkExcludedIp(); } })
+        .then(d => {
+          if (!d || !d.ip) return;
+          clientIp = d.ip;
+          if (!GAS_URL) return;
+          return fetch(GAS_URL + "?action=ip_check&ip=" + encodeURIComponent(clientIp))
+            .then(r => r.ok ? r.json() : null)
+            .then(x => { if (x && x.excluded) excludedIpHit = true; });
+        })
         .catch(() => {});
     }
-    // 除外IPの照会。全PVでGASを叩かないよう、フォームに触れた人だけ照会する
-    // （送信までに数十秒あるので間に合う。失敗したら本物扱い＝CVを落とさない側に倒す）。
-    function checkExcludedIp() {
-      if (!ipCheckWanted || ipChecked || !clientIp || !GAS_URL) return;
-      ipChecked = true;
-      fetch(GAS_URL + "?action=ip_check&ip=" + encodeURIComponent(clientIp))
-        .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && d.excluded) excludedIpHit = true; })
-        .catch(() => {});
-    }
-    ["click", "focusin"].forEach((type) => {
-      document.addEventListener(type, function onFirstTouch(e) {
-        if (!e.target || !e.target.closest || !e.target.closest(".wpcf7-form")) return;
-        document.removeEventListener(type, onFirstTouch, true);
-        ipCheckWanted = true;
-        checkExcludedIp();
-      }, true);
-    });
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(fetchClientIp, { timeout: 5000 });
-    } else {
-      setTimeout(fetchClientIp, 2000);
-    }
+    document.addEventListener("click", startIpLookup, true);
+    document.addEventListener("focusin", startIpLookup, true);
 
     function postTo(url, body) {
       if (!url) return;

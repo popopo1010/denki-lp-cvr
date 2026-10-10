@@ -25,6 +25,9 @@
 var EXCLUDE_IP_SHEET = "除外IP";
 var EXCLUDE_IP_INVALID_STAGE = "28_無効リード";
 var EXCLUDE_IP_CACHE_KEY = "exclude_ips_v1";
+// LPフォーム（form_submissions）の記録開始より前の商談は照合に使わない（2024年の取込分などで
+// 照会が何ページにも膨らむだけ）。シートの最古行は 2026-05-20。
+var EXCLUDE_IP_ZOHO_SINCE = "2026-04-01T00:00:00+09:00";
 var EXCLUDE_IP_SECTION = "# ===== 無効リード（Zoho 28_無効リード・LPフォーム由来。refreshExcludeIps で追加） =====";
 
 function excludeIpSheet(create) {
@@ -103,7 +106,7 @@ function fetchInvalidLeadKeys() {
       method: "post",
       payload: {
         select_query: "select id, m_phone_number from Deals where Stage = '" + EXCLUDE_IP_INVALID_STAGE +
-          "' limit " + offset + ", 2000"
+          "' and Created_Time >= '" + EXCLUDE_IP_ZOHO_SINCE + "' limit " + offset + ", 2000"
       }
     });
     if (res.code === 204) break;
@@ -150,11 +153,14 @@ function refreshExcludeIps() {
     if (!ip) continue;
     if (String(r[cTest] || "").trim()) { testIps[ip] = true; continue; }
     var deal = String(r[cDeal] || "").trim();
+    var hasDeal = /^\d{15,}$/.test(deal);
     var tel = zohoNormalizeTel(r[cTel]);
-    if (inv.ids[deal] || (tel.length >= 10 && inv.phones[tel])) candidates.push(r);
+    // 商談IDがある行はそのIDのステージだけで判断する。電話番号で照らすのは商談IDが無い・壊れた行
+    // （"3.755E+15" 等）だけ——過去の無効商談と同じ番号の人が、今回は本物として登録していることがあるため。
+    if (hasDeal ? inv.ids[deal] : (tel.length >= 10 && inv.phones[tel])) candidates.push(r);
     // 無効でない商談が実在する行だけを「本物のリード」と数える。商談IDの無い行（Zoho連携前・
     // 手で消したテスト等）は判断材料にしない＝無効扱いにも本物扱いにもしない。
-    else if (/^\d{15,}$/.test(deal)) okIps[ip] = true;
+    else if (hasDeal) okIps[ip] = true;
   }
   // 2周目: 無効リードだけを出しているIPを追加候補にする
   var added = {}, order = [], skippedTest = {}, skippedShared = {};
@@ -246,7 +252,16 @@ function buildHtaccessWithAdditions(pastedCells, additions) {
   if (block.length) block.push("");
   var out = lines.slice(0, at).concat(block, lines.slice(at));
 
-  var total = out.filter(function (l) { return /^\s*Require\s+not\s+ip\s+/i.test(l); }).length;
+  // 同じIPの重複行は最初の1行だけ残す（貼り付け元の .htaccess に重複がある。2026-10-10 時点で10件）
+  var seen = {};
+  out = out.filter(function (l) {
+    var m = /^\s*Require\s+not\s+ip\s+(\S+)\s*$/i.exec(l);
+    if (!m) return true;
+    if (seen[m[1]]) return false;
+    seen[m[1]] = true;
+    return true;
+  });
+  var total = Object.keys(seen).length;
   return out.map(function (l) {
     return /^#\s*Total:\s*\d+\s*IP addresses blocked/i.test(l.trim()) ? "# Total: " + total + " IP addresses blocked" : l;
   });
