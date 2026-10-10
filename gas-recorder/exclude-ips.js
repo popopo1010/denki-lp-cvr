@@ -171,7 +171,8 @@ function refreshExcludeIps() {
     if (testIps[cip]) { skippedTest[cip] = true; continue; }
     if (okIps[cip]) { skippedShared[cip] = true; continue; }
     if (have[cip] || added[cip] || isIpCoveredByList(cip, haveList)) continue;
-    added[cip] = { at: String(c[cAt] || "").slice(0, 10), lp: String(c[cLp] || "") };
+    // シートの日時セルは Date で返る。String(Date) は "Wed May 20 …" になるので toJst で整形する
+    added[cip] = { at: String(toJst(c[cAt]) || "").slice(0, 10), lp: String(c[cLp] || "") };
     order.push(cip);
   }
 
