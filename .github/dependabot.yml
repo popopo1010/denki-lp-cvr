@@ -1,0 +1,9 @@
+# 依存と GitHub Actions の更新 PR を週次で出す（2026-10-10 セキュリティ監査で追加）。
+# minor/patch はまとめ、major は個別。Actions は SHA ピンのまま更新される。
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
